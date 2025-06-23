@@ -5,7 +5,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 interface HeroProps {
@@ -16,6 +16,13 @@ export function Hero({ signupCount }: HeroProps) {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,6 +113,7 @@ export function Hero({ signupCount }: HeroProps) {
         >
           <form onSubmit={handleSubmit} className="flex gap-3 w-full max-w-lg">
             <Input
+              ref={inputRef}
               type="email"
               placeholder="Enter your email"
               className="h-11 text-base flex-1"
