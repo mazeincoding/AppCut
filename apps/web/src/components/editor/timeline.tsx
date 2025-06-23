@@ -28,6 +28,7 @@ import { usePlaybackStore } from "@/stores/playback-store";
 import { processMediaFiles } from "@/lib/media-processing";
 import { toast } from "sonner";
 import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 
 export function Timeline() {
   // Timeline shows all tracks (video, audio, effects) and their clips.
@@ -1146,10 +1147,12 @@ function TimelineTrackContent({
     if (mediaItem.type === "image") {
       return (
         <div className="w-full h-full flex items-center justify-center">
-          <img
+          <Image
             src={mediaItem.url}
             alt={mediaItem.name}
             className="w-full h-full object-cover"
+            width={256}
+            height={144}
           />
         </div>
       );
@@ -1159,10 +1162,12 @@ function TimelineTrackContent({
       return (
         <div className="w-full h-full flex items-center gap-2">
           <div className="w-8 h-8 flex-shrink-0">
-            <img
+            <Image
               src={mediaItem.thumbnailUrl}
               alt={mediaItem.name}
               className="w-full h-full object-cover rounded-sm"
+              width={32}
+              height={32}
             />
           </div>
           <span className="text-xs text-foreground/80 truncate flex-1">

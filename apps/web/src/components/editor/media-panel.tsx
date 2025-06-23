@@ -5,10 +5,11 @@ import { AspectRatio } from "../ui/aspect-ratio";
 import { DragOverlay } from "../ui/drag-overlay";
 import { useMediaStore } from "@/stores/media-store";
 import { processMediaFiles } from "@/lib/media-processing";
-import { Plus, Image, Video, Music, Trash2, Upload } from "lucide-react";
+import { Plus, Image as ImageIcon, Video, Music, Trash2, Upload } from "lucide-react";
 import { useDragDrop } from "@/hooks/use-drag-drop";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
+import Image from "next/image";
 
 // MediaPanel lets users add, view, and drag media (images, videos, audio) into the project.
 // You can upload files or drag them from your computer. Dragging from here to the timeline adds them to your video project.
@@ -88,12 +89,15 @@ export function MediaPanel() {
 
     if (item.type === "image") {
       return (
-        <img
+        <Image
           src={item.url}
           alt={item.name}
           className="w-full h-full object-cover rounded cursor-grab active:cursor-grabbing"
           loading="lazy"
-          {...baseDragProps}
+          draggable
+          onDragStart={(e) => startDrag(e, item)}
+          width={256}
+          height={144}
         />
       );
     }
@@ -105,11 +109,13 @@ export function MediaPanel() {
             className="relative w-full h-full cursor-grab active:cursor-grabbing"
             {...baseDragProps}
           >
-            <img
+            <Image
               src={item.thumbnailUrl}
               alt={item.name}
               className="w-full h-full object-cover rounded"
               loading="lazy"
+              width={256}
+              height={144}
             />
             <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded">
               <Video className="h-6 w-6 text-white drop-shadow-md" />
@@ -144,7 +150,7 @@ export function MediaPanel() {
           className="w-full h-full bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex flex-col items-center justify-center text-muted-foreground rounded border border-green-500/20 cursor-grab active:cursor-grabbing"
           {...baseDragProps}
         >
-          <Music className="h-6 w-6 mb-1" />
+          <ImageIcon className="h-6 w-6 mb-1" />
           <span className="text-xs">Audio</span>
           {item.duration && (
             <span className="text-xs opacity-70">
@@ -160,7 +166,7 @@ export function MediaPanel() {
         className="w-full h-full bg-muted/30 flex flex-col items-center justify-center text-muted-foreground rounded cursor-grab active:cursor-grabbing"
         {...baseDragProps}
       >
-        <Image className="h-6 w-6" />
+        <ImageIcon className="h-6 w-6" />
         <span className="text-xs mt-1">Unknown</span>
       </div>
     );
@@ -213,7 +219,7 @@ export function MediaPanel() {
           {mediaItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center h-full">
               <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mb-4">
-                <Image className="h-8 w-8 text-muted-foreground" />
+                <ImageIcon className="h-8 w-8 text-muted-foreground" />
               </div>
               <p className="text-sm text-muted-foreground">
                 No media in project
