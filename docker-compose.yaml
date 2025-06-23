@@ -42,6 +42,34 @@ services:
       timeout: 10s
       retries: 5
       start_period: 10s
+    depends_on:
+      - redis
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      # Example environment variables - these should be tailored
+      # using apps/web/.env.example as a guide
+      NEXT_PUBLIC_DATABASE_URL: "postgresql://opencut:opencutthegoat@db:5432/opencut"
+      NEXT_PUBLIC_REDIS_URL: "redis://redis:6379"
+      NEXT_PUBLIC_UPSTASH_REDIS_REST_URL: "http://serverless-redis-http:8079"
+      NEXT_PUBLIC_UPSTASH_REDIS_REST_TOKEN: "example_token"
+      # Add other necessary environment variables from .env.example
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      serverless-redis-http:
+        condition: service_healthy
+    volumes:
+      - ./apps/web:/app # Optional: for development to reflect code changes without rebuilding
+      - /app/node_modules # Ensure node_modules in container is used
+      - /app/.next # Ensure .next in container is used
 
 volumes:
   postgres_data:
