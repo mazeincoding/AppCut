@@ -79,10 +79,29 @@ function createWindow() {
 
 // Register file protocol for better asset handling
 app.whenReady().then(() => {
-  // Register a custom protocol to handle file loading
-  protocol.registerFileProtocol('file', (request, callback) => {
-    const pathname = decodeURI(request.url.replace('file:///', ''));
-    callback(pathname);
+  protocol.interceptFileProtocol('file', (request, callback) => {
+    try {
+      const url = new URL(request.url);
+      const pathname = url.pathname;
+
+
+      if (pathname.startsWith('/_next/') || 
+          pathname.startsWith('/favicon') || 
+          pathname.startsWith('/logo') ||
+          (pathname.endsWith('.txt') && url.search.includes('_rsc='))) {
+        const webDir = path.join(__dirname, 'web');
+        const assetPath = path.join(webDir, pathname);
+        console.log(`Redirecting ${pathname} to ${assetPath}`);
+        return callback({ path: assetPath });
+      }
+
+      const originalPath = url.pathname;
+      return callback({ path: originalPath });
+    } catch (err) {
+      console.error('Protocol intercept error:', err);
+      const fallbackPath = request.url.replace('file://', '');
+      callback({ path: fallbackPath });
+    }
   });
 
   createWindow();

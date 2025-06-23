@@ -1,13 +1,13 @@
 {
   "name": "opencut-desktop",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "main": "main.js",
   "private": true,
   "description": "Electron build for OpenCut",
   "author": "OpenCut",
   "scripts": {
     "dev": "concurrently \"npm --prefix ../web run dev\" \"wait-on http://localhost:3000 && electron .\"",
-    "build": "cross-env ELECTRON_BUILD=true npm --prefix ../web run build && node fix-paths.js && electron-builder"
+    "build": "cross-env ELECTRON_BUILD=true npm --prefix ../web run build && electron-builder"
   },
   "devDependencies": {
     "electron": "^36.5.0",
