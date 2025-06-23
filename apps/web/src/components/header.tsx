@@ -5,8 +5,10 @@ import Image from "next/image";
 import { Button } from "./ui/button";
 import { ArrowRight } from "lucide-react";
 import { HeaderBase } from "./header-base";
+import { useSession } from "@/lib/auth-client";
 
 export function Header() {
+  const { data: session } = useSession();
   const leftContent = (
     <Link href="/" className="flex items-center gap-3">
       <Image src="/logo.png" alt="OpenCut Logo" width={24} height={24} />
@@ -21,7 +23,7 @@ export function Header() {
           GitHub
         </Button>
       </Link>
-      <Link href="/editor">
+      <Link href={session ? "/editor" : "/auth/login"}>
         <Button size="sm" className="text-sm ml-4">
           Start editing
           <ArrowRight className="h-4 w-4" />

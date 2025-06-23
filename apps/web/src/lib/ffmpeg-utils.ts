@@ -104,55 +104,69 @@ export const getVideoInfo = async (videoFile: File): Promise<{
   codec?: string;
 }> => {
   const ffmpeg = await initFFmpeg();
-  
+
   const inputName = 'input.mp4';
   
   try {
     // Write input file
     await ffmpeg.writeFile(inputName, new Uint8Array(await videoFile.arrayBuffer()));
-    
-    // Get video info using ffprobe-like functionality
-    let output = '';
-    ffmpeg.on('log', ({ message }) => {
-      output += message + '\n';
-    });
-    
-    // Run ffmpeg with probe-like options to get video information
-    await ffmpeg.exec([
-      '-i', inputName,
-      '-f', 'null', 
-      '-'
-    ]);
-    
-    // Parse the output for video information
-    const videoInfoMatch = output.match(/Stream #\d+:\d+.*Video: (.+?), (\d+)x(\d+).*?(\d+(?:\.\d+)?) fps/);
-    const durationMatch = output.match(/Duration: (\d{2}):(\d{2}):(\d{2}\.\d{2})/);
-    const bitrateMatch = output.match(/bitrate: (\d+) kb\/s/);
-    
-    let width = 1920, height = 1080, fps = 30, duration = 0;
-    let codec = '', bitrate = 0;
-    
-    if (videoInfoMatch) {
-      codec = videoInfoMatch[1].split(',')[0].trim();
-      width = parseInt(videoInfoMatch[2]);
-      height = parseInt(videoInfoMatch[3]);
-      fps = parseFloat(videoInfoMatch[4]);
+
+    // Capture FFmpeg stderr output with a one-time listener pattern
+    let ffmpegOutput = '';
+    let listening = true;
+    const listener = (data: string) => {
+      if (listening) ffmpegOutput += data;
+    };
+    ffmpeg.on('log', ({ message }) => listener(message));
+
+    // Run ffmpeg to get info (stderr will contain the info)
+    try {
+      await ffmpeg.exec(['-i', inputName, '-f', 'null', '-']);
+    } catch (error) {
+      // This is expected - FFmpeg will error when trying to output to null
+      // The important part is that we captured the log output
     }
-    
+
+    // Disable listener after exec completes
+    listening = false;
+
+    // Cleanup
+    await ffmpeg.deleteFile(inputName);
+
+    // Parse output for duration, resolution, and fps
+    // Example: Duration: 00:00:10.00, start: 0.000000, bitrate: 1234 kb/s
+    // Example: Stream #0:0: Video: h264 (High), yuv420p(progressive), 1920x1080 [SAR 1:1 DAR 16:9], 30 fps, 30 tbr, 90k tbn, 60 tbc
+
+    const durationMatch = ffmpegOutput.match(/Duration: (\d+):(\d+):([\d.]+)/);
+    let duration = 0;
     if (durationMatch) {
-      const hours = parseInt(durationMatch[1]);
-      const minutes = parseInt(durationMatch[2]);
-      const seconds = parseFloat(durationMatch[3]);
-      duration = hours * 3600 + minutes * 60 + seconds;
+      const [, h, m, s] = durationMatch;
+      duration = parseInt(h) * 3600 + parseInt(m) * 60 + parseFloat(s);
     }
+
+    const videoStreamMatch = ffmpegOutput.match(/Video:.* (\d+)x(\d+)[^,]*, ([\d.]+) fps/);
+    let width = 0, height = 0, fps = 0;
+    if (videoStreamMatch) {
+      width = parseInt(videoStreamMatch[1]);
+      height = parseInt(videoStreamMatch[2]);
+      fps = parseFloat(videoStreamMatch[3]);
+    }
+
+    // Enhanced parsing for additional metadata
+    const bitrateMatch = ffmpegOutput.match(/bitrate: (\d+) kb\/s/);
+    const codecMatch = ffmpegOutput.match(/Video: ([^,\(]+)/);
+    
+    let bitrate = undefined;
+    let codec = undefined;
     
     if (bitrateMatch) {
       bitrate = parseInt(bitrateMatch[1]);
     }
     
-    // Cleanup
-    await ffmpeg.deleteFile(inputName);
-    
+    if (codecMatch) {
+      codec = codecMatch[1].trim();
+    }
+
     return {
       duration,
       width,
@@ -265,4 +279,4 @@ export const extractAudio = async (
   await ffmpeg.deleteFile(outputName);
   
   return blob;
-}; 
+};

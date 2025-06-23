@@ -25,7 +25,7 @@ export function VideoPlayer({
     clipDuration
 }: VideoPlayerProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
-    const { isPlaying, currentTime, volume, play, pause, setVolume } = usePlaybackStore();
+    const { isPlaying, currentTime, volume, speed, play, pause, setVolume } = usePlaybackStore();
 
     // Calculate if we're within this clip's timeline range
     const clipEndTime = clipStartTime + (clipDuration - trimStart - trimEnd);
@@ -59,18 +59,26 @@ export function VideoPlayer({
                 timelineTime - clipStartTime + trimStart
             ));
 
-            // Only sync if there's a significant difference
-            if (Math.abs(video.currentTime - targetVideoTime) > 0.2) {
+            // Only sync if there's a significant difference to avoid micro-adjustments
+            if (Math.abs(video.currentTime - targetVideoTime) > 0.5) {
                 video.currentTime = targetVideoTime;
             }
         };
 
+        const handleSpeedEvent = (e: CustomEvent) => {
+            if (!isInClipRange) return;
+            // Set playbackRate directly without any additional checks
+            video.playbackRate = e.detail.speed;
+        };
+
         window.addEventListener("playback-seek", handleSeekEvent as EventListener);
         window.addEventListener("playback-update", handleUpdateEvent as EventListener);
+        window.addEventListener("playback-speed", handleSpeedEvent as EventListener);
 
         return () => {
             window.removeEventListener("playback-seek", handleSeekEvent as EventListener);
             window.removeEventListener("playback-update", handleUpdateEvent as EventListener);
+            window.removeEventListener("playback-speed", handleSpeedEvent as EventListener);
         };
     }, [clipStartTime, trimStart, trimEnd, clipDuration, isInClipRange]);
 
@@ -93,6 +101,13 @@ export function VideoPlayer({
         video.volume = volume;
     }, [volume]);
 
+    // Sync speed immediately when it changes
+    useEffect(() => {
+        const video = videoRef.current;
+        if (!video) return;
+        video.playbackRate = speed;
+    }, [speed]);
+
     return (
         <div className={`relative group ${className}`}>
             <video
@@ -101,7 +116,7 @@ export function VideoPlayer({
                 poster={poster}
                 className="w-full h-full object-cover"
                 playsInline
-                preload="metadata"
+                preload="auto"
             />
 
             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />

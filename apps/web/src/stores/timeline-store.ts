@@ -21,6 +21,13 @@ export interface TimelineTrack {
 interface TimelineStore {
   tracks: TimelineTrack[];
 
+  // Multi-selection
+  selectedClips: { trackId: string; clipId: string }[];
+  selectClip: (trackId: string, clipId: string, multi?: boolean) => void;
+  deselectClip: (trackId: string, clipId: string) => void;
+  clearSelectedClips: () => void;
+  setSelectedClips: (clips: { trackId: string; clipId: string }[]) => void;
+
   // Actions
   addTrack: (type: "video" | "audio" | "effects") => string;
   removeTrack: (trackId: string) => void;
@@ -50,6 +57,33 @@ interface TimelineStore {
 
 export const useTimelineStore = create<TimelineStore>((set, get) => ({
   tracks: [],
+  selectedClips: [],
+
+  selectClip: (trackId, clipId, multi = false) => {
+    set((state) => {
+      const exists = state.selectedClips.some(
+        (c) => c.trackId === trackId && c.clipId === clipId
+      );
+      if (multi) {
+        // Toggle selection
+        return exists
+          ? { selectedClips: state.selectedClips.filter((c) => !(c.trackId === trackId && c.clipId === clipId)) }
+          : { selectedClips: [...state.selectedClips, { trackId, clipId }] };
+      } else {
+        return { selectedClips: [{ trackId, clipId }] };
+      }
+    });
+  },
+  deselectClip: (trackId, clipId) => {
+    set((state) => ({
+      selectedClips: state.selectedClips.filter((c) => !(c.trackId === trackId && c.clipId === clipId)),
+    }));
+  },
+  clearSelectedClips: () => {
+    set({ selectedClips: [] });
+  },
+
+  setSelectedClips: (clips) => set({ selectedClips: clips }),
 
   addTrack: (type) => {
     const newTrack: TimelineTrack = {

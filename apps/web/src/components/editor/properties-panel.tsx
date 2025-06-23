@@ -20,6 +20,7 @@ import { useProjectStore } from "@/stores/project-store";
 import { ImageTimelineTreatment } from "@/components/ui/image-timeline-treatment";
 import { Monitor, Settings, Video } from "lucide-react";
 import { useState } from "react";
+import { SpeedControl } from "./speed-control";
 
 // Common video resolutions for manual selection
 const COMMON_RESOLUTIONS = [
@@ -39,6 +40,18 @@ export function PropertiesPanel() {
     "blur" | "mirror" | "color"
   >("blur");
   const [backgroundColor, setBackgroundColor] = useState("#000000");
+
+  // Get the first video clip for preview (simplified)
+  const firstVideoClip = tracks
+    .flatMap((track) => track.clips)
+    .find((clip) => {
+      const mediaItem = mediaItems.find((item) => item.id === clip.mediaId);
+      return mediaItem?.type === "video";
+    });
+
+  const firstVideoItem = firstVideoClip
+    ? mediaItems.find((item) => item.id === firstVideoClip.mediaId)
+    : null;
 
   // Get the first image clip for preview (simplified)
   const firstImageClip = tracks
@@ -198,6 +211,14 @@ export function PropertiesPanel() {
               </div>
             </div>
 
+            <Separator />
+          </>
+        )}
+
+        {/* Video Controls - only show if a video is selected */}
+        {firstVideoItem && (
+          <>
+            <SpeedControl />
             <Separator />
           </>
         )}
