@@ -95,7 +95,6 @@ export function MediaPanel() {
             className="w-full h-full object-cover rounded"
             loading="lazy"
           />
-          {/* Resolution indicator for images */}
           {item.resolution && (
             <div className="absolute top-1 left-1 bg-black/70 text-white text-xs px-1 rounded">
               {item.resolution}
@@ -121,13 +120,11 @@ export function MediaPanel() {
             <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded">
               <Video className="h-6 w-6 text-white drop-shadow-md" />
             </div>
-            {/* Duration indicator */}
             {item.duration && (
               <div className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1 rounded">
                 {formatDuration(item.duration)}
               </div>
             )}
-            {/* Resolution indicator for videos */}
             {item.resolution && (
               <div className="absolute top-1 left-1 bg-black/70 text-white text-xs px-1 rounded">
                 {item.resolution}

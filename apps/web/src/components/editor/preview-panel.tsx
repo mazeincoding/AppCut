@@ -446,7 +446,6 @@ export function PreviewPanel() {
     <div className="h-full flex flex-col">
       {/* Canvas Controls */}
       <div className="border-b p-2 flex items-center gap-2 text-xs">
-        {/* Project Resolution Info */}
         {activeProject?.resolution && (
           <div className="flex items-center gap-2">
             <Monitor className="h-3 w-3" />
