@@ -37,12 +37,16 @@ A free, open-source video editor for web, desktop, and mobile.
    npm install
    # or, with Bun
    bun install
+   # or, with pnpm
+   pnpm install
    ```
 3. **Run the development server:**
    ```bash
    npm run dev
    # or, with Bun
    bun run dev
+   # or, with pnpm
+   pnpm run dev
    ```
 4. **Open in browser:**
    Visit [http://localhost:3000](http://localhost:3000)

@@ -1,0 +1,17 @@
+{
+	"name": "open-cut",
+	"version": "0.1.0",
+	"private": true,
+  "scripts": {
+    "dev": "pnpm --filter web dev",
+    "build": "pnpm --filter web build",
+    "start": "pnpm --filter web start",
+    "lint": "pnpm --filter web lint",
+    "db:generate": "pnpm --filter web db:generate",
+    "db:push:local": "pnpm --filter web db:push:local",
+    "db:push:prod": "pnpm --filter web db:push:prod"
+  },
+  "workspaces": [
+    "apps/web"
+  ]
+}

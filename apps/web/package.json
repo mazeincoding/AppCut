@@ -1,9 +1,9 @@
 {
-  "name": "next-template",
+  "name": "web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -53,6 +53,7 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/node": "24.0.3",
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
     "cross-env": "^7.0.3",
