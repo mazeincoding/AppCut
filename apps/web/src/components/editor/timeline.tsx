@@ -46,6 +46,7 @@ export function Timeline() {
     addClipToTrack,
     removeTrack,
     toggleTrackMute,
+    toggleClipMute,
     removeClipFromTrack,
     moveClipToTrack,
     getTotalDuration,
@@ -532,22 +533,6 @@ export function Timeline() {
                 >
                   <div className="absolute top-1 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-red-500 rounded-full border-2 border-white shadow-sm" />
                 </div>
-
-                {/* Hover time indicator */}
-                {hoverTime !== null && !isDraggingPlayhead && (
-                  <div
-                    className="absolute top-0 w-0.5 bg-blue-400/50 pointer-events-none z-15"
-                    style={{
-                      left: `${hoverTime * 50 * zoomLevel}px`,
-                      height: `${tracks.length * 60}px`,
-                    }}
-                  >
-                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-blue-400 rounded-full border border-white shadow-sm" />
-                    <div className="absolute top-5 left-1/2 transform -translate-x-1/2 bg-blue-400 text-white text-xs px-2 py-1 rounded shadow-lg pointer-events-none whitespace-nowrap">
-                      {Math.floor(hoverTime * 10) / 10}s
-                    </div>
-                  </div>
-                )}
               </div>
             </ScrollArea>
           </div>
@@ -837,6 +822,44 @@ export function Timeline() {
                 <Copy className="h-4 w-4 mr-2" />
                 Duplicate Clip
               </button>
+              <button
+                className="flex items-center w-full px-3 py-2 hover:bg-accent hover:text-accent-foreground transition-colors text-left"
+                onClick={() => {
+                  if (contextMenu.clipId) {
+                    const track = tracks.find(
+                      (t) => t.id === contextMenu.trackId
+                    );
+                    const clip = track?.clips.find(
+                      (c) => c.id === contextMenu.clipId
+                    );
+                    if (clip && track) {
+                      toggleClipMute(track.id, clip.id);
+                      toast.success(clip.muted ? "Clip unmuted" : "Clip muted");
+                    }
+                  }
+                  setContextMenu(null);
+                }}
+              >
+                {(() => {
+                  const track = tracks.find(
+                    (t) => t.id === contextMenu.trackId
+                  );
+                  const clip = track?.clips.find(
+                    (c) => c.id === contextMenu.clipId
+                  );
+                  return clip?.muted ? (
+                    <>
+                      <Volume2 className="h-4 w-4 mr-2" />
+                      Unmute Clip
+                    </>
+                  ) : (
+                    <>
+                      <VolumeX className="h-4 w-4 mr-2" />
+                      Mute Clip
+                    </>
+                  );
+                })()}
+              </button>
               <div className="h-px bg-border mx-1 my-1" />
               <button
                 className="flex items-center w-full px-3 py-2 text-destructive hover:bg-destructive/10 transition-colors text-left"
@@ -888,6 +911,7 @@ function TimelineTrackContent({
     addClipToTrack,
     removeClipFromTrack,
     toggleTrackMute,
+    toggleClipMute,
     selectedClip,
     selectClip,
   } = useTimelineStore();
@@ -1495,6 +1519,14 @@ function TimelineTrackContent({
                     onDragEnd={handleClipDragEnd}
                   >
                     {renderClipContent(clip)}
+                    {/* Mute indicator */}
+                    {clip.muted && (
+                      <div className="absolute top-1 left-1 z-10">
+                        <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                          <VolumeX className="h-2 w-2 text-white" />
+                        </div>
+                      </div>
+                    )}
                     {/* Clip options menu */}
                     <div className="absolute top-1 right-1 z-10">
                       <Button
