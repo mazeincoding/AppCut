@@ -33,7 +33,7 @@ export function Timeline() {
   // Timeline shows all tracks (video, audio, effects) and their clips.
   // You can drag media here to add it to your project.
   // Clips can be trimmed, deleted, and moved.
-  const { tracks, addTrack, addClipToTrack, removeTrack, toggleTrackMute } =
+  const { tracks, addTrack, addClipToTrack, removeTrack, toggleTrackMute, removeClipFromTrack, moveClipToTrack } =
     useTimelineStore();
   const { mediaItems, addMediaItem } = useMediaStore();
   const { currentTime, duration, seek } = usePlaybackStore();
@@ -42,11 +42,12 @@ export function Timeline() {
   const [zoomLevel, setZoomLevel] = useState(1);
   const dragCounterRef = useRef(0);
   const timelineRef = useRef<HTMLDivElement>(null);
-  // Track menu state
-  const [trackMenuOpen, setTrackMenuOpen] = useState<string | null>(null);
-  // Context menu state for tracks
+
+  // Unified context menu state
   const [contextMenu, setContextMenu] = useState<{
+    type: 'track' | 'clip';
     trackId: string;
+    clipId?: string;
     x: number;
     y: number;
   } | null>(null);
@@ -318,19 +319,17 @@ export function Timeline() {
                     return (
                       <div
                         key={i}
-                        className={`absolute top-0 bottom-0 ${
-                          isMainMarker
-                            ? "border-l border-muted-foreground/40"
-                            : "border-l border-muted-foreground/20"
-                        }`}
+                        className={`absolute top-0 bottom-0 ${isMainMarker
+                          ? "border-l border-muted-foreground/40"
+                          : "border-l border-muted-foreground/20"
+                          }`}
                         style={{ left: `${time * 50 * zoomLevel}px` }}
                       >
                         <span
-                          className={`absolute top-1 left-1 text-xs ${
-                            isMainMarker
-                              ? "text-muted-foreground font-medium"
-                              : "text-muted-foreground/70"
-                          }`}
+                          className={`absolute top-1 left-1 text-xs ${isMainMarker
+                            ? "text-muted-foreground font-medium"
+                            : "text-muted-foreground/70"
+                            }`}
                         >
                           {(() => {
                             const formatTime = (seconds: number) => {
@@ -391,13 +390,12 @@ export function Timeline() {
                   >
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       <div
-                        className={`w-3 h-3 rounded-full flex-shrink-0 ${
-                          track.type === "video"
-                            ? "bg-blue-500"
-                            : track.type === "audio"
-                              ? "bg-green-500"
-                              : "bg-purple-500"
-                        }`}
+                        className={`w-3 h-3 rounded-full flex-shrink-0 ${track.type === "video"
+                          ? "bg-blue-500"
+                          : track.type === "audio"
+                            ? "bg-green-500"
+                            : "bg-purple-500"
+                          }`}
                       />
                       <span className="text-sm font-medium truncate">
                         {track.name}
@@ -453,6 +451,7 @@ export function Timeline() {
                         onContextMenu={(e) => {
                           e.preventDefault();
                           setContextMenu({
+                            type: 'track',
                             trackId: track.id,
                             x: e.clientX,
                             y: e.clientY,
@@ -462,64 +461,9 @@ export function Timeline() {
                         <TimelineTrackContent
                           track={track}
                           zoomLevel={zoomLevel}
+                          setContextMenu={setContextMenu}
                         />
-                        {/* Render context menu if open for this track */}
-                        {contextMenu && contextMenu.trackId === track.id && (
-                          <TrackContextMenu
-                            x={contextMenu.x}
-                            y={contextMenu.y}
-                            track={track}
-                            onClose={() => setContextMenu(null)}
-                            onSplit={() => {
-                              // Split all clips at playhead
-                              track.clips.forEach((clip) => {
-                                const splitTime = currentTime;
-                                const effectiveStart = clip.startTime;
-                                const effectiveEnd =
-                                  clip.startTime +
-                                  (clip.duration -
-                                    clip.trimStart -
-                                    clip.trimEnd);
-                                if (
-                                  splitTime > effectiveStart &&
-                                  splitTime < effectiveEnd
-                                ) {
-                                  // First part: adjust original clip
-                                  useTimelineStore
-                                    .getState()
-                                    .updateClipTrim(
-                                      track.id,
-                                      clip.id,
-                                      clip.trimStart,
-                                      clip.trimEnd + (effectiveEnd - splitTime)
-                                    );
-                                  // Second part: add new clip after split
-                                  useTimelineStore
-                                    .getState()
-                                    .addClipToTrack(track.id, {
-                                      mediaId: clip.mediaId,
-                                      name: clip.name + " (cut)",
-                                      duration: clip.duration,
-                                      startTime: splitTime,
-                                      trimStart:
-                                        clip.trimStart +
-                                        (splitTime - effectiveStart),
-                                      trimEnd: clip.trimEnd,
-                                    });
-                                }
-                              });
-                              setContextMenu(null);
-                            }}
-                            onMute={() => {
-                              toggleTrackMute(track.id);
-                              setContextMenu(null);
-                            }}
-                            onDelete={() => {
-                              removeTrack(track.id);
-                              setContextMenu(null);
-                            }}
-                          />
-                        )}
+
                       </div>
                     ))}
 
@@ -538,6 +482,136 @@ export function Timeline() {
           </div>
         </div>
       </div>
+
+      {/* Clean Unified Context Menu */}
+      {contextMenu && (
+        <div
+          className="fixed z-50 min-w-[160px] bg-popover border border-border rounded-md shadow-md py-1 text-sm"
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          {contextMenu.type === 'track' ? (
+            // Track context menu
+            <>
+              <button
+                className="flex items-center w-full px-3 py-2 hover:bg-accent hover:text-accent-foreground transition-colors text-left"
+                onClick={() => {
+                  const track = tracks.find(t => t.id === contextMenu.trackId);
+                  if (track) toggleTrackMute(track.id);
+                  setContextMenu(null);
+                }}
+              >
+                {(() => {
+                  const track = tracks.find(t => t.id === contextMenu.trackId);
+                  return track?.muted ? (
+                    <>
+                      <Volume2 className="h-4 w-4 mr-2" />
+                      Unmute Track
+                    </>
+                  ) : (
+                    <>
+                      <VolumeX className="h-4 w-4 mr-2" />
+                      Mute Track
+                    </>
+                  );
+                })()}
+              </button>
+              <div className="h-px bg-border mx-1 my-1" />
+              <button
+                className="flex items-center w-full px-3 py-2 text-destructive hover:bg-destructive/10 transition-colors text-left"
+                onClick={() => {
+                  removeTrack(contextMenu.trackId);
+                  setContextMenu(null);
+                  toast.success("Track deleted");
+                }}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete Track
+              </button>
+            </>
+          ) : (
+            // Clip context menu
+            <>
+              <button
+                className="flex items-center w-full px-3 py-2 hover:bg-accent hover:text-accent-foreground transition-colors text-left"
+                onClick={() => {
+                  if (contextMenu.clipId) {
+                    const track = tracks.find(t => t.id === contextMenu.trackId);
+                    const clip = track?.clips.find(c => c.id === contextMenu.clipId);
+                    if (clip && track) {
+                      const splitTime = currentTime;
+                      const effectiveStart = clip.startTime;
+                      const effectiveEnd = clip.startTime + (clip.duration - clip.trimStart - clip.trimEnd);
+
+                      if (splitTime > effectiveStart && splitTime < effectiveEnd) {
+                        useTimelineStore.getState().updateClipTrim(
+                          track.id,
+                          clip.id,
+                          clip.trimStart,
+                          clip.trimEnd + (effectiveEnd - splitTime)
+                        );
+                        useTimelineStore.getState().addClipToTrack(track.id, {
+                          mediaId: clip.mediaId,
+                          name: clip.name + " (split)",
+                          duration: clip.duration,
+                          startTime: splitTime,
+                          trimStart: clip.trimStart + (splitTime - effectiveStart),
+                          trimEnd: clip.trimEnd,
+                        });
+                        toast.success("Clip split successfully");
+                      } else {
+                        toast.error("Playhead must be within clip to split");
+                      }
+                    }
+                  }
+                  setContextMenu(null);
+                }}
+              >
+                <Scissors className="h-4 w-4 mr-2" />
+                Split at Playhead
+              </button>
+              <button
+                className="flex items-center w-full px-3 py-2 hover:bg-accent hover:text-accent-foreground transition-colors text-left"
+                onClick={() => {
+                  if (contextMenu.clipId) {
+                    const track = tracks.find(t => t.id === contextMenu.trackId);
+                    const clip = track?.clips.find(c => c.id === contextMenu.clipId);
+                    if (clip && track) {
+                      useTimelineStore.getState().addClipToTrack(track.id, {
+                        mediaId: clip.mediaId,
+                        name: clip.name + " (copy)",
+                        duration: clip.duration,
+                        startTime: clip.startTime + (clip.duration - clip.trimStart - clip.trimEnd) + 0.1,
+                        trimStart: clip.trimStart,
+                        trimEnd: clip.trimEnd,
+                      });
+                      toast.success("Clip duplicated");
+                    }
+                  }
+                  setContextMenu(null);
+                }}
+              >
+                <Copy className="h-4 w-4 mr-2" />
+                Duplicate Clip
+              </button>
+              <div className="h-px bg-border mx-1 my-1" />
+              <button
+                className="flex items-center w-full px-3 py-2 text-destructive hover:bg-destructive/10 transition-colors text-left"
+                onClick={() => {
+                  if (contextMenu.clipId) {
+                    removeClipFromTrack(contextMenu.trackId, contextMenu.clipId);
+                    toast.success("Clip deleted");
+                  }
+                  setContextMenu(null);
+                }}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete Clip
+              </button>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -545,9 +619,11 @@ export function Timeline() {
 function TimelineTrackContent({
   track,
   zoomLevel,
+  setContextMenu,
 }: {
   track: TimelineTrack;
   zoomLevel: number;
+  setContextMenu: (menu: { type: 'track' | 'clip'; trackId: string; clipId?: string; x: number; y: number; } | null) => void;
 }) {
   const { mediaItems } = useMediaStore();
   const {
@@ -573,89 +649,10 @@ function TimelineTrackContent({
   } | null>(null);
   const dragCounterRef = useRef(0);
   const [clipMenuOpen, setClipMenuOpen] = useState<string | null>(null);
-  // Track-level context menu state (for empty areas)
-  const [trackContextMenu, setTrackContextMenu] = useState<{
-    x: number;
-    y: number;
-  } | null>(null);
-
-  // Clip-level context menu state (for specific clips)
-  const [clipContextMenu, setClipContextMenu] = useState<{
-    clipId: string;
-    x: number;
-    y: number;
-  } | null>(null);
-
-  // Auto-dismiss timer ref
-  const dismissTimerRef = useRef<NodeJS.Timeout>();
-
-  // Handle right-click on empty track area
-  const handleTrackContextMenu = (e: React.MouseEvent) => {
-    e.preventDefault();
-    // Only show track menu if we didn't click on a clip
-    if (!(e.target as HTMLElement).closest(".timeline-clip")) {
-      clearTimeout(dismissTimerRef.current);
-      setTrackContextMenu({
-        x: e.clientX,
-        y: e.clientY,
-      });
-      // Auto-dismiss after 3 seconds
-      dismissTimerRef.current = setTimeout(() => {
-        setTrackContextMenu(null);
-      }, 3000);
-    }
-  };
-
-  // Handle right-click on a clip
-  const handleClipContextMenu = (e: React.MouseEvent, clipId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    clearTimeout(dismissTimerRef.current);
-    setClipContextMenu({
-      clipId,
-      x: e.clientX,
-      y: e.clientY,
-    });
-    // Auto-dismiss after 3 seconds
-    dismissTimerRef.current = setTimeout(() => {
-      setClipContextMenu(null);
-    }, 3000);
-  };
-
-  // Close context menus when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      // Check if click is outside both menus
-      const isOutsideTrackMenu =
-        trackContextMenu &&
-        !(e.target as HTMLElement).closest(".track-context-menu");
-      const isOutsideClipMenu =
-        clipContextMenu &&
-        !(e.target as HTMLElement).closest(".clip-context-menu");
-
-      if (isOutsideTrackMenu) setTrackContextMenu(null);
-      if (isOutsideClipMenu) setClipContextMenu(null);
-    };
-
-    // Clean up any existing timer when component unmounts
-    const cleanup = () => clearTimeout(dismissTimerRef.current);
-
-    window.addEventListener("click", handleClickOutside);
-    return () => {
-      window.removeEventListener("click", handleClickOutside);
-      cleanup();
-    };
-  }, [trackContextMenu, clipContextMenu]);
 
   // Handle clip deletion
   const handleDeleteClip = (clipId: string) => {
-    // Find the clip to be deleted
-    const clipToDelete = track.clips.find((c) => c.id === clipId);
-    if (!clipToDelete) return;
-
-    // Remove only this specific clip from the track
     removeClipFromTrack(track.id, clipId);
-    setClipContextMenu(null);
   };
 
   const handleResizeStart = (
@@ -768,7 +765,7 @@ function TimelineTrackContent({
             return;
           }
         }
-      } catch (error) {}
+      } catch (error) { }
     }
 
     // Calculate drop position for overlap checking
@@ -984,8 +981,11 @@ function TimelineTrackContent({
         }
 
         if (fromTrackId === track.id) {
+          // Moving within same track
           updateClipStartTime(track.id, clipId, snappedTime);
         } else {
+          // Moving to different track
+          console.log('Moving clip from', fromTrackId, 'to', track.id);
           moveClipToTrack(fromTrackId, track.id, clipId);
           requestAnimationFrame(() => {
             updateClipStartTime(track.id, clipId, snappedTime);
@@ -1143,14 +1143,24 @@ function TimelineTrackContent({
 
   return (
     <div
-      className={`w-full h-full transition-all duration-150 ease-out ${
-        isDraggedOver
-          ? wouldOverlap
-            ? "bg-red-500/15 border-2 border-dashed border-red-400 shadow-lg"
-            : "bg-blue-500/15 border-2 border-dashed border-blue-400 shadow-lg"
-          : "hover:bg-muted/20"
-      }`}
-      onContextMenu={handleTrackContextMenu}
+      className={`w-full h-full transition-all duration-150 ease-out ${isDraggedOver
+        ? wouldOverlap
+          ? "bg-red-500/15 border-2 border-dashed border-red-400 shadow-lg"
+          : "bg-blue-500/15 border-2 border-dashed border-blue-400 shadow-lg"
+        : "hover:bg-muted/20"
+        }`}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        // Only show track menu if we didn't click on a clip
+        if (!(e.target as HTMLElement).closest(".timeline-clip")) {
+          setContextMenu({
+            type: 'track',
+            trackId: track.id,
+            x: e.clientX,
+            y: e.clientY,
+          });
+        }
+      }}
       onDragOver={handleTrackDragOver}
       onDragEnter={handleTrackDragEnter}
       onDragLeave={handleTrackDragLeave}
@@ -1162,13 +1172,12 @@ function TimelineTrackContent({
       <div className="h-full relative track-clips-container min-w-full">
         {track.clips.length === 0 ? (
           <div
-            className={`h-full w-full rounded-sm border-2 border-dashed flex items-center justify-center text-xs text-muted-foreground transition-colors ${
-              isDropping
-                ? wouldOverlap
-                  ? "border-red-500 bg-red-500/10 text-red-600"
-                  : "border-blue-500 bg-blue-500/10 text-blue-600"
-                : "border-muted/30"
-            }`}
+            className={`h-full w-full rounded-sm border-2 border-dashed flex items-center justify-center text-xs text-muted-foreground transition-colors ${isDropping
+              ? wouldOverlap
+                ? "border-red-500 bg-red-500/10 text-red-600"
+                : "border-blue-500 bg-blue-500/10 text-blue-600"
+              : "border-muted/30"
+              }`}
           >
             {isDropping
               ? wouldOverlap
@@ -1192,7 +1201,17 @@ function TimelineTrackContent({
                   key={clip.id}
                   className={`timeline-clip absolute h-full rounded-sm border transition-all duration-200 ${getTrackColor(track.type)} flex items-center py-3 min-w-[80px] overflow-hidden group hover:shadow-lg`}
                   style={{ width: `${clipWidth}px`, left: `${clipLeft}px` }}
-                  onContextMenu={(e) => handleClipContextMenu(e, clip.id)}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setContextMenu({
+                      type: 'clip',
+                      trackId: track.id,
+                      clipId: clip.id,
+                      x: e.clientX,
+                      y: e.clientY,
+                    });
+                  }}
                 >
                   {/* Left trim handle */}
                   <div
@@ -1250,28 +1269,24 @@ function TimelineTrackContent({
             {/* Drop position indicator */}
             {isDraggedOver && dropPosition !== null && (
               <div
-                className={`absolute top-0 bottom-0 w-1 pointer-events-none z-30 transition-all duration-75 ease-out ${
-                  wouldOverlap ? "bg-red-500" : "bg-blue-500"
-                }`}
+                className={`absolute top-0 bottom-0 w-1 pointer-events-none z-30 transition-all duration-75 ease-out ${wouldOverlap ? "bg-red-500" : "bg-blue-500"
+                  }`}
                 style={{
                   left: `${dropPosition * 50 * zoomLevel}px`,
                   transform: "translateX(-50%)",
                 }}
               >
                 <div
-                  className={`absolute -top-2 left-1/2 transform -translate-x-1/2 w-3 h-3 rounded-full border-2 border-white shadow-md ${
-                    wouldOverlap ? "bg-red-500" : "bg-blue-500"
-                  }`}
+                  className={`absolute -top-2 left-1/2 transform -translate-x-1/2 w-3 h-3 rounded-full border-2 border-white shadow-md ${wouldOverlap ? "bg-red-500" : "bg-blue-500"
+                    }`}
                 />
                 <div
-                  className={`absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-3 h-3 rounded-full border-2 border-white shadow-md ${
-                    wouldOverlap ? "bg-red-500" : "bg-blue-500"
-                  }`}
+                  className={`absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-3 h-3 rounded-full border-2 border-white shadow-md ${wouldOverlap ? "bg-red-500" : "bg-blue-500"
+                    }`}
                 />
                 <div
-                  className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-xs text-white px-1 py-0.5 rounded whitespace-nowrap ${
-                    wouldOverlap ? "bg-red-500" : "bg-blue-500"
-                  }`}
+                  className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-xs text-white px-1 py-0.5 rounded whitespace-nowrap ${wouldOverlap ? "bg-red-500" : "bg-blue-500"
+                    }`}
                 >
                   {wouldOverlap ? "⚠️" : ""}
                   {dropPosition.toFixed(1)}s
@@ -1281,75 +1296,7 @@ function TimelineTrackContent({
           </>
         )}
 
-        {/* Track Context Menu (for empty areas) */}
-        {trackContextMenu && (
-          <div
-            className="track-context-menu fixed z-50 min-w-[140px] bg-white border border-muted rounded-lg shadow-lg py-1 text-sm animate-fade-in text-black"
-            style={{
-              left: trackContextMenu.x + 4,
-              top: trackContextMenu.y + 4,
-            }}
-            onContextMenu={(e) => e.preventDefault()}
-          >
-            {/* Mute/Unmute option */}
-            <button
-              className="flex items-center w-full px-3 py-2 hover:bg-muted/20 transition-colors"
-              onClick={() => {
-                toggleTrackMute(track.id);
-                setTrackContextMenu(null);
-              }}
-            >
-              <span className="mr-2">
-                {track.muted ? (
-                  <VolumeX className="h-4 w-4" />
-                ) : (
-                  <Volume2 className="h-4 w-4" />
-                )}
-              </span>
-              {track.muted ? "Unmute Track" : "Mute Track"}
-            </button>
-          </div>
-        )}
 
-        {/* Clip Context Menu (for specific clips) */}
-        {clipContextMenu &&
-          track.clips.some((c) => c.id === clipContextMenu.clipId) && (
-            <div
-              className="clip-context-menu fixed z-50 min-w-[140px] bg-white border border-muted rounded-lg shadow-lg py-1 text-sm animate-fade-in text-black"
-              style={{
-                left: clipContextMenu.x + 4,
-                top: clipContextMenu.y + 4,
-              }}
-              onContextMenu={(e) => e.preventDefault()}
-            >
-              {/* Split option */}
-              <button
-                className="flex items-center w-full px-3 py-2 hover:bg-muted/20 transition-colors"
-                onClick={() => {
-                  const clip = track.clips.find(
-                    (c) => c.id === clipContextMenu.clipId
-                  );
-                  if (clip) handleSplitClip(clip);
-                  setClipContextMenu(null);
-                }}
-              >
-                <span className="mr-2">
-                  <Scissors className="h-4 w-4" />
-                </span>
-                Split at Playhead
-              </button>
-              {/* Delete clip option */}
-              <button
-                className="flex items-center w-full px-3 py-2 text-red-600 hover:bg-red-50 transition-colors"
-                onClick={() => handleDeleteClip(clipContextMenu.clipId)}
-              >
-                <span className="mr-2">
-                  <Trash2 className="h-4 w-4" />
-                </span>
-                Delete This Clip
-              </button>
-            </div>
-          )}
       </div>
     </div>
   );
