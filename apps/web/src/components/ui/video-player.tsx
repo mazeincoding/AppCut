@@ -9,72 +9,89 @@ interface VideoPlayerProps {
     src: string;
     poster?: string;
     className?: string;
-    startTime?: number;
+    clipStartTime: number;
+    trimStart: number;
+    trimEnd: number;
+    clipDuration: number;
 }
 
-export function VideoPlayer({ src, poster, className = "", startTime = 0 }: VideoPlayerProps) {
+export function VideoPlayer({
+    src,
+    poster,
+    className = "",
+    clipStartTime,
+    trimStart,
+    trimEnd,
+    clipDuration
+}: VideoPlayerProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
-    const { isPlaying, currentTime, volume, play, pause, setVolume, setDuration, setCurrentTime } = usePlaybackStore();
+    const { isPlaying, currentTime, volume, play, pause, setVolume } = usePlaybackStore();
+
+    // Calculate if we're within this clip's timeline range
+    const clipEndTime = clipStartTime + (clipDuration - trimStart - trimEnd);
+    const isInClipRange = currentTime >= clipStartTime && currentTime < clipEndTime;
+
+    // Calculate the video's internal time based on timeline position
+    const videoTime = Math.max(trimStart, Math.min(
+        clipDuration - trimEnd,
+        currentTime - clipStartTime + trimStart
+    ));
 
     useEffect(() => {
         const video = videoRef.current;
         if (!video) return;
 
-        const handleTimeUpdate = () => {
-            setCurrentTime(video.currentTime);
+        const handleSeekEvent = (e: CustomEvent) => {
+            if (!isInClipRange) return;
+            const timelineTime = e.detail.time;
+            const newVideoTime = Math.max(trimStart, Math.min(
+                clipDuration - trimEnd,
+                timelineTime - clipStartTime + trimStart
+            ));
+            video.currentTime = newVideoTime;
         };
 
-        const handleLoadedMetadata = () => {
-            setDuration(video.duration);
-            if (startTime > 0) {
-                video.currentTime = startTime;
+        const handleUpdateEvent = (e: CustomEvent) => {
+            if (!isInClipRange) return;
+            const timelineTime = e.detail.time;
+            const targetVideoTime = Math.max(trimStart, Math.min(
+                clipDuration - trimEnd,
+                timelineTime - clipStartTime + trimStart
+            ));
+
+            // Only sync if there's a significant difference
+            if (Math.abs(video.currentTime - targetVideoTime) > 0.2) {
+                video.currentTime = targetVideoTime;
             }
         };
 
-        const handleSeekEvent = (e: CustomEvent) => {
-            video.currentTime = e.detail.time;
-        };
-
-        video.addEventListener("timeupdate", handleTimeUpdate);
-        video.addEventListener("loadedmetadata", handleLoadedMetadata);
         window.addEventListener("playback-seek", handleSeekEvent as EventListener);
+        window.addEventListener("playback-update", handleUpdateEvent as EventListener);
 
         return () => {
-            video.removeEventListener("timeupdate", handleTimeUpdate);
-            video.removeEventListener("loadedmetadata", handleLoadedMetadata);
             window.removeEventListener("playback-seek", handleSeekEvent as EventListener);
+            window.removeEventListener("playback-update", handleUpdateEvent as EventListener);
         };
-    }, [setCurrentTime, setDuration]);
+    }, [clipStartTime, trimStart, trimEnd, clipDuration, isInClipRange]);
 
+    // Sync video playback state - only play if in clip range
     useEffect(() => {
         const video = videoRef.current;
         if (!video) return;
 
-        if (isPlaying) {
+        if (isPlaying && isInClipRange) {
             video.play().catch(console.error);
         } else {
             video.pause();
         }
-    }, [isPlaying]);
+    }, [isPlaying, isInClipRange]);
 
+    // Sync volume
     useEffect(() => {
         const video = videoRef.current;
         if (!video) return;
         video.volume = volume;
     }, [volume]);
-
-    const handleSeek = (e: React.MouseEvent<HTMLVideoElement>) => {
-        const video = videoRef.current;
-        if (!video) return;
-
-        const rect = video.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const percentage = x / rect.width;
-        const newTime = percentage * video.duration;
-
-        video.currentTime = newTime;
-        setCurrentTime(newTime);
-    };
 
     return (
         <div className={`relative group ${className}`}>
@@ -82,8 +99,7 @@ export function VideoPlayer({ src, poster, className = "", startTime = 0 }: Vide
                 ref={videoRef}
                 src={src}
                 poster={poster}
-                className="w-full h-full object-cover cursor-pointer"
-                onClick={handleSeek}
+                className="w-full h-full object-cover"
                 playsInline
                 preload="metadata"
             />

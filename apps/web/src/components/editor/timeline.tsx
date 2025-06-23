@@ -13,6 +13,8 @@ import {
   MoreVertical,
   Volume2,
   VolumeX,
+  Pause,
+  Play,
 } from "lucide-react";
 import {
   Tooltip,
@@ -31,10 +33,10 @@ export function Timeline() {
   // Timeline shows all tracks (video, audio, effects) and their clips.
   // You can drag media here to add it to your project.
   // Clips can be trimmed, deleted, and moved.
-  const { tracks, addTrack, addClipToTrack, removeTrack, toggleTrackMute, removeClipFromTrack, moveClipToTrack } =
+  const { tracks, addTrack, addClipToTrack, removeTrack, toggleTrackMute, removeClipFromTrack, moveClipToTrack, getTotalDuration } =
     useTimelineStore();
   const { mediaItems, addMediaItem } = useMediaStore();
-  const { currentTime, duration, seek } = usePlaybackStore();
+  const { currentTime, duration, seek, setDuration, isPlaying, play, pause, toggle } = usePlaybackStore();
   const [isDragOver, setIsDragOver] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
@@ -49,6 +51,12 @@ export function Timeline() {
     x: number;
     y: number;
   } | null>(null);
+
+  // Update timeline duration when tracks change
+  useEffect(() => {
+    const totalDuration = getTotalDuration();
+    setDuration(Math.max(totalDuration, 10)); // Minimum 10 seconds for empty timeline
+  }, [tracks, setDuration, getTotalDuration]);
 
   // Close context menu on click elsewhere
   useEffect(() => {
@@ -208,6 +216,59 @@ export function Timeline() {
       {/* Toolbar */}
       <div className="border-b flex items-center px-2 py-1 gap-1">
         <TooltipProvider delayDuration={500}>
+          {/* Play/Pause Button */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggle}
+                className="mr-2"
+              >
+                {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{isPlaying ? "Pause (Space)" : "Play (Space)"}</TooltipContent>
+          </Tooltip>
+
+          <div className="w-px h-6 bg-border mx-1" />
+
+          {/* Time Display */}
+          <div className="text-xs text-muted-foreground font-mono px-2">
+            {Math.floor(currentTime * 10) / 10}s / {Math.floor(duration * 10) / 10}s
+          </div>
+
+          <div className="w-px h-6 bg-border mx-1" />
+
+          {/* Test Clip Button - for debugging */}
+          {tracks.length === 0 && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const trackId = addTrack("video");
+                    addClipToTrack(trackId, {
+                      mediaId: "test",
+                      name: "Test Clip",
+                      duration: 5,
+                      startTime: 0,
+                      trimStart: 0,
+                      trimEnd: 0,
+                    });
+                  }}
+                  className="text-xs"
+                >
+                  Add Test Clip
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Add a test clip to try playback</TooltipContent>
+            </Tooltip>
+          )}
+
+          <div className="w-px h-6 bg-border mx-1" />
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="ghost" size="icon">

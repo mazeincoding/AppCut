@@ -36,7 +36,7 @@ export function PreviewPanel() {
   const aspectRatio = activeMediaItem?.aspectRatio || 16 / 9;
 
   const renderContent = () => {
-    if (!activeMediaItem || !activeClip) {
+    if (!activeClip) {
       return (
         <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/50">
           {tracks.length === 0 ? "Drop media to start editing" : "No clip at current time"}
@@ -44,8 +44,26 @@ export function PreviewPanel() {
       );
     }
 
-    // Calculate the relative time within the clip (accounting for trim)
-    const relativeTime = Math.max(0, currentTime - activeClip.startTime + activeClip.trimStart);
+    // Handle test clips without media items
+    if (!activeMediaItem && activeClip.mediaId === "test") {
+      return (
+        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-500/20 to-purple-500/20">
+          <div className="text-center">
+            <div className="text-6xl mb-4">🎬</div>
+            <p className="text-muted-foreground">{activeClip.name}</p>
+            <p className="text-xs text-muted-foreground/70 mt-2">Test clip for playback</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (!activeMediaItem) {
+      return (
+        <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/50">
+          Media not found
+        </div>
+      );
+    }
 
     if (activeMediaItem.type === "video") {
       return (
@@ -53,7 +71,10 @@ export function PreviewPanel() {
           src={activeMediaItem.url}
           poster={activeMediaItem.thumbnailUrl}
           className="w-full h-full"
-          startTime={relativeTime}
+          clipStartTime={activeClip.startTime}
+          trimStart={activeClip.trimStart}
+          trimEnd={activeClip.trimEnd}
+          clipDuration={activeClip.duration}
           key={`${activeClip.id}-${activeClip.trimStart}-${activeClip.trimEnd}`}
         />
       );
