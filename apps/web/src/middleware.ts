@@ -7,7 +7,7 @@ export async function middleware(request: NextRequest) {
   const session = getSessionCookie(request);
 
   if (path === "/editor" && !session && process.env.NODE_ENV === "production") {
-    const loginUrl = new URL("/auth/login", request.url);
+    const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", request.url);
     return NextResponse.redirect(loginUrl);
   }

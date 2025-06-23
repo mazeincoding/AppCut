@@ -77,14 +77,21 @@ function LoginForm() {
         size="lg"
         disabled={isAnyLoading}
       >
-        {isGoogleLoading ? <Loader2 className="animate-spin" /> : (<GoogleIcon />)} Continue with Google
+        {isGoogleLoading ? (
+          <Loader2 className="animate-spin" />
+        ) : (
+          <GoogleIcon />
+        )}{" "}
+        Continue with Google
       </Button>
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
           <Separator className="w-full" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+          <span className="bg-background px-2 text-muted-foreground">
+            Or continue with
+          </span>
         </div>
       </div>
       <div className="space-y-4">
@@ -144,14 +151,21 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-0">
-          <Suspense fallback={<div className="text-center">
-            <Loader2 className="animate-spin" />
-          </div>}>
+          <Suspense
+            fallback={
+              <div className="text-center">
+                <Loader2 className="animate-spin" />
+              </div>
+            }
+          >
             <LoginForm />
           </Suspense>
           <div className="mt-6 text-center text-sm">
             Don't have an account?{" "}
-            <Link href="/auth/signup" className="font-medium text-primary underline-offset-4 hover:underline">
+            <Link
+              href="/signup"
+              className="font-medium text-primary underline-offset-4 hover:underline"
+            >
               Sign up
             </Link>
           </div>
