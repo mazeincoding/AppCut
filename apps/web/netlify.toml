@@ -4,3 +4,9 @@
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+[[redirects]]
+  from = "https://appcut.app/*"
+  to = "https://opencut.app/:splat"
+  status = 301
+  force = true
