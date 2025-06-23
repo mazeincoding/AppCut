@@ -8,6 +8,7 @@ export interface TimelineClip {
   startTime: number;
   trimStart: number;
   trimEnd: number;
+  muted?: boolean;
 }
 
 export interface TimelineTrack {
@@ -20,6 +21,11 @@ export interface TimelineTrack {
 
 interface TimelineStore {
   tracks: TimelineTrack[];
+
+  // Selection
+  selectedClip: { trackId: string; clipId: string } | null;
+  selectClip: (trackId: string, clipId: string) => void;
+  clearSelectedClip: () => void;
 
   // Actions
   addTrack: (type: "video" | "audio" | "effects") => string;
@@ -43,6 +49,7 @@ interface TimelineStore {
     startTime: number
   ) => void;
   toggleTrackMute: (trackId: string) => void;
+  toggleClipMute: (trackId: string, clipId: string) => void;
 
   // Computed values
   getTotalDuration: () => number;
@@ -50,6 +57,14 @@ interface TimelineStore {
 
 export const useTimelineStore = create<TimelineStore>((set, get) => ({
   tracks: [],
+  selectedClip: null,
+
+  selectClip: (trackId, clipId) => {
+    set({ selectedClip: { trackId, clipId } });
+  },
+  clearSelectedClip: () => {
+    set({ selectedClip: null });
+  },
 
   addTrack: (type) => {
     const newTrack: TimelineTrack = {
@@ -78,6 +93,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
       startTime: clipData.startTime || 0,
       trimStart: 0,
       trimEnd: 0,
+      muted: false,
     };
 
     set((state) => ({
@@ -162,6 +178,21 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
     set((state) => ({
       tracks: state.tracks.map((track) =>
         track.id === trackId ? { ...track, muted: !track.muted } : track
+      ),
+    }));
+  },
+
+  toggleClipMute: (trackId, clipId) => {
+    set((state) => ({
+      tracks: state.tracks.map((track) =>
+        track.id === trackId
+          ? {
+              ...track,
+              clips: track.clips.map((clip) =>
+                clip.id === clipId ? { ...clip, muted: !clip.muted } : clip
+              ),
+            }
+          : track
       ),
     }));
   },

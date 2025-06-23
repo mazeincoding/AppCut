@@ -6,29 +6,46 @@ interface PlaybackStore extends PlaybackState, PlaybackControls {
   setCurrentTime: (time: number) => void;
 }
 
-let playbackTimer: NodeJS.Timeout | null = null;
+let playbackTimer: number | null = null;
 
 const startTimer = (store: any) => {
-  if (playbackTimer) clearInterval(playbackTimer);
-  
-  playbackTimer = setInterval(() => {
+  if (playbackTimer) cancelAnimationFrame(playbackTimer);
+
+  // Use requestAnimationFrame for smoother updates
+  const updateTime = () => {
     const state = store();
     if (state.isPlaying && state.currentTime < state.duration) {
-      const newTime = state.currentTime + 0.1;
+      const now = performance.now();
+      const delta = (now - lastUpdate) / 1000; // Convert to seconds
+      lastUpdate = now;
+
+      const newTime = state.currentTime + delta * state.speed;
       if (newTime >= state.duration) {
-        state.pause();
+        // Loop: restart from 0 and keep playing
+        state.seek(0);
+        state.setCurrentTime(0);
+        // Notify video elements to sync
+        window.dispatchEvent(
+          new CustomEvent("playback-update", { detail: { time: 0 } })
+        );
       } else {
         state.setCurrentTime(newTime);
         // Notify video elements to sync
-        window.dispatchEvent(new CustomEvent('playback-update', { detail: { time: newTime } }));
+        window.dispatchEvent(
+          new CustomEvent("playback-update", { detail: { time: newTime } })
+        );
       }
     }
-  }, 100);
+    playbackTimer = requestAnimationFrame(updateTime);
+  };
+
+  let lastUpdate = performance.now();
+  playbackTimer = requestAnimationFrame(updateTime);
 };
 
 const stopTimer = () => {
   if (playbackTimer) {
-    clearInterval(playbackTimer);
+    cancelAnimationFrame(playbackTimer);
     playbackTimer = null;
   }
 };
@@ -38,6 +55,7 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => ({
   currentTime: 0,
   duration: 0,
   volume: 1,
+  speed: 1.0,
 
   play: () => {
     set({ isPlaying: true });
@@ -62,12 +80,27 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => ({
     const { duration } = get();
     const clampedTime = Math.max(0, Math.min(duration, time));
     set({ currentTime: clampedTime });
-    
+
     // Notify video elements to seek
-    window.dispatchEvent(new CustomEvent('playback-seek', { detail: { time: clampedTime } }));
+    const event = new CustomEvent("playback-seek", {
+      detail: { time: clampedTime },
+    });
+    window.dispatchEvent(event);
   },
-  
-  setVolume: (volume: number) => set({ volume: Math.max(0, Math.min(1, volume)) }),
+
+  setVolume: (volume: number) =>
+    set({ volume: Math.max(0, Math.min(1, volume)) }),
+
+  setSpeed: (speed: number) => {
+    const newSpeed = Math.max(0.1, Math.min(2.0, speed));
+    set({ speed: newSpeed });
+
+    const event = new CustomEvent("playback-speed", {
+      detail: { speed: newSpeed },
+    });
+    window.dispatchEvent(event);
+  },
+
   setDuration: (duration: number) => set({ duration }),
   setCurrentTime: (time: number) => set({ currentTime: time }),
-})); 
+}));
