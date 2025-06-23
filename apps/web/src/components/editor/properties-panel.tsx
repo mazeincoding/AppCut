@@ -16,6 +16,7 @@ import { useTimelineStore } from "@/stores/timeline-store";
 import { useMediaStore } from "@/stores/media-store";
 import { ImageTimelineTreatment } from "@/components/ui/image-timeline-treatment";
 import { useState } from "react";
+import { SpeedControl } from "./speed-control";
 
 export function PropertiesPanel() {
   const { tracks } = useTimelineStore();
@@ -191,6 +192,8 @@ export function PropertiesPanel() {
             </div>
           </div>
         </div>
+
+        <SpeedControl />
       </div>
     </ScrollArea>
   );

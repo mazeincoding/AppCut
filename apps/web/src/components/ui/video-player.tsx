@@ -14,7 +14,7 @@ interface VideoPlayerProps {
 
 export function VideoPlayer({ src, poster, className = "", startTime = 0 }: VideoPlayerProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
-    const { isPlaying, currentTime, volume, play, pause, setVolume, setDuration, setCurrentTime } = usePlaybackStore();
+    const { isPlaying, currentTime, volume, speed, play, pause, setVolume, setDuration, setCurrentTime } = usePlaybackStore();
 
     useEffect(() => {
         const video = videoRef.current;
@@ -35,14 +35,20 @@ export function VideoPlayer({ src, poster, className = "", startTime = 0 }: Vide
             video.currentTime = e.detail.time;
         };
 
+        const handleSpeedEvent = (e: CustomEvent) => {
+            video.playbackRate = e.detail.speed;
+        };
+
         video.addEventListener("timeupdate", handleTimeUpdate);
         video.addEventListener("loadedmetadata", handleLoadedMetadata);
         window.addEventListener("playback-seek", handleSeekEvent as EventListener);
+        window.addEventListener("playback-speed", handleSpeedEvent as EventListener);
 
         return () => {
             video.removeEventListener("timeupdate", handleTimeUpdate);
             video.removeEventListener("loadedmetadata", handleLoadedMetadata);
             window.removeEventListener("playback-seek", handleSeekEvent as EventListener);
+            window.removeEventListener("playback-speed", handleSpeedEvent as EventListener);
         };
     }, [setCurrentTime, setDuration]);
 
@@ -62,6 +68,12 @@ export function VideoPlayer({ src, poster, className = "", startTime = 0 }: Vide
         if (!video) return;
         video.volume = volume;
     }, [volume]);
+
+    useEffect(() => {
+        const video = videoRef.current;
+        if (!video) return;
+        video.playbackRate = speed;
+    }, [speed]);
 
     const handleSeek = (e: React.MouseEvent<HTMLVideoElement>) => {
         const video = videoRef.current;

@@ -11,6 +11,7 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => ({
   currentTime: 0,
   duration: 0,
   volume: 1,
+  speed: 1.0,
 
   play: () => set({ isPlaying: true }),
   pause: () => set({ isPlaying: false }),
@@ -25,6 +26,14 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => ({
     window.dispatchEvent(event);
   },
   setVolume: (volume: number) => set({ volume: Math.max(0, Math.min(1, volume)) }),
+  setSpeed: (speed: number) => {
+    const newSpeed = Math.max(0.1, Math.min(2.0, speed));
+    set({ speed: newSpeed });
+    
+    // Notify video element to update playback rate
+    const event = new CustomEvent('playback-speed', { detail: { speed: newSpeed } });
+    window.dispatchEvent(event);
+  },
   setDuration: (duration: number) => set({ duration }),
   setCurrentTime: (time: number) => set({ currentTime: time }),
 })); 

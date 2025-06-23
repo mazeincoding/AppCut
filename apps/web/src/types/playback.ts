@@ -3,6 +3,7 @@ export interface PlaybackState {
   currentTime: number;
   duration: number;
   volume: number;
+  speed: number;
 }
 
 export interface PlaybackControls {
@@ -10,5 +11,6 @@ export interface PlaybackControls {
   pause: () => void;
   seek: (time: number) => void;
   setVolume: (volume: number) => void;
+  setSpeed: (speed: number) => void;
   toggle: () => void;
 } 
