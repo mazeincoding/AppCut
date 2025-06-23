@@ -9,6 +9,9 @@ export interface MediaItem {
   thumbnailUrl?: string; // For video thumbnails
   duration?: number; // For video/audio duration
   aspectRatio: number; // width / height
+  width?: number; // Resolution width in pixels
+  height?: number; // Resolution height in pixels
+  resolution?: string; // Human-readable resolution (e.g., "1920x1080", "4K", "HD")
 }
 
 interface MediaStore {
@@ -37,14 +40,18 @@ export const getFileType = (file: File): "image" | "video" | "audio" | null => {
   return null;
 };
 
-// Helper function to get image aspect ratio
-export const getImageAspectRatio = (file: File): Promise<number> => {
+// Helper function to get image dimensions and aspect ratio
+export const getImageDimensions = (file: File): Promise<{ width: number; height: number; aspectRatio: number; resolution: string }> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
 
     img.addEventListener("load", () => {
-      const aspectRatio = img.naturalWidth / img.naturalHeight;
-      resolve(aspectRatio);
+      const width = img.naturalWidth;
+      const height = img.naturalHeight;
+      const aspectRatio = width / height;
+      const resolution = getResolutionLabel(width, height);
+      
+      resolve({ width, height, aspectRatio, resolution });
       img.remove();
     });
 
@@ -57,10 +64,21 @@ export const getImageAspectRatio = (file: File): Promise<number> => {
   });
 };
 
-// Helper function to generate video thumbnail and get aspect ratio
+// Helper function to get image aspect ratio (legacy - use getImageDimensions for full info)
+export const getImageAspectRatio = (file: File): Promise<number> => {
+  return getImageDimensions(file).then(({ aspectRatio }) => aspectRatio);
+};
+
+// Helper function to generate video thumbnail and get full video metadata
 export const generateVideoThumbnail = (
   file: File
-): Promise<{ thumbnailUrl: string; aspectRatio: number }> => {
+): Promise<{ 
+  thumbnailUrl: string; 
+  aspectRatio: number; 
+  width: number; 
+  height: number; 
+  resolution: string;
+}> => {
   return new Promise((resolve, reject) => {
     const video = document.createElement("video");
     const canvas = document.createElement("canvas");
@@ -82,9 +100,12 @@ export const generateVideoThumbnail = (
     video.addEventListener("seeked", () => {
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       const thumbnailUrl = canvas.toDataURL("image/jpeg", 0.8);
-      const aspectRatio = video.videoWidth / video.videoHeight;
+      const width = video.videoWidth;
+      const height = video.videoHeight;
+      const aspectRatio = width / height;
+      const resolution = getResolutionLabel(width, height);
 
-      resolve({ thumbnailUrl, aspectRatio });
+      resolve({ thumbnailUrl, aspectRatio, width, height, resolution });
 
       // Cleanup
       video.remove();
@@ -122,6 +143,28 @@ export const getMediaDuration = (file: File): Promise<number> => {
     element.src = URL.createObjectURL(file);
     element.load();
   });
+};
+
+// Helper function to get human-readable resolution labels
+export const getResolutionLabel = (width: number, height: number): string => {
+  // Common resolution names
+  if (width === 7680 && height === 4320) return "8K UHD (7680x4320)";
+  if (width === 3840 && height === 2160) return "4K UHD (3840x2160)";
+  if (width === 2560 && height === 1440) return "QHD (2560x1440)";
+  if (width === 1920 && height === 1080) return "Full HD (1920x1080)";
+  if (width === 1280 && height === 720) return "HD (1280x720)";
+  if (width === 854 && height === 480) return "SD (854x480)";
+  if (width === 640 && height === 360) return "360p (640x360)";
+  
+  // For non-standard resolutions, check general categories
+  if (width >= 7680) return `8K (${width}x${height})`;
+  if (width >= 3840) return `4K (${width}x${height})`;
+  if (width >= 2560) return `QHD (${width}x${height})`;
+  if (width >= 1920) return `Full HD (${width}x${height})`;
+  if (width >= 1280) return `HD (${width}x${height})`;
+  if (width >= 854) return `SD (${width}x${height})`;
+  
+  return `${width}x${height}`;
 };
 
 export const useMediaStore = create<MediaStore>((set, get) => ({

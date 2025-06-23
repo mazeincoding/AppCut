@@ -88,13 +88,20 @@ export function MediaPanel() {
 
     if (item.type === "image") {
       return (
-        <img
-          src={item.url}
-          alt={item.name}
-          className="w-full h-full object-cover rounded cursor-grab active:cursor-grabbing"
-          loading="lazy"
-          {...baseDragProps}
-        />
+        <div className="relative w-full h-full cursor-grab active:cursor-grabbing" {...baseDragProps}>
+          <img
+            src={item.url}
+            alt={item.name}
+            className="w-full h-full object-cover rounded"
+            loading="lazy"
+          />
+          {/* Resolution indicator for images */}
+          {item.resolution && (
+            <div className="absolute top-1 left-1 bg-black/70 text-white text-xs px-1 rounded">
+              {item.resolution}
+            </div>
+          )}
+        </div>
       );
     }
 
@@ -114,9 +121,16 @@ export function MediaPanel() {
             <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded">
               <Video className="h-6 w-6 text-white drop-shadow-md" />
             </div>
+            {/* Duration indicator */}
             {item.duration && (
               <div className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1 rounded">
                 {formatDuration(item.duration)}
+              </div>
+            )}
+            {/* Resolution indicator for videos */}
+            {item.resolution && (
+              <div className="absolute top-1 left-1 bg-black/70 text-white text-xs px-1 rounded">
+                {item.resolution}
               </div>
             )}
           </div>
@@ -132,6 +146,12 @@ export function MediaPanel() {
           {item.duration && (
             <span className="text-xs opacity-70">
               {formatDuration(item.duration)}
+            </span>
+          )}
+          {/* Resolution for videos without thumbnails */}
+          {item.resolution && (
+            <span className="text-xs opacity-70">
+              {item.resolution}
             </span>
           )}
         </div>

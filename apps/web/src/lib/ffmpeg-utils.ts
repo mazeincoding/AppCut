@@ -100,29 +100,100 @@ export const getVideoInfo = async (videoFile: File): Promise<{
   width: number;
   height: number;
   fps: number;
+  bitrate?: number;
+  codec?: string;
 }> => {
   const ffmpeg = await initFFmpeg();
   
   const inputName = 'input.mp4';
   
-  // Write input file
-  await ffmpeg.writeFile(inputName, new Uint8Array(await videoFile.arrayBuffer()));
-  
-  // Get video info
-  await ffmpeg.exec(['-i', inputName, '-f', 'null', '-']);
-  
-  // Note: In a real implementation, you'd parse the FFmpeg output
-  // For now, we'll return default values and enhance this later
-  
-  // Cleanup
-  await ffmpeg.deleteFile(inputName);
-  
-  return {
-    duration: 10, // Placeholder - would parse from FFmpeg output
-    width: 1920,  // Placeholder
-    height: 1080, // Placeholder
-    fps: 30       // Placeholder
-  };
+  try {
+    // Write input file
+    await ffmpeg.writeFile(inputName, new Uint8Array(await videoFile.arrayBuffer()));
+    
+    // Get video info using ffprobe-like functionality
+    let output = '';
+    ffmpeg.on('log', ({ message }) => {
+      output += message + '\n';
+    });
+    
+    // Run ffmpeg with probe-like options to get video information
+    await ffmpeg.exec([
+      '-i', inputName,
+      '-f', 'null', 
+      '-'
+    ]);
+    
+    // Parse the output for video information
+    const videoInfoMatch = output.match(/Stream #\d+:\d+.*Video: (.+?), (\d+)x(\d+).*?(\d+(?:\.\d+)?) fps/);
+    const durationMatch = output.match(/Duration: (\d{2}):(\d{2}):(\d{2}\.\d{2})/);
+    const bitrateMatch = output.match(/bitrate: (\d+) kb\/s/);
+    
+    let width = 1920, height = 1080, fps = 30, duration = 0;
+    let codec = '', bitrate = 0;
+    
+    if (videoInfoMatch) {
+      codec = videoInfoMatch[1].split(',')[0].trim();
+      width = parseInt(videoInfoMatch[2]);
+      height = parseInt(videoInfoMatch[3]);
+      fps = parseFloat(videoInfoMatch[4]);
+    }
+    
+    if (durationMatch) {
+      const hours = parseInt(durationMatch[1]);
+      const minutes = parseInt(durationMatch[2]);
+      const seconds = parseFloat(durationMatch[3]);
+      duration = hours * 3600 + minutes * 60 + seconds;
+    }
+    
+    if (bitrateMatch) {
+      bitrate = parseInt(bitrateMatch[1]);
+    }
+    
+    // Cleanup
+    await ffmpeg.deleteFile(inputName);
+    
+    return {
+      duration,
+      width,
+      height,
+      fps,
+      bitrate,
+      codec,
+    };
+  } catch (error) {
+    // Cleanup on error
+    try {
+      await ffmpeg.deleteFile(inputName);
+    } catch {
+      // Ignore cleanup errors
+    }
+    
+    // Return fallback values if FFmpeg fails
+    console.warn('FFmpeg video info extraction failed, using HTML5 video element as fallback');
+    
+    // Fallback to HTML5 video element for basic info
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video');
+      video.addEventListener('loadedmetadata', () => {
+        resolve({
+          duration: video.duration,
+          width: video.videoWidth,
+          height: video.videoHeight,
+          fps: 30, // Default fps when not available
+        });
+        video.remove();
+      });
+      
+      video.addEventListener('error', () => {
+        reject(new Error('Could not extract video info'));
+        video.remove();
+      });
+      
+      video.src = URL.createObjectURL(videoFile);
+      video.load();
+    });
+  }
 };
 
 export const convertToWebM = async (

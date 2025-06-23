@@ -3,9 +3,11 @@
 import { useTimelineStore } from "@/stores/timeline-store";
 import { useMediaStore } from "@/stores/media-store";
 import { usePlaybackStore } from "@/stores/playback-store";
+import { useProjectStore } from "@/stores/project-store";
 import { VideoPlayer } from "@/components/ui/video-player";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, Move, RotateCw, Crop, ZoomIn, ZoomOut } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Play, Pause, Move, RotateCw, Crop, ZoomIn, ZoomOut, Monitor } from "lucide-react";
 import { useState, useRef, useEffect, useCallback } from "react";
 
 interface ClipTransform {
@@ -36,11 +38,24 @@ export function PreviewPanel() {
   const { tracks } = useTimelineStore();
   const { mediaItems } = useMediaStore();
   const { isPlaying, toggle, currentTime } = usePlaybackStore();
+  const { activeProject } = useProjectStore();
 
   const [clipTransforms, setClipTransforms] = useState<Record<string, ClipTransform>>({});
-  const [canvasSize, setCanvasSize] = useState({ width: 1920, height: 1080 }); // Default 16:9
+  const [canvasSize, setCanvasSize] = useState({ 
+    width: activeProject?.resolution?.width || 1920, 
+    height: activeProject?.resolution?.height || 1080 
+  });
   const [dragState, setDragState] = useState<DragState | null>(null);
   const previewRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (activeProject?.resolution) {
+      setCanvasSize({
+        width: activeProject.resolution.width,
+        height: activeProject.resolution.height
+      });
+    }
+  }, [activeProject?.resolution]);
 
   // Get all active clips at current time (for overlaying)
   const getActiveClips = () => {
@@ -266,8 +281,6 @@ export function PreviewPanel() {
     }
   }, [tracks, currentTime]); // Re-run when tracks or time changes
 
-
-
   // Render a single clip layer
   const renderClipLayer = (clipData: any, index: number) => {
     const { clip, mediaItem } = clipData;
@@ -402,18 +415,50 @@ export function PreviewPanel() {
   };
 
   // Canvas size presets
-  const canvasPresets = [
-    { name: "16:9 HD", width: 1920, height: 1080 },
-    { name: "16:9 4K", width: 3840, height: 2160 },
-    { name: "9:16 Mobile", width: 1080, height: 1920 },
-    { name: "1:1 Square", width: 1080, height: 1080 },
-    { name: "4:3 Standard", width: 1440, height: 1080 },
-  ];
+  const getCanvasPresets = () => {
+    const basePresets = [
+      { name: "16:9 HD", width: 1920, height: 1080 },
+      { name: "16:9 4K", width: 3840, height: 2160 },
+      { name: "9:16 Mobile", width: 1080, height: 1920 },
+      { name: "1:1 Square", width: 1080, height: 1080 },
+      { name: "4:3 Standard", width: 1440, height: 1080 },
+    ];
+
+    // Add project resolution as first option if it exists and is different from presets
+    if (activeProject?.resolution) {
+      const { width, height, label } = activeProject.resolution;
+      const existsInPresets = basePresets.some(p => p.width === width && p.height === height);
+      
+      if (!existsInPresets) {
+        return [
+          { name: `Project: ${label}`, width, height },
+          ...basePresets
+        ];
+      }
+    }
+
+    return basePresets;
+  };
+
+  const canvasPresets = getCanvasPresets();
 
   return (
     <div className="h-full flex flex-col">
       {/* Canvas Controls */}
       <div className="border-b p-2 flex items-center gap-2 text-xs">
+        {/* Project Resolution Info */}
+        {activeProject?.resolution && (
+          <div className="flex items-center gap-2">
+            <Monitor className="h-3 w-3" />
+            <Badge variant={activeProject.resolution.autoDetected ? "default" : "secondary"} className="text-xs">
+              {activeProject.resolution.label}
+            </Badge>
+            {activeProject.resolution.autoDetected && (
+              <span className="text-muted-foreground text-xs">Auto</span>
+            )}
+          </div>
+        )}
+
         <span className="text-muted-foreground">Canvas:</span>
         <select
           value={`${canvasSize.width}x${canvasSize.height}`}

@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { Button } from "./ui/button";
-import { ChevronLeft, Download } from "lucide-react";
+import { Badge } from "./ui/badge";
+import { ChevronLeft, Download, Monitor } from "lucide-react";
 import { useProjectStore } from "@/stores/project-store";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { HeaderBase } from "./header-base";
@@ -34,8 +35,24 @@ export function EditorHeader() {
   );
 
   const centerContent = (
-    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+    <div className="flex items-center gap-4 text-xs text-muted-foreground">
       <span>{formatDuration(getTotalDuration())}</span>
+      
+      {/* Project Resolution Info */}
+      {activeProject?.resolution && (
+        <div className="flex items-center gap-2">
+          <Monitor className="h-3 w-3" />
+          <Badge 
+            variant={activeProject.resolution.autoDetected ? "default" : "secondary"} 
+            className="text-xs"
+          >
+            {activeProject.resolution.label}
+          </Badge>
+          {activeProject.resolution.autoDetected && (
+            <span className="text-xs">auto</span>
+          )}
+        </div>
+      )}
     </div>
   );
 
