@@ -16,13 +16,12 @@
   "asar": false,
   "mac": {
     "category": "public.app-category.video",
-    "target": "dmg"
+    "target": "dmg",
+    "icon": "build-icons/icon.icns"
   },
   "win": {
-    "target": "nsis"
-  },
-  "linux": {
-    "target": "AppImage"
+    "target": "nsis",
+    "icon": "build-icons/icon.ico"
   },
   "nsis": {
     "oneClick": false,

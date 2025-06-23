@@ -6,6 +6,12 @@ const nextConfig: NextConfig = {
   },
   reactStrictMode: true,
   productionBrowserSourceMaps: true,
+  ...(process.env.ELECTRON_BUILD
+    ? {
+        output: "export",
+        basePath: "",
+      }
+    : {}),
 };
 
 export default nextConfig;
