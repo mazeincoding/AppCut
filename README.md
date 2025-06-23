@@ -47,19 +47,6 @@ OpenCut is designed as a **privacy-first, offline-capable** video editor:
 - **Optional database** - only needed for the waitlist feature on the website
 - **No servers required** - the editor works completely offline
 
-### Optional Features (Web only)
-
-The waitlist signup is the only feature that uses a server. Set these environment variables if you want it:
-
-```bash
-# Optional: For waitlist functionality
-DATABASE_URL="postgresql://..."
-UPSTASH_REDIS_REST_URL="..."
-UPSTASH_REDIS_REST_TOKEN="..."
-```
-
-**The video editor works perfectly without any of these!**
-
 ## Production Build
 
 ### Desktop App
@@ -68,7 +55,7 @@ cd apps/desktop
 npm run build
 ```
 
-Creates installers for macOS, Windows, and Linux.
+Creates installers for MacOS and Windows.
 
 ### Web App
 ```bash
