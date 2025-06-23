@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    tags:
+      - '*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-desktop-macos:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: apps/desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: apps/desktop/package-lock.json
+      - run: npm install
+      - name: Install web dependencies
+        run: npm install
+        working-directory: apps/web
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-build
+          path: |
+            apps/desktop/dist/*.dmg
+            apps/desktop/dist/*.zip
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            apps/desktop/dist/*.dmg
+            apps/desktop/dist/*.zip
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
+          body: |
+            Also accessible on https://opencut.app/
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-desktop-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: apps/desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: apps/desktop/package-lock.json
+      - run: npm install
+      - name: Install web dependencies
+        run: npm install
+        working-directory: apps/web
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: |
+            apps/desktop/dist/*.exe
+            apps/desktop/dist/*.zip
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            apps/desktop/dist/*.exe
+            apps/desktop/dist/*.zip
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
+          body: |
+            Also accessible on https://opencut.app/
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
