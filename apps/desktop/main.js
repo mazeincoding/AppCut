@@ -125,4 +125,21 @@ app.on('web-contents-created', (event, contents) => {
   contents.on('new-window', (event, navigationUrl) => {
     event.preventDefault();
   });
+
+  contents.setWindowOpenHandler(({ url }) => {
+    const { shell } = require('electron');
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      shell.openExternal(url);
+      return { action: 'deny' };
+    }
+    return { action: 'allow' };
+  });
+
+  contents.on('will-navigate', (event, url) => {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      event.preventDefault();
+      const { shell } = require('electron');
+      shell.openExternal(url);
+    }
+  });
 });
