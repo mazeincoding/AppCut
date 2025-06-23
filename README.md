@@ -1,53 +1,86 @@
-# OpenCut (prev AppCut)
+# OpenCut
 
-A free, open-source video editor for web, desktop, and mobile.
+A free, open-source video editor that works completely offline in your browser.
 
 ## Why?
 
-- **Privacy**: Your videos stay on your device
-- **Free features**: Every basic feature of CapCut is paywalled now
-- **Simple**: People want editors that are easy to use - CapCut proved that
+- **Privacy**: Your videos never leave your device - everything is processed client-side
+- **Free features**: No paywalls, subscriptions, or account required
+- **Simple**: Easy to use interface inspired by CapCut
+- **Offline**: Works without internet connection once loaded
 
 ## Features
 
 - Timeline-based editing
 - Multi-track support
 - Real-time preview
-- No watermarks or subscriptions
+- Drag & drop media import
+- No watermarks, accounts, or subscriptions
+- Complete offline functionality
 
-## Project Structure
+## Quick Start
 
-- `apps/web/` – Main Next.js web application
-- `src/components/` – UI and editor components
-- `src/hooks/` – Custom React hooks
-- `src/lib/` – Utility and API logic
-- `src/stores/` – State management (Zustand, etc.)
-- `src/types/` – TypeScript types
+### Web Version
+```bash
+cd apps/web
+npm install
+npm run dev
+```
 
-## Getting Started
+Visit `http://localhost:3000` and click "Start Editing" - no setup required!
 
-1. **Clone the repository:**
-   ```bash
-   git clone <repo-url>
-   cd OpenCut
-   ```
-2. **Install dependencies:**
-   ```bash
-   cd apps/web
-   npm install
-   # or, with Bun
-   bun install
-   ```
-3. **Run the development server:**
-   ```bash
-   npm run dev
-   # or, with Bun
-   bun run dev
-   ```
-4. **Open in browser:**
-   Visit [http://localhost:3000](http://localhost:3000)
+### Desktop Version
+```bash
+cd apps/desktop
+npm install
+npm run dev
+```
+
+Creates a native desktop app experience.
+
+## Architecture
+
+OpenCut is designed as a **privacy-first, offline-capable** video editor:
+
+- **No authentication required** - just start editing
+- **Client-side processing** - your videos stay on your device
+- **Optional database** - only needed for the waitlist feature on the website
+- **No servers required** - the editor works completely offline
+
+### Optional Features (Web only)
+
+The waitlist signup is the only feature that uses a server. Set these environment variables if you want it:
+
+```bash
+# Optional: For waitlist functionality
+DATABASE_URL="postgresql://..."
+UPSTASH_REDIS_REST_URL="..."
+UPSTASH_REDIS_REST_TOKEN="..."
+```
+
+**The video editor works perfectly without any of these!**
+
+## Production Build
+
+### Desktop App
+```bash
+cd apps/desktop
+npm run build
+```
+
+Creates installers for macOS, Windows, and Linux.
+
+### Web App
+```bash
+cd apps/web
+npm run build
+```
+
+Generates a static site that can be hosted anywhere.
 
 ## Contributing
+
+All contributions welcome! The core principle is to keep video editing completely client-side and privacy-focused.
 
 ## License
 

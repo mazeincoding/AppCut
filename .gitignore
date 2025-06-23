@@ -2,10 +2,12 @@
 
 # dependencies
 /apps/web/node_modules
+/apps/desktop/node_modules
 
-# next.js
+# Build outputs
 /apps/web/.next/
 /apps/web/out/
+/apps/desktop/dist
 
 # debug
 /apps/web/npm-debug.log*
@@ -19,3 +21,6 @@
 # typescript
 /apps/web/next-env.d.ts
 /apps/web/yarn.lock
+
+# macos
+.DS_Store

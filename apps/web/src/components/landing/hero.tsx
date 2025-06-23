@@ -2,70 +2,10 @@
 
 import { motion } from "motion/react";
 import { Button } from "../ui/button";
-import { Input } from "../ui/input";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
 
-interface HeroProps {
-  signupCount: number;
-}
-
-export function Hero({ signupCount }: HeroProps) {
-  const [email, setEmail] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!email.trim()) {
-      toast({
-        title: "Email required",
-        description: "Please enter your email address.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const response = await fetch("/api/waitlist", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email: email.trim() }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        toast({
-          title: "Welcome to the waitlist! 🎉",
-          description: "You'll be notified when we launch.",
-        });
-        setEmail("");
-      } else {
-        toast({
-          title: "Oops!",
-          description: data.error || "Something went wrong. Please try again.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Network error",
-        description: "Please check your connection and try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
+export function Hero() {
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center text-center px-4">
       <motion.div
@@ -104,41 +44,15 @@ export function Hero({ signupCount }: HeroProps) {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6, duration: 0.8 }}
         >
-          <form onSubmit={handleSubmit} className="flex gap-3 w-full max-w-lg">
-            <Input
-              type="email"
-              placeholder="Enter your email"
-              className="h-11 text-base flex-1"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={isSubmitting}
-              required
-            />
-            <Button
-              type="submit"
-              size="lg"
-              className="px-6 h-11 text-base"
-              disabled={isSubmitting}
-            >
+          <Link href="/editor">
+            <Button size="lg" className="px-8 h-12 text-lg">
               <span className="relative z-10">
-                {isSubmitting ? "Joining..." : "Join waitlist"}
+                Get Started
               </span>
-              <ArrowRight className="relative z-10 ml-0.5 h-4 w-4 inline-block" />
+              <ArrowRight className="relative z-10 ml-2 h-5 w-5 inline-block" />
             </Button>
-          </form>
+          </Link>
         </motion.div>
-
-        {signupCount > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8, duration: 0.6 }}
-            className="mt-6 inline-flex items-center gap-2 bg-muted/30 px-4 py-2 rounded-full text-sm text-muted-foreground"
-          >
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span>{signupCount.toLocaleString()} people already joined</span>
-          </motion.div>
-        )}
       </motion.div>
 
       <motion.div

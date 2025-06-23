@@ -1,0 +1,31 @@
+{
+  "appId": "com.opencut.app",
+  "productName": "OpenCut",
+  "directories": {
+    "output": "dist"
+  },
+  "files": [
+    "main.js",
+    "package.json",
+    {
+      "from": "../web/out",
+      "to": "web",
+      "filter": ["**/*"]
+    }
+  ],
+  "asar": false,
+  "mac": {
+    "category": "public.app-category.video",
+    "target": "dmg"
+  },
+  "win": {
+    "target": "nsis"
+  },
+  "linux": {
+    "target": "AppImage"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true
+  }
+} 

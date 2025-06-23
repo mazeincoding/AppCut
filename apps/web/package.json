@@ -2,16 +2,11 @@
   "name": "next-template",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "bun@1.2.2",  
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:push:local": "cross-env NODE_ENV=development drizzle-kit push",
-    "db:push:prod": "cross-env NODE_ENV=production drizzle-kit push"
+    "lint": "next lint"
   },
   "dependencies": {
     "@ffmpeg/core": "^0.12.10",
@@ -19,9 +14,7 @@
     "@ffmpeg/util": "^0.12.2",
     "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "^3.9.1",
-    "@types/pg": "^8.15.4",
-    "@upstash/ratelimit": "^2.0.5",
-    "@upstash/redis": "^1.35.0",
+
     "@vercel/analytics": "^1.4.1",
     "better-auth": "^1.2.7",
     "class-variance-authority": "^0.7.1",
@@ -29,7 +22,6 @@
     "cmdk": "^1.0.0",
     "dayjs": "^1.11.13",
     "dotenv": "^16.5.0",
-    "drizzle-orm": "^0.44.2",
     "embla-carousel-react": "^8.5.1",
     "framer-motion": "^11.13.1",
     "input-otp": "^1.4.1",
@@ -37,7 +29,6 @@
     "motion": "^12.18.1",
     "next": "^15.2.0",
     "next-themes": "^0.4.4",
-    "pg": "^8.16.2",
     "radix-ui": "^1.4.2",
     "react": "^18.2.0",
     "react-day-picker": "^8.10.1",
@@ -54,11 +45,13 @@
     "zustand": "^5.0.2"
   },
   "devDependencies": {
+    "@radix-ui/react-dialog": "^1.1.14",
     "@types/bun": "latest",
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
     "cross-env": "^7.0.3",
-    "drizzle-kit": "^0.31.1",
+    "eslint": "^9.29.0",
+    "eslint-config-next": "^15.3.4",
     "postcss": "^8",
     "prettier": "^3.4.2",
     "tailwindcss": "^3.4.1",
