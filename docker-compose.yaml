@@ -11,11 +11,11 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD", "pg_isready -U opencut"]
+      test: ["CMD-SHELL", "pg_isready -U opencut -d opencut"]
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 10s
+      start_period: 30s
 
   redis:
     image: redis
@@ -42,6 +42,35 @@ services:
       timeout: 10s
       retries: 5
       start_period: 10s
+
+  app:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      # Database
+      DATABASE_URL: "postgresql://opencut:opencutthegoat@db:5432/opencut"
+      
+      # Auth (you'll need to set these)
+      BETTER_AUTH_SECRET: "your-secret-here"
+      GOOGLE_CLIENT_ID: "your-google-client-id"
+      GOOGLE_CLIENT_SECRET: "your-google-client-secret"
+      
+      # Redis for rate limiting
+      UPSTASH_REDIS_REST_URL: "http://serverless-redis-http:80"
+      UPSTASH_REDIS_REST_TOKEN: "example_token"
+      
+      NODE_ENV: "production"
+    depends_on:
+      db:
+        condition: service_healthy
+      serverless-redis-http:
+        condition: service_healthy
+    profiles:
+      - app
+    restart: unless-stopped
 
 volumes:
   postgres_data:
