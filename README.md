@@ -1,12 +1,6 @@
-<img src="apps/web/public/logo.png" align="left" width="130" height="130">
-
-<div align="right">
-
-
-
 # OpenCut (prev AppCut)
-### A free, open-source video editor for web, desktop, and mobile.
-</div>
+
+A free, open-source video editor for web, desktop, and mobile.
 
 ## Why?
 
@@ -20,7 +14,6 @@
 - Multi-track support
 - Real-time preview
 - No watermarks or subscriptions
-- Analytics provided by [Databuddy](https://www.databuddy.cc?utm_source=opencut), 100% Anonymized & Non-invasive.
 
 ## Project Structure
 
