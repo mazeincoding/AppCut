@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { signUp, signIn } from "@/lib/auth-client";
+import { signUp, signIn } from "@opencut/auth/client";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -44,7 +44,7 @@ function SignUpForm() {
       return;
     }
 
-    router.push("/auth/login");
+    router.push("/login");
   };
 
   const handleGoogleSignUp = async () => {
@@ -80,7 +80,12 @@ function SignUpForm() {
         size="lg"
         disabled={isAnyLoading}
       >
-        {isGoogleLoading ? <Loader2 className="animate-spin" /> : (<GoogleIcon />)} Continue with Google
+        {isGoogleLoading ? (
+          <Loader2 className="animate-spin" />
+        ) : (
+          <GoogleIcon />
+        )}{" "}
+        Continue with Google
       </Button>
 
       <div className="relative">
@@ -88,7 +93,9 @@ function SignUpForm() {
           <Separator className="w-full" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+          <span className="bg-background px-2 text-muted-foreground">
+            Or continue with
+          </span>
         </div>
       </div>
 
@@ -135,7 +142,11 @@ function SignUpForm() {
           className="w-full h-11"
           size="lg"
         >
-          {isEmailLoading ? <Loader2 className="animate-spin" /> : "Create account"}
+          {isEmailLoading ? (
+            <Loader2 className="animate-spin" />
+          ) : (
+            "Create account"
+          )}
         </Button>
       </div>
     </div>
@@ -148,7 +159,7 @@ export default function SignUpPage() {
   return (
     <div className="flex h-screen items-center justify-center relative">
       <Button
-        variant="ghost"
+        variant="text"
         onClick={() => router.back()}
         className="absolute top-6 left-6"
       >
@@ -157,20 +168,29 @@ export default function SignUpPage() {
 
       <Card className="w-[400px] shadow-lg border-0">
         <CardHeader className="text-center pb-4">
-          <CardTitle className="text-2xl font-semibold">Create your account</CardTitle>
+          <CardTitle className="text-2xl font-semibold">
+            Create your account
+          </CardTitle>
           <CardDescription className="text-base">
             Get started with your free account today
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-0">
-          <Suspense fallback={<div className="text-center">
-            <Loader2 className="animate-spin" />
-          </div>}>
+          <Suspense
+            fallback={
+              <div className="text-center">
+                <Loader2 className="animate-spin" />
+              </div>
+            }
+          >
             <SignUpForm />
           </Suspense>
           <div className="mt-6 text-center text-sm">
             Already have an account?{" "}
-            <Link href="/auth/login" className="font-medium text-primary underline-offset-4 hover:underline">
+            <Link
+              href="/login"
+              className="font-medium text-primary underline-offset-4 hover:underline"
+            >
               Sign in
             </Link>
           </div>

@@ -41,7 +41,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         {showPasswordToggle && (
           <Button
             type="button"
-            variant="ghost"
+            variant="text"
             size="icon"
             onClick={() => onShowPasswordChange?.(!showPassword)}
             className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:text-foreground"

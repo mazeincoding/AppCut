@@ -1,8 +1,8 @@
 {
-  "name": "next-template",
+  "name": "opencut",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "bun@1.2.2",  
+  "packageManager": "bun@1.2.17",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
@@ -19,6 +19,8 @@
     "@ffmpeg/util": "^0.12.2",
     "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "^3.9.1",
+    "@opencut/auth": "workspace:*",
+    "@opencut/db": "workspace:*",
     "@types/pg": "^8.15.4",
     "@upstash/ratelimit": "^2.0.5",
     "@upstash/redis": "^1.35.0",
@@ -35,7 +37,7 @@
     "input-otp": "^1.4.1",
     "lucide-react": "^0.468.0",
     "motion": "^12.18.1",
-    "next": "^15.2.0",
+    "next": "^15.3.4",
     "next-themes": "^0.4.4",
     "pg": "^8.16.2",
     "radix-ui": "^1.4.2",
@@ -51,6 +53,7 @@
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.1",
+    "zod": "^3.25.67",
     "zustand": "^5.0.2"
   },
   "devDependencies": {

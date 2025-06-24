@@ -20,6 +20,8 @@ export interface TimelineTrack {
 
 interface TimelineStore {
   tracks: TimelineTrack[];
+  history: TimelineTrack[][];
+  redoStack: TimelineTrack[][];
 
   // Multi-selection
   selectedClips: { trackId: string; clipId: string }[];
@@ -53,11 +55,38 @@ interface TimelineStore {
 
   // Computed values
   getTotalDuration: () => number;
+
+  // New actions
+  undo: () => void;
+  redo: () => void;
+  pushHistory: () => void;
 }
 
 export const useTimelineStore = create<TimelineStore>((set, get) => ({
   tracks: [],
+  history: [],
+  redoStack: [],
   selectedClips: [],
+
+  pushHistory: () => {
+    const { tracks, history, redoStack } = get();
+    // Deep copy tracks
+    set({ 
+      history: [...history, JSON.parse(JSON.stringify(tracks))],
+      redoStack: [] // Clear redo stack when new action is performed
+    });
+  },
+
+  undo: () => {
+    const { history, redoStack, tracks } = get();
+    if (history.length === 0) return;
+    const prev = history[history.length - 1];
+    set({ 
+      tracks: prev, 
+      history: history.slice(0, -1),
+      redoStack: [...redoStack, JSON.parse(JSON.stringify(tracks))] // Add current state to redo stack
+    });
+  },
 
   selectClip: (trackId, clipId, multi = false) => {
     set((state) => {
@@ -86,6 +115,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
   setSelectedClips: (clips) => set({ selectedClips: clips }),
 
   addTrack: (type) => {
+    get().pushHistory();
     const newTrack: TimelineTrack = {
       id: crypto.randomUUID(),
       name: `${type.charAt(0).toUpperCase() + type.slice(1)} Track`,
@@ -100,12 +130,14 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
   },
 
   removeTrack: (trackId) => {
+    get().pushHistory();
     set((state) => ({
       tracks: state.tracks.filter((track) => track.id !== trackId),
     }));
   },
 
   addClipToTrack: (trackId, clipData) => {
+    get().pushHistory();
     const newClip: TimelineClip = {
       ...clipData,
       id: crypto.randomUUID(),
@@ -124,19 +156,21 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
   },
 
   removeClipFromTrack: (trackId, clipId) => {
+    get().pushHistory();
     set((state) => ({
-      tracks: state.tracks.map((track) =>
-        track.id === trackId
-          ? {
-              ...track,
-              clips: track.clips.filter((clip) => clip.id !== clipId),
-            }
-          : track
-      ),
+      tracks: state.tracks
+        .map((track) =>
+          track.id === trackId
+            ? { ...track, clips: track.clips.filter((clip) => clip.id !== clipId) }
+            : track
+        )
+        // Remove track if it becomes empty
+        .filter((track) => track.clips.length > 0),
     }));
   },
 
   moveClipToTrack: (fromTrackId, toTrackId, clipId) => {
+    get().pushHistory();
     set((state) => {
       const fromTrack = state.tracks.find((track) => track.id === fromTrackId);
       const clipToMove = fromTrack?.clips.find((clip) => clip.id === clipId);
@@ -144,25 +178,29 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
       if (!clipToMove) return state;
 
       return {
-        tracks: state.tracks.map((track) => {
-          if (track.id === fromTrackId) {
-            return {
-              ...track,
-              clips: track.clips.filter((clip) => clip.id !== clipId),
-            };
-          } else if (track.id === toTrackId) {
-            return {
-              ...track,
-              clips: [...track.clips, clipToMove],
-            };
-          }
-          return track;
-        }),
+        tracks: state.tracks
+          .map((track) => {
+            if (track.id === fromTrackId) {
+              return {
+                ...track,
+                clips: track.clips.filter((clip) => clip.id !== clipId),
+              };
+            } else if (track.id === toTrackId) {
+              return {
+                ...track,
+                clips: [...track.clips, clipToMove],
+              };
+            }
+            return track;
+          })
+          // Remove track if it becomes empty
+          .filter((track) => track.clips.length > 0),
       };
     });
   },
 
   updateClipTrim: (trackId, clipId, trimStart, trimEnd) => {
+    get().pushHistory();
     set((state) => ({
       tracks: state.tracks.map((track) =>
         track.id === trackId
@@ -178,6 +216,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
   },
 
   updateClipStartTime: (trackId, clipId, startTime) => {
+    get().pushHistory();
     set((state) => ({
       tracks: state.tracks.map((track) =>
         track.id === trackId
@@ -193,6 +232,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
   },
 
   toggleTrackMute: (trackId) => {
+    get().pushHistory();
     set((state) => ({
       tracks: state.tracks.map((track) =>
         track.id === trackId ? { ...track, muted: !track.muted } : track
@@ -213,5 +253,12 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
     );
 
     return Math.max(...trackEndTimes, 0);
+  },
+
+  redo: () => {
+    const { redoStack } = get();
+    if (redoStack.length === 0) return;
+    const next = redoStack[redoStack.length - 1];
+    set({ tracks: next, redoStack: redoStack.slice(0, -1) });
   },
 }));

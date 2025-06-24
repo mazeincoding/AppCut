@@ -18,7 +18,8 @@ services:
       start_period: 10s
 
   redis:
-    image: redis
+    image: redis:7-alpine
+    restart: unless-stopped
     ports:
       - "6379:6379"
     healthcheck:
@@ -36,12 +37,46 @@ services:
       SRH_MODE: env
       SRH_TOKEN: example_token
       SRH_CONNECTION_STRING: "redis://redis:6379"
+    depends_on:
+      redis:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:80 || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 10s
-
-volumes:
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: ./apps/web/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://opencut:opencutthegoat@db:5432/opencut
+      - BETTER_AUTH_URL=http://localhost:3000
+      - BETTER_AUTH_SECRET=your-production-secret-key-here
+      - UPSTASH_REDIS_REST_URL=http://serverless-redis-http:80
+      - UPSTASH_REDIS_REST_TOKEN=example_token
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+    depends_on:
+      db:
+        condition: service_healthy
+      serverless-redis-http:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+  
+volumes:  
   postgres_data:
+
+networks:  
+  default:  
+    name: opencut-network

@@ -7,32 +7,11 @@ import { useProjectStore } from "@/stores/project-store";
 import { VideoPlayer } from "@/components/ui/video-player";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Play, Pause, Move, RotateCw, Crop, ZoomIn, ZoomOut, Monitor } from "lucide-react";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { Play, Pause, Monitor } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 
-interface ClipTransform {
-  x: number;
-  y: number;
-  scale: number;
-  rotation: number;
-  opacity: number;
-  width: number;
-  height: number;
-  blendMode: string;
-  cropTop: number;
-  cropBottom: number;
-  cropLeft: number;
-  cropRight: number;
-}
-
-interface DragState {
-  isDragging: boolean;
-  dragType: 'move' | 'resize-nw' | 'resize-ne' | 'resize-sw' | 'resize-se' | 'rotate' | 'scale' | 'crop-n' | 'crop-s' | 'crop-e' | 'crop-w';
-  startMouseX: number;
-  startMouseY: number;
-  startTransform: ClipTransform;
-  clipId: string;
-}
+// Debug flag - set to false to hide active clips info
+const SHOW_DEBUG_INFO = process.env.NODE_ENV === 'development';
 
 export function PreviewPanel() {
   const { tracks } = useTimelineStore();
@@ -40,14 +19,14 @@ export function PreviewPanel() {
   const { isPlaying, toggle, currentTime } = usePlaybackStore();
   const { activeProject } = useProjectStore();
 
-  const [clipTransforms, setClipTransforms] = useState<Record<string, ClipTransform>>({});
   const [canvasSize, setCanvasSize] = useState({ 
     width: activeProject?.resolution?.width || 1920, 
     height: activeProject?.resolution?.height || 1080 
   });
-  const [dragState, setDragState] = useState<DragState | null>(null);
+  const [showDebug, setShowDebug] = useState(SHOW_DEBUG_INFO);
   const previewRef = useRef<HTMLDivElement>(null);
 
+  // Update canvas size when project resolution changes
   useEffect(() => {
     if (activeProject?.resolution) {
       setCanvasSize({
@@ -57,16 +36,15 @@ export function PreviewPanel() {
     }
   }, [activeProject?.resolution]);
 
-  // Get all active clips at current time (for overlaying)
+  // Get active clips at current time
   const getActiveClips = () => {
     const activeClips: Array<{
       clip: any;
       track: any;
       mediaItem: any;
-      layer: number;
     }> = [];
 
-    tracks.forEach((track, trackIndex) => {
+    tracks.forEach((track) => {
       track.clips.forEach((clip) => {
         const clipStart = clip.startTime;
         const clipEnd = clip.startTime + (clip.duration - clip.trimStart - clip.trimEnd);
@@ -77,336 +55,78 @@ export function PreviewPanel() {
             : mediaItems.find((item) => item.id === clip.mediaId);
 
           if (mediaItem || clip.mediaId === "test") {
-            activeClips.push({
-              clip,
-              track,
-              mediaItem,
-              layer: trackIndex, // Track index determines layer order
-            });
+            activeClips.push({ clip, track, mediaItem });
           }
         }
       });
     });
 
-    // Sort by layer (track order) - higher index = on top
-    return activeClips.sort((a, b) => a.layer - b.layer);
+    return activeClips;
   };
 
   const activeClips = getActiveClips();
   const aspectRatio = canvasSize.width / canvasSize.height;
 
-  // Get or create transform for a clip
-  const getClipTransform = (clipId: string): ClipTransform => {
-    return clipTransforms[clipId] || {
-      x: 0,
-      y: 0,
-      scale: 1,
-      rotation: 0,
-      opacity: 1,
-      width: 100, // Percentage of canvas
-      height: 100,
-      blendMode: 'normal',
-      cropTop: 0,
-      cropBottom: 0,
-      cropLeft: 0,
-      cropRight: 0,
-    };
-  };
-
-  // Update clip transform
-  const updateClipTransform = useCallback((clipId: string, updates: Partial<ClipTransform>) => {
-    setClipTransforms(prev => {
-      const currentTransform = prev[clipId] || {
-        x: 0,
-        y: 0,
-        scale: 1,
-        rotation: 0,
-        opacity: 1,
-        width: 100,
-        height: 100,
-        blendMode: 'normal',
-        cropTop: 0,
-        cropBottom: 0,
-        cropLeft: 0,
-        cropRight: 0,
-      };
-
-      return {
-        ...prev,
-        [clipId]: { ...currentTransform, ...updates }
-      };
-    });
-  }, []);
-
-  // Mouse event handlers
-  const handleMouseDown = (e: React.MouseEvent, clipId: string, dragType: DragState['dragType']) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    setDragState({
-      isDragging: true,
-      dragType,
-      startMouseX: e.clientX,
-      startMouseY: e.clientY,
-      startTransform: getClipTransform(clipId),
-      clipId
-    });
-  };
-
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!dragState || !dragState.isDragging) return;
-
-    const deltaX = e.clientX - dragState.startMouseX;
-    const deltaY = e.clientY - dragState.startMouseY;
-    const { startTransform, clipId, dragType } = dragState;
-
-    switch (dragType) {
-      case 'move':
-        updateClipTransform(clipId, {
-          x: Math.max(-100, Math.min(100, startTransform.x + deltaX * 0.3)),
-          y: Math.max(-100, Math.min(100, startTransform.y + deltaY * 0.3))
-        });
-        break;
-
-      case 'resize-nw':
-        updateClipTransform(clipId, {
-          width: Math.max(20, startTransform.width - deltaX * 0.5),
-          height: Math.max(20, startTransform.height - deltaY * 0.5)
-        });
-        break;
-
-      case 'resize-ne':
-        updateClipTransform(clipId, {
-          width: Math.max(20, startTransform.width + deltaX * 0.5),
-          height: Math.max(20, startTransform.height - deltaY * 0.5)
-        });
-        break;
-
-      case 'resize-sw':
-        updateClipTransform(clipId, {
-          width: Math.max(20, startTransform.width - deltaX * 0.5),
-          height: Math.max(20, startTransform.height + deltaY * 0.5)
-        });
-        break;
-
-      case 'resize-se':
-        updateClipTransform(clipId, {
-          width: Math.max(20, startTransform.width + deltaX * 0.5),
-          height: Math.max(20, startTransform.height + deltaY * 0.5)
-        });
-        break;
-
-      case 'rotate':
-        updateClipTransform(clipId, {
-          rotation: (startTransform.rotation + deltaX * 2) % 360
-        });
-        break;
-
-      case 'scale':
-        updateClipTransform(clipId, {
-          scale: Math.max(0.1, Math.min(3, startTransform.scale + deltaX * 0.01))
-        });
-        break;
-
-      case 'crop-n':
-        updateClipTransform(clipId, {
-          cropTop: Math.max(0, Math.min(40, startTransform.cropTop + deltaY * 0.2))
-        });
-        break;
-
-      case 'crop-s':
-        updateClipTransform(clipId, {
-          cropBottom: Math.max(0, Math.min(40, startTransform.cropBottom - deltaY * 0.2))
-        });
-        break;
-
-      case 'crop-e':
-        updateClipTransform(clipId, {
-          cropRight: Math.max(0, Math.min(40, startTransform.cropRight - deltaX * 0.2))
-        });
-        break;
-
-      case 'crop-w':
-        updateClipTransform(clipId, {
-          cropLeft: Math.max(0, Math.min(40, startTransform.cropLeft + deltaX * 0.2))
-        });
-        break;
-    }
-  }, [dragState, updateClipTransform]);
-
-  const handleMouseUp = useCallback(() => {
-    setDragState(null);
-  }, []);
-
-  // Add global mouse event listeners
-  useEffect(() => {
-    if (dragState?.isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [dragState, handleMouseMove, handleMouseUp]);
-
-  // Initialize transforms for new clips
-  useEffect(() => {
-    const activeClips = getActiveClips();
-    const newTransforms: Record<string, ClipTransform> = {};
-    let hasNewClips = false;
-
-    activeClips.forEach(({ clip }) => {
-      if (!clipTransforms[clip.id]) {
-        hasNewClips = true;
-        newTransforms[clip.id] = {
-          x: 0,
-          y: 0,
-          scale: 1,
-          rotation: 0,
-          opacity: 1,
-          width: 100,
-          height: 100,
-          blendMode: 'normal',
-          cropTop: 0,
-          cropBottom: 0,
-          cropLeft: 0,
-          cropRight: 0,
-        };
-      }
-    });
-
-    if (hasNewClips) {
-      setClipTransforms(prev => ({ ...prev, ...newTransforms }));
-    }
-  }, [tracks, currentTime]); // Re-run when tracks or time changes
-
-  // Render a single clip layer
-  const renderClipLayer = (clipData: any, index: number) => {
+  // Render a clip
+  const renderClip = (clipData: any, index: number) => {
     const { clip, mediaItem } = clipData;
-    const transform = getClipTransform(clip.id);
 
-    const layerStyle = {
-      position: 'absolute' as const,
-      left: '50%',
-      top: '50%',
-      width: `${transform.width}%`,
-      height: `${transform.height}%`,
-      transform: `translate(-50%, -50%) translate(${transform.x}%, ${transform.y}%) scale(${transform.scale}) rotate(${transform.rotation}deg)`,
-      opacity: transform.opacity,
-      mixBlendMode: transform.blendMode as any,
-      clipPath: `inset(${transform.cropTop}% ${transform.cropRight}% ${transform.cropBottom}% ${transform.cropLeft}%)`,
-      zIndex: index + 10,
-      cursor: dragState?.isDragging && dragState.clipId === clip.id ? 'grabbing' : 'grab',
-      userSelect: 'none' as const,
-    };
-
-    const handleClipMouseDown = (e: React.MouseEvent) => {
-      e.stopPropagation();
-      handleMouseDown(e, clip.id, 'move');
-    };
-
-    // Handle test clips
+    // Test clips
     if (!mediaItem || clip.mediaId === "test") {
       return (
         <div
           key={clip.id}
-          style={layerStyle}
-          onMouseDown={handleClipMouseDown}
-          className="bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center group"
+          className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center"
         >
-          <div className="text-center pointer-events-none">
-            <div className="text-2xl">🎬</div>
+          <div className="text-center">
+            <div className="text-2xl mb-2">🎬</div>
             <p className="text-xs text-white">{clip.name}</p>
           </div>
-
-          {/* Hover resize corners */}
-          <div className="absolute -top-1 -left-1 w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-nw-resize opacity-0 group-hover:opacity-100 transition-opacity"
-            onMouseDown={(e) => { e.stopPropagation(); handleMouseDown(e, clip.id, 'resize-nw'); }}></div>
-          <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-ne-resize opacity-0 group-hover:opacity-100 transition-opacity"
-            onMouseDown={(e) => { e.stopPropagation(); handleMouseDown(e, clip.id, 'resize-ne'); }}></div>
-          <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-sw-resize opacity-0 group-hover:opacity-100 transition-opacity"
-            onMouseDown={(e) => { e.stopPropagation(); handleMouseDown(e, clip.id, 'resize-sw'); }}></div>
-          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity"
-            onMouseDown={(e) => { e.stopPropagation(); handleMouseDown(e, clip.id, 'resize-se'); }}></div>
         </div>
       );
     }
 
-    // Render video
+    // Video clips
     if (mediaItem.type === "video") {
       return (
-        <div key={clip.id} style={layerStyle} onMouseDown={handleClipMouseDown} className="group">
+        <div key={clip.id} className="absolute inset-0">
           <VideoPlayer
             src={mediaItem.url}
             poster={mediaItem.thumbnailUrl}
-            className="w-full h-full pointer-events-none"
             clipStartTime={clip.startTime}
             trimStart={clip.trimStart}
             trimEnd={clip.trimEnd}
             clipDuration={clip.duration}
           />
-
-          {/* Hover resize corners */}
-          <div className="absolute -top-1 -left-1 w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-nw-resize opacity-0 group-hover:opacity-100 transition-opacity"
-            onMouseDown={(e) => { e.stopPropagation(); handleMouseDown(e, clip.id, 'resize-nw'); }}></div>
-          <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-ne-resize opacity-0 group-hover:opacity-100 transition-opacity"
-            onMouseDown={(e) => { e.stopPropagation(); handleMouseDown(e, clip.id, 'resize-ne'); }}></div>
-          <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-sw-resize opacity-0 group-hover:opacity-100 transition-opacity"
-            onMouseDown={(e) => { e.stopPropagation(); handleMouseDown(e, clip.id, 'resize-sw'); }}></div>
-          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity"
-            onMouseDown={(e) => { e.stopPropagation(); handleMouseDown(e, clip.id, 'resize-se'); }}></div>
         </div>
       );
     }
 
-    // Render image
+    // Image clips
     if (mediaItem.type === "image") {
       return (
-        <div key={clip.id} style={layerStyle} onMouseDown={handleClipMouseDown} className="group">
+        <div key={clip.id} className="absolute inset-0">
           <img
             src={mediaItem.url}
             alt={mediaItem.name}
-            className="w-full h-full object-cover rounded pointer-events-none"
+            className="w-full h-full object-cover"
             draggable={false}
           />
-
-          {/* Hover resize corners */}
-          <div className="absolute -top-1 -left-1 w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-nw-resize opacity-0 group-hover:opacity-100 transition-opacity"
-            onMouseDown={(e) => { e.stopPropagation(); handleMouseDown(e, clip.id, 'resize-nw'); }}></div>
-          <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-ne-resize opacity-0 group-hover:opacity-100 transition-opacity"
-            onMouseDown={(e) => { e.stopPropagation(); handleMouseDown(e, clip.id, 'resize-ne'); }}></div>
-          <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-sw-resize opacity-0 group-hover:opacity-100 transition-opacity"
-            onMouseDown={(e) => { e.stopPropagation(); handleMouseDown(e, clip.id, 'resize-sw'); }}></div>
-          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity"
-            onMouseDown={(e) => { e.stopPropagation(); handleMouseDown(e, clip.id, 'resize-se'); }}></div>
         </div>
       );
     }
 
-    // Render audio (visual representation)
+    // Audio clips (visual representation)
     if (mediaItem.type === "audio") {
       return (
         <div
           key={clip.id}
-          style={layerStyle}
-          onMouseDown={handleClipMouseDown}
-          className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center group"
+          className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center"
         >
-          <div className="text-center pointer-events-none">
-            <div className="text-2xl">🎵</div>
+          <div className="text-center">
+            <div className="text-2xl mb-2">🎵</div>
             <p className="text-xs text-white">{mediaItem.name}</p>
           </div>
-
-          {/* Hover resize corners */}
-          <div className="absolute -top-1 -left-1 w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-nw-resize opacity-0 group-hover:opacity-100 transition-opacity"
-            onMouseDown={(e) => { e.stopPropagation(); handleMouseDown(e, clip.id, 'resize-nw'); }}></div>
-          <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-ne-resize opacity-0 group-hover:opacity-100 transition-opacity"
-            onMouseDown={(e) => { e.stopPropagation(); handleMouseDown(e, clip.id, 'resize-ne'); }}></div>
-          <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-sw-resize opacity-0 group-hover:opacity-100 transition-opacity"
-            onMouseDown={(e) => { e.stopPropagation(); handleMouseDown(e, clip.id, 'resize-sw'); }}></div>
-          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity"
-            onMouseDown={(e) => { e.stopPropagation(); handleMouseDown(e, clip.id, 'resize-se'); }}></div>
         </div>
       );
     }
@@ -414,7 +134,7 @@ export function PreviewPanel() {
     return null;
   };
 
-  // Canvas size presets
+  // Canvas size presets with project resolution awareness
   const getCanvasPresets = () => {
     const basePresets = [
       { name: "16:9 HD", width: 1920, height: 1080 },
@@ -443,9 +163,9 @@ export function PreviewPanel() {
   const canvasPresets = getCanvasPresets();
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full w-full flex flex-col min-h-0 min-w-0">
       {/* Canvas Controls */}
-      <div className="border-b p-2 flex items-center gap-2 text-xs">
+      <div className="border-b p-2 flex items-center gap-2 text-xs flex-shrink-0">
         {activeProject?.resolution && (
           <div className="flex items-center gap-2">
             <Monitor className="h-3 w-3" />
@@ -465,7 +185,7 @@ export function PreviewPanel() {
             const preset = canvasPresets.find(p => `${p.width}x${p.height}` === e.target.value);
             if (preset) setCanvasSize({ width: preset.width, height: preset.height });
           }}
-          className="bg-background border rounded px-2 py-1"
+          className="bg-background border rounded px-2 py-1 text-xs"
         >
           {canvasPresets.map(preset => (
             <option key={preset.name} value={`${preset.width}x${preset.height}`}>
@@ -474,71 +194,68 @@ export function PreviewPanel() {
           ))}
         </select>
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={toggle}
-          className="ml-auto"
-        >
+        {/* Debug Toggle - Only show in development */}
+        {SHOW_DEBUG_INFO && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowDebug(!showDebug)}
+            className="text-xs"
+          >
+            Debug {showDebug ? 'ON' : 'OFF'}
+          </Button>
+        )}
+
+        <Button variant="outline" size="sm" onClick={toggle} className="ml-auto">
           {isPlaying ? <Pause className="h-3 w-3 mr-1" /> : <Play className="h-3 w-3 mr-1" />}
           {isPlaying ? "Pause" : "Play"}
         </Button>
       </div>
 
-      {/* Preview Area - Full Width */}
-      <div className="flex-1 flex items-center justify-center p-4 bg-gray-900">
+      {/* Preview Area */}
+      <div className="flex-1 flex items-center justify-center p-2 sm:p-4 bg-gray-900 min-h-0 min-w-0">
         <div
           ref={previewRef}
-          className="relative overflow-hidden"
+          className="relative overflow-hidden rounded-sm max-w-full max-h-full bg-black border border-gray-600"
           style={{
             aspectRatio: aspectRatio.toString(),
-            width: aspectRatio > 1 ? "100%" : "auto",
-            height: aspectRatio <= 1 ? "100%" : "auto",
-            maxWidth: "100%",
-            maxHeight: "100%",
-            background: '#000000',
-            border: '1px solid #374151'
+            width: "100%",
+            height: "100%",
           }}
-
         >
-
-
-          {/* Render all active clips as layers */}
           {activeClips.length === 0 ? (
             <div className="absolute inset-0 flex items-center justify-center text-white/50">
               {tracks.length === 0 ? "Drop media to start editing" : "No clips at current time"}
             </div>
           ) : (
-            activeClips.map((clipData, index) => renderClipLayer(clipData, index))
+            activeClips.map((clipData, index) => renderClip(clipData, index))
           )}
-
-
         </div>
       </div>
 
-      {/* Bottom Info Panel */}
-      <div className="border-t bg-background">
-        {/* Layer List */}
-        <div className="p-2 border-b">
-          <div className="text-xs font-medium mb-2">Active Layers ({activeClips.length})</div>
-          <div className="space-y-1 max-h-20 overflow-y-auto">
+      {/* Debug Info Panel - Conditionally rendered */}
+      {showDebug && (
+        <div className="border-t bg-background p-2 flex-shrink-0">
+          <div className="text-xs font-medium mb-1">Debug: Active Clips ({activeClips.length})</div>
+          <div className="flex gap-2 overflow-x-auto">
             {activeClips.map((clipData, index) => (
               <div
                 key={clipData.clip.id}
-                className="flex items-center gap-2 p-1 rounded text-xs hover:bg-muted/50"
+                className="flex items-center gap-1 px-2 py-1 bg-muted rounded text-xs whitespace-nowrap"
               >
-                <span className="w-4 h-4 bg-muted rounded text-center text-xs leading-4">
+                <span className="w-4 h-4 bg-primary/20 rounded text-center text-xs leading-4">
                   {index + 1}
                 </span>
-                <span className="flex-1 truncate">{clipData.clip.name}</span>
-                <span className="text-muted-foreground">{clipData.track.name}</span>
+                <span>{clipData.clip.name}</span>
+                <span className="text-muted-foreground">({clipData.mediaItem?.type || 'test'})</span>
               </div>
             ))}
+            {activeClips.length === 0 && (
+              <span className="text-muted-foreground">No active clips</span>
+            )}
           </div>
         </div>
-
-
-      </div>
+      )}
     </div>
   );
 }

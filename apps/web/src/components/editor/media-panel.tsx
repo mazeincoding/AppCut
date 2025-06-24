@@ -7,7 +7,7 @@ import { useMediaStore } from "@/stores/media-store";
 import { processMediaFiles } from "@/lib/media-processing";
 import { Plus, Image, Video, Music, Trash2, Upload } from "lucide-react";
 import { useDragDrop } from "@/hooks/use-drag-drop";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 // MediaPanel lets users add, view, and drag media (images, videos, audio) into the project.
@@ -17,6 +17,8 @@ export function MediaPanel() {
   const { mediaItems, addMediaItem, removeMediaItem } = useMediaStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [mediaFilter, setMediaFilter] = useState("all");
 
   const processFiles = async (files: FileList | File[]) => {
     // If no files, do nothing
@@ -77,6 +79,24 @@ export function MediaPanel() {
     );
     e.dataTransfer.effectAllowed = "copy";
   };
+
+  const [filteredMediaItems, setFilteredMediaItems] = useState(mediaItems);
+
+  useEffect(() => {
+    const filtered = mediaItems.filter((item) => {
+      if (mediaFilter && mediaFilter !== 'all' && item.type !== mediaFilter) {
+        return false;
+      }
+      
+      if (searchQuery && !item.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+        return false;
+      }
+      
+      return true;
+    });
+    
+    setFilteredMediaItems(filtered);
+  }, [mediaItems, mediaFilter, searchQuery]);
 
   const renderPreview = (item: any) => {
     // Render a preview for each media type (image, video, audio, unknown)
@@ -204,30 +224,52 @@ export function MediaPanel() {
 
         <div className="p-2 border-b">
           {/* Button to add/upload media */}
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full"
-            onClick={handleFileSelect}
-            disabled={isProcessing}
-          >
-            {isProcessing ? (
-              <>
-                <Upload className="h-4 w-4 mr-2 animate-spin" />
-                Processing...
-              </>
-            ) : (
-              <>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Media
-              </>
-            )}
-          </Button>
+          <div className="flex gap-2">
+            {/* Search and filter controls */}
+              <select
+                value={mediaFilter}
+                onChange={(e) => setMediaFilter(e.target.value)}
+                className="px-2 py-1 text-xs border rounded bg-background"
+              >
+                <option value="all">All</option>
+                <option value="video">Video</option>
+                <option value="audio">Audio</option>
+                <option value="image">Image</option>
+              </select>
+              <input
+                type="text"
+                placeholder="Search media..."
+                className="min-w-[60px] flex-1 px-2 py-1 text-xs border rounded bg-background"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+
+            {/* Add media button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleFileSelect}
+              disabled={isProcessing}
+              className="flex-none min-w-[80px] whitespace-nowrap"
+            >
+              {isProcessing ? (
+                <>
+                  <Upload className="h-4 w-4 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4" />
+                  Add
+                </>
+              )}
+            </Button>
+            </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-2">
           {/* Show message if no media, otherwise show media grid */}
-          {mediaItems.length === 0 ? (
+          {filteredMediaItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center h-full">
               <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mb-4">
                 <Image className="h-8 w-8 text-muted-foreground" />
@@ -242,7 +284,7 @@ export function MediaPanel() {
           ) : (
             <div className="grid grid-cols-2 gap-2">
               {/* Render each media item as a draggable button */}
-              {mediaItems.map((item) => (
+              {filteredMediaItems.map((item) => (
                 <div key={item.id} className="relative group">
                   <Button
                     variant="outline"

@@ -13,33 +13,104 @@ Thank you for your interest in contributing to OpenCut! This document provides g
 ## Development Setup
 
 ### Prerequisites
-- Node.js 18+ 
+
+- Node.js 18+
 - Bun (latest version)
 - Docker (for local database)
 
 ### Local Development
-1. Copy `.env.example` to `.env.local` and configure your environment variables
-2. Start the database: `docker-compose up -d` (run from project root)
-3. Navigate to the web app: `cd apps/web`
-4. Run database migrations: `bun run db:migrate`
-5. Start the development server: `bun run dev`
+
+1. Start the database and Redis services:
+
+   ```bash
+   # From project root
+   docker-compose up -d
+   ```
+
+2. Navigate to the web app directory:
+
+   ```bash
+   cd apps/web
+   ```
+
+3. Copy `.env.example` to `.env.local`:
+
+   ```bash
+   # Unix/Linux/Mac
+   cp .env.example .env.local
+
+   # Windows Command Prompt
+   copy .env.example .env.local
+
+   # Windows PowerShell
+   Copy-Item .env.example .env.local
+   ```
+
+4. Configure required environment variables in `.env.local`:
+
+   **Required Variables:**
+
+   ```bash
+   # Database (matches docker-compose.yaml)
+   DATABASE_URL="postgresql://opencut:opencutthegoat@localhost:5432/opencut"
+
+   # Generate a secure secret for Better Auth
+   BETTER_AUTH_SECRET="your-generated-secret-here"
+   BETTER_AUTH_URL="http://localhost:3000"
+
+   # Redis (matches docker-compose.yaml)
+   UPSTASH_REDIS_REST_URL="http://localhost:8079"
+   UPSTASH_REDIS_REST_TOKEN="example_token"
+
+   # Development
+   NODE_ENV="development"
+   ```
+
+   **Generate BETTER_AUTH_SECRET:**
+
+   ```bash
+   # Unix/Linux/Mac
+   openssl rand -base64 32
+
+   # Windows PowerShell (simple method)
+   [System.Web.Security.Membership]::GeneratePassword(32, 0)
+
+   # Cross-platform (using Node.js)
+   node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+
+   # Or use an online generator: https://generate-secret.vercel.app/32
+   ```
+
+   **Optional Variables (for Google OAuth):**
+
+   ```bash
+   # Only needed if you want to test Google login
+   GOOGLE_CLIENT_ID="your-google-client-id"
+   GOOGLE_CLIENT_SECRET="your-google-client-secret"
+   ```
+
+5. Run database migrations: `bun run db:migrate`
+6. Start the development server: `bun run dev`
 
 ## How to Contribute
 
 ### Reporting Bugs
+
 - Use the bug report template
 - Include steps to reproduce
 - Provide screenshots if applicable
 
 ### Suggesting Features
+
 - Use the feature request template
 - Explain the use case
 - Consider implementation details
 
 ### Code Contributions
+
 1. Create a new branch: `git checkout -b feature/your-feature-name`
 2. Make your changes
-3. Navigate to the web app directory: `cd apps/web` 
+3. Navigate to the web app directory: `cd apps/web`
 4. Run the linter: `bun run lint`
 5. Format your code: `bunx biome format --write .`
 6. Commit your changes with a descriptive message
@@ -66,4 +137,4 @@ Thank you for your interest in contributing to OpenCut! This document provides g
 - Follow our Code of Conduct
 - Help others in discussions and issues
 
-Thank you for contributing! 
+Thank you for contributing!
