@@ -94,13 +94,13 @@ Before you begin, ensure you have the following installed on your system:
 
 The application will be available at [http://localhost:3000](http://localhost:3000).
 
-=======
+========
 
 
 ## Contributing
 
 Visit [CONTRIBUTING.md](.github/CONTRIBUTING.md)
-=======
+========
 We welcome contributions! Please see our [Contributing Guide](.github/CONTRIBUTING.md) for detailed setup instructions and development guidelines.
 
 Quick start for contributors:
