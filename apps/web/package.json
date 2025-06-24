@@ -2,7 +2,7 @@
   "name": "next-template",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "bun@1.2.2",  
+  "packageManager": "bun@1.2.2",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
@@ -19,6 +19,7 @@
     "@ffmpeg/util": "^0.12.2",
     "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "^3.9.1",
+    "@radix-ui/react-dialog": "^1.1.14",
     "@types/pg": "^8.15.4",
     "@upstash/ratelimit": "^2.0.5",
     "@upstash/redis": "^1.35.0",
