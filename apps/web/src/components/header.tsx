@@ -46,12 +46,21 @@ export function Header() {
           GitHub
         </Button>
       </Link>
-      <Link href={session ? "/editor" : "/auth/login"}>
-        <Button size="sm" className="text-sm ml-4">
-          Start editing
-          <ArrowRight className="h-4 w-4" />
-        </Button>
-      </Link>
+      {session ? (
+        <Link href="/editor">
+          <Button size="sm" className="text-sm ml-4">
+            Start editing
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </Link>
+      ) : (
+        <Link href="/login">
+          <Button size="sm" className="text-sm ml-4">
+            Login
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </Link>
+      )}
     </nav>
   );
 

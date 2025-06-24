@@ -16,8 +16,18 @@ import { usePanelStore } from "@/stores/panel-store";
 import { useProjectStore } from "@/stores/project-store";
 import { EditorProvider } from "@/components/editor-provider";
 import { usePlaybackControls } from "@/hooks/use-playback-controls";
+import { useSession } from "@opencut/auth/client";
+import { useRouter } from "next/navigation";
 
 export default function Editor() {
+  const { data: session } = useSession();
+  const router = useRouter();
+  useEffect(() => {
+    if (!session) {
+      router.push("/login");
+    }
+  }, [session, router]);
+  
   const {
     toolsPanel,
     previewPanel,
