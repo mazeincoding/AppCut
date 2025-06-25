@@ -640,7 +640,7 @@ export function Timeline() {
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="text" size="icon" onClick={handleSplitSelected}>
+              <Button variant="text" size="icon" onClick={handleSplitSelected} className="text-black hover:text-gray-800">
                 <Scissors className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
