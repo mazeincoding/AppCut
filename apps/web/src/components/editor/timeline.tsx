@@ -602,9 +602,9 @@ export function Timeline() {
           <div className="w-px h-6 bg-border mx-1" />
 
           {/* Time Display */}
-          <div className="text-xs text-muted-foreground font-mono px-2">
-            {Math.floor(currentTime * 10) / 10}s /{" "}
-            {Math.floor(duration * 10) / 10}s
+          <div className="text-xs text-muted-foreground font-mono px-2 w-[120px] text-center flex-shrink-0">
+            {currentTime.toFixed(1)}s /{" "}
+            {duration.toFixed(1)}s
           </div>
 
           <div className="w-px h-6 bg-border mx-1" />
@@ -638,72 +638,75 @@ export function Timeline() {
 
           <div className="w-px h-6 bg-border mx-1" />
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="text" size="icon" onClick={handleSplitSelected}>
-                <Scissors className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Split clip (S)</TooltipContent>
-          </Tooltip>
+          {/* Action Buttons: Split, Freeze, Delete etc. */}
+          <div className="flex items-center gap-1.5">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="text" size="icon" onClick={handleSplitSelected}>
+                  <Scissors className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Split clip (S)</TooltipContent>
+            </Tooltip>
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="text" size="icon">
-                <ArrowLeftToLine className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Split and keep left (A)</TooltipContent>
-          </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="text" size="icon">
+                  <ArrowLeftToLine className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Split and keep left (A)</TooltipContent>
+            </Tooltip>
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="text" size="icon">
-                <ArrowRightToLine className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Split and keep right (D)</TooltipContent>
-          </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="text" size="icon">
+                  <ArrowRightToLine className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Split and keep right (D)</TooltipContent>
+            </Tooltip>
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="text" size="icon">
-                <SplitSquareHorizontal className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Separate audio (E)</TooltipContent>
-          </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="text" size="icon">
+                  <SplitSquareHorizontal className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Separate audio (E)</TooltipContent>
+            </Tooltip>
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="text"
-                size="icon"
-                onClick={handleDuplicateSelected}
-              >
-                <Copy className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Duplicate clip (Ctrl+D)</TooltipContent>
-          </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="text"
+                  size="icon"
+                  onClick={handleDuplicateSelected}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Duplicate clip (Ctrl+D)</TooltipContent>
+            </Tooltip>
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="text" size="icon" onClick={handleFreezeSelected}>
-                <Snowflake className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Freeze frame (F)</TooltipContent>
-          </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="text" size="icon" onClick={handleFreezeSelected}>
+                  <Snowflake className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Freeze frame (F)</TooltipContent>
+            </Tooltip>
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="text" size="icon" onClick={handleDeleteSelected}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Delete clip (Delete)</TooltipContent>
-          </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="text" size="icon" onClick={handleDeleteSelected}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Delete clip (Delete)</TooltipContent>
+            </Tooltip>
+          </div>
 
           <div className="w-px h-6 bg-border mx-1" />
 
