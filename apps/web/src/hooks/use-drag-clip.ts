@@ -25,6 +25,10 @@ export function useDragClip(zoomLevel: number) {
   });
 
   const timelineRef = useRef<HTMLDivElement>(null);
+  const dragStateRef = useRef(dragState);
+
+  // Keep ref in sync with state
+  dragStateRef.current = dragState;
 
   const startDrag = useCallback(
     (
@@ -52,7 +56,9 @@ export function useDragClip(zoomLevel: number) {
 
   const updateDrag = useCallback(
     (e: MouseEvent) => {
-      if (!dragState.isDragging || !timelineRef.current) return;
+      if (!dragState.isDragging || !timelineRef.current) {
+        return;
+      }
 
       const timelineRect = timelineRef.current.getBoundingClientRect();
       const mouseX = e.clientX - timelineRect.left;
@@ -172,12 +178,17 @@ export function useDragClip(zoomLevel: number) {
 
   const getDraggedClipPosition = useCallback(
     (clipId: string) => {
-      if (dragState.isDragging && dragState.clipId === clipId) {
-        return dragState.currentTime;
+      // Use ref to get current state, not stale closure
+      const currentDragState = dragStateRef.current;
+      const isMatch =
+        currentDragState.isDragging && currentDragState.clipId === clipId;
+
+      if (isMatch) {
+        return currentDragState.currentTime;
       }
       return null;
     },
-    [dragState]
+    [] // No dependencies needed since we use ref
   );
 
   const isValidDropTarget = useCallback(
@@ -199,6 +210,8 @@ export function useDragClip(zoomLevel: number) {
     // State
     isDragging: dragState.isDragging,
     draggedClipId: dragState.clipId,
+    currentDragTime: dragState.currentTime,
+    clickOffsetTime: dragState.clickOffsetTime,
 
     // Methods
     startDrag,
