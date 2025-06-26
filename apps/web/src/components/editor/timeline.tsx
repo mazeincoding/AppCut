@@ -100,6 +100,11 @@ export function Timeline() {
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [scrubTime, setScrubTime] = useState<number | null>(null);
 
+  // --- Add refs for scroll sync ---
+  const rulerScrollRef = useRef<HTMLDivElement>(null);
+  const tracksScrollRef = useRef<HTMLDivElement>(null);
+  const isUpdatingRef = useRef(false);
+
   // Update timeline duration when tracks change
   useEffect(() => {
     const totalDuration = getTotalDuration();
@@ -562,6 +567,48 @@ export function Timeline() {
     };
   }, [isInTimeline]);
 
+  // --- Scroll synchronization effect ---
+  useEffect(() => {
+    const rulerViewport = rulerScrollRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+    const tracksViewport = tracksScrollRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+    if (!rulerViewport || !tracksViewport) return;
+    const handleRulerScroll = () => {
+      if (isUpdatingRef.current) return;
+      isUpdatingRef.current = true;
+      tracksViewport.scrollLeft = rulerViewport.scrollLeft;
+      requestAnimationFrame(() => { isUpdatingRef.current = false; });
+    };
+    const handleTracksScroll = () => {
+      if (isUpdatingRef.current) return;
+      isUpdatingRef.current = true;
+      rulerViewport.scrollLeft = tracksViewport.scrollLeft;
+      requestAnimationFrame(() => { isUpdatingRef.current = false; });
+    };
+    rulerViewport.addEventListener('scroll', handleRulerScroll);
+    tracksViewport.addEventListener('scroll', handleTracksScroll);
+    return () => {
+      rulerViewport.removeEventListener('scroll', handleRulerScroll);
+      tracksViewport.removeEventListener('scroll', handleTracksScroll);
+    };
+  }, []);
+
+  // --- Playhead auto-scroll effect ---
+  useEffect(() => {
+    const rulerViewport = rulerScrollRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+    const tracksViewport = tracksScrollRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+    if (!rulerViewport || !tracksViewport || isUpdatingRef.current) return;
+    const playheadPosition = currentTime * 50 * zoomLevel;
+    const containerWidth = rulerViewport.clientWidth;
+    const scrollLeft = rulerViewport.scrollLeft;
+    if (playheadPosition < scrollLeft || playheadPosition > scrollLeft + containerWidth - 100) {
+      const targetScrollLeft = Math.max(0, playheadPosition - containerWidth / 2);
+      isUpdatingRef.current = true;
+      rulerViewport.scrollLeft = targetScrollLeft;
+      tracksViewport.scrollLeft = targetScrollLeft;
+      requestAnimationFrame(() => { isUpdatingRef.current = false; });
+    }
+  }, [currentTime, zoomLevel]);
+
   return (
     <div
       className={`h-full flex flex-col transition-colors duration-200 relative ${isDragOver ? "bg-accent/30 border-accent" : ""}`}
@@ -743,7 +790,7 @@ export function Timeline() {
 
           {/* Timeline Ruler */}
           <div className="flex-1 relative overflow-hidden">
-            <ScrollArea className="w-full">
+            <ScrollArea className="w-full" ref={rulerScrollRef}>
               <div
                 className="relative h-12 bg-muted/30 cursor-pointer"
                 style={{
@@ -876,88 +923,90 @@ export function Timeline() {
 
           {/* Timeline Tracks Content */}
           <div className="flex-1 relative overflow-hidden">
-            <div
-              className="w-full h-full overflow-hidden flex"
-              ref={timelineRef}
-              style={{ position: "relative" }}
-            >
-              {/* Timeline grid and clips area (with left margin for sifdebar) */}
+            <ScrollArea className="w-full h-full" ref={tracksScrollRef}>
               <div
-                className="relative flex-1"
-                style={{
-                  height: `${Math.max(200, Math.min(800, tracks.length * 60))}px`,
-                  width: `${Math.max(1000, duration * 50 * zoomLevel)}px`,
-                }}
-                onClick={handleTimelineAreaClick}
-                onMouseDown={handleTimelineMouseDown}
+                className="relative h-full overflow-hidden flex"
+                ref={timelineRef}
+                style={{ position: "relative" }}
               >
-                {tracks.length === 0 ? (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mb-4 mx-auto">
-                        <SplitSquareHorizontal className="h-8 w-8 text-muted-foreground" />
+                {/* Timeline grid and clips area (with left margin for sifdebar) */}
+                <div
+                  className="relative flex-1"
+                  style={{
+                    height: `${Math.max(200, Math.min(800, tracks.length * 60))}px`,
+                    width: `${Math.max(1000, duration * 50 * zoomLevel)}px`,
+                  }}
+                  onClick={handleTimelineAreaClick}
+                  onMouseDown={handleTimelineMouseDown}
+                >
+                  {tracks.length === 0 ? (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mb-4 mx-auto">
+                          <SplitSquareHorizontal className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Drop media here to start
+                        </p>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        Drop media here to start
-                      </p>
                     </div>
-                  </div>
-                ) : (
-                  <>
-                    {tracks.map((track, index) => (
-                      <div
-                        key={track.id}
-                        className="absolute left-0 right-0 border-b border-muted/30"
-                        style={{
-                          top: `${index * 60}px`,
-                          height: "60px",
-                        }}
-                        // Show context menu on right click
-                        onContextMenu={(e) => {
-                          e.preventDefault();
-                          setContextMenu({
-                            type: "track",
-                            trackId: track.id,
-                            x: e.clientX,
-                            y: e.clientY,
-                          });
-                        }}
-                      >
-                        <TimelineTrackContent
-                          track={track}
-                          zoomLevel={zoomLevel}
-                          setContextMenu={setContextMenu}
-                          contextMenu={contextMenu}
-                        />
-                      </div>
-                    ))}
+                  ) : (
+                    <>
+                      {tracks.map((track, index) => (
+                        <div
+                          key={track.id}
+                          className="absolute left-0 right-0 border-b border-muted/30"
+                          style={{
+                            top: `${index * 60}px`,
+                            height: "60px",
+                          }}
+                          // Show context menu on right click
+                          onContextMenu={(e) => {
+                            e.preventDefault();
+                            setContextMenu({
+                              type: "track",
+                              trackId: track.id,
+                              x: e.clientX,
+                              y: e.clientY,
+                            });
+                          }}
+                        >
+                          <TimelineTrackContent
+                            track={track}
+                            zoomLevel={zoomLevel}
+                            setContextMenu={setContextMenu}
+                            contextMenu={contextMenu}
+                          />
+                        </div>
+                      ))}
 
-                    {/* Playhead for tracks area (scrubbable) */}
-                    {tracks.length > 0 && (
-                      <div
-                        className="absolute top-0 w-0.5 bg-red-500 pointer-events-auto z-20 cursor-ew-resize"
-                        style={{
-                          left: `${playheadPosition * 50 * zoomLevel}px`,
-                          height: `${tracks.length * 60}px`,
-                        }}
-                        onMouseDown={handlePlayheadMouseDown}
-                      />
-                    )}
-                  </>
-                )}
-                {isDragOver && (
-                  <div
-                    className="absolute left-0 right-0 border-2 border-dashed border-accent flex items-center justify-center text-muted-foreground"
-                    style={{
-                      top: `${tracks.length * 60}px`,
-                      height: "60px",
-                    }}
-                  >
-                    <div>Drop media here to add a new track</div>
-                  </div>
-                )}
+                      {/* Playhead for tracks area (scrubbable) */}
+                      {tracks.length > 0 && (
+                        <div
+                          className="absolute top-0 w-0.5 bg-red-500 pointer-events-auto z-20 cursor-ew-resize"
+                          style={{
+                            left: `${playheadPosition * 50 * zoomLevel}px`,
+                            height: `${tracks.length * 60}px`,
+                          }}
+                          onMouseDown={handlePlayheadMouseDown}
+                        />
+                      )}
+                    </>
+                  )}
+                  {isDragOver && (
+                    <div
+                      className="absolute left-0 right-0 border-2 border-dashed border-accent flex items-center justify-center text-muted-foreground"
+                      style={{
+                        top: `${tracks.length * 60}px`,
+                        height: "60px",
+                      }}
+                    >
+                      <div>Drop media here to add a new track</div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            </ScrollArea>
           </div>
         </div>
       </div>
