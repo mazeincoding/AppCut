@@ -1,0 +1,22 @@
+{
+  "name": "opencut",
+  "packageManager": "bun@1.2.17",
+  "devDependencies": {
+    "turbo": "^2.5.4"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "check-types": "turbo run check-types",
+    "lint": "turbo run lint",
+    "format": "turbo run format"
+  },
+  "dependencies": {
+    "next": "^15.3.4",
+    "wavesurfer.js": "^7.9.8"
+  }
+}

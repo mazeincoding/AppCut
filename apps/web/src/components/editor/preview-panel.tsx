@@ -1,7 +1,11 @@
 "use client";
 
-import { useTimelineStore } from "@/stores/timeline-store";
-import { useMediaStore } from "@/stores/media-store";
+import {
+  useTimelineStore,
+  type TimelineClip,
+  type TimelineTrack,
+} from "@/stores/timeline-store";
+import { useMediaStore, type MediaItem } from "@/stores/media-store";
 import { usePlaybackStore } from "@/stores/playback-store";
 import { VideoPlayer } from "@/components/ui/video-player";
 import { Button } from "@/components/ui/button";
@@ -49,6 +53,12 @@ interface DragState {
   startMouseY: number;
   startTransform: ClipTransform;
   clipId: string;
+}
+
+interface ActiveClip {
+  clip: TimelineClip;
+  track: TimelineTrack;
+  mediaItem: MediaItem | null;
 }
 
 export function PreviewPanel() {

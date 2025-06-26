@@ -102,26 +102,60 @@ export const getVideoInfo = async (videoFile: File): Promise<{
   fps: number;
 }> => {
   const ffmpeg = await initFFmpeg();
-  
+
   const inputName = 'input.mp4';
-  
+
   // Write input file
   await ffmpeg.writeFile(inputName, new Uint8Array(await videoFile.arrayBuffer()));
-  
-  // Get video info
-  await ffmpeg.exec(['-i', inputName, '-f', 'null', '-']);
-  
-  // Note: In a real implementation, you'd parse the FFmpeg output
-  // For now, we'll return default values and enhance this later
-  
+
+  // Capture FFmpeg stderr output with a one-time listener pattern
+  let ffmpegOutput = '';
+  let listening = true;
+  const listener = (data: string) => {
+    if (listening) ffmpegOutput += data;
+  };
+  ffmpeg.on('log', ({ message }) => listener(message));
+
+  // Run ffmpeg to get info (stderr will contain the info)
+  try {
+    await ffmpeg.exec(['-i', inputName, '-f', 'null', '-']);
+  } catch (error) {
+    listening = false;
+    await ffmpeg.deleteFile(inputName);
+    console.error('FFmpeg execution failed:', error);
+    throw new Error('Failed to extract video info. The file may be corrupted or in an unsupported format.');
+  }
+
+  // Disable listener after exec completes
+  listening = false;
+
   // Cleanup
   await ffmpeg.deleteFile(inputName);
-  
+
+  // Parse output for duration, resolution, and fps
+  // Example: Duration: 00:00:10.00, start: 0.000000, bitrate: 1234 kb/s
+  // Example: Stream #0:0: Video: h264 (High), yuv420p(progressive), 1920x1080 [SAR 1:1 DAR 16:9], 30 fps, 30 tbr, 90k tbn, 60 tbc
+
+  const durationMatch = ffmpegOutput.match(/Duration: (\d+):(\d+):([\d.]+)/);
+  let duration = 0;
+  if (durationMatch) {
+    const [, h, m, s] = durationMatch;
+    duration = parseInt(h) * 3600 + parseInt(m) * 60 + parseFloat(s);
+  }
+
+  const videoStreamMatch = ffmpegOutput.match(/Video:.* (\d+)x(\d+)[^,]*, ([\d.]+) fps/);
+  let width = 0, height = 0, fps = 0;
+  if (videoStreamMatch) {
+    width = parseInt(videoStreamMatch[1]);
+    height = parseInt(videoStreamMatch[2]);
+    fps = parseFloat(videoStreamMatch[3]);
+  }
+
   return {
-    duration: 10, // Placeholder - would parse from FFmpeg output
-    width: 1920,  // Placeholder
-    height: 1080, // Placeholder
-    fps: 30       // Placeholder
+    duration,
+    width,
+    height,
+    fps
   };
 };
 
@@ -194,4 +228,4 @@ export const extractAudio = async (
   await ffmpeg.deleteFile(outputName);
   
   return blob;
-}; 
+};

@@ -17,13 +17,12 @@ import { useMediaStore } from "@/stores/media-store";
 import { ImageTimelineTreatment } from "@/components/ui/image-timeline-treatment";
 import { useState } from "react";
 import { SpeedControl } from "./speed-control";
+import type { BackgroundType } from "@/types/editor";
 
 export function PropertiesPanel() {
   const { tracks } = useTimelineStore();
   const { mediaItems } = useMediaStore();
-  const [backgroundType, setBackgroundType] = useState<
-    "blur" | "mirror" | "color"
-  >("blur");
+  const [backgroundType, setBackgroundType] = useState<BackgroundType>("blur");
   const [backgroundColor, setBackgroundColor] = useState("#000000");
 
   // Get the first video clip for preview (simplified)
@@ -38,7 +37,6 @@ export function PropertiesPanel() {
     ? mediaItems.find((item) => item.id === firstVideoClip.mediaId)
     : null;
 
-  // Get the first image clip for preview (simplified)
   const firstImageClip = tracks
     .flatMap((track) => track.clips)
     .find((clip) => {
@@ -79,7 +77,9 @@ export function PropertiesPanel() {
                   <Label htmlFor="bg-type">Background Type</Label>
                   <Select
                     value={backgroundType}
-                    onValueChange={(value: any) => setBackgroundType(value)}
+                    onValueChange={(value: BackgroundType) =>
+                      setBackgroundType(value)
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select background type" />

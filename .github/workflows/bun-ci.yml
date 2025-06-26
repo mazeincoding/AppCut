@@ -1,0 +1,53 @@
+name: Bun CI
+
+concurrency:
+  group: bun-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "*.md"
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "*.md"
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    env:
+      DATABASE_URL: "postgresql://opencut:opencutthegoat@localhost:5432/opencut"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76
+        with:
+          bun-version: 1.2.17
+
+      - name: Cache Bun modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-1.2.17-${{ hashFiles('apps/web/bun.lock') }}
+
+      - name: Install dependencies
+        working-directory: apps/web
+        run: bun install
+
+      - name: Build
+        working-directory: apps/web
+        run: bun run build
+
+      - name: Run tests
+        working-directory: apps/web
+        run: echo "No tests implemented yet"
+        continue-on-error: true

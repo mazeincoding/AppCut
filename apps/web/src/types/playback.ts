@@ -4,6 +4,8 @@ export interface PlaybackState {
   duration: number;
   volume: number;
   speed: number;
+  muted: boolean;
+  previousVolume?: number;
 }
 
 export interface PlaybackControls {
@@ -13,4 +15,7 @@ export interface PlaybackControls {
   setVolume: (volume: number) => void;
   setSpeed: (speed: number) => void;
   toggle: () => void;
-} 
+  mute: () => void;
+  unmute: () => void;
+  toggleMute: () => void;
+}

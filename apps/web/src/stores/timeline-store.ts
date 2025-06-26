@@ -8,7 +8,6 @@ export interface TimelineClip {
   startTime: number;
   trimStart: number;
   trimEnd: number;
-  muted?: boolean;
 }
 
 export interface TimelineTrack {
@@ -21,11 +20,36 @@ export interface TimelineTrack {
 
 interface TimelineStore {
   tracks: TimelineTrack[];
+  history: TimelineTrack[][];
+  redoStack: TimelineTrack[][];
 
-  // Selection
-  selectedClip: { trackId: string; clipId: string } | null;
-  selectClip: (trackId: string, clipId: string) => void;
-  clearSelectedClip: () => void;
+  // Multi-selection
+  selectedClips: { trackId: string; clipId: string }[];
+  selectClip: (trackId: string, clipId: string, multi?: boolean) => void;
+  deselectClip: (trackId: string, clipId: string) => void;
+  clearSelectedClips: () => void;
+  setSelectedClips: (clips: { trackId: string; clipId: string }[]) => void;
+
+  // Drag state
+  dragState: {
+    isDragging: boolean;
+    clipId: string | null;
+    trackId: string | null;
+    startMouseX: number;
+    startClipTime: number;
+    clickOffsetTime: number;
+    currentTime: number;
+  };
+  setDragState: (dragState: Partial<TimelineStore["dragState"]>) => void;
+  startDrag: (
+    clipId: string,
+    trackId: string,
+    startMouseX: number,
+    startClipTime: number,
+    clickOffsetTime: number
+  ) => void;
+  updateDragTime: (currentTime: number) => void;
+  endDrag: () => void;
 
   // Actions
   addTrack: (type: "video" | "audio" | "effects") => string;
@@ -49,24 +73,76 @@ interface TimelineStore {
     startTime: number
   ) => void;
   toggleTrackMute: (trackId: string) => void;
-  toggleClipMute: (trackId: string, clipId: string) => void;
 
   // Computed values
   getTotalDuration: () => number;
+
+  // New actions
+  undo: () => void;
+  redo: () => void;
+  pushHistory: () => void;
 }
 
 export const useTimelineStore = create<TimelineStore>((set, get) => ({
   tracks: [],
-  selectedClip: null,
+  history: [],
+  redoStack: [],
+  selectedClips: [],
 
-  selectClip: (trackId, clipId) => {
-    set({ selectedClip: { trackId, clipId } });
+  pushHistory: () => {
+    const { tracks, history, redoStack } = get();
+    // Deep copy tracks
+    set({
+      history: [...history, JSON.parse(JSON.stringify(tracks))],
+      redoStack: [], // Clear redo stack when new action is performed
+    });
   },
-  clearSelectedClip: () => {
-    set({ selectedClip: null });
+
+  undo: () => {
+    const { history, redoStack, tracks } = get();
+    if (history.length === 0) return;
+    const prev = history[history.length - 1];
+    set({
+      tracks: prev,
+      history: history.slice(0, -1),
+      redoStack: [...redoStack, JSON.parse(JSON.stringify(tracks))], // Add current state to redo stack
+    });
   },
+
+  selectClip: (trackId, clipId, multi = false) => {
+    set((state) => {
+      const exists = state.selectedClips.some(
+        (c) => c.trackId === trackId && c.clipId === clipId
+      );
+      if (multi) {
+        // Toggle selection
+        return exists
+          ? {
+              selectedClips: state.selectedClips.filter(
+                (c) => !(c.trackId === trackId && c.clipId === clipId)
+              ),
+            }
+          : { selectedClips: [...state.selectedClips, { trackId, clipId }] };
+      } else {
+        return { selectedClips: [{ trackId, clipId }] };
+      }
+    });
+  },
+  deselectClip: (trackId, clipId) => {
+    set((state) => ({
+      selectedClips: state.selectedClips.filter(
+        (c) => !(c.trackId === trackId && c.clipId === clipId)
+      ),
+    }));
+  },
+  clearSelectedClips: () => {
+    set({ selectedClips: [] });
+  },
+
+  setSelectedClips: (clips) => set({ selectedClips: clips }),
 
   addTrack: (type) => {
+    get().pushHistory();
     const newTrack: TimelineTrack = {
       id: crypto.randomUUID(),
       name: `${type.charAt(0).toUpperCase() + type.slice(1)} Track`,
@@ -81,12 +157,14 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
   },
 
   removeTrack: (trackId) => {
+    get().pushHistory();
     set((state) => ({
       tracks: state.tracks.filter((track) => track.id !== trackId),
     }));
   },
 
   addClipToTrack: (trackId, clipData) => {
+    get().pushHistory();
     const newClip: TimelineClip = {
       ...clipData,
       id: crypto.randomUUID(),
@@ -105,19 +183,24 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
   },
 
   removeClipFromTrack: (trackId, clipId) => {
+    get().pushHistory();
     set((state) => ({
-      tracks: state.tracks.map((track) =>
-        track.id === trackId
-          ? {
-              ...track,
-              clips: track.clips.filter((clip) => clip.id !== clipId),
-            }
-          : track
-      ),
+      tracks: state.tracks
+        .map((track) =>
+          track.id === trackId
+            ? {
+                ...track,
+                clips: track.clips.filter((clip) => clip.id !== clipId),
+              }
+            : track
+        )
+        // Remove track if it becomes empty
+        .filter((track) => track.clips.length > 0),
     }));
   },
 
   moveClipToTrack: (fromTrackId, toTrackId, clipId) => {
+    get().pushHistory();
     set((state) => {
       const fromTrack = state.tracks.find((track) => track.id === fromTrackId);
       const clipToMove = fromTrack?.clips.find((clip) => clip.id === clipId);
@@ -125,25 +208,29 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
       if (!clipToMove) return state;
 
       return {
-        tracks: state.tracks.map((track) => {
-          if (track.id === fromTrackId) {
-            return {
-              ...track,
-              clips: track.clips.filter((clip) => clip.id !== clipId),
-            };
-          } else if (track.id === toTrackId) {
-            return {
-              ...track,
-              clips: [...track.clips, clipToMove],
-            };
-          }
-          return track;
-        }),
+        tracks: state.tracks
+          .map((track) => {
+            if (track.id === fromTrackId) {
+              return {
+                ...track,
+                clips: track.clips.filter((clip) => clip.id !== clipId),
+              };
+            } else if (track.id === toTrackId) {
+              return {
+                ...track,
+                clips: [...track.clips, clipToMove],
+              };
+            }
+            return track;
+          })
+          // Remove track if it becomes empty
+          .filter((track) => track.clips.length > 0),
       };
     });
   },
 
   updateClipTrim: (trackId, clipId, trimStart, trimEnd) => {
+    get().pushHistory();
     set((state) => ({
       tracks: state.tracks.map((track) =>
         track.id === trackId
@@ -159,6 +246,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
   },
 
   updateClipStartTime: (trackId, clipId, startTime) => {
+    get().pushHistory();
     set((state) => ({
       tracks: state.tracks.map((track) =>
         track.id === trackId
@@ -174,24 +262,10 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
   },
 
   toggleTrackMute: (trackId) => {
+    get().pushHistory();
     set((state) => ({
       tracks: state.tracks.map((track) =>
         track.id === trackId ? { ...track, muted: !track.muted } : track
-      ),
-    }));
-  },
-
-  toggleClipMute: (trackId, clipId) => {
-    set((state) => ({
-      tracks: state.tracks.map((track) =>
-        track.id === trackId
-          ? {
-              ...track,
-              clips: track.clips.map((clip) =>
-                clip.id === clipId ? { ...clip, muted: !clip.muted } : clip
-              ),
-            }
-          : track
       ),
     }));
   },
@@ -209,5 +283,64 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
     );
 
     return Math.max(...trackEndTimes, 0);
+  },
+
+  redo: () => {
+    const { redoStack } = get();
+    if (redoStack.length === 0) return;
+    const next = redoStack[redoStack.length - 1];
+    set({ tracks: next, redoStack: redoStack.slice(0, -1) });
+  },
+
+  dragState: {
+    isDragging: false,
+    clipId: null,
+    trackId: null,
+    startMouseX: 0,
+    startClipTime: 0,
+    clickOffsetTime: 0,
+    currentTime: 0,
+  },
+
+  setDragState: (dragState) =>
+    set((state) => ({
+      dragState: { ...state.dragState, ...dragState },
+    })),
+
+  startDrag: (clipId, trackId, startMouseX, startClipTime, clickOffsetTime) => {
+    set({
+      dragState: {
+        isDragging: true,
+        clipId,
+        trackId,
+        startMouseX,
+        startClipTime,
+        clickOffsetTime,
+        currentTime: startClipTime,
+      },
+    });
+  },
+
+  updateDragTime: (currentTime) => {
+    set((state) => ({
+      dragState: {
+        ...state.dragState,
+        currentTime,
+      },
+    }));
+  },
+
+  endDrag: () => {
+    set({
+      dragState: {
+        isDragging: false,
+        clipId: null,
+        trackId: null,
+        startMouseX: 0,
+        startClipTime: 0,
+        clickOffsetTime: 0,
+        currentTime: 0,
+      },
+    });
   },
 }));

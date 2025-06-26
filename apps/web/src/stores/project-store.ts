@@ -7,6 +7,7 @@ interface ProjectStore {
   // Actions
   createNewProject: (name: string) => void;
   closeProject: () => void;
+  updateProjectName: (name: string) => void;
 }
 
 export const useProjectStore = create<ProjectStore>((set) => ({
@@ -24,5 +25,17 @@ export const useProjectStore = create<ProjectStore>((set) => ({
 
   closeProject: () => {
     set({ activeProject: null });
+  },
+
+  updateProjectName: (name: string) => {
+    set((state) => ({
+      activeProject: state.activeProject
+        ? {
+            ...state.activeProject,
+            name,
+            updatedAt: new Date(),
+          }
+        : null,
+    }));
   },
 }));

@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import type { BackgroundType } from "@/types/editor";
 
 interface ImageTimelineTreatmentProps {
   src: string;
   alt: string;
   targetAspectRatio?: number; // Default to 16:9 for video
   className?: string;
-  backgroundType?: "blur" | "mirror" | "color";
+  backgroundType?: BackgroundType;
   backgroundColor?: string;
 }
 

@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Analytics } from "@vercel/analytics/react";
@@ -6,17 +5,15 @@ import Script from "next/script";
 import "./globals.css";
 import { Toaster } from "../components/ui/sonner";
 import { TooltipProvider } from "../components/ui/tooltip";
+import { DevelopmentDebug } from "../components/development-debug";
+import { baseMetaData } from "./metadata";
 
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
 });
 
-export const metadata: Metadata = {
-  title: "OpenCut",
-  description:
-    "A simple but powerful video editor that gets the job done. In your browser.",
-};
+export const metadata = baseMetaData;
 
 export default function RootLayout({
   children,
@@ -31,6 +28,7 @@ export default function RootLayout({
             {children}
             <Analytics />
             <Toaster />
+            <DevelopmentDebug />
             <Script
               src="https://app.databuddy.cc/databuddy.js"
               strategy="afterInteractive"

@@ -1,0 +1,10 @@
+# Next.js plugin
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Redirects for domain migration
+[[redirects]]
+  from = "https://appcut.app/*"
+  to = "https://opencut.app/:splat"
+  status = 301
+  force = true

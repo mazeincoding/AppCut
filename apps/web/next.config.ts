@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   },
   reactStrictMode: true,
   productionBrowserSourceMaps: true,
+  output: "standalone",
 };
 
 export default nextConfig;

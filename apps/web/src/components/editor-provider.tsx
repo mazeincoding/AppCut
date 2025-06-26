@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { useEditorStore } from "@/stores/editor-store";
-import { usePanelStore } from "@/stores/panel-store";
 
 interface EditorProviderProps {
   children: React.ReactNode;
@@ -11,19 +10,10 @@ interface EditorProviderProps {
 
 export function EditorProvider({ children }: EditorProviderProps) {
   const { isInitializing, isPanelsReady, initializeApp } = useEditorStore();
-  const { setInitialized } = usePanelStore();
 
   useEffect(() => {
-    const initialize = async () => {
-      // Initialize the app
-      await initializeApp();
-
-      // Initialize panel store for future resize events
-      setInitialized();
-    };
-
-    initialize();
-  }, [initializeApp, setInitialized]);
+    initializeApp();
+  }, [initializeApp]);
 
   // Show loading screen while initializing
   if (isInitializing || !isPanelsReady) {

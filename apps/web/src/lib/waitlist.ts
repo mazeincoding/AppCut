@@ -1,5 +1,5 @@
-import { db } from "@/lib/db";
-import { waitlist } from "@/lib/db/schema";
+import { db } from "@opencut/db";
+import { waitlist } from "@opencut/db/schema";
 import { sql } from "drizzle-orm";
 
 export async function getWaitlistCount() {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import "./editor.css";
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -42,59 +43,71 @@ export default function Editor() {
 
   return (
     <EditorProvider>
-      <div className="h-screen w-screen flex flex-col bg-background">
+      <div className="h-screen w-screen flex flex-col bg-background overflow-hidden">
         <EditorHeader />
-        <ResizablePanelGroup direction="vertical">
-          <ResizablePanel
-            defaultSize={mainContent}
-            minSize={30}
-            onResize={setMainContent}
-          >
-            {/* Main content area */}
-            <ResizablePanelGroup direction="horizontal">
-              {/* Tools Panel */}
-              <ResizablePanel
-                defaultSize={toolsPanel}
-                minSize={15}
-                onResize={setToolsPanel}
-              >
-                <MediaPanel />
-              </ResizablePanel>
+        <div className="flex-1 min-h-0 min-w-0">
+          <ResizablePanelGroup direction="vertical" className="h-full w-full">
+            <ResizablePanel
+              defaultSize={mainContent}
+              minSize={30}
+              maxSize={85}
+              onResize={setMainContent}
+              className="min-h-0"
+            >
+              {/* Main content area */}
+              <ResizablePanelGroup direction="horizontal" className="h-full w-full">
+                {/* Tools Panel */}
+                <ResizablePanel
+                  defaultSize={toolsPanel}
+                  minSize={15}
+                  maxSize={40}
+                  onResize={setToolsPanel}
+                  className="min-w-0"
+                >
+                  <MediaPanel />
+                </ResizablePanel>
 
-              <ResizableHandle withHandle />
+                <ResizableHandle withHandle />
 
-              {/* Preview Area */}
-              <ResizablePanel
-                defaultSize={previewPanel}
-                onResize={setPreviewPanel}
-              >
-                <PreviewPanel />
-              </ResizablePanel>
+                {/* Preview Area */}
+                <ResizablePanel
+                  defaultSize={previewPanel}
+                  minSize={30}
+                  onResize={setPreviewPanel}
+                  className="min-w-0 min-h-0 flex-1"
+                >
+                  <PreviewPanel />
+                </ResizablePanel>
 
-              <ResizableHandle withHandle />
+                <ResizableHandle withHandle />
 
-              {/* Properties Panel */}
-              {/* <ResizablePanel
-                defaultSize={propertiesPanel}
-                minSize={15}
-                onResize={setPropertiesPanel}
-              >
-                <PropertiesPanel />
-              </ResizablePanel> */}
-            </ResizablePanelGroup>
-          </ResizablePanel>
+                {/* Properties Panel - Hidden for now but ready */}
+                {/* <ResizablePanel
+                  defaultSize={propertiesPanel}
+                  minSize={15}
+                  maxSize={40}
+                  onResize={setPropertiesPanel}
+                  className="min-w-0"
+                >
+                  <PropertiesPanel />
+                </ResizablePanel> */}
+              </ResizablePanelGroup>
+            </ResizablePanel>
 
-          <ResizableHandle withHandle />
+            <ResizableHandle withHandle />
 
-          {/* Timeline */}
-          <ResizablePanel
-            defaultSize={timeline}
-            minSize={15}
-            onResize={setTimeline}
-          >
-            <Timeline />
-          </ResizablePanel>
-        </ResizablePanelGroup>
+            {/* Timeline */}
+            <ResizablePanel
+              defaultSize={timeline}
+              minSize={15}
+              maxSize={70}
+              onResize={setTimeline}
+              className="min-h-0"
+            >
+              <Timeline />
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        </div>
       </div>
     </EditorProvider>
   );
