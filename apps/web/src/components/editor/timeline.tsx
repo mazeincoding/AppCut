@@ -60,6 +60,8 @@ export function Timeline() {
     updateClipTrim,
     undo,
     redo,
+    updateClipStartTime,
+    moveClipToTrack,
   } = useTimelineStore();
   const { mediaItems, addMediaItem } = useMediaStore();
   const {
@@ -96,6 +98,13 @@ export function Timeline() {
   // Playhead scrubbing state
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [scrubTime, setScrubTime] = useState<number | null>(null);
+
+  // Dynamic timeline width calculation based on playhead position and duration
+  const dynamicTimelineWidth = Math.max(
+    (duration || 0) * 50 * zoomLevel, // Base width from duration
+    (currentTime + 30) * 50 * zoomLevel, // Width to show current time + 30 seconds buffer
+    timelineRef.current?.clientWidth || 1000 // Minimum width
+  );
 
   // Update timeline duration when tracks change
   useEffect(() => {
@@ -564,6 +573,42 @@ export function Timeline() {
     };
   }, [isInTimeline]);
 
+  // Scroll synchronization and auto-scroll to playhead
+  const rulerScrollRef = useRef<HTMLDivElement>(null);
+  const tracksScrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!rulerScrollRef.current || !tracksScrollRef.current) return;
+
+    const rulerViewport = rulerScrollRef.current.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+    const tracksViewport = tracksScrollRef.current.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+
+    if (!rulerViewport || !tracksViewport) return;
+
+    // Sync scroll between ruler and tracks
+    const handleRulerScroll = () => tracksViewport.scrollLeft = rulerViewport.scrollLeft;
+    const handleTracksScroll = () => rulerViewport.scrollLeft = tracksViewport.scrollLeft;
+
+    rulerViewport.addEventListener('scroll', handleRulerScroll);
+    tracksViewport.addEventListener('scroll', handleTracksScroll);
+
+    // Auto-scroll to playhead when it moves significantly
+    const playheadPosition = currentTime * 50 * zoomLevel;
+    const containerWidth = rulerViewport.clientWidth;
+    const scrollLeft = rulerViewport.scrollLeft;
+    
+    if (playheadPosition < scrollLeft || playheadPosition > scrollLeft + containerWidth - 100) {
+      const targetScrollLeft = Math.max(0, playheadPosition - containerWidth / 2);
+      rulerViewport.scrollLeft = targetScrollLeft;
+      tracksViewport.scrollLeft = targetScrollLeft;
+    }
+
+    return () => {
+      rulerViewport.removeEventListener('scroll', handleRulerScroll);
+      tracksViewport.removeEventListener('scroll', handleTracksScroll);
+    };
+  }, [currentTime, zoomLevel, tracks.length]);
+
   return (
     <div
       className={`h-full flex flex-col transition-colors duration-200 relative ${isDragOver ? "bg-accent/30 border-accent" : ""}`}
@@ -603,7 +648,7 @@ export function Timeline() {
             className="text-xs text-muted-foreground font-mono px-2"
             style={{ minWidth: "18ch", textAlign: "center" }}
           >
-            {currentTime.toFixed(1)}s / {duration.toFixed(1)}s
+            {currentTime.toFixed(1)}s / {duration?.toFixed(1) || "N/A"}s
           </div>
 
           {/* Test Clip Button - for debugging */}
@@ -746,11 +791,11 @@ export function Timeline() {
 
           {/* Timeline Ruler */}
           <div className="flex-1 relative overflow-hidden">
-            <ScrollArea className="w-full">
+            <ScrollArea className="w-full" ref={rulerScrollRef}>
               <div
                 className="relative h-12 bg-muted/30 cursor-pointer"
                 style={{
-                  width: `${Math.max(1000, duration * 50 * zoomLevel)}px`,
+                  width: `${dynamicTimelineWidth}px`,
                 }}
                 onClick={(e) => {
                   // Calculate the clicked time position and seek to it
@@ -791,108 +836,80 @@ export function Timeline() {
                         }`}
                         style={{ left: `${time * 50 * zoomLevel}px` }}
                       >
-                        <span
-                          className={`absolute top-1 left-1 text-xs ${
-                            isMainMarker
-                              ? "text-muted-foreground font-medium"
-                              : "text-muted-foreground/70"
-                          }`}
-                        >
-                          {(() => {
-                            const formatTime = (seconds: number) => {
-                              const hours = Math.floor(seconds / 3600);
-                              const minutes = Math.floor((seconds % 3600) / 60);
-                              const secs = seconds % 60;
-
-                              if (hours > 0) {
-                                return `${hours}:${minutes.toString().padStart(2, "0")}:${Math.floor(secs).toString().padStart(2, "0")}`;
-                              } else if (minutes > 0) {
-                                return `${minutes}:${Math.floor(secs).toString().padStart(2, "0")}`;
-                              } else if (interval >= 1) {
-                                return `${Math.floor(secs)}s`;
-                              } else {
-                                return `${secs.toFixed(1)}s`;
-                              }
-                            };
-                            return formatTime(time);
-                          })()}
-                        </span>
+                        {isMainMarker && (
+                          <div className="absolute top-1 left-1 text-xs text-muted-foreground font-mono">
+                            {(() => {
+                              const formatTime = (seconds: number) => {
+                                const mins = Math.floor(seconds / 60);
+                                const secs = Math.floor(seconds % 60);
+                                if (mins > 0) {
+                                  return `${mins}:${secs.toString().padStart(2, "0")}`;
+                                }
+                                return `${secs}s`;
+                              };
+                              return formatTime(time);
+                            })()}
+                          </div>
+                        )}
                       </div>
                     );
-                  }).filter(Boolean);
+                  });
                 })()}
 
-                {/* Playhead in ruler (scrubbable) */}
+                {/* Playhead for ruler */}
                 <div
-                  className="absolute top-0 bottom-0 w-0.5 bg-red-500 pointer-events-auto z-10 cursor-ew-resize"
-                  style={{ left: `${playheadPosition * 50 * zoomLevel}px` }}
+                  className="absolute top-0 w-0.5 bg-red-500 pointer-events-auto z-20 cursor-ew-resize"
+                  style={{
+                    left: `${playheadPosition * 50 * zoomLevel}px`,
+                    height: "100%",
+                  }}
                   onMouseDown={handlePlayheadMouseDown}
-                >
-                  <div className="absolute top-1 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-red-500 rounded-full border-2 border-white shadow-sm" />
-                </div>
+                />
               </div>
             </ScrollArea>
           </div>
         </div>
 
-        {/* Tracks Area */}
+        {/* Timeline Tracks */}
         <div className="flex-1 flex overflow-hidden">
           {/* Track Labels */}
-          {tracks.length > 0 && (
-            <div className="w-48 flex-shrink-0 border-r bg-background overflow-y-auto">
-              <div className="flex flex-col">
-                {tracks.map((track) => (
+          <div className="w-48 flex-shrink-0 bg-muted/30 border-r">
+            {tracks.map((track, index) => (
+              <div
+                key={track.id}
+                className="h-[60px] border-b border-muted/30 flex items-center justify-between px-3"
+              >
+                <div className="flex items-center gap-2">
                   <div
-                    key={track.id}
-                    className="h-[60px] flex items-center px-3 border-b border-muted/30 bg-background group"
-                    onContextMenu={(e) => {
-                      e.preventDefault();
-                      setContextMenu({
-                        type: "track",
-                        trackId: track.id,
-                        x: e.clientX,
-                        y: e.clientY,
-                      });
-                    }}
-                  >
-                    <div className="flex items-center flex-1 min-w-0">
-                      <div
-                        className={`w-3 h-3 rounded-full flex-shrink-0 ${
-                          track.type === "video"
-                            ? "bg-blue-500"
-                            : track.type === "audio"
-                              ? "bg-green-500"
-                              : "bg-purple-500"
-                        }`}
-                      />
-                      <span className="ml-2 text-sm font-medium truncate">
-                        {track.name}
-                      </span>
-                    </div>
-                    {track.muted && (
-                      <span className="ml-2 text-xs text-red-500 font-semibold flex-shrink-0">
-                        Muted
-                      </span>
-                    )}
-                  </div>
-                ))}
+                    className={`w-3 h-3 rounded-full ${
+                      track.type === "video"
+                        ? "bg-blue-500"
+                        : track.type === "audio"
+                        ? "bg-green-500"
+                        : "bg-purple-500"
+                    }`}
+                  />
+                  <span className="text-sm font-medium truncate">
+                    {track.name}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  {track.muted && (
+                    <VolumeX className="h-3 w-3 text-muted-foreground" />
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            ))}
+          </div>
 
           {/* Timeline Tracks Content */}
           <div className="flex-1 relative overflow-hidden">
-            <div
-              className="w-full h-full overflow-hidden flex"
-              ref={timelineRef}
-              style={{ position: "relative" }}
-            >
-              {/* Timeline grid and clips area (with left margin for sifdebar) */}
+            <ScrollArea className="w-full h-full" ref={tracksScrollRef}>
               <div
-                className="relative flex-1"
+                className="relative"
                 style={{
                   height: `${Math.max(200, Math.min(800, tracks.length * 60))}px`,
-                  width: `${Math.max(1000, duration * 50 * zoomLevel)}px`,
+                  width: `${dynamicTimelineWidth}px`,
                 }}
                 onClick={handleTimelineAreaClick}
                 onMouseDown={handleTimelineMouseDown}
@@ -961,7 +978,7 @@ export function Timeline() {
                   </div>
                 )}
               </div>
-            </div>
+            </ScrollArea>
           </div>
         </div>
       </div>
@@ -1144,6 +1161,14 @@ function TimelineTrackContent({
     selectClip,
     deselectClip,
   } = useTimelineStore();
+  const { currentTime, duration } = usePlaybackStore();
+
+  // Dynamic timeline width calculation for this track
+  const dynamicTimelineWidth = Math.max(
+    (duration || 0) * 50 * zoomLevel, // Base width from duration
+    (currentTime + 30) * 50 * zoomLevel, // Width to show current time + 30 seconds buffer
+    1000 // Minimum width
+  );
 
   // Mouse-based drag hook
   const { isDragging, startDrag, endDrag, timelineRef } =
@@ -1584,7 +1609,8 @@ function TimelineTrackContent({
     >
       <div
         ref={timelineRef}
-        className="h-full relative track-clips-container min-w-full"
+        className="h-full relative track-clips-container"
+        style={{ width: `${dynamicTimelineWidth}px` }}
       >
         {track.clips.length === 0 ? (
           <div
