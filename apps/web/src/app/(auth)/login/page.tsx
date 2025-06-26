@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { signIn } from "@opencut/auth/client";
 import { Button } from "@/components/ui/button";
+import { getSafeRedirectUrl } from "@/lib/redirect-utils";
 import {
   Card,
   CardContent,
@@ -139,7 +140,7 @@ type Props = {
 
 export default function LoginPage({ searchParams }: Props) {
   const { redirect } = use(searchParams);
-  const redirectUrl = redirect || "/editor";
+  const redirectUrl = getSafeRedirectUrl(redirect);
   const router = useRouter();
 
   return (
