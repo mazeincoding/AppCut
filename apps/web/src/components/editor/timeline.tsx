@@ -1,3 +1,4 @@
+
 "use client";
 
 import { ScrollArea } from "../ui/scroll-area";
@@ -1585,46 +1586,3 @@ function TimelineTrackContent({
       <div
         ref={timelineRef}
         className="h-full relative track-clips-container min-w-full"
-      >
-        {track.clips.length === 0 ? (
-          <div
-            className={`h-full w-full rounded-sm border-2 border-dashed flex items-center justify-center text-xs text-muted-foreground transition-colors ${
-              isDropping
-                ? wouldOverlap
-                  ? "border-red-500 bg-red-500/10 text-red-600"
-                  : "border-blue-500 bg-blue-500/10 text-blue-600"
-                : "border-muted/30"
-            }`}
-          >
-            {isDropping
-              ? wouldOverlap
-                ? "Cannot drop - would overlap"
-                : "Drop clip here"
-              : "Drop media here"}
-          </div>
-        ) : (
-          <>
-            {track.clips.map((clip) => {
-              const isSelected = selectedClips.some(
-                (c) => c.trackId === track.id && c.clipId === clip.id
-              );
-
-              return (
-                <TimelineClip
-                  key={clip.id}
-                  clip={clip}
-                  track={track}
-                  zoomLevel={zoomLevel}
-                  isSelected={isSelected}
-                  onContextMenu={handleClipContextMenu}
-                  onClipMouseDown={handleClipMouseDown}
-                  onClipClick={handleClipClick}
-                />
-              );
-            })}
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
