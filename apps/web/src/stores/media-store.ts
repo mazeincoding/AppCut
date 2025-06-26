@@ -151,7 +151,11 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     }
 
     // Remove timeline clips that reference this media
-    useTimelineStore.getState().removeClipsByMediaId(id);
+    try {
+      useTimelineStore.getState().removeClipsByMediaId(id);
+    } catch (error) {
+      console.error('Failed to remove timeline clips for media:', id, error);
+    }
 
     set((state) => ({
       mediaItems: state.mediaItems.filter((item) => item.id !== id),
@@ -170,7 +174,11 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     });
 
     // Clear all timeline clips
-    useTimelineStore.getState().clearAllTracks();
+    try {
+      useTimelineStore.getState().clearAllTracks();
+    } catch (error) {
+      console.error('Failed to clear timeline tracks:', error);
+    }
 
     set({ mediaItems: [] });
   },
