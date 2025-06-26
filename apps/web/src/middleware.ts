@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
-import { isValidInternalPath } from "@/lib/redirect-utils";
+import { getSafeRedirectUrl } from "@/lib/redirect-utils";
 
 const ROUTE_CONFIG = {
   protected: [{ exact: false, path: "/editor" }],
@@ -26,9 +26,10 @@ function isRouteMatch(
 }
 
 function buildRedirectUrl(base: string, redirectPath: string, nextUrl: URL) {
-  const safePath = isValidInternalPath(redirectPath)
-    ? redirectPath
-    : ROUTE_CONFIG.defaultRedirect;
+  const safePath = getSafeRedirectUrl(
+    redirectPath,
+    ROUTE_CONFIG.defaultRedirect
+  );
 
   const redirectParam = `?redirect=${encodeURIComponent(safePath)}`;
   return new URL(base + redirectParam, nextUrl);
