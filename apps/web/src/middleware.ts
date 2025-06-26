@@ -2,14 +2,62 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 
-export async function middleware(request: NextRequest) {
-  const path = request.nextUrl.pathname;
-  const session = getSessionCookie(request);
+const ROUTE_CONFIG = {
+  protected: [{ exact: false, path: "/editor" }],
+  auth: [
+    { exact: true, path: "/login" },
+    { exact: true, path: "/signup" },
+  ],
+  defaultRedirect: "/editor",
+  loginPath: "/login",
+} as const;
 
-  if (path === "/editor" && !session && process.env.NODE_ENV === "production") {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("redirect", request.url);
-    return NextResponse.redirect(loginUrl);
+function isRouteMatch(
+  pathname: string,
+  routes: readonly { exact: boolean; path: string }[]
+) {
+  return routes.some((route) => {
+    if (route.exact) {
+      return pathname === route.path;
+    }
+    return pathname.startsWith(route.path);
+  });
+}
+
+function buildRedirectUrl(base: string, redirectPath: string, nextUrl: URL) {
+  const redirectParam = `?redirect=${encodeURIComponent(redirectPath)}`;
+  return new URL(base + redirectParam, nextUrl);
+}
+
+export async function middleware(request: NextRequest) {
+  const { nextUrl } = request;
+  const session = getSessionCookie(request);
+  const isLoggedIn = !!session;
+  const isProtectedRoute = isRouteMatch(
+    nextUrl.pathname,
+    ROUTE_CONFIG.protected
+  );
+  const isAuthRoute = isRouteMatch(nextUrl.pathname, ROUTE_CONFIG.auth);
+
+  if (isAuthRoute && isLoggedIn) {
+    return NextResponse.redirect(
+      new URL(ROUTE_CONFIG.defaultRedirect, nextUrl)
+    );
+  }
+
+  if (isProtectedRoute && !isLoggedIn) {
+    let redirectPath = nextUrl.pathname;
+    if (nextUrl.search) {
+      redirectPath += nextUrl.search;
+    }
+
+    const loginRedirectUrl = buildRedirectUrl(
+      ROUTE_CONFIG.loginPath,
+      redirectPath,
+      nextUrl
+    );
+
+    return NextResponse.redirect(loginRedirectUrl);
   }
 
   return NextResponse.next();
