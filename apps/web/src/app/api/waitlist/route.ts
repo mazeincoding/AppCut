@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@opencut/db";
+import { db, eq } from "@opencut/db";
 import { waitlist } from "@opencut/db/schema";
-import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { waitlistRateLimit } from "@/lib/rate-limit";
 import { z } from "zod";

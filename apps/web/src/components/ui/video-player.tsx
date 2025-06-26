@@ -11,7 +11,8 @@ interface VideoPlayerProps {
   trimStart: number;
   trimEnd: number;
   clipDuration: number;
-  muted?: boolean;
+  isClipMuted?: boolean;
+  speed?: number;
 }
 
 export function VideoPlayer({
@@ -22,10 +23,17 @@ export function VideoPlayer({
   trimStart,
   trimEnd,
   clipDuration,
-  muted = false,
+  isClipMuted,
+  speed: clipSpeed,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const { isPlaying, currentTime, volume, speed } = usePlaybackStore();
+  const {
+    isPlaying,
+    currentTime,
+    volume,
+    speed: globalSpeed,
+    muted: trackMuted,
+  } = usePlaybackStore();
 
   // Calculate if we're within this clip's timeline range
   const clipEndTime = clipStartTime + (clipDuration - trimStart - trimEnd);
@@ -60,6 +68,7 @@ export function VideoPlayer({
           timelineTime - clipStartTime + trimStart
         )
       );
+
       if (Math.abs(video.currentTime - targetTime) > 0.5) {
         video.currentTime = targetTime;
       }
@@ -104,14 +113,15 @@ export function VideoPlayer({
     }
   }, [isPlaying, isInClipRange]);
 
-  // Sync volume, speed, and muted state
+  // Sync volume and speed
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
+
     video.volume = volume;
-    video.muted = muted;
-    video.playbackRate = speed;
-  }, [volume, speed, muted]);
+    video.muted = trackMuted || isClipMuted || false;
+    video.playbackRate = clipSpeed ?? globalSpeed;
+  }, [volume, globalSpeed, trackMuted, isClipMuted, clipSpeed]);
 
   return (
     <video

@@ -1,33 +1,27 @@
 "use client";
 
-import { ScrollArea } from "../ui/scroll-area";
-import { Button } from "../ui/button";
-import {
-  Scissors,
-  ArrowLeftToLine,
-  ArrowRightToLine,
-  Trash2,
-  Snowflake,
-  Copy,
-  SplitSquareHorizontal,
-  MoreVertical,
-  Volume2,
-  VolumeX,
-  Pause,
-  Play,
-} from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-  TooltipProvider,
-} from "../ui/tooltip";
-import { useTimelineStore, type TimelineTrack } from "@/stores/timeline-store";
+import { processMediaFiles } from "@/lib/media-processing";
 import { useMediaStore } from "@/stores/media-store";
 import { usePlaybackStore } from "@/stores/playback-store";
-import { processMediaFiles } from "@/lib/media-processing";
+import { useTimelineStore, type TimelineTrack } from "@/stores/timeline-store";
+import {
+  ArrowLeftToLine,
+  ArrowRightToLine,
+  Copy,
+  MoreVertical,
+  Pause,
+  Play,
+  Scissors,
+  Snowflake,
+  SplitSquareHorizontal,
+  Trash2,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { useState, useRef, useEffect } from "react";
+import { Button } from "../ui/button";
+import { ScrollArea } from "../ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -35,6 +29,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
+
+import AudioWaveform from "./audio-waveform";
 
 export function Timeline() {
   // Timeline shows all tracks (video, audio, effects) and their clips.
@@ -46,12 +49,16 @@ export function Timeline() {
     addClipToTrack,
     removeTrack,
     toggleTrackMute,
-    toggleClipMute,
     removeClipFromTrack,
-    moveClipToTrack,
     getTotalDuration,
-    selectedClip,
-    clearSelectedClip,
+    selectedClips,
+    clearSelectedClips,
+    setSelectedClips,
+    updateClipTrim,
+    toggleClipMute,
+    updateClipSpeed,
+    undo,
+    redo,
   } = useTimelineStore();
   const { mediaItems, addMediaItem } = useMediaStore();
   const {
@@ -60,8 +67,6 @@ export function Timeline() {
     seek,
     setDuration,
     isPlaying,
-    play,
-    pause,
     toggle,
     setSpeed,
     speed,
@@ -69,10 +74,9 @@ export function Timeline() {
   const [isDragOver, setIsDragOver] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
-  const [isDraggingPlayhead, setIsDraggingPlayhead] = useState(false);
-  const [hoverTime, setHoverTime] = useState<number | null>(null);
   const dragCounterRef = useRef(0);
   const timelineRef = useRef<HTMLDivElement>(null);
+  const [isInTimeline, setIsInTimeline] = useState(false);
 
   // Unified context menu state
   const [contextMenu, setContextMenu] = useState<{
@@ -82,6 +86,20 @@ export function Timeline() {
     x: number;
     y: number;
   } | null>(null);
+
+  // Marquee selection state
+  const [marquee, setMarquee] = useState<{
+    startX: number;
+    startY: number;
+    endX: number;
+    endY: number;
+    active: boolean;
+    additive: boolean;
+  } | null>(null);
+
+  // Playhead scrubbing state
+  const [isScrubbing, setIsScrubbing] = useState(false);
+  const [scrubTime, setScrubTime] = useState<number | null>(null);
 
   // Update timeline duration when tracks change
   useEffect(() => {
@@ -98,17 +116,152 @@ export function Timeline() {
     }
   }, [contextMenu]);
 
-  // Keyboard event for deleting selected clip
+  // Keyboard event for deleting selected clips
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.key === "Delete" || e.key === "Backspace") && selectedClip) {
-        removeClipFromTrack(selectedClip.trackId, selectedClip.clipId);
-        clearSelectedClip();
+      if (
+        (e.key === "Delete" || e.key === "Backspace") &&
+        selectedClips.length > 0
+      ) {
+        selectedClips.forEach(({ trackId, clipId }) => {
+          removeClipFromTrack(trackId, clipId);
+        });
+        clearSelectedClips();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedClip, removeClipFromTrack, clearSelectedClip]);
+  }, [selectedClips, removeClipFromTrack, clearSelectedClips]);
+
+  // Keyboard event for undo (Cmd+Z)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [undo]);
+
+  // Keyboard event for redo (Cmd+Shift+Z or Cmd+Y)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "z" && e.shiftKey) {
+        e.preventDefault();
+        redo();
+      } else if ((e.metaKey || e.ctrlKey) && e.key === "y") {
+        e.preventDefault();
+        redo();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [redo]);
+
+  // Mouse down on timeline background to start marquee
+  const handleTimelineMouseDown = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget && e.button === 0) {
+      setMarquee({
+        startX: e.clientX,
+        startY: e.clientY,
+        endX: e.clientX,
+        endY: e.clientY,
+        active: true,
+        additive: e.metaKey || e.ctrlKey || e.shiftKey,
+      });
+    }
+  };
+
+  // Mouse move to update marquee
+  useEffect(() => {
+    if (!marquee || !marquee.active) return;
+    const handleMouseMove = (e: MouseEvent) => {
+      setMarquee(
+        (prev) => prev && { ...prev, endX: e.clientX, endY: e.clientY }
+      );
+    };
+    const handleMouseUp = (e: MouseEvent) => {
+      setMarquee(
+        (prev) =>
+          prev && { ...prev, endX: e.clientX, endY: e.clientY, active: false }
+      );
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [marquee]);
+
+  // On marquee end, select clips in box
+  useEffect(() => {
+    if (!marquee || marquee.active) return;
+    const timeline = timelineRef.current;
+    if (!timeline) return;
+    const rect = timeline.getBoundingClientRect();
+    const x1 = Math.min(marquee.startX, marquee.endX) - rect.left;
+    const x2 = Math.max(marquee.startX, marquee.endX) - rect.left;
+    const y1 = Math.min(marquee.startY, marquee.endY) - rect.top;
+    const y2 = Math.max(marquee.startY, marquee.endY) - rect.top;
+    // Validation: skip if too small
+    if (Math.abs(x2 - x1) < 5 || Math.abs(y2 - y1) < 5) {
+      setMarquee(null);
+      return;
+    }
+    // Clamp to timeline bounds
+    const clamp = (val: number, min: number, max: number) =>
+      Math.max(min, Math.min(max, val));
+    const bx1 = clamp(x1, 0, rect.width);
+    const bx2 = clamp(x2, 0, rect.width);
+    const by1 = clamp(y1, 0, rect.height);
+    const by2 = clamp(y2, 0, rect.height);
+    let newSelection: { trackId: string; clipId: string }[] = [];
+    tracks.forEach((track, trackIdx) => {
+      track.clips.forEach((clip) => {
+        const effectiveDuration = clip.duration - clip.trimStart - clip.trimEnd;
+        const clipWidth = Math.max(80, effectiveDuration * 50 * zoomLevel);
+        const clipLeft = clip.startTime * 50 * zoomLevel;
+        const clipTop = trackIdx * 60;
+        const clipBottom = clipTop + 60;
+        const clipRight = clipLeft + 60; // Set a fixed width for time display
+        if (
+          bx1 < clipRight &&
+          bx2 > clipLeft &&
+          by1 < clipBottom &&
+          by2 > clipTop
+        ) {
+          newSelection.push({ trackId: track.id, clipId: clip.id });
+        }
+      });
+    });
+    if (newSelection.length > 0) {
+      if (marquee.additive) {
+        const selectedSet = new Set(
+          selectedClips.map((c) => c.trackId + ":" + c.clipId)
+        );
+        newSelection = [
+          ...selectedClips,
+          ...newSelection.filter(
+            (c) => !selectedSet.has(c.trackId + ":" + c.clipId)
+          ),
+        ];
+      }
+      setSelectedClips(newSelection);
+    } else if (!marquee.additive) {
+      clearSelectedClips();
+    }
+    setMarquee(null);
+  }, [
+    marquee,
+    tracks,
+    zoomLevel,
+    selectedClips,
+    setSelectedClips,
+    clearSelectedClips,
+  ]);
 
   const handleDragEnter = (e: React.DragEvent) => {
     // When something is dragged over the timeline, show overlay
@@ -218,53 +371,75 @@ export function Timeline() {
     }
   };
 
-  const handleTimelineClick = (e: React.MouseEvent) => {
-    const timeline = timelineRef.current;
-    if (!timeline || duration === 0) return;
+  const handleSeekToPosition = (e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const clickedTime = clickX / (50 * zoomLevel);
+    const clampedTime = Math.max(0, Math.min(duration, clickedTime));
 
-    const rect = timeline.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const timelineWidth = rect.width;
-    const visibleDuration = duration / zoomLevel;
-    const clickedTime = (x / timelineWidth) * visibleDuration;
-
-    seek(Math.max(0, Math.min(duration, clickedTime)));
+    seek(clampedTime);
   };
 
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.1 : 0.1;
-    setZoomLevel((prev) => Math.max(0.1, Math.min(5, prev + delta)));
-  };
+  const handleTimelineAreaClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      clearSelectedClips();
 
-  const handlePlayheadMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDraggingPlayhead(true);
-  };
-
-  const handleTimelineMouseMove = (e: React.MouseEvent) => {
-    if (!timelineRef.current || duration === 0) return;
-
-    const rect = timelineRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const time = Math.max(0, Math.min(duration, x / (50 * zoomLevel)));
-
-    setHoverTime(time);
-
-    if (isDraggingPlayhead) {
-      seek(time);
+      // Calculate the clicked time position and seek to it
+      handleSeekToPosition(e);
     }
   };
 
-  const handleTimelineMouseUp = () => {
-    setIsDraggingPlayhead(false);
+  const handleWheel = (e: React.WheelEvent) => {
+    // Only zoom if user is using pinch gesture (ctrlKey or metaKey is true)
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.05 : 0.05;
+      setZoomLevel((prev) => Math.max(0.1, Math.min(10, prev + delta)));
+    }
+    // Otherwise, allow normal scrolling
   };
 
-  const handleTimelineMouseLeave = () => {
-    setHoverTime(null);
-    setIsDraggingPlayhead(false);
-  };
+  // --- Playhead Scrubbing Handlers ---
+  const handlePlayheadMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      setIsScrubbing(true);
+      handleScrub(e);
+    },
+    [duration, zoomLevel]
+  );
+
+  const handleScrub = useCallback(
+    (e: MouseEvent | React.MouseEvent) => {
+      const timeline = timelineRef.current;
+      if (!timeline) return;
+      const rect = timeline.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const time = Math.max(0, Math.min(duration, x / (50 * zoomLevel)));
+      setScrubTime(time);
+      seek(time); // update video preview in real time
+    },
+    [duration, zoomLevel, seek]
+  );
+
+  useEffect(() => {
+    if (!isScrubbing) return;
+    const onMouseMove = (e: MouseEvent) => handleScrub(e);
+    const onMouseUp = (e: MouseEvent) => {
+      setIsScrubbing(false);
+      if (scrubTime !== null) seek(scrubTime); // finalize seek
+      setScrubTime(null);
+    };
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+  }, [isScrubbing, scrubTime, seek, handleScrub]);
+
+  const playheadPosition =
+    isScrubbing && scrubTime !== null ? scrubTime : currentTime;
 
   const dragProps = {
     onDragEnter: handleDragEnter,
@@ -273,20 +448,128 @@ export function Timeline() {
     onDrop: handleDrop,
   };
 
+  // Action handlers for toolbar
+  const handleSplitSelected = () => {
+    if (selectedClips.length === 0) {
+      toast.error("No clips selected");
+      return;
+    }
+    selectedClips.forEach(({ trackId, clipId }) => {
+      const track = tracks.find((t) => t.id === trackId);
+      const clip = track?.clips.find((c) => c.id === clipId);
+      if (clip && track) {
+        const splitTime = currentTime;
+        const effectiveStart = clip.startTime;
+        const effectiveEnd =
+          clip.startTime + (clip.duration - clip.trimStart - clip.trimEnd);
+        if (splitTime > effectiveStart && splitTime < effectiveEnd) {
+          updateClipTrim(
+            track.id,
+            clip.id,
+            clip.trimStart,
+            clip.trimEnd + (effectiveEnd - splitTime)
+          );
+          addClipToTrack(track.id, {
+            mediaId: clip.mediaId,
+            name: clip.name + " (split)",
+            duration: clip.duration,
+            startTime: splitTime,
+            trimStart: clip.trimStart + (splitTime - effectiveStart),
+            trimEnd: clip.trimEnd,
+          });
+        }
+      }
+    });
+    toast.success("Split selected clip(s)");
+  };
+
+  const handleDuplicateSelected = () => {
+    if (selectedClips.length === 0) {
+      toast.error("No clips selected");
+      return;
+    }
+    selectedClips.forEach(({ trackId, clipId }) => {
+      const track = tracks.find((t) => t.id === trackId);
+      const clip = track?.clips.find((c) => c.id === clipId);
+      if (clip && track) {
+        addClipToTrack(track.id, {
+          mediaId: clip.mediaId,
+          name: clip.name + " (copy)",
+          duration: clip.duration,
+          startTime:
+            clip.startTime +
+            (clip.duration - clip.trimStart - clip.trimEnd) +
+            0.1,
+          trimStart: clip.trimStart,
+          trimEnd: clip.trimEnd,
+        });
+      }
+    });
+    toast.success("Duplicated selected clip(s)");
+  };
+
+  const handleFreezeSelected = () => {
+    if (selectedClips.length === 0) {
+      toast.error("No clips selected");
+      return;
+    }
+    selectedClips.forEach(({ trackId, clipId }) => {
+      const track = tracks.find((t) => t.id === trackId);
+      const clip = track?.clips.find((c) => c.id === clipId);
+      if (clip && track) {
+        // Add a new freeze frame clip at the playhead
+        addClipToTrack(track.id, {
+          mediaId: clip.mediaId,
+          name: clip.name + " (freeze)",
+          duration: 1, // 1 second freeze frame
+          startTime: currentTime,
+          trimStart: 0,
+          trimEnd: clip.duration - 1,
+        });
+      }
+    });
+    toast.success("Freeze frame added for selected clip(s)");
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedClips.length === 0) {
+      toast.error("No clips selected");
+      return;
+    }
+    selectedClips.forEach(({ trackId, clipId }) => {
+      removeClipFromTrack(trackId, clipId);
+    });
+    clearSelectedClips();
+    toast.success("Deleted selected clip(s)");
+  };
+
+  // Prevent explorer zooming in/out when in timeline
+  useEffect(() => {
+    const preventZoom = (e: WheelEvent) => {
+      if (
+        isInTimeline &&
+        (e.ctrlKey || e.metaKey) &&
+        timelineRef.current?.contains(e.target as Node)
+      ) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener("wheel", preventZoom, { passive: false });
+
+    return () => {
+      document.removeEventListener("wheel", preventZoom);
+    };
+  }, [isInTimeline]);
+
   return (
     <div
       className={`h-full flex flex-col transition-colors duration-200 relative ${isDragOver ? "bg-accent/30 border-accent" : ""}`}
       {...dragProps}
+      onMouseEnter={() => setIsInTimeline(true)}
+      onMouseLeave={() => setIsInTimeline(false)}
+      onWheel={handleWheel}
     >
-      {/* Show overlay when dragging media over the timeline */}
-      {isDragOver && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
-          <div className="bg-accent/80 text-accent-foreground px-8 py-4 rounded-lg shadow-lg text-lg font-semibold border border-accent">
-            Drop media here to add to timeline
-          </div>
-        </div>
-      )}
-
       {/* Toolbar */}
       <div className="border-b flex items-center px-2 py-1 gap-1">
         <TooltipProvider delayDuration={500}>
@@ -314,45 +597,48 @@ export function Timeline() {
           <div className="w-px h-6 bg-border mx-1" />
 
           {/* Time Display */}
-          <div className="text-xs text-muted-foreground font-mono px-2">
-            {Math.floor(currentTime * 10) / 10}s /{" "}
-            {Math.floor(duration * 10) / 10}s
+          <div
+            className="text-xs text-muted-foreground font-mono px-2"
+            style={{ minWidth: "18ch", textAlign: "center" }}
+          >
+            {currentTime.toFixed(1)}s / {duration.toFixed(1)}s
           </div>
-
-          <div className="w-px h-6 bg-border mx-1" />
 
           {/* Test Clip Button - for debugging */}
           {tracks.length === 0 && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const trackId = addTrack("video");
-                    addClipToTrack(trackId, {
-                      mediaId: "test",
-                      name: "Test Clip",
-                      duration: 5,
-                      startTime: 0,
-                      trimStart: 0,
-                      trimEnd: 0,
-                    });
-                  }}
-                  className="text-xs"
-                >
-                  Add Test Clip
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Add a test clip to try playback</TooltipContent>
-            </Tooltip>
+            <>
+              <div className="w-px h-6 bg-border mx-1" />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const trackId = addTrack("video");
+                      addClipToTrack(trackId, {
+                        mediaId: "test",
+                        name: "Test Clip",
+                        duration: 5,
+                        startTime: 0,
+                        trimStart: 0,
+                        trimEnd: 0,
+                      });
+                    }}
+                    className="text-xs"
+                  >
+                    Add Test Clip
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Add a test clip to try playback</TooltipContent>
+              </Tooltip>
+            </>
           )}
 
           <div className="w-px h-6 bg-border mx-1" />
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="text" size="icon">
+              <Button variant="text" size="icon" onClick={handleSplitSelected}>
                 <Scissors className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
@@ -388,7 +674,11 @@ export function Timeline() {
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="text" size="icon">
+              <Button
+                variant="text"
+                size="icon"
+                onClick={handleDuplicateSelected}
+              >
                 <Copy className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
@@ -397,7 +687,7 @@ export function Timeline() {
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="text" size="icon">
+              <Button variant="text" size="icon" onClick={handleFreezeSelected}>
                 <Snowflake className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
@@ -406,7 +696,7 @@ export function Timeline() {
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="text" size="icon">
+              <Button variant="text" size="icon" onClick={handleDeleteSelected}>
                 <Trash2 className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
@@ -456,9 +746,13 @@ export function Timeline() {
           <div className="flex-1 relative overflow-hidden">
             <ScrollArea className="w-full">
               <div
-                className="relative h-12 bg-muted/30"
+                className="relative h-12 bg-muted/30 cursor-pointer"
                 style={{
                   width: `${Math.max(1000, duration * 50 * zoomLevel)}px`,
+                }}
+                onClick={(e) => {
+                  // Calculate the clicked time position and seek to it
+                  handleSeekToPosition(e);
                 }}
               >
                 {/* Time markers */}
@@ -526,10 +820,11 @@ export function Timeline() {
                   }).filter(Boolean);
                 })()}
 
-                {/* Playhead in ruler */}
+                {/* Playhead in ruler (scrubbable) */}
                 <div
-                  className="absolute top-0 bottom-0 w-0.5 bg-red-500 pointer-events-none z-10"
-                  style={{ left: `${currentTime * 50 * zoomLevel}px` }}
+                  className="absolute top-0 bottom-0 w-0.5 bg-red-500 pointer-events-auto z-10 cursor-ew-resize"
+                  style={{ left: `${playheadPosition * 50 * zoomLevel}px` }}
+                  onMouseDown={handlePlayheadMouseDown}
                 >
                   <div className="absolute top-1 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-red-500 rounded-full border-2 border-white shadow-sm" />
                 </div>
@@ -541,25 +836,24 @@ export function Timeline() {
         {/* Tracks Area */}
         <div className="flex-1 flex overflow-hidden">
           {/* Track Labels */}
-          <div className="w-48 flex-shrink-0 border-r bg-background overflow-y-auto">
-            {tracks.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full py-8 text-center px-4">
-                <div className="w-12 h-12 rounded-full bg-muted/30 flex items-center justify-center mb-3">
-                  <SplitSquareHorizontal className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <p className="text-sm text-muted-foreground">No tracks</p>
-                <p className="text-xs text-muted-foreground/70 mt-1">
-                  Drop media to create tracks
-                </p>
-              </div>
-            ) : (
+          {tracks.length > 0 && (
+            <div className="w-48 flex-shrink-0 border-r bg-background overflow-y-auto">
               <div className="flex flex-col">
                 {tracks.map((track) => (
                   <div
                     key={track.id}
                     className="h-[60px] flex items-center px-3 border-b border-muted/30 bg-background group"
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      setContextMenu({
+                        type: "track",
+                        trackId: track.id,
+                        x: e.clientX,
+                        y: e.clientY,
+                      });
+                    }}
                   >
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <div className="flex items-center flex-1 min-w-0">
                       <div
                         className={`w-3 h-3 rounded-full flex-shrink-0 ${
                           track.type === "video"
@@ -569,37 +863,37 @@ export function Timeline() {
                               : "bg-purple-500"
                         }`}
                       />
-                      <span className="text-sm font-medium truncate">
+                      <span className="ml-2 text-sm font-medium truncate">
                         {track.name}
                       </span>
-                      {track.muted && (
-                        <span className="ml-2 text-xs text-red-500 font-semibold">
-                          Muted
-                        </span>
-                      )}
                     </div>
+                    {track.muted && (
+                      <span className="ml-2 text-xs text-red-500 font-semibold flex-shrink-0">
+                        Muted
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Timeline Tracks Content */}
-          <div className="flex-1 relative">
-            <ScrollArea className="h-full w-full">
+          <div className="flex-1 relative overflow-hidden">
+            <div
+              className="w-full h-full overflow-hidden flex"
+              ref={timelineRef}
+              style={{ position: "relative" }}
+            >
+              {/* Timeline grid and clips area (with left margin for sifdebar) */}
               <div
-                ref={timelineRef}
-                className="relative cursor-pointer select-none"
+                className="relative flex-1"
                 style={{
+                  height: `${Math.max(200, Math.min(800, tracks.length * 60))}px`,
                   width: `${Math.max(1000, duration * 50 * zoomLevel)}px`,
-                  minHeight:
-                    tracks.length > 0 ? `${tracks.length * 60}px` : "200px",
                 }}
-                onClick={handleTimelineClick}
-                onWheel={handleWheel}
-                onMouseMove={handleTimelineMouseMove}
-                onMouseUp={handleTimelineMouseUp}
-                onMouseLeave={handleTimelineMouseLeave}
+                onClick={handleTimelineAreaClick}
+                onMouseDown={handleTimelineMouseDown}
               >
                 {tracks.length === 0 ? (
                   <div className="absolute inset-0 flex items-center justify-center">
@@ -637,53 +931,37 @@ export function Timeline() {
                           track={track}
                           zoomLevel={zoomLevel}
                           setContextMenu={setContextMenu}
+                          contextMenu={contextMenu}
                         />
                       </div>
                     ))}
 
-                    {/* Playhead for tracks area */}
-                    <div
-                      className="absolute top-0 w-0.5 bg-red-500 pointer-events-none z-20"
-                      style={{
-                        left: `${currentTime * 50 * zoomLevel}px`,
-                        height: `${tracks.length * 60}px`,
-                      }}
-                    >
-                      {/* Draggable playhead handle */}
+                    {/* Playhead for tracks area (scrubbable) */}
+                    {tracks.length > 0 && (
                       <div
-                        className="absolute top-0 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-red-500 rounded-full border-2 border-white shadow-lg cursor-ew-resize pointer-events-auto hover:scale-110 transition-transform"
-                        onMouseDown={handlePlayheadMouseDown}
-                        style={{ zIndex: 30 }}
-                      />
-
-                      {/* Time display on playhead */}
-                      <div
-                        className="absolute top-6 left-1/2 transform -translate-x-1/2 bg-red-500 text-white text-xs px-2 py-1 rounded shadow-lg pointer-events-none whitespace-nowrap"
-                        style={{ zIndex: 25 }}
-                      >
-                        {Math.floor(currentTime * 10) / 10}s
-                      </div>
-                    </div>
-
-                    {/* Hover time indicator */}
-                    {hoverTime !== null && !isDraggingPlayhead && (
-                      <div
-                        className="absolute top-0 w-0.5 bg-blue-400/50 pointer-events-none z-15"
+                        className="absolute top-0 w-0.5 bg-red-500 pointer-events-auto z-20 cursor-ew-resize"
                         style={{
-                          left: `${hoverTime * 50 * zoomLevel}px`,
+                          left: `${playheadPosition * 50 * zoomLevel}px`,
                           height: `${tracks.length * 60}px`,
                         }}
-                      >
-                        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-blue-400 rounded-full border border-white shadow-sm" />
-                        <div className="absolute top-5 left-1/2 transform -translate-x-1/2 bg-blue-400 text-white text-xs px-2 py-1 rounded shadow-lg pointer-events-none whitespace-nowrap">
-                          {Math.floor(hoverTime * 10) / 10}s
-                        </div>
-                      </div>
+                        onMouseDown={handlePlayheadMouseDown}
+                      />
                     )}
                   </>
                 )}
+                {isDragOver && (
+                  <div
+                    className="absolute left-0 right-0 border-2 border-dashed border-accent flex items-center justify-center text-muted-foreground"
+                    style={{
+                      top: `${tracks.length * 60}px`,
+                      height: "60px",
+                    }}
+                  >
+                    <div>Drop media here to add a new track</div>
+                  </div>
+                )}
               </div>
-            </ScrollArea>
+            </div>
           </div>
         </div>
       </div>
@@ -739,7 +1017,7 @@ export function Timeline() {
               </button>
             </>
           ) : (
-            // Clip context menu
+            // Clip context menu (UPDATED ORDER)
             <>
               <button
                 className="flex items-center w-full px-3 py-2 hover:bg-accent hover:text-accent-foreground transition-colors text-left"
@@ -762,14 +1040,12 @@ export function Timeline() {
                         splitTime > effectiveStart &&
                         splitTime < effectiveEnd
                       ) {
-                        useTimelineStore
-                          .getState()
-                          .updateClipTrim(
-                            track.id,
-                            clip.id,
-                            clip.trimStart,
-                            clip.trimEnd + (effectiveEnd - splitTime)
-                          );
+                        updateClipTrim(
+                          track.id,
+                          clip.id,
+                          clip.trimStart,
+                          clip.trimEnd + (effectiveEnd - splitTime)
+                        );
                         useTimelineStore.getState().addClipToTrack(track.id, {
                           mediaId: clip.mediaId,
                           name: clip.name + " (split)",
@@ -791,6 +1067,65 @@ export function Timeline() {
                 <Scissors className="h-4 w-4 mr-2" />
                 Split at Playhead
               </button>
+
+              {/* Mute/Unmute option moved here */}
+              <button
+                className="flex items-center w-full px-3 py-2 hover:bg-accent hover:text-accent-foreground transition-colors text-left"
+                onClick={() => {
+                  if (contextMenu.trackId && contextMenu.clipId) {
+                    toggleClipMute(contextMenu.trackId, contextMenu.clipId);
+                  }
+                  setContextMenu(null);
+                }}
+              >
+                {tracks
+                  .find((t) => t.id === contextMenu.trackId)
+                  ?.clips.find((c) => c.id === contextMenu.clipId)?.muted ? (
+                  <Volume2 className="w-4 h-4 mr-2" />
+                ) : (
+                  <VolumeX className="w-4 h-4 mr-2" />
+                )}
+                {tracks
+                  .find((t) => t.id === contextMenu.trackId)
+                  ?.clips.find((c) => c.id === contextMenu.clipId)?.muted
+                  ? "Unmute"
+                  : "Mute"}
+              </button>
+
+              {/* Clip Speed Controls */}
+              <div className="flex flex-col w-full px-3 py-1">
+                <span className="text-xs text-muted-foreground mb-1">
+                  Speed:
+                </span>
+                <div className="flex gap-1">
+                  {[1, 1.5, 2].map((speed) => (
+                    <button
+                      key={speed}
+                      className={`px-2 py-1 rounded text-xs border ${
+                        tracks
+                          .find((t) => t.id === contextMenu.trackId)
+                          ?.clips.find((c) => c.id === contextMenu.clipId)
+                          ?.speed === speed
+                          ? "bg-accent text-accent-foreground border-accent"
+                          : "bg-background border-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                      }`}
+                      onClick={() => {
+                        if (contextMenu.trackId && contextMenu.clipId) {
+                          updateClipSpeed(
+                            contextMenu.trackId,
+                            contextMenu.clipId,
+                            speed
+                          );
+                        }
+                        setContextMenu(null);
+                      }}
+                    >
+                      {speed}x
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <button
                 className="flex items-center w-full px-3 py-2 hover:bg-accent hover:text-accent-foreground transition-colors text-left"
                 onClick={() => {
@@ -822,60 +1157,23 @@ export function Timeline() {
                 <Copy className="h-4 w-4 mr-2" />
                 Duplicate Clip
               </button>
-              <button
-                className="flex items-center w-full px-3 py-2 hover:bg-accent hover:text-accent-foreground transition-colors text-left"
-                onClick={() => {
-                  if (contextMenu.clipId) {
-                    const track = tracks.find(
-                      (t) => t.id === contextMenu.trackId
-                    );
-                    const clip = track?.clips.find(
-                      (c) => c.id === contextMenu.clipId
-                    );
-                    if (clip && track) {
-                      toggleClipMute(track.id, clip.id);
-                      toast.success(clip.muted ? "Clip unmuted" : "Clip muted");
-                    }
-                  }
-                  setContextMenu(null);
-                }}
-              >
-                {(() => {
-                  const track = tracks.find(
-                    (t) => t.id === contextMenu.trackId
-                  );
-                  const clip = track?.clips.find(
-                    (c) => c.id === contextMenu.clipId
-                  );
-                  return clip?.muted ? (
-                    <>
-                      <Volume2 className="h-4 w-4 mr-2" />
-                      Unmute Clip
-                    </>
-                  ) : (
-                    <>
-                      <VolumeX className="h-4 w-4 mr-2" />
-                      Mute Clip
-                    </>
-                  );
-                })()}
-              </button>
+
               <div className="h-px bg-border mx-1 my-1" />
+
               <button
                 className="flex items-center w-full px-3 py-2 text-destructive hover:bg-destructive/10 transition-colors text-left"
                 onClick={() => {
-                  if (contextMenu.clipId) {
+                  if (contextMenu.trackId && contextMenu.clipId) {
                     removeClipFromTrack(
                       contextMenu.trackId,
                       contextMenu.clipId
                     );
-                    toast.success("Clip deleted");
                   }
                   setContextMenu(null);
                 }}
               >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete Clip
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete
               </button>
             </>
           )}
@@ -889,6 +1187,7 @@ function TimelineTrackContent({
   track,
   zoomLevel,
   setContextMenu,
+  contextMenu,
 }: {
   track: TimelineTrack;
   zoomLevel: number;
@@ -901,6 +1200,13 @@ function TimelineTrackContent({
       y: number;
     } | null
   ) => void;
+  contextMenu: {
+    type: "track" | "clip";
+    trackId: string;
+    clipId?: string;
+    x: number;
+    y: number;
+  } | null;
 }) {
   const { mediaItems } = useMediaStore();
   const {
@@ -911,9 +1217,10 @@ function TimelineTrackContent({
     addClipToTrack,
     removeClipFromTrack,
     toggleTrackMute,
-    toggleClipMute,
-    selectedClip,
+    selectedClips,
     selectClip,
+    deselectClip,
+    toggleClipMute,
   } = useTimelineStore();
   const { currentTime } = usePlaybackStore();
   const [isDropping, setIsDropping] = useState(false);
@@ -931,8 +1238,8 @@ function TimelineTrackContent({
   const [clipMenuOpen, setClipMenuOpen] = useState<string | null>(null);
 
   // Handle clip deletion
-  const handleDeleteClip = (clipId: string) => {
-    removeClipFromTrack(track.id, clipId);
+  const handleDeleteClip = (trackId: string, clipId: string) => {
+    removeClipFromTrack(trackId, clipId);
   };
 
   const handleResizeStart = (
@@ -1045,7 +1352,9 @@ function TimelineTrackContent({
             return;
           }
         }
-      } catch (error) {}
+      } catch (error) {
+        console.error("Error parsing dropped media item:", error);
+      }
     }
 
     // Calculate drop position for overlap checking
@@ -1387,7 +1696,21 @@ function TimelineTrackContent({
       );
     }
 
-    // Fallback for audio or videos without thumbnails
+    if (mediaItem.type === "audio") {
+      return (
+        <div className="w-full h-full flex items-center gap-2">
+          <div className="flex-1 min-w-0">
+            <AudioWaveform
+              audioUrl={mediaItem.url}
+              height={24}
+              className="w-full"
+            />
+          </div>
+        </div>
+      );
+    }
+
+    // Fallback for videos without thumbnails
     return (
       <span className="text-xs text-foreground/80 truncate">{clip.name}</span>
     );
@@ -1477,21 +1800,37 @@ function TimelineTrackContent({
                 effectiveDuration * 50 * zoomLevel
               );
               const clipLeft = clip.startTime * 50 * zoomLevel;
-
-              // Correctly declare isSelected inside the map
-              const isSelected =
-                selectedClip &&
-                selectedClip.trackId === track.id &&
-                selectedClip.clipId === clip.id;
-
+              const isSelected = selectedClips.some(
+                (c) => c.trackId === track.id && c.clipId === clip.id
+              );
               return (
                 <div
                   key={clip.id}
-                  className={`timeline-clip absolute h-full rounded-sm border transition-all duration-200 ${getTrackColor(track.type)} flex items-center py-3 min-w-[80px] overflow-hidden group hover:shadow-lg ${isSelected ? "ring-2 ring-blue-500 z-10" : ""}`}
+                  className={`timeline-clip absolute h-full border transition-all-200 ${getTrackColor(track.type)} flex items-center py-3 min-w-[80px] overflow-hidden group hover:shadow-lg ${isSelected ? "ring-2 ring-blue-500 z-10" : ""}`}
                   style={{ width: `${clipWidth}px`, left: `${clipLeft}px` }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    selectClip(track.id, clip.id);
+
+                    // Close context menu if it's open
+                    if (contextMenu) {
+                      setContextMenu(null);
+                      return; // Don't handle selection when closing context menu
+                    }
+
+                    const isSelected = selectedClips.some(
+                      (c) => c.trackId === track.id && c.clipId === clip.id
+                    );
+
+                    if (e.metaKey || e.ctrlKey || e.shiftKey) {
+                      // Multi-selection mode: toggle the clip
+                      selectClip(track.id, clip.id, true);
+                    } else if (isSelected) {
+                      // If clip is already selected, deselect it
+                      deselectClip(track.id, clip.id);
+                    } else {
+                      // If clip is not selected, select it (replacing other selections)
+                      selectClip(track.id, clip.id, false);
+                    }
                   }}
                   tabIndex={0}
                   onContextMenu={(e) => {
@@ -1519,14 +1858,6 @@ function TimelineTrackContent({
                     onDragEnd={handleClipDragEnd}
                   >
                     {renderClipContent(clip)}
-                    {/* Mute indicator */}
-                    {clip.muted && (
-                      <div className="absolute top-1 left-1 z-10">
-                        <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-                          <VolumeX className="h-2 w-2 text-white" />
-                        </div>
-                      </div>
-                    )}
                     {/* Clip options menu */}
                     <div className="absolute top-1 right-1 z-10">
                       <Button
@@ -1538,7 +1869,7 @@ function TimelineTrackContent({
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                       {clipMenuOpen === clip.id && (
-                        <div className="absolute right-0 mt-2 w-32 bg-white border rounded shadow z-50">
+                        <div className="absolute right-0 mt-2 w-32 bg-white text-black border rounded shadow z-50">
                           <button
                             className="flex items-center w-full px-3 py-2 text-sm hover:bg-muted/30"
                             onClick={() => {
@@ -1550,7 +1881,7 @@ function TimelineTrackContent({
                           </button>
                           <button
                             className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50"
-                            onClick={() => handleDeleteClip(clip.id)}
+                            onClick={() => handleDeleteClip(track.id, clip.id)}
                           >
                             <Trash2 className="h-4 w-4 mr-2" /> Delete
                           </button>
@@ -1570,9 +1901,7 @@ function TimelineTrackContent({
             {/* Drop position indicator */}
             {isDraggedOver && dropPosition !== null && (
               <div
-                className={`absolute top-0 bottom-0 w-1 pointer-events-none z-30 transition-all duration-75 ease-out ${
-                  wouldOverlap ? "bg-red-500" : "bg-blue-500"
-                }`}
+                className={`absolute top-0 bottom-0 w-1 pointer-events-none z-30 transition-all duration-75 ease-out ${wouldOverlap ? "bg-red-500" : "bg-blue-500"}`}
                 style={{
                   left: `${dropPosition * 50 * zoomLevel}px`,
                   transform: "translateX(-50%)",

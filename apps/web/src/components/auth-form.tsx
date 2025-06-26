@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { signUp, signIn } from "@opencut/auth/client";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,6 +18,8 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { GoogleIcon } from "@/components/icons";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+// import { z } from "zod";
+// import {z} from 'zod'
 import { z } from "zod";
 import {
   Form,
@@ -28,6 +29,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { signIn, signUp } from "@opencut/auth/client";
 
 // Zod schemas
 const loginSchema = z.object({

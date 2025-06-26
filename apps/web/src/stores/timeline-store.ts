@@ -8,6 +8,8 @@ export interface TimelineClip {
   startTime: number;
   trimStart: number;
   trimEnd: number;
+  muted?: boolean;
+  speed?: number; // 1.0 = normal, 1.5 = 1.5x, etc.
 }
 
 export interface TimelineTrack {
@@ -73,6 +75,8 @@ interface TimelineStore {
     startTime: number
   ) => void;
   toggleTrackMute: (trackId: string) => void;
+  toggleClipMute: (trackId: string, clipId: string) => void;
+  updateClipSpeed: (trackId: string, clipId: string, speed: number) => void;
 
   // Computed values
   getTotalDuration: () => number;
@@ -266,6 +270,38 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
     set((state) => ({
       tracks: state.tracks.map((track) =>
         track.id === trackId ? { ...track, muted: !track.muted } : track
+      ),
+    }));
+  },
+
+  toggleClipMute: (trackId, clipId) => {
+    get().pushHistory();
+    set((state) => ({
+      tracks: state.tracks.map((track) =>
+        track.id === trackId
+          ? {
+              ...track,
+              clips: track.clips.map((clip) =>
+                clip.id === clipId ? { ...clip, muted: !clip.muted } : clip
+              ),
+            }
+          : track
+      ),
+    }));
+  },
+
+  updateClipSpeed: (trackId, clipId, speed) => {
+    get().pushHistory();
+    set((state) => ({
+      tracks: state.tracks.map((track) =>
+        track.id === trackId
+          ? {
+              ...track,
+              clips: track.clips.map((clip) =>
+                clip.id === clipId ? { ...clip, speed } : clip
+              ),
+            }
+          : track
       ),
     }));
   },

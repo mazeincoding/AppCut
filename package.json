@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "next": "^15.3.4",
-    "wavesurfer.js": "^7.9.8"
+    "wavesurfer.js": "^7.9.8",
+    "zod": "^3.25.67"
   }
 }
