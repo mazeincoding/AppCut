@@ -24,8 +24,23 @@ function isRouteMatch(
   });
 }
 
+function isValidInternalPath(path: string): boolean {
+  return (
+    path.startsWith("/") && // Must start with slash
+    !path.startsWith("//") && // Prevent protocol-relative URLs
+    !path.includes("://") && // No protocol
+    !path.includes("@") && // No user info
+    !path.includes("\\") && // No backslashes
+    path.length < 2048 // Reasonable length limit
+  );
+}
+
 function buildRedirectUrl(base: string, redirectPath: string, nextUrl: URL) {
-  const redirectParam = `?redirect=${encodeURIComponent(redirectPath)}`;
+  const safePath = isValidInternalPath(redirectPath)
+    ? redirectPath
+    : ROUTE_CONFIG.defaultRedirect;
+
+  const redirectParam = `?redirect=${encodeURIComponent(safePath)}`;
   return new URL(base + redirectParam, nextUrl);
 }
 
