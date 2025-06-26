@@ -1,14 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { Button } from "./ui/button";
 import { ArrowRight } from "lucide-react";
 import { HeaderBase } from "./header-base";
 import { useSession } from "@opencut/auth/client";
 import { getStars } from "@/lib/fetchGhStars";
-import { Star } from "lucide-react";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 export function Header() {
   const { data: session } = useSession();
@@ -29,7 +28,8 @@ export function Header() {
 
   const leftContent = (
     <Link href="/" className="flex items-center gap-3">
-      <Image src="/logo.svg" alt="OpenCut Logo" width={142} height={32} />
+      <Image src="/logo.svg" alt="OpenCut Logo" width={32} height={32} />
+      <span className="text-xl font-medium hidden md:block">OpenCut</span>
     </Link>
   );
 
@@ -59,10 +59,12 @@ export function Header() {
   );
 
   return (
-    <HeaderBase
-      className="bg-[#1D1D1D] border border-white/10 rounded-2xl max-w-3xl mx-auto mt-4 pl-4 pr-[14px]"
-      leftContent={leftContent}
-      rightContent={rightContent}
-    />
+    <div className="mx-4 md:mx-0">
+      <HeaderBase
+        className="bg-[#1D1D1D] border border-white/10 rounded-2xl max-w-3xl mx-auto mt-4 pl-4 pr-[14px]"
+        leftContent={leftContent}
+        rightContent={rightContent}
+      />
+    </div>
   );
 }
