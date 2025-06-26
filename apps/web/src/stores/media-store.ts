@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useTimelineStore } from "./timeline-store";
 
 export interface MediaItem {
   id: string;
@@ -149,6 +150,9 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
       }
     }
 
+    // Remove timeline clips that reference this media
+    useTimelineStore.getState().removeClipsByMediaId(id);
+
     set((state) => ({
       mediaItems: state.mediaItems.filter((item) => item.id !== id),
     }));
@@ -164,6 +168,9 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
         URL.revokeObjectURL(item.thumbnailUrl);
       }
     });
+
+    // Clear all timeline clips
+    useTimelineStore.getState().clearAllTracks();
 
     set({ mediaItems: [] });
   },

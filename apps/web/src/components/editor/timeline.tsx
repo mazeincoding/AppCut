@@ -564,6 +564,11 @@ export function Timeline() {
     };
   }, [isInTimeline]);
 
+  // Helper function to check if a clip is broken (media deleted)
+  const isClipBroken = (clip: TypeTimelineClip) => {
+    return !mediaItems.some(item => item.id === clip.mediaId);
+  };
+
   return (
     <div
       className={`h-full flex flex-col transition-colors duration-200 relative ${isDragOver ? "bg-accent/30 border-accent" : ""}`}
@@ -1019,102 +1024,119 @@ export function Timeline() {
           ) : (
             // Clip context menu
             <>
-              <button
-                className="flex items-center w-full px-3 py-2 hover:bg-accent hover:text-accent-foreground transition-colors text-left"
-                onClick={() => {
-                  if (contextMenu.clipId) {
-                    const track = tracks.find(
-                      (t) => t.id === contextMenu.trackId
-                    );
-                    const clip = track?.clips.find(
-                      (c) => c.id === contextMenu.clipId
-                    );
-                    if (clip && track) {
-                      const splitTime = currentTime;
-                      const effectiveStart = clip.startTime;
-                      const effectiveEnd =
-                        clip.startTime +
-                        (clip.duration - clip.trimStart - clip.trimEnd);
+              {(() => {
+                const track = tracks.find((t) => t.id === contextMenu.trackId);
+                const clip = track?.clips.find((c) => c.id === contextMenu.clipId);
+                const isBroken = clip ? isClipBroken(clip) : false;
 
-                      if (
-                        splitTime > effectiveStart &&
-                        splitTime < effectiveEnd
-                      ) {
-                        updateClipTrim(
-                          track.id,
-                          clip.id,
-                          clip.trimStart,
-                          clip.trimEnd + (effectiveEnd - splitTime)
-                        );
-                        useTimelineStore.getState().addClipToTrack(track.id, {
-                          mediaId: clip.mediaId,
-                          name: clip.name + " (split)",
-                          duration: clip.duration,
-                          startTime: splitTime,
-                          trimStart:
-                            clip.trimStart + (splitTime - effectiveStart),
-                          trimEnd: clip.trimEnd,
-                        });
-                        toast.success("Clip split successfully");
-                      } else {
-                        toast.error("Playhead must be within clip to split");
-                      }
-                    }
-                  }
-                  setContextMenu(null);
-                }}
-              >
-                <Scissors className="h-4 w-4 mr-2" />
-                Split at Playhead
-              </button>
-              <button
-                className="flex items-center w-full px-3 py-2 hover:bg-accent hover:text-accent-foreground transition-colors text-left"
-                onClick={() => {
-                  if (contextMenu.clipId) {
-                    const track = tracks.find(
-                      (t) => t.id === contextMenu.trackId
-                    );
-                    const clip = track?.clips.find(
-                      (c) => c.id === contextMenu.clipId
-                    );
-                    if (clip && track) {
-                      useTimelineStore.getState().addClipToTrack(track.id, {
-                        mediaId: clip.mediaId,
-                        name: clip.name + " (copy)",
-                        duration: clip.duration,
-                        startTime:
-                          clip.startTime +
-                          (clip.duration - clip.trimStart - clip.trimEnd) +
-                          0.1,
-                        trimStart: clip.trimStart,
-                        trimEnd: clip.trimEnd,
-                      });
-                      toast.success("Clip duplicated");
-                    }
-                  }
-                  setContextMenu(null);
-                }}
-              >
-                <Copy className="h-4 w-4 mr-2" />
-                Duplicate Clip
-              </button>
-              <div className="h-px bg-border mx-1 my-1" />
-              <button
-                className="flex items-center w-full px-3 py-2 text-destructive hover:bg-destructive/10 transition-colors text-left"
-                onClick={() => {
-                  if (contextMenu.clipId) {
-                    removeClipFromTrack(
-                      contextMenu.trackId,
-                      contextMenu.clipId
-                    );
-                    toast.success("Clip deleted");
-                  }
-                  setContextMenu(null);
-                }}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete Clip
-              </button>
+                return (
+                  <>
+                    {isBroken && (
+                      <div className="px-3 py-2 text-xs text-red-600 bg-red-50 border-b border-red-200">
+                        ⚠️ This clip references deleted media
+                      </div>
+                    )}
+                    <button
+                      className="flex items-center w-full px-3 py-2 hover:bg-accent hover:text-accent-foreground transition-colors text-left"
+                      onClick={() => {
+                        if (contextMenu.clipId) {
+                          const track = tracks.find(
+                            (t) => t.id === contextMenu.trackId
+                          );
+                          const clip = track?.clips.find(
+                            (c) => c.id === contextMenu.clipId
+                          );
+                          if (clip && track) {
+                            const splitTime = currentTime;
+                            const effectiveStart = clip.startTime;
+                            const effectiveEnd =
+                              clip.startTime +
+                              (clip.duration - clip.trimStart - clip.trimEnd);
+
+                            if (
+                              splitTime > effectiveStart &&
+                              splitTime < effectiveEnd
+                            ) {
+                              updateClipTrim(
+                                track.id,
+                                clip.id,
+                                clip.trimStart,
+                                clip.trimEnd + (effectiveEnd - splitTime)
+                              );
+                              useTimelineStore.getState().addClipToTrack(track.id, {
+                                mediaId: clip.mediaId,
+                                name: clip.name + " (split)",
+                                duration: clip.duration,
+                                startTime: splitTime,
+                                trimStart:
+                                  clip.trimStart + (splitTime - effectiveStart),
+                                trimEnd: clip.trimEnd,
+                              });
+                              toast.success("Clip split successfully");
+                            } else {
+                              toast.error("Playhead must be within clip to split");
+                            }
+                          }
+                        }
+                        setContextMenu(null);
+                      }}
+                      disabled={isBroken}
+                    >
+                      <Scissors className="h-4 w-4 mr-2" />
+                      Split at Playhead
+                    </button>
+                    <button
+                      className="flex items-center w-full px-3 py-2 hover:bg-accent hover:text-accent-foreground transition-colors text-left"
+                      onClick={() => {
+                        if (contextMenu.clipId) {
+                          const track = tracks.find(
+                            (t) => t.id === contextMenu.trackId
+                          );
+                          const clip = track?.clips.find(
+                            (c) => c.id === contextMenu.clipId
+                          );
+                          if (clip && track) {
+                            useTimelineStore.getState().addClipToTrack(track.id, {
+                              mediaId: clip.mediaId,
+                              name: clip.name + " (copy)",
+                              duration: clip.duration,
+                              startTime:
+                                clip.startTime +
+                                (clip.duration - clip.trimStart - clip.trimEnd) +
+                                0.1,
+                              trimStart: clip.trimStart,
+                              trimEnd: clip.trimEnd,
+                            });
+                            toast.success("Clip duplicated");
+                          }
+                        }
+                        setContextMenu(null);
+                      }}
+                      disabled={isBroken}
+                    >
+                      <Copy className="h-4 w-4 mr-2" />
+                      Duplicate Clip
+                    </button>
+                    <div className="h-px bg-border mx-1 my-1" />
+                    <button
+                      className="flex items-center w-full px-3 py-2 text-destructive hover:bg-destructive/10 transition-colors text-left"
+                      onClick={() => {
+                        if (contextMenu.clipId) {
+                          removeClipFromTrack(
+                            contextMenu.trackId,
+                            contextMenu.clipId
+                          );
+                          toast.success(isBroken ? "Broken clip removed" : "Clip deleted");
+                        }
+                        setContextMenu(null);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      {isBroken ? "Remove Broken Clip" : "Delete Clip"}
+                    </button>
+                  </>
+                );
+              })()}
             </>
           )}
         </div>

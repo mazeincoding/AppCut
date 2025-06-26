@@ -35,6 +35,8 @@ interface TimelineStore {
   removeTrack: (trackId: string) => void;
   addClipToTrack: (trackId: string, clip: Omit<TimelineClip, "id">) => void;
   removeClipFromTrack: (trackId: string, clipId: string) => void;
+  removeClipsByMediaId: (mediaId: string) => void;
+  clearAllTracks: () => void;
   moveClipToTrack: (
     fromTrackId: string,
     toTrackId: string,
@@ -260,5 +262,20 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
     if (redoStack.length === 0) return;
     const next = redoStack[redoStack.length - 1];
     set({ tracks: next, redoStack: redoStack.slice(0, -1) });
+  },
+
+  removeClipsByMediaId: (mediaId) => {
+    get().pushHistory();
+    set((state) => ({
+      tracks: state.tracks.map((track) => ({
+        ...track,
+        clips: track.clips.filter((clip) => clip.mediaId !== mediaId),
+      })).filter((track) => track.clips.length > 0),
+    }));
+  },
+
+  clearAllTracks: () => {
+    get().pushHistory();
+    set({ tracks: [] });
   },
 }));

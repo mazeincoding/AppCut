@@ -153,7 +153,12 @@ export function TimelineClip({
 
     if (!mediaItem) {
       return (
-        <span className="text-xs text-foreground/80 truncate">{clip.name}</span>
+        <div className="w-full h-full flex items-center justify-center bg-red-500/10 border border-red-500/30 rounded-sm">
+          <div className="text-center">
+            <div className="text-xs text-red-600 font-medium mb-1">⚠️ Media Deleted</div>
+            <div className="text-xs text-red-500/80 truncate">{clip.name}</div>
+          </div>
+        </div>
       );
     }
 
