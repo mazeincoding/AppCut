@@ -249,7 +249,7 @@ export function PreviewPanel() {
           {activeClips.length === 0 ? (
             <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
               {tracks.length === 0
-                ? "Drop media to start editing"
+                ? "No media added to timeline"
                 : "No clips at current time"}
             </div>
           ) : (

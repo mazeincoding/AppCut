@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useAuth } from '@/hooks/useAuth';
+import { signIn, signUp } from "@opencut/auth/client";
 import { Button } from "@/components/ui/button";
 import {
   Card,
