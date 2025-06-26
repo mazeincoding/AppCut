@@ -576,38 +576,58 @@ export function Timeline() {
   // Scroll synchronization and auto-scroll to playhead
   const rulerScrollRef = useRef<HTMLDivElement>(null);
   const tracksScrollRef = useRef<HTMLDivElement>(null);
+  const isUpdatingRef = useRef(false);
 
+  // Setup scroll event synchronization (runs once when refs are available)
   useEffect(() => {
-    if (!rulerScrollRef.current || !tracksScrollRef.current) return;
-
-    const rulerViewport = rulerScrollRef.current.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
-    const tracksViewport = tracksScrollRef.current.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+    const rulerViewport = rulerScrollRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+    const tracksViewport = tracksScrollRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
 
     if (!rulerViewport || !tracksViewport) return;
 
-    // Sync scroll between ruler and tracks
-    const handleRulerScroll = () => tracksViewport.scrollLeft = rulerViewport.scrollLeft;
-    const handleTracksScroll = () => rulerViewport.scrollLeft = tracksViewport.scrollLeft;
+    // Sync scroll between ruler and tracks with infinite loop prevention
+    const handleRulerScroll = () => {
+      if (isUpdatingRef.current) return;
+      isUpdatingRef.current = true;
+      tracksViewport.scrollLeft = rulerViewport.scrollLeft;
+      requestAnimationFrame(() => { isUpdatingRef.current = false; });
+    };
+
+    const handleTracksScroll = () => {
+      if (isUpdatingRef.current) return;
+      isUpdatingRef.current = true;
+      rulerViewport.scrollLeft = tracksViewport.scrollLeft;
+      requestAnimationFrame(() => { isUpdatingRef.current = false; });
+    };
 
     rulerViewport.addEventListener('scroll', handleRulerScroll);
     tracksViewport.addEventListener('scroll', handleTracksScroll);
 
-    // Auto-scroll to playhead when it moves significantly
+    return () => {
+      rulerViewport?.removeEventListener('scroll', handleRulerScroll);
+      tracksViewport?.removeEventListener('scroll', handleTracksScroll);
+    };
+  }, []); // Only run once when component mounts
+
+  // Auto-scroll to playhead when it moves significantly (separate effect)
+  useEffect(() => {
+    const rulerViewport = rulerScrollRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+    const tracksViewport = tracksScrollRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+
+    if (!rulerViewport || !tracksViewport || isUpdatingRef.current) return;
+
     const playheadPosition = currentTime * 50 * zoomLevel;
     const containerWidth = rulerViewport.clientWidth;
     const scrollLeft = rulerViewport.scrollLeft;
     
     if (playheadPosition < scrollLeft || playheadPosition > scrollLeft + containerWidth - 100) {
       const targetScrollLeft = Math.max(0, playheadPosition - containerWidth / 2);
+      isUpdatingRef.current = true;
       rulerViewport.scrollLeft = targetScrollLeft;
       tracksViewport.scrollLeft = targetScrollLeft;
+      requestAnimationFrame(() => { isUpdatingRef.current = false; });
     }
-
-    return () => {
-      rulerViewport.removeEventListener('scroll', handleRulerScroll);
-      tracksViewport.removeEventListener('scroll', handleTracksScroll);
-    };
-  }, [currentTime, zoomLevel, tracks.length]);
+  }, [currentTime, zoomLevel]); // Only trigger on time/zoom changes
 
   return (
     <div
@@ -951,6 +971,7 @@ export function Timeline() {
                           zoomLevel={zoomLevel}
                           setContextMenu={setContextMenu}
                           contextMenu={contextMenu}
+                          timelineWidth={dynamicTimelineWidth}
                         />
                       </div>
                     ))}
@@ -1145,11 +1166,13 @@ function TimelineTrackContent({
   zoomLevel,
   setContextMenu,
   contextMenu,
+  timelineWidth,
 }: {
   track: TimelineTrack;
   zoomLevel: number;
   setContextMenu: (menu: ContextMenuState | null) => void;
   contextMenu: ContextMenuState | null;
+  timelineWidth: number;
 }) {
   const { mediaItems } = useMediaStore();
   const {
@@ -1162,13 +1185,6 @@ function TimelineTrackContent({
     deselectClip,
   } = useTimelineStore();
   const { currentTime, duration } = usePlaybackStore();
-
-  // Dynamic timeline width calculation for this track
-  const dynamicTimelineWidth = Math.max(
-    (duration || 0) * 50 * zoomLevel, // Base width from duration
-    (currentTime + 30) * 50 * zoomLevel, // Width to show current time + 30 seconds buffer
-    1000 // Minimum width
-  );
 
   // Mouse-based drag hook
   const { isDragging, startDrag, endDrag, timelineRef } =
@@ -1610,7 +1626,7 @@ function TimelineTrackContent({
       <div
         ref={timelineRef}
         className="h-full relative track-clips-container"
-        style={{ width: `${dynamicTimelineWidth}px` }}
+        style={{ width: `${timelineWidth}px` }}
       >
         {track.clips.length === 0 ? (
           <div
