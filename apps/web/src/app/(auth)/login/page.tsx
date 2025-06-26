@@ -52,8 +52,8 @@ function LoginForm() {
     try {
       await signIn.social({
         provider: "google",
+        callbackURL: "/editor",
       });
-      router.push("/editor");
     } catch (error) {
       setError("Failed to sign in with Google. Please try again.");
       setIsGoogleLoading(false);

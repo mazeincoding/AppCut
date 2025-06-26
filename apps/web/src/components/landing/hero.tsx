@@ -83,7 +83,7 @@ export function Hero({ signupCount }: HeroProps) {
   };
 
   return (
-    <div className="min-h-[calc(100vh-6rem)] flex flex-col justify-between items-center text-center px-4">
+    <div className="min-h-[calc(100vh-6rem)] supports-[height:100dvh]:min-h-[calc(100dvh-6rem)] flex flex-col justify-between items-center text-center px-4">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -96,16 +96,10 @@ export function Hero({ signupCount }: HeroProps) {
           transition={{ delay: 0.2, duration: 0.8 }}
           className="inline-block font-bold tracking-tighter text-4xl md:text-[4rem]"
         >
-          <h1>The open source</h1>
+          <h1>The Open Source</h1>
           <div className="flex justify-center gap-4 leading-[4rem] mt-0 md:mt-2">
             <div className="relative -rotate-[2.76deg] max-w-[250px] md:max-w-[454px] mt-2">
-              <Image
-                className="mt-2.5 md:mt-0"
-                src="/frame.svg"
-                height={79}
-                width={459}
-                alt="frame"
-              />
+              <Image src="/frame.svg" height={79} width={459} alt="frame" />
               <span className="absolute inset-0 flex items-center justify-center">
                 Video Editor
               </span>
@@ -114,7 +108,7 @@ export function Hero({ signupCount }: HeroProps) {
         </motion.div>
 
         <motion.p
-          className="mt-10 text-lg sm:text-xl text-muted-foreground font-light tracking-wide max-w-xl mx-auto"
+          className="mt-10 text-base sm:text-xl text-muted-foreground font-light tracking-wide max-w-xl mx-auto"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4, duration: 0.8 }}
@@ -129,7 +123,10 @@ export function Hero({ signupCount }: HeroProps) {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6, duration: 0.8 }}
         >
-          <form onSubmit={handleSubmit} className="flex gap-3 w-full max-w-lg flex-col sm:flex-row">
+          <form
+            onSubmit={handleSubmit}
+            className="flex gap-3 w-full max-w-lg flex-col sm:flex-row"
+          >
             <Input
               type="email"
               placeholder="Enter your email"

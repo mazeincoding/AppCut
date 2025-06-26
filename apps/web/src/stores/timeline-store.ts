@@ -30,6 +30,27 @@ interface TimelineStore {
   clearSelectedClips: () => void;
   setSelectedClips: (clips: { trackId: string; clipId: string }[]) => void;
 
+  // Drag state
+  dragState: {
+    isDragging: boolean;
+    clipId: string | null;
+    trackId: string | null;
+    startMouseX: number;
+    startClipTime: number;
+    clickOffsetTime: number;
+    currentTime: number;
+  };
+  setDragState: (dragState: Partial<TimelineStore["dragState"]>) => void;
+  startDrag: (
+    clipId: string,
+    trackId: string,
+    startMouseX: number,
+    startClipTime: number,
+    clickOffsetTime: number
+  ) => void;
+  updateDragTime: (currentTime: number) => void;
+  endDrag: () => void;
+
   // Actions
   addTrack: (type: "video" | "audio" | "effects") => string;
   removeTrack: (trackId: string) => void;
@@ -71,9 +92,9 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
   pushHistory: () => {
     const { tracks, history, redoStack } = get();
     // Deep copy tracks
-    set({ 
+    set({
       history: [...history, JSON.parse(JSON.stringify(tracks))],
-      redoStack: [] // Clear redo stack when new action is performed
+      redoStack: [], // Clear redo stack when new action is performed
     });
   },
 
@@ -81,10 +102,10 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
     const { history, redoStack, tracks } = get();
     if (history.length === 0) return;
     const prev = history[history.length - 1];
-    set({ 
-      tracks: prev, 
+    set({
+      tracks: prev,
       history: history.slice(0, -1),
-      redoStack: [...redoStack, JSON.parse(JSON.stringify(tracks))] // Add current state to redo stack
+      redoStack: [...redoStack, JSON.parse(JSON.stringify(tracks))], // Add current state to redo stack
     });
   },
 
@@ -96,7 +117,11 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
       if (multi) {
         // Toggle selection
         return exists
-          ? { selectedClips: state.selectedClips.filter((c) => !(c.trackId === trackId && c.clipId === clipId)) }
+          ? {
+              selectedClips: state.selectedClips.filter(
+                (c) => !(c.trackId === trackId && c.clipId === clipId)
+              ),
+            }
           : { selectedClips: [...state.selectedClips, { trackId, clipId }] };
       } else {
         return { selectedClips: [{ trackId, clipId }] };
@@ -105,7 +130,9 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
   },
   deselectClip: (trackId, clipId) => {
     set((state) => ({
-      selectedClips: state.selectedClips.filter((c) => !(c.trackId === trackId && c.clipId === clipId)),
+      selectedClips: state.selectedClips.filter(
+        (c) => !(c.trackId === trackId && c.clipId === clipId)
+      ),
     }));
   },
   clearSelectedClips: () => {
@@ -161,7 +188,10 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
       tracks: state.tracks
         .map((track) =>
           track.id === trackId
-            ? { ...track, clips: track.clips.filter((clip) => clip.id !== clipId) }
+            ? {
+                ...track,
+                clips: track.clips.filter((clip) => clip.id !== clipId),
+              }
             : track
         )
         // Remove track if it becomes empty
@@ -260,5 +290,57 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
     if (redoStack.length === 0) return;
     const next = redoStack[redoStack.length - 1];
     set({ tracks: next, redoStack: redoStack.slice(0, -1) });
+  },
+
+  dragState: {
+    isDragging: false,
+    clipId: null,
+    trackId: null,
+    startMouseX: 0,
+    startClipTime: 0,
+    clickOffsetTime: 0,
+    currentTime: 0,
+  },
+
+  setDragState: (dragState) =>
+    set((state) => ({
+      dragState: { ...state.dragState, ...dragState },
+    })),
+
+  startDrag: (clipId, trackId, startMouseX, startClipTime, clickOffsetTime) => {
+    set({
+      dragState: {
+        isDragging: true,
+        clipId,
+        trackId,
+        startMouseX,
+        startClipTime,
+        clickOffsetTime,
+        currentTime: startClipTime,
+      },
+    });
+  },
+
+  updateDragTime: (currentTime) => {
+    set((state) => ({
+      dragState: {
+        ...state.dragState,
+        currentTime,
+      },
+    }));
+  },
+
+  endDrag: () => {
+    set({
+      dragState: {
+        isDragging: false,
+        clipId: null,
+        trackId: null,
+        startMouseX: 0,
+        startClipTime: 0,
+        clickOffsetTime: 0,
+        currentTime: 0,
+      },
+    });
   },
 }));

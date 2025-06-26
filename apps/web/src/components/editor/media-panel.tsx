@@ -14,6 +14,12 @@ import { toast } from "sonner";
 // You can upload files or drag them from your computer. Dragging from here to the timeline adds them to your video project.
 
 export function MediaPanel() {
+  return (
+    <div style={{ backgroundColor: 'transparent' }}>
+      {/* Existing content */}
+    </div>
+  );
+}
   const { mediaItems, addMediaItem, removeMediaItem } = useMediaStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);

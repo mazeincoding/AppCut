@@ -28,3 +28,7 @@ node_modules
 .turbo
 
 *.env
+
+# cursor
+
+.cursor/

@@ -21,11 +21,9 @@ export function TimelineClip({
   onClipClick,
 }: TimelineClipProps) {
   const { mediaItems } = useMediaStore();
-  const { updateClipTrim, addClipToTrack, removeClipFromTrack } =
+  const { updateClipTrim, addClipToTrack, removeClipFromTrack, dragState } =
     useTimelineStore();
   const { currentTime } = usePlaybackStore();
-  const { draggedClipId, getDraggedClipPosition } =
-    useDragClip(zoomLevel);
 
   const [resizing, setResizing] = useState<ResizeState | null>(null);
   const [clipMenuOpen, setClipMenuOpen] = useState(false);
@@ -34,11 +32,12 @@ export function TimelineClip({
   const clipWidth = Math.max(80, effectiveDuration * 50 * zoomLevel);
 
   // Use real-time position during drag, otherwise use stored position
-  const dragPosition = getDraggedClipPosition(clip.id);
-  const clipStartTime = dragPosition !== null ? dragPosition : clip.startTime;
+  const isBeingDragged = dragState.clipId === clip.id;
+  const clipStartTime =
+    isBeingDragged && dragState.isDragging
+      ? dragState.currentTime
+      : clip.startTime;
   const clipLeft = clipStartTime * 50 * zoomLevel;
-
-  const isBeingDragged = draggedClipId === clip.id;
 
   const getTrackColor = (type: string) => {
     switch (type) {
@@ -210,7 +209,7 @@ export function TimelineClip({
 
   return (
     <div
-      className={`timeline-clip absolute h-full border ${getTrackColor(track.type)} flex items-center py-3 min-w-[80px] overflow-hidden group hover:shadow-lg ${isSelected ? "ring-2 ring-blue-500 z-10" : ""} ${isBeingDragged ? "shadow-lg z-20" : ""} ${isBeingDragged ? "cursor-grabbing" : "cursor-grab"}`}
+      className={`timeline-clip absolute h-full border ${getTrackColor(track.type)} flex items-center py-3 min-w-[80px] overflow-hidden group hover:shadow-lg ${isSelected ? "ring-2 ring-blue-500 z-10" : ""} ${isBeingDragged ? "shadow-lg z-20" : ""}`}
       style={{ width: `${clipWidth}px`, left: `${clipLeft}px` }}
       onMouseDown={(e) => onClipMouseDown(e, clip)}
       onClick={(e) => onClipClick(e, clip)}
