@@ -829,16 +829,16 @@ export function Timeline() {
                       <div
                         key={i}
                         className={`absolute top-0 bottom-0 ${isMainMarker
-                          ? "border-l border-muted-foreground/40"
-                          : "border-l border-muted-foreground/20"
-                          }`}
+                            ? "border-l border-muted-foreground/40"
+                            : "border-l border-muted-foreground/20"
+                        }`}
                         style={{ left: `${time * 50 * zoomLevel}px` }}
                       >
                         <span
                           className={`absolute top-1 left-1 text-xs ${isMainMarker
-                            ? "text-muted-foreground font-medium"
-                            : "text-muted-foreground/70"
-                            }`}
+                              ? "text-muted-foreground font-medium"
+                              : "text-muted-foreground/70"
+                          }`}
                         >
                           {(() => {
                             const formatTime = (seconds: number) => {
@@ -900,11 +900,11 @@ export function Timeline() {
                     <div className="flex items-center flex-1 min-w-0">
                       <div
                         className={`w-3 h-3 rounded-full flex-shrink-0 ${track.type === "video"
-                          ? "bg-blue-500"
-                          : track.type === "audio"
-                            ? "bg-green-500"
-                            : "bg-purple-500"
-                          }`}
+                            ? "bg-blue-500"
+                            : track.type === "audio"
+                              ? "bg-green-500"
+                              : "bg-purple-500"
+                        }`}
                       />
                       <span className="ml-2 text-sm font-medium truncate">
                         {track.name}
@@ -924,76 +924,76 @@ export function Timeline() {
           {/* Timeline Tracks Content */}
           <div className="flex-1 relative overflow-hidden">
             <ScrollArea className="w-full h-full" ref={tracksScrollRef}>
-              <div
+            <div
                 className="relative h-full overflow-hidden flex"
-                ref={timelineRef}
-                style={{ position: "relative" }}
+              ref={timelineRef}
+              style={{ position: "relative" }}
+            >
+              {/* Timeline grid and clips area (with left margin for sifdebar) */}
+              <div
+                className="relative flex-1"
+                style={{
+                  height: `${Math.max(200, Math.min(800, tracks.length * 60))}px`,
+                  width: `${Math.max(1000, duration * 50 * zoomLevel)}px`,
+                }}
+                onClick={handleTimelineAreaClick}
+                onMouseDown={handleTimelineMouseDown}
               >
-                {/* Timeline grid and clips area (with left margin for sifdebar) */}
-                <div
-                  className="relative flex-1"
-                  style={{
-                    height: `${Math.max(200, Math.min(800, tracks.length * 60))}px`,
-                    width: `${Math.max(1000, duration * 50 * zoomLevel)}px`,
-                  }}
-                  onClick={handleTimelineAreaClick}
-                  onMouseDown={handleTimelineMouseDown}
-                >
-                  {tracks.length === 0 ? (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mb-4 mx-auto">
-                          <SplitSquareHorizontal className="h-8 w-8 text-muted-foreground" />
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          Drop media here to start
-                        </p>
+                {tracks.length === 0 ? (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mb-4 mx-auto">
+                        <SplitSquareHorizontal className="h-8 w-8 text-muted-foreground" />
                       </div>
+                      <p className="text-sm text-muted-foreground">
+                        Drop media here to start
+                      </p>
                     </div>
-                  ) : (
-                    <>
-                      {tracks.map((track, index) => (
-                        <div
-                          key={track.id}
-                          className="absolute left-0 right-0 border-b border-muted/30"
-                          style={{
-                            top: `${index * 60}px`,
-                            height: "60px",
-                          }}
-                          // Show context menu on right click
-                          onContextMenu={(e) => {
-                            e.preventDefault();
-                            setContextMenu({
-                              type: "track",
-                              trackId: track.id,
-                              x: e.clientX,
-                              y: e.clientY,
-                            });
-                          }}
-                        >
-                          <TimelineTrackContent
-                            track={track}
-                            zoomLevel={zoomLevel}
-                            setContextMenu={setContextMenu}
-                            contextMenu={contextMenu}
-                          />
-                        </div>
-                      ))}
-
-                      {/* Playhead for tracks area (scrubbable) */}
-                      {tracks.length > 0 && (
-                        <div
-                          className="absolute top-0 w-0.5 bg-red-500 pointer-events-auto z-20 cursor-ew-resize"
-                          style={{
-                            left: `${playheadPosition * 50 * zoomLevel}px`,
-                            height: `${tracks.length * 60}px`,
-                          }}
-                          onMouseDown={handlePlayheadMouseDown}
+                  </div>
+                ) : (
+                  <>
+                    {tracks.map((track, index) => (
+                      <div
+                        key={track.id}
+                        className="absolute left-0 right-0 border-b border-muted/30"
+                        style={{
+                          top: `${index * 60}px`,
+                          height: "60px",
+                        }}
+                        // Show context menu on right click
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          setContextMenu({
+                            type: "track",
+                            trackId: track.id,
+                            x: e.clientX,
+                            y: e.clientY,
+                          });
+                        }}
+                      >
+                        <TimelineTrackContent
+                          track={track}
+                          zoomLevel={zoomLevel}
+                          setContextMenu={setContextMenu}
+                          contextMenu={contextMenu}
                         />
-                      )}
-                    </>
-                  )}
-                  {isDragOver && (
+                      </div>
+                    ))}
+
+                    {/* Playhead for tracks area (scrubbable) */}
+                    {tracks.length > 0 && (
+                      <div
+                          className="absolute top-0 w-0.5 bg-red-500 pointer-events-auto z-20 cursor-ew-resize"
+                        style={{
+                          left: `${playheadPosition * 50 * zoomLevel}px`,
+                          height: `${tracks.length * 60}px`,
+                        }}
+                        onMouseDown={handlePlayheadMouseDown}
+                      />
+                    )}
+                  </>
+                )}
+                {isDragOver && (
                     <div
                       className="absolute left-0 right-0 border-2 border-dashed border-accent flex items-center justify-center text-muted-foreground"
                       style={{
@@ -1002,10 +1002,10 @@ export function Timeline() {
                       }}
                     >
                       <div>Drop media here to add a new track</div>
-                    </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
+            </div>
             </ScrollArea>
           </div>
         </div>
@@ -1264,7 +1264,7 @@ function TimelineTrackContent({
         )
       );
       updateClipTrim(track.id, clip.id, newTrimStart, clip.trimEnd);
-    } else {
+          } else {
       const newTrimEnd = Math.max(
         0,
         Math.min(
@@ -1760,11 +1760,11 @@ function TimelineTrackContent({
         {track.clips.length === 0 ? (
           <div
             className={`h-full w-full rounded-sm border-2 border-dashed flex items-center justify-center text-xs text-muted-foreground transition-colors ${isDropping
-              ? wouldOverlap
-                ? "border-red-500 bg-red-500/10 text-red-600"
-                : "border-blue-500 bg-blue-500/10 text-blue-600"
-              : "border-muted/30"
-              }`}
+                ? wouldOverlap
+                  ? "border-red-500 bg-red-500/10 text-red-600"
+                  : "border-blue-500 bg-blue-500/10 text-blue-600"
+                : "border-muted/30"
+            }`}
           >
             {isDropping
               ? wouldOverlap
@@ -1795,7 +1795,7 @@ function TimelineTrackContent({
 
                     // Close context menu if it's open
                     if (contextMenu) {
-                      setContextMenu(null);
+    setContextMenu(null);
                       return; // Don't handle selection when closing context menu
                     }
 
@@ -1852,7 +1852,7 @@ function TimelineTrackContent({
                       </Button>
                       {clipMenuOpen === clip.id && (
                         <div className="absolute right-0 mt-2 w-32 bg-white text-black border rounded shadow z-50">
-                          <button
+      <button
                             className="flex items-center w-full px-3 py-2 text-sm hover:bg-muted/30"
                             onClick={() => {
                               handleSplitClip(clip);
@@ -1860,13 +1860,13 @@ function TimelineTrackContent({
                             }}
                           >
                             <Scissors className="h-4 w-4 mr-2" /> Split
-                          </button>
-                          <button
+      </button>
+      <button
                             className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50"
                             onClick={() => handleDeleteClip(clip.id)}
-                          >
+      >
                             <Trash2 className="h-4 w-4 mr-2" /> Delete
-                          </button>
+      </button>
                         </div>
                       )}
                     </div>
