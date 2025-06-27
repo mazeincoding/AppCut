@@ -25,11 +25,16 @@
 ## Project Structure
 
 - `apps/web/` – Main Next.js web application
-- `src/components/` – UI and editor components
-- `src/hooks/` – Custom React hooks
-- `src/lib/` – Utility and API logic
-- `src/stores/` – State management (Zustand, etc.)
-- `src/types/` – TypeScript types
+    - `src/components/` – UI and editor components
+    - `src/hooks/` – Custom React hooks
+    - `src/lib/` – Utility and API logic
+    - `src/stores/` – State management (Zustand, etc.)
+    - `src/types/` – TypeScript types
+- `apps/mobile` - Main Expo React Native mobile app
+    - `src/components/` – UI and editor components
+    - `src/hooks/` – Custom React hooks
+    - `src/lib/` – Utility and API logic
+    - `src/stores/` – State management (Zustand, etc.)
 
 ## Getting Started
 
@@ -102,6 +107,8 @@ Before you begin, ensure you have the following installed on your system:
     ```
 
 The application will be available at [http://localhost:3000](http://localhost:3000).
+
+To run the mobile app, read [apps/mobile/README.md](apps/mobile/README.md)
 
 ---
 
