@@ -22,75 +22,98 @@ Thank you for your interest in contributing to OpenCut! This document provides g
 
 1. Start the database and Redis services:
 
-   ```bash
-   # From project root
-   docker-compose up -d
-   ```
+    ```bash
+    # From project root
+    bun run docker:dev
+
+    # Or with npm
+    npm run docker:dev
+    ```
+
+    > This uses `docker-compose.dev.yaml` to start only the required services for development.
 
 2. Navigate to the web app directory:
 
-   ```bash
-   cd apps/web
-   ```
+    ```bash
+    cd apps/web
+    ```
 
 3. Copy `.env.example` to `.env.local`:
 
-   ```bash
-   # Unix/Linux/Mac
-   cp .env.example .env.local
+    ```bash
+    # Unix/Linux/Mac
+    cp .env.example .env.local
 
-   # Windows Command Prompt
-   copy .env.example .env.local
+    # Windows Command Prompt
+    copy .env.example .env.local
 
-   # Windows PowerShell
-   Copy-Item .env.example .env.local
-   ```
+    # Windows PowerShell
+    Copy-Item .env.example .env.local
+    ```
 
 4. Configure required environment variables in `.env.local`:
 
-   **Required Variables:**
+    **Required Variables:**
 
-   ```bash
-   # Database (matches docker-compose.yaml)
-   DATABASE_URL="postgresql://opencut:opencutthegoat@localhost:5432/opencut"
+    ```env
+    # Database (matches docker-compose.dev.yaml)
+    DATABASE_URL="postgresql://opencut:opencutthegoat@localhost:5432/opencut"
 
-   # Generate a secure secret for Better Auth
-   BETTER_AUTH_SECRET="your-generated-secret-here"
-   BETTER_AUTH_URL="http://localhost:3000"
+    # Generate a secure secret for Better Auth
+    BETTER_AUTH_SECRET="your-generated-secret-here"
+    BETTER_AUTH_URL="http://localhost:3000"
 
-   # Redis (matches docker-compose.yaml)
-   UPSTASH_REDIS_REST_URL="http://localhost:8079"
-   UPSTASH_REDIS_REST_TOKEN="example_token"
+    # Redis (matches docker-compose.dev.yaml)
+    UPSTASH_REDIS_REST_URL="http://localhost:8079"
+    UPSTASH_REDIS_REST_TOKEN="example_token"
 
-   # Development
-   NODE_ENV="development"
-   ```
+    # Development
+    NODE_ENV="development"
+    ```
 
-   **Generate BETTER_AUTH_SECRET:**
+    **Generate BETTER_AUTH_SECRET:**
 
-   ```bash
-   # Unix/Linux/Mac
-   openssl rand -base64 32
+    ```bash
+    # Unix/Linux/Mac
+    openssl rand -base64 32
 
-   # Windows PowerShell (simple method)
-   [System.Web.Security.Membership]::GeneratePassword(32, 0)
+    # Windows PowerShell (simple method)
+    [System.Web.Security.Membership]::GeneratePassword(32, 0)
 
-   # Cross-platform (using Node.js)
-   node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+    # Cross-platform (using Node.js)
+    node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 
-   # Or use an online generator: https://generate-secret.vercel.app/32
-   ```
+    # Or use an online generator: https://generate-secret.vercel.app/32
+    ```
 
-   **Optional Variables (for Google OAuth):**
+    **Optional Variables (for Google OAuth):**
 
-   ```bash
-   # Only needed if you want to test Google login
-   GOOGLE_CLIENT_ID="your-google-client-id"
-   GOOGLE_CLIENT_SECRET="your-google-client-secret"
-   ```
+    ```env
+    # Only needed if you want to test Google login
+    GOOGLE_CLIENT_ID="your-google-client-id"
+    GOOGLE_CLIENT_SECRET="your-google-client-secret"
+    ```
 
-5. Run database migrations: `bun run db:migrate`
-6. Start the development server: `bun run dev`
+5. Run database migrations:
+
+    ```bash
+    bun run db:migrate
+    ```
+
+6. Start the development server:
+
+    ```bash
+    bun run dev
+    ```
+
+### Stopping & Resetting Dev Containers
+
+You can also stop or reset your dev environment using the following scripts:
+
+```bash
+bun run docker:dev:stop   # Stop containers without removing them
+bun run docker:dev:down   # Stop and remove containers/networks
+bun run docker:dev:reset  # Fully reset containers AND volumes (wipes DB!)
 
 ## How to Contribute
 
@@ -138,3 +161,4 @@ Thank you for your interest in contributing to OpenCut! This document provides g
 - Help others in discussions and issues
 
 Thank you for contributing!
+```
