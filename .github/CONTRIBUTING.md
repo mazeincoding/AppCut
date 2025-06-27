@@ -115,6 +115,8 @@ bun run docker:dev:stop   # Stop containers without removing them
 bun run docker:dev:down   # Stop and remove containers/networks
 bun run docker:dev:reset  # Fully reset containers AND volumes (wipes DB!)
 
+```
+
 ## How to Contribute
 
 ### Reporting Bugs
@@ -161,4 +163,3 @@ bun run docker:dev:reset  # Fully reset containers AND volumes (wipes DB!)
 - Help others in discussions and issues
 
 Thank you for contributing!
-```
