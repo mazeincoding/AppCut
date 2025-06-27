@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "../ui/button";
 import {
   MoreVertical,
@@ -10,6 +10,8 @@ import {
   Music,
   ChevronRight,
   ChevronLeft,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { useMediaStore } from "@/stores/media-store";
 import { useTimelineStore } from "@/stores/timeline-store";
@@ -48,11 +50,14 @@ export function TimelineClip({
     splitAndKeepLeft,
     splitAndKeepRight,
     separateAudio,
+    toggleClipMute,
+    updateClipSpeed,
   } = useTimelineStore();
   const { currentTime } = usePlaybackStore();
 
   const [resizing, setResizing] = useState<ResizeState | null>(null);
   const [clipMenuOpen, setClipMenuOpen] = useState(false);
+  const clipRef = useRef<HTMLDivElement>(null);
 
   const effectiveDuration = clip.duration - clip.trimStart - clip.trimEnd;
   const clipWidth = Math.max(80, effectiveDuration * 50 * zoomLevel);
@@ -203,6 +208,11 @@ export function TimelineClip({
     setClipMenuOpen(false);
   };
 
+  const handleToggleMute = () => {
+    toggleClipMute(track.id, clip.id);
+    setClipMenuOpen(false);
+  };
+
   const canSplitAtPlayhead = () => {
     const effectiveStart = clip.startTime;
     const effectiveEnd =
@@ -280,8 +290,14 @@ export function TimelineClip({
     }
   };
 
+  const handleSpeedChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    updateClipSpeed(track.id, clip.id, parseFloat(e.target.value));
+    setClipMenuOpen(false);
+  };
+
   return (
     <div
+      ref={clipRef}
       className={`absolute top-0 h-full select-none transition-all duration-75 ${
         isBeingDragged ? "z-50" : "z-10"
       } ${isSelected ? "ring-2 ring-primary" : ""}`}
@@ -292,6 +308,9 @@ export function TimelineClip({
       onMouseMove={resizing ? handleResizeMove : undefined}
       onMouseUp={resizing ? handleResizeEnd : undefined}
       onMouseLeave={resizing ? handleResizeEnd : undefined}
+      onContextMenu={(e) => {
+        if (onContextMenu) onContextMenu(e, clip.id);
+      }}
     >
       <div
         className={`relative h-full rounded border cursor-pointer overflow-hidden ${getTrackColor(
@@ -299,12 +318,10 @@ export function TimelineClip({
         )} ${isSelected ? "ring-2 ring-primary ring-offset-1" : ""}`}
         onClick={(e) => onClipClick && onClipClick(e, clip)}
         onMouseDown={handleClipMouseDown}
-        onContextMenu={(e) => onContextMenu && onContextMenu(e, clip.id)}
       >
         <div className="absolute inset-1 flex items-center p-1">
           {renderClipContent()}
         </div>
-
         <div
           className="absolute left-0 top-0 bottom-0 w-1 cursor-w-resize hover:bg-primary/50 transition-colors"
           onMouseDown={(e) => handleResizeStart(e, clip.id, "left")}
@@ -313,65 +330,17 @@ export function TimelineClip({
           className="absolute right-0 top-0 bottom-0 w-1 cursor-e-resize hover:bg-primary/50 transition-colors"
           onMouseDown={(e) => handleResizeStart(e, clip.id, "right")}
         />
-
         <div className="absolute top-1 right-1">
-          <DropdownMenu open={clipMenuOpen} onOpenChange={setClipMenuOpen}>
+          <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
                 size="sm"
                 className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 hover:bg-background"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setClipMenuOpen(true);
-                }}
               >
                 <MoreVertical className="h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              {/* Split operations - only available when playhead is within clip */}
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger disabled={!canSplitAtPlayhead()}>
-                  <Scissors className="mr-2 h-4 w-4" />
-                  Split
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent>
-                  <DropdownMenuItem onClick={handleSplitClip}>
-                    <SplitSquareHorizontal className="mr-2 h-4 w-4" />
-                    Split at Playhead
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleSplitAndKeepLeft}>
-                    <ChevronLeft className="mr-2 h-4 w-4" />
-                    Split and Keep Left
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleSplitAndKeepRight}>
-                    <ChevronRight className="mr-2 h-4 w-4" />
-                    Split and Keep Right
-                  </DropdownMenuItem>
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-
-              {/* Audio separation - only available for video clips */}
-              {canSeparateAudio() && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSeparateAudio}>
-                    <Music className="mr-2 h-4 w-4" />
-                    Separate Audio
-                  </DropdownMenuItem>
-                </>
-              )}
-
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={handleDeleteClip}
-                className="text-destructive"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete Clip
-              </DropdownMenuItem>
-            </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>

@@ -146,6 +146,8 @@ export function PreviewPanel() {
             trimStart={clip.trimStart}
             trimEnd={clip.trimEnd}
             clipDuration={clip.duration}
+            muted={!!clip.muted}
+            speed={clip.speed || 1}
           />
         </div>
       );
