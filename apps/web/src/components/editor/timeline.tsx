@@ -544,6 +544,21 @@ export function Timeline() {
     toast.success("Deleted selected clip(s)");
   };
 
+  // Keyboard event for splitting selected clips
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key.toLowerCase() === 's' && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+            if ((e.target as HTMLElement).tagName.toLowerCase() === 'input' || (e.target as HTMLElement).tagName.toLowerCase() === 'textarea') {
+                return;
+            }
+            e.preventDefault();
+            handleSplitSelected();
+        }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleSplitSelected]);
+
   // Prevent explorer zooming in/out when in timeline
   useEffect(() => {
     const preventZoom = (e: WheelEvent) => {
