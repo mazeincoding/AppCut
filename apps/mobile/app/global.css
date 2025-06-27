@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 255 255 255; /* 0 0% 100% */
+    --foreground: 10 10 10; /* 0 0% 3.9% */
+    --card: 255 255 255; /* 0 0% 100% */
+    --card-foreground: 10 10 10; /* 0 0% 3.9% */
+    --popover: 255 255 255; /* 0 0% 100% */
+    --popover-foreground: 10 10 10; /* 0 0% 3.9% */
+    --primary: 23 23 23; /* 0 0% 9% */
+    --primary-foreground: 250 250 250; /* 0 0% 98% */
+    --secondary: 245 245 245; /* 0 0% 96.1% */
+    --secondary-foreground: 23 23 23; /* 0 0% 9% */
+    --muted: 245 245 245; /* 0 0% 96.1% */
+    --muted-foreground: 115 115 115; /* 0 0% 45.1% */
+    --accent: 245 245 245; /* 0 0% 96.1% */
+    --accent-foreground: 23 23 23; /* 0 0% 9% */
+    --destructive: 239 68 68; /* 0 84.2% 60.2% */
+    --destructive-foreground: 250 250 250; /* 0 0% 98% */
+    --border: 229 229 229; /* 0 0% 89.8% */
+    --input: 229 229 229; /* 0 0% 89.8% */
+    --ring: 10 10 10; /* 0 0% 3.9% */
+  }
+
+  .dark {
+    --background: 15 15 15; /* 0 0% 6% */
+    --foreground: 250 250 250; /* 0 0% 98% */
+    --card: 10 10 10; /* 0 0% 3.9% */
+    --card-foreground: 250 250 250; /* 0 0% 98% */
+    --popover: 10 10 10; /* 0 0% 3.9% */
+    --popover-foreground: 250 250 250; /* 0 0% 98% */
+    --primary: 250 250 250; /* 0 0% 98% */
+    --primary-foreground: 23 23 23; /* 0 0% 9% */
+    --secondary: 38 38 38; /* 0 0% 14.9% */
+    --secondary-foreground: 250 250 250; /* 0 0% 98% */
+    --muted: 38 38 38; /* 0 0% 14.9% */
+    --muted-foreground: 163 163 163; /* 0 0% 63.9% */
+    --accent: 38 38 38; /* 0 0% 14.9% */
+    --accent-foreground: 250 250 250; /* 0 0% 98% */
+    --destructive: 220 38 38; /* 0 100% 60% */
+    --destructive-foreground: 250 250 250; /* 0 0% 98% */
+    --border: 38 38 38; /* 0 0% 14.9% */
+    --input: 38 38 38; /* 0 0% 14.9% */
+    --ring: 212 212 212; /* 0 0% 83.1% */
+  }
+
+  * {
+    font-family: 'Inter-Regular', system-ui, -apple-system, sans-serif;
+  }
+}

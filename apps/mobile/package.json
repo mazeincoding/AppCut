@@ -1,0 +1,80 @@
+{
+  "name": "opencut-mobile",
+  "main": "expo-router/entry",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "expo start",
+    "reset-project": "node ./scripts/reset-project.js",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "lint": "expo lint"
+  },
+  "dependencies": {
+    "@expo/vector-icons": "^14.1.0",
+    "@hookform/resolvers": "^5.1.1",
+    "@opencut/auth": "workspace:*",
+    "@opencut/db": "workspace:*",
+    "@react-navigation/bottom-tabs": "^7.3.10",
+    "@react-navigation/elements": "^2.3.8",
+    "@react-navigation/native": "^7.1.6",
+    "better-auth": "^1.2.10",
+    "clsx": "^2.1.1",
+    "expo": "~53.0.12",
+    "expo-audio": "~0.4.6",
+    "expo-av": "~15.1.6",
+    "expo-blur": "~14.1.5",
+    "expo-constants": "~17.1.6",
+    "expo-crypto": "~14.1.5",
+    "expo-document-picker": "^13.1.6",
+    "expo-file-system": "~18.1.10",
+    "expo-font": "~13.3.1",
+    "expo-haptics": "~14.1.4",
+    "expo-image": "~2.3.0",
+    "expo-image-picker": "^16.1.4",
+    "expo-linking": "~7.1.5",
+    "expo-media-library": "~17.1.7",
+    "expo-router": "~5.1.0",
+    "expo-secure-store": "~14.2.3",
+    "expo-splash-screen": "~0.30.9",
+    "expo-status-bar": "~2.2.3",
+    "expo-symbols": "~0.4.5",
+    "expo-system-ui": "~5.0.9",
+    "expo-video": "~2.2.2",
+    "expo-video-thumbnails": "~9.1.3",
+    "expo-web-browser": "~14.2.0",
+    "lucide-react-native": "^0.523.0",
+    "nativewind": "^4.1.23",
+    "react-hook-form": "^7.58.1",
+    "react-native": "0.79.4",
+    "react-native-gesture-handler": "~2.24.0",
+    "react-native-reanimated": "~3.17.4",
+    "react-native-safe-area-context": "5.4.0",
+    "react-native-screens": "~4.11.1",
+    "react-native-web": "~0.20.0",
+    "react-native-webview": "13.13.5",
+    "sonner-native": "^0.21.0",
+    "zod": "^3.25.67",
+    "zustand": "^5.0.6"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@types/react": "~19.0.10",
+    "eslint": "^9.25.0",
+    "eslint-config-expo": "~9.2.0",
+    "prettier-plugin-tailwindcss": "^0.5.11",
+    "tailwindcss": "^3.4.17",
+    "typescript": "~5.8.3"
+  },
+  "private": true,
+  "expo": {
+    "install": {
+      "exclude": [
+        "react"
+      ]
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
