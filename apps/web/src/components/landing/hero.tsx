@@ -5,34 +5,19 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { getStars } from "@/lib/fetchGhStars";
+
 import Image from "next/image";
-import { RiGithubLine, RiTwitterXLine } from "react-icons/ri";
 
 interface HeroProps {
   signupCount: number;
 }
 
 export function Hero({ signupCount }: HeroProps) {
-  const [star, setStar] = useState<string>();
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-
-  useEffect(() => {
-    const fetchStars = async () => {
-      try {
-        const data = await getStars();
-        setStar(data);
-      } catch (err) {
-        console.error("Failed to fetch GitHub stars", err);
-      }
-    };
-
-    fetchStars();
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -162,35 +147,6 @@ export function Hero({ signupCount }: HeroProps) {
             <span>{signupCount.toLocaleString()} people already joined</span>
           </motion.div>
         )}
-      </motion.div>
-
-      <motion.div
-        className="mb-8 text-center text-sm text-muted-foreground/60 flex flex-row gap-2 items-center justify-center"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.8, duration: 0.8 }}
-      >
-        Currently in beta • Open source on{" "}
-        <Link
-          href="https://github.com/OpenCut-app/OpenCut"
-          className="text-foreground flex items-center gap-1"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Github
-          <RiGithubLine className="h-5 w-5 " />
-          {star}+
-        </Link>
-        • Follow us on
-        <Link
-          href="https://x.com/OpenCutApp"
-          className="text-foreground flex items-center gap-1"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Twitter
-          <RiTwitterXLine className="h-5 w-5 " />
-        </Link>
       </motion.div>
     </div>
   );

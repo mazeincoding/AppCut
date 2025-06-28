@@ -1,5 +1,6 @@
 import { Hero } from "@/components/landing/hero";
 import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
 import { getWaitlistCount } from "@/lib/waitlist";
 import Image from "next/image";
 
@@ -20,6 +21,7 @@ export default async function Home() {
       />
       <Header />
       <Hero signupCount={signupCount} />
+      <Footer />
     </div>
   );
 }
