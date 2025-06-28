@@ -12,21 +12,22 @@ const footerLinks: { label: string; href: string }[] = [
   { label: "Contributors", href: "/contributors" },
 ];
 
-const footerSocialNetwork: { icon: Function; href: string }[] = [
-  {
-    icon: () => <RiGithubLine size={20} />,
-    href: "https://github.com/OpenCut-app/OpenCut",
-  },
-  {
-    icon: () => <RiTwitterXLine size={20} />,
-    href: "https://x.com/OpenCutApp",
-  },
-];
+const footerSocialNetwork: { icon: () => React.ReactElement; href: string }[] =
+  [
+    {
+      icon: () => <RiGithubLine size={20} />,
+      href: "https://github.com/OpenCut-app/OpenCut",
+    },
+    {
+      icon: () => <RiTwitterXLine size={20} />,
+      href: "https://x.com/OpenCutApp",
+    },
+  ];
 
 const Footer = () => {
   return (
     <footer className="text-sm text-muted-foreground flex flex-col md:flex-row gap-6 items-center justify-between m-4">
-      <p>© 2025 OpenCut, All Rights Reserved</p>
+      <p>© {new Date().getFullYear()} OpenCut, All Rights Reserved</p>
       <ul className="flex items-center gap-4">
         {footerLinks.map((link) => (
           <li key={`link-${link.label}`}>
