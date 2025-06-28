@@ -555,22 +555,23 @@ export function Timeline() {
       toast.error("No clips selected");
       return;
     }
-    
+
     let splitCount = 0;
     selectedClips.forEach(({ trackId, clipId }) => {
       const track = tracks.find((t) => t.id === trackId);
       const clip = track?.clips.find((c) => c.id === clipId);
       if (clip && track) {
         const effectiveStart = clip.startTime;
-        const effectiveEnd = clip.startTime + (clip.duration - clip.trimStart - clip.trimEnd);
-        
+        const effectiveEnd =
+          clip.startTime + (clip.duration - clip.trimStart - clip.trimEnd);
+
         if (currentTime > effectiveStart && currentTime < effectiveEnd) {
           splitAndKeepLeft(trackId, clipId, currentTime);
           splitCount++;
         }
       }
     });
-    
+
     if (splitCount > 0) {
       toast.success(`Split and kept left portion of ${splitCount} clip(s)`);
     } else {
@@ -583,22 +584,23 @@ export function Timeline() {
       toast.error("No clips selected");
       return;
     }
-    
+
     let splitCount = 0;
     selectedClips.forEach(({ trackId, clipId }) => {
       const track = tracks.find((t) => t.id === trackId);
       const clip = track?.clips.find((c) => c.id === clipId);
       if (clip && track) {
         const effectiveStart = clip.startTime;
-        const effectiveEnd = clip.startTime + (clip.duration - clip.trimStart - clip.trimEnd);
-        
+        const effectiveEnd =
+          clip.startTime + (clip.duration - clip.trimStart - clip.trimEnd);
+
         if (currentTime > effectiveStart && currentTime < effectiveEnd) {
           splitAndKeepRight(trackId, clipId, currentTime);
           splitCount++;
         }
       }
     });
-    
+
     if (splitCount > 0) {
       toast.success(`Split and kept right portion of ${splitCount} clip(s)`);
     } else {
@@ -611,19 +613,24 @@ export function Timeline() {
       toast.error("No clips selected");
       return;
     }
-    
+
     let separatedCount = 0;
     selectedClips.forEach(({ trackId, clipId }) => {
       const track = tracks.find((t) => t.id === trackId);
       const clip = track?.clips.find((c) => c.id === clipId);
       const mediaItem = mediaItems.find((item) => item.id === clip?.mediaId);
-      
-      if (clip && track && mediaItem?.type === "video" && track.type === "video") {
+
+      if (
+        clip &&
+        track &&
+        mediaItem?.type === "video" &&
+        track.type === "video"
+      ) {
         const audioClipId = separateAudio(trackId, clipId);
         if (audioClipId) separatedCount++;
       }
     });
-    
+
     if (separatedCount > 0) {
       toast.success(`Separated audio from ${separatedCount} video clip(s)`);
     } else {
@@ -664,8 +671,12 @@ export function Timeline() {
 
   // --- Scroll synchronization effect ---
   useEffect(() => {
-    const rulerViewport = rulerScrollRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
-    const tracksViewport = tracksScrollRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+    const rulerViewport = rulerScrollRef.current?.querySelector(
+      "[data-radix-scroll-area-viewport]"
+    ) as HTMLElement;
+    const tracksViewport = tracksScrollRef.current?.querySelector(
+      "[data-radix-scroll-area-viewport]"
+    ) as HTMLElement;
     if (!rulerViewport || !tracksViewport) return;
     const handleRulerScroll = () => {
       const now = Date.now();
@@ -683,18 +694,22 @@ export function Timeline() {
       rulerViewport.scrollLeft = tracksViewport.scrollLeft;
       isUpdatingRef.current = false;
     };
-    rulerViewport.addEventListener('scroll', handleRulerScroll);
-    tracksViewport.addEventListener('scroll', handleTracksScroll);
+    rulerViewport.addEventListener("scroll", handleRulerScroll);
+    tracksViewport.addEventListener("scroll", handleTracksScroll);
     return () => {
-      rulerViewport.removeEventListener('scroll', handleRulerScroll);
-      tracksViewport.removeEventListener('scroll', handleTracksScroll);
+      rulerViewport.removeEventListener("scroll", handleRulerScroll);
+      tracksViewport.removeEventListener("scroll", handleTracksScroll);
     };
   }, []);
 
   // --- Playhead auto-scroll effect ---
   useEffect(() => {
-    const rulerViewport = rulerScrollRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
-    const tracksViewport = tracksScrollRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+    const rulerViewport = rulerScrollRef.current?.querySelector(
+      "[data-radix-scroll-area-viewport]"
+    ) as HTMLElement;
+    const tracksViewport = tracksScrollRef.current?.querySelector(
+      "[data-radix-scroll-area-viewport]"
+    ) as HTMLElement;
     if (!rulerViewport || !tracksViewport) return;
     const playheadPx = playheadPosition * 50 * zoomLevel;
     const viewportWidth = rulerViewport.clientWidth;
@@ -798,7 +813,11 @@ export function Timeline() {
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="text" size="icon" onClick={handleSplitAndKeepLeft}>
+              <Button
+                variant="text"
+                size="icon"
+                onClick={handleSplitAndKeepLeft}
+              >
                 <ArrowLeftToLine className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
@@ -807,7 +826,11 @@ export function Timeline() {
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="text" size="icon" onClick={handleSplitAndKeepRight}>
+              <Button
+                variant="text"
+                size="icon"
+                onClick={handleSplitAndKeepRight}
+              >
                 <ArrowRightToLine className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
@@ -1167,104 +1190,96 @@ export function Timeline() {
             </>
           ) : (
             // Clip context menu
-            <>
-              <button
-                className="flex items-center w-full px-3 py-2 hover:bg-accent hover:text-accent-foreground transition-colors text-left"
-                onClick={() => {
-                  if (contextMenu.clipId) {
-                    const track = tracks.find(
-                      (t) => t.id === contextMenu.trackId
-                    );
-                    const clip = track?.clips.find(
-                      (c) => c.id === contextMenu.clipId
-                    );
-                    if (clip && track) {
+            (() => {
+              const track = tracks.find((t) => t.id === contextMenu.trackId);
+              const clip = track?.clips.find(
+                (c) => c.id === contextMenu.clipId
+              );
+              if (!clip || !track) return null;
+              return (
+                <>
+                  <button
+                    className="flex items-center w-full px-3 py-2 hover:bg-accent hover:text-accent-foreground transition-colors text-left"
+                    onClick={() => {
+                      // Split at playhead
                       const splitTime = currentTime;
                       const effectiveStart = clip.startTime;
                       const effectiveEnd =
                         clip.startTime +
                         (clip.duration - clip.trimStart - clip.trimEnd);
-
                       if (
                         splitTime > effectiveStart &&
                         splitTime < effectiveEnd
                       ) {
-                        updateClipTrim(
-                          track.id,
-                          clip.id,
-                          clip.trimStart,
-                          clip.trimEnd + (effectiveEnd - splitTime)
-                        );
-                        useTimelineStore.getState().addClipToTrack(track.id, {
-                          mediaId: clip.mediaId,
-                          name: clip.name + " (split)",
-                          duration: clip.duration,
-                          startTime: splitTime,
-                          trimStart:
-                            clip.trimStart + (splitTime - effectiveStart),
-                          trimEnd: clip.trimEnd,
-                        });
+                        useTimelineStore
+                          .getState()
+                          .splitClip(track.id, clip.id, splitTime);
                         toast.success("Clip split successfully");
                       } else {
                         toast.error("Playhead must be within clip to split");
                       }
-                    }
-                  }
-                  setContextMenu(null);
-                }}
-              >
-                <Scissors className="h-4 w-4 mr-2" />
-                Split at Playhead
-              </button>
-              <button
-                className="flex items-center w-full px-3 py-2 hover:bg-accent hover:text-accent-foreground transition-colors text-left"
-                onClick={() => {
-                  if (contextMenu.clipId) {
-                    const track = tracks.find(
-                      (t) => t.id === contextMenu.trackId
-                    );
-                    const clip = track?.clips.find(
-                      (c) => c.id === contextMenu.clipId
-                    );
-                    if (clip && track) {
-                      useTimelineStore.getState().addClipToTrack(track.id, {
-                        mediaId: clip.mediaId,
-                        name: clip.name + " (copy)",
-                        duration: clip.duration,
-                        startTime:
-                          clip.startTime +
-                          (clip.duration - clip.trimStart - clip.trimEnd) +
-                          0.1,
-                        trimStart: clip.trimStart,
-                        trimEnd: clip.trimEnd,
-                      });
-                      toast.success("Clip duplicated");
-                    }
-                  }
-                  setContextMenu(null);
-                }}
-              >
-                <Copy className="h-4 w-4 mr-2" />
-                Duplicate Clip
-              </button>
-              <div className="h-px bg-border mx-1 my-1" />
-              <button
-                className="flex items-center w-full px-3 py-2 text-destructive hover:bg-destructive/10 transition-colors text-left"
-                onClick={() => {
-                  if (contextMenu.clipId) {
-                    removeClipFromTrack(
-                      contextMenu.trackId,
-                      contextMenu.clipId
-                    );
-                    toast.success("Clip deleted");
-                  }
-                  setContextMenu(null);
-                }}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete Clip
-              </button>
-            </>
+                      setContextMenu(null);
+                    }}
+                  >
+                    <Scissors className="h-4 w-4 mr-2" />
+                    Split at Playhead
+                  </button>
+                  <button
+                    className="flex items-center w-full px-3 py-2 hover:bg-accent hover:text-accent-foreground transition-colors text-left"
+                    onClick={() => {
+                      useTimelineStore
+                        .getState()
+                        .toggleClipMute(track.id, clip.id);
+                      setContextMenu(null);
+                    }}
+                  >
+                    {clip.muted ? (
+                      <>
+                        <Volume2 className="h-4 w-4 mr-2" />
+                        Unmute Clip
+                      </>
+                    ) : (
+                      <>
+                        <VolumeX className="h-4 w-4 mr-2" />
+                        Mute Clip
+                      </>
+                    )}
+                  </button>
+                  <div className="px-3 py-2 flex items-center gap-2">
+                    <span className="block text-xs mr-2">Speed</span>
+                    {[0.5, 1.0, 1.5, 2].map((speedVal) => (
+                      <button
+                        key={speedVal}
+                        className={`px-2 py-1 rounded text-xs border transition-colors ${
+                          (clip.speed || 1) === speedVal
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background text-foreground border-muted hover:bg-accent"
+                        }`}
+                        onClick={() => {
+                          useTimelineStore
+                            .getState()
+                            .updateClipSpeed(track.id, clip.id, speedVal);
+                          setContextMenu(null);
+                        }}
+                      >
+                        {speedVal.toFixed(1)}x
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    className="flex items-center w-full px-3 py-2 text-destructive hover:bg-destructive/10 transition-colors text-left"
+                    onClick={() => {
+                      removeClipFromTrack(track.id, clip.id);
+                      toast.success("Clip deleted");
+                      setContextMenu(null);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Clip
+                  </button>
+                </>
+              );
+            })()
           )}
         </div>
       )}
@@ -1829,44 +1844,26 @@ function TimelineTrackContent({
         ref={timelineRef}
         className="h-full relative track-clips-container min-w-full"
       >
-        {track.clips.length === 0 ? (
-          <div
-            className={`h-full w-full rounded-sm border-2 border-dashed flex items-center justify-center text-xs text-muted-foreground transition-colors ${
-              isDropping
-                ? wouldOverlap
-                  ? "border-red-500 bg-red-500/10 text-red-600"
-                  : "border-blue-500 bg-blue-500/10 text-blue-600"
-                : "border-muted/30"
-            }`}
-          >
-            {isDropping
-              ? wouldOverlap
-                ? "Cannot drop - would overlap"
-                : "Drop clip here"
-              : "Drop media here"}
-          </div>
-        ) : (
-          <>
-            {track.clips.map((clip) => {
-              const isSelected = selectedClips.some(
-                (c) => c.trackId === track.id && c.clipId === clip.id
-              );
+        {track.clips
+          .filter((clip) => clip.duration - clip.trimStart - clip.trimEnd > 0)
+          .map((clip) => {
+            const isSelected = selectedClips.some(
+              (c) => c.trackId === track.id && c.clipId === clip.id
+            );
 
-              return (
-                <TimelineClip
-                  key={clip.id}
-                  clip={clip}
-                  track={track}
-                  zoomLevel={zoomLevel}
-                  isSelected={isSelected}
-                  onContextMenu={handleClipContextMenu}
-                  onClipMouseDown={handleClipMouseDown}
-                  onClipClick={handleClipClick}
-                />
-              );
-            })}
-          </>
-        )}
+            return (
+              <TimelineClip
+                key={clip.id}
+                clip={clip}
+                track={track}
+                zoomLevel={zoomLevel}
+                isSelected={isSelected}
+                onContextMenu={handleClipContextMenu}
+                onClipMouseDown={handleClipMouseDown}
+                onClipClick={handleClipClick}
+              />
+            );
+          })}
       </div>
     </div>
   );

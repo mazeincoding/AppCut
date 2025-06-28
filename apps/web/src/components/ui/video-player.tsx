@@ -11,6 +11,8 @@ interface VideoPlayerProps {
   trimStart: number;
   trimEnd: number;
   clipDuration: number;
+  muted?: boolean;
+  speed?: number;
 }
 
 export function VideoPlayer({
@@ -21,9 +23,11 @@ export function VideoPlayer({
   trimStart,
   trimEnd,
   clipDuration,
+  muted = false,
+  speed = 1,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const { isPlaying, currentTime, volume, speed, muted } = usePlaybackStore();
+  const { isPlaying, currentTime, volume } = usePlaybackStore();
 
   // Calculate if we're within this clip's timeline range
   const clipEndTime = clipStartTime + (clipDuration - trimStart - trimEnd);
@@ -36,7 +40,7 @@ export function VideoPlayer({
     if (!video || !isInClipRange) return;
 
     const handleSeekEvent = (e: CustomEvent) => {
-      // Always update video time, even if outside clip range
+      // Only update video time on explicit user seek
       const timelineTime = e.detail.time;
       const videoTime = Math.max(
         trimStart,
@@ -48,41 +52,17 @@ export function VideoPlayer({
       video.currentTime = videoTime;
     };
 
-    const handleUpdateEvent = (e: CustomEvent) => {
-      // Always update video time, even if outside clip range
-      const timelineTime = e.detail.time;
-      const targetTime = Math.max(
-        trimStart,
-        Math.min(
-          clipDuration - trimEnd,
-          timelineTime - clipStartTime + trimStart
-        )
-      );
-
-      if (Math.abs(video.currentTime - targetTime) > 0.5) {
-        video.currentTime = targetTime;
-      }
-    };
-
     const handleSpeed = (e: CustomEvent) => {
       video.playbackRate = e.detail.speed;
     };
 
     window.addEventListener("playback-seek", handleSeekEvent as EventListener);
-    window.addEventListener(
-      "playback-update",
-      handleUpdateEvent as EventListener
-    );
     window.addEventListener("playback-speed", handleSpeed as EventListener);
 
     return () => {
       window.removeEventListener(
         "playback-seek",
         handleSeekEvent as EventListener
-      );
-      window.removeEventListener(
-        "playback-update",
-        handleUpdateEvent as EventListener
       );
       window.removeEventListener(
         "playback-speed",

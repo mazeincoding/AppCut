@@ -24,6 +24,8 @@ export interface TimelineClip {
   startTime: number;
   trimStart: number;
   trimEnd: number;
+  muted?: boolean;
+  speed?: number;
 }
 
 export interface TimelineTrack {
@@ -89,6 +91,8 @@ interface TimelineStore {
     startTime: number
   ) => void;
   toggleTrackMute: (trackId: string) => void;
+  toggleClipMute: (trackId: string, clipId: string) => void;
+  updateClipSpeed: (trackId: string, clipId: string, speed: number) => void;
 
   // Split operations for clips
   splitClip: (
@@ -302,6 +306,38 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
     }));
   },
 
+  toggleClipMute: (trackId, clipId) => {
+    get().pushHistory();
+    set((state) => ({
+      tracks: state.tracks.map((track) =>
+        track.id === trackId
+          ? {
+              ...track,
+              clips: track.clips.map((clip) =>
+                clip.id === clipId ? { ...clip, muted: !clip.muted } : clip
+              ),
+            }
+          : track
+      ),
+    }));
+  },
+
+  updateClipSpeed: (trackId, clipId, speed) => {
+    get().pushHistory();
+    set((state) => ({
+      tracks: state.tracks.map((track) =>
+        track.id === trackId
+          ? {
+              ...track,
+              clips: track.clips.map((clip) =>
+                clip.id === clipId ? { ...clip, speed } : clip
+              ),
+            }
+          : track
+      ),
+    }));
+  },
+
   splitClip: (trackId, clipId, splitTime) => {
     const { tracks } = get();
     const track = tracks.find((t) => t.id === trackId);
@@ -309,20 +345,35 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
 
     if (!clip) return null;
 
+    // Calculate the effective start and end times of the clip (considering trims)
     const effectiveStart = clip.startTime;
     const effectiveEnd =
       clip.startTime + (clip.duration - clip.trimStart - clip.trimEnd);
 
+    // Check if split time is within the clip bounds
     if (splitTime <= effectiveStart || splitTime >= effectiveEnd) return null;
 
     get().pushHistory();
 
-    const relativeTime = splitTime - clip.startTime;
-    const firstDuration = relativeTime;
-    const secondDuration =
-      clip.duration - clip.trimStart - clip.trimEnd - relativeTime;
-
-    const secondClipId = crypto.randomUUID();
+    // Calculate offsets
+    const leftDuration = splitTime - effectiveStart;
+    const rightDuration = effectiveEnd - splitTime;
+    const leftClip = {
+      ...clip,
+      id: crypto.randomUUID(),
+      name: getClipNameWithSuffix(clip.name, "left"),
+      startTime: clip.startTime,
+      trimStart: clip.trimStart,
+      trimEnd: clip.trimEnd + rightDuration,
+    };
+    const rightClip = {
+      ...clip,
+      id: crypto.randomUUID(),
+      name: getClipNameWithSuffix(clip.name, "right"),
+      startTime: splitTime,
+      trimStart: clip.trimStart + leftDuration,
+      trimEnd: clip.trimEnd,
+    };
 
     set((state) => ({
       tracks: state.tracks.map((track) =>
@@ -330,29 +381,14 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
           ? {
               ...track,
               clips: track.clips.flatMap((c) =>
-                c.id === clipId
-                  ? [
-                      {
-                        ...c,
-                        trimEnd: c.trimEnd + secondDuration,
-                        name: getClipNameWithSuffix(c.name, "left"),
-                      },
-                      {
-                        ...c,
-                        id: secondClipId,
-                        startTime: splitTime,
-                        trimStart: c.trimStart + firstDuration,
-                        name: getClipNameWithSuffix(c.name, "right"),
-                      },
-                    ]
-                  : [c]
+                c.id === clipId ? [leftClip, rightClip] : [c]
               ),
             }
           : track
       ),
     }));
 
-    return secondClipId;
+    return rightClip.id;
   },
 
   // Split clip and keep only the left portion
@@ -371,9 +407,8 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
 
     get().pushHistory();
 
-    const relativeTime = splitTime - clip.startTime;
-    const durationToRemove =
-      clip.duration - clip.trimStart - clip.trimEnd - relativeTime;
+    // Calculate how much to trim from the end
+    const durationToTrimFromEnd = effectiveEnd - splitTime;
 
     set((state) => ({
       tracks: state.tracks.map((track) =>
@@ -384,7 +419,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
                 c.id === clipId
                   ? {
                       ...c,
-                      trimEnd: c.trimEnd + durationToRemove,
+                      trimEnd: c.trimEnd + durationToTrimFromEnd,
                       name: getClipNameWithSuffix(c.name, "left"),
                     }
                   : c
@@ -411,7 +446,8 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
 
     get().pushHistory();
 
-    const relativeTime = splitTime - clip.startTime;
+    // Calculate how much time from the start to trim
+    const timeFromStart = splitTime - clip.startTime;
 
     set((state) => ({
       tracks: state.tracks.map((track) =>
@@ -423,7 +459,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
                   ? {
                       ...c,
                       startTime: splitTime,
-                      trimStart: c.trimStart + relativeTime,
+                      trimStart: c.trimStart + timeFromStart,
                       name: getClipNameWithSuffix(c.name, "right"),
                     }
                   : c

@@ -19,7 +19,8 @@ const startTimer = (store: () => PlaybackStore) => {
       const delta = (now - lastUpdate) / 1000; // Convert to seconds
       lastUpdate = now;
 
-      const newTime = state.currentTime + delta * state.speed;
+      // Only advance by delta, not delta * state.speed
+      const newTime = state.currentTime + delta;
       if (newTime >= state.duration) {
         // When video completes, pause and reset playhead to start
         state.pause();
