@@ -8,7 +8,7 @@ import {
   ResizableHandle,
 } from "../../components/ui/resizable";
 import { MediaPanel } from "../../components/editor/media-panel";
-// import { PropertiesPanel } from "../../components/editor/properties-panel";
+// import { PropertiesPanel } from "../../components/editor/properties-panel"; // Re-comment out PropertiesPanel import
 import { Timeline } from "../../components/editor/timeline";
 import { PreviewPanel } from "../../components/editor/preview-panel";
 import { EditorHeader } from "@/components/editor-header";
@@ -16,6 +16,7 @@ import { usePanelStore } from "@/stores/panel-store";
 import { useProjectStore } from "@/stores/project-store";
 import { EditorProvider } from "@/components/editor-provider";
 import { usePlaybackControls } from "@/hooks/use-playback-controls";
+import { CaptionPanel } from "../../components/editor/caption-panel";
 
 export default function Editor() {
   const {
@@ -24,11 +25,14 @@ export default function Editor() {
     propertiesPanel,
     mainContent,
     timeline,
+    showCaptionPanel,
     setToolsPanel,
     setPreviewPanel,
     setPropertiesPanel,
     setMainContent,
     setTimeline,
+    setShowCaptionPanel,
+    reset,
   } = usePanelStore();
 
   const { activeProject, createNewProject } = useProjectStore();
@@ -39,7 +43,9 @@ export default function Editor() {
     if (!activeProject) {
       createNewProject("Untitled Project");
     }
-  }, [activeProject, createNewProject]);
+    // Ensure caption panel is hidden on initial load
+    reset();
+  }, [activeProject, createNewProject, reset]);
 
   return (
     <EditorProvider>
@@ -79,18 +85,22 @@ export default function Editor() {
                   <PreviewPanel />
                 </ResizablePanel>
 
+                {/* Conditionally render Caption Panel */}
+                {showCaptionPanel && (
+                  <>
                 <ResizableHandle withHandle />
-
-                {/* Properties Panel - Hidden for now but ready */}
-                {/* <ResizablePanel
-                  defaultSize={propertiesPanel}
+                    <ResizablePanel
+                      defaultSize={propertiesPanel}
                   minSize={15}
                   maxSize={40}
-                  onResize={setPropertiesPanel}
-                  className="min-w-0"
+                      onResize={setPropertiesPanel}
+                  className="min-w-0 flex flex-col"
                 >
-                  <PropertiesPanel />
-                </ResizablePanel> */}
+                      {/* CaptionPanel now handles its own internal view (list vs. style) */}
+                      <CaptionPanel />
+                    </ResizablePanel>
+                  </>
+                )}
               </ResizablePanelGroup>
             </ResizablePanel>
 
