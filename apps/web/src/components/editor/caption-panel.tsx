@@ -45,7 +45,7 @@ export function CaptionPanel({ /* onClose */ }: CaptionPanelProps) {
     borderRadius: "4px",
   });
 
-  const { captions, addCaption, updateCaption, deleteCaption, reorderCaptions, setSelectedCaptionId, selectedCaptionId, clearAllCaptions, undoClearAllCaptions } = useCaptionStore();
+  const { captions, addCaption, updateCaption, deleteCaption, reorderCaptions, setSelectedCaptionId, selectedCaptionId, clearAllCaptions, undoClearAllCaptions, canUndoClearAll } = useCaptionStore();
   const currentTime = usePlaybackStore((state) => state.currentTime);
   const { setShowCaptionPanel } = usePanelStore();
   const { toast } = useToast();
@@ -225,15 +225,16 @@ export function CaptionPanel({ /* onClose */ }: CaptionPanelProps) {
     setIsClearConfirmOpen(false);
     toast({
       title: "All Captions Cleared",
-      description: "All captions have been removed.",
+      description: "All captions have been removed. You can undo this action.",
       action: (
         <Button
           variant="outline"
+          size="sm"
           onClick={() => {
             undoClearAllCaptions();
             toast({
               title: "Undo Successful",
-              description: "Captions restored.",
+              description: "All captions have been restored.",
             });
           }}
         >
@@ -339,7 +340,31 @@ export function CaptionPanel({ /* onClose */ }: CaptionPanelProps) {
           >
             <h3 className="text-sm font-medium">Existing Captions</h3>
             {captions.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No captions added yet.</p>
+              <div className="space-y-3">
+                <p className="text-muted-foreground text-sm">No captions added yet.</p>
+                {/* Show undo button if there are previous captions to restore */}
+                {canUndoClearAll() && (
+                  <div className="flex justify-center">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        undoClearAllCaptions();
+                        toast({
+                          title: "Captions Restored",
+                          description: "Previous captions have been restored.",
+                        });
+                      }}
+                      className="text-primary border-primary hover:bg-primary/10"
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                      </svg>
+                      Restore Previous Captions
+                    </Button>
+                  </div>
+                )}
+              </div>
             ) : (
               <div className="space-y-3">
                 {captions.map((caption, index) => (
@@ -438,7 +463,7 @@ export function CaptionPanel({ /* onClose */ }: CaptionPanelProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete all your captions.
+              This will remove all your captions. You can undo this action if needed.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

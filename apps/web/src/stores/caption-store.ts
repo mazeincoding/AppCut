@@ -13,6 +13,7 @@ interface CaptionStore {
   clearAllCaptions: () => void;
   undoClearAllCaptions: () => void;
   previousCaptions: Caption[] | null;
+  canUndoClearAll: () => boolean;
 }
 
 export const useCaptionStore = create<CaptionStore>((set, get) => ({
@@ -104,5 +105,10 @@ export const useCaptionStore = create<CaptionStore>((set, get) => ({
       }
       return {};
     });
+  },
+
+  canUndoClearAll: () => {
+    const state = get();
+    return state.previousCaptions !== null;
   },
 })); 
