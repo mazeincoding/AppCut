@@ -20,5 +20,8 @@ export interface Caption {
     letterSpacing?: string;
     animation?: string;
     position?: { x: number; y: number };
+    whiteSpace?: "nowrap" | "normal" | "pre-wrap"; // Text wrapping control
+    overflow?: "visible" | "hidden" | "ellipsis"; // Overflow handling
+    maxWidth?: string; // Maximum width for text wrapping
   };
 }

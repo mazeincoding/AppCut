@@ -294,6 +294,64 @@ export function CaptionStylePanel({ currentCaption, onStyleChange, onApplyToAllB
         </div>
       </div>
 
+      {/* Text Wrapping & Overflow */}
+      <div className="space-y-4 p-4 border rounded-md bg-accent/20">
+        <h3 className="text-lg font-semibold mb-2">Text Wrapping & Overflow</h3>
+        <div className="space-y-3">
+          {/* Text Wrapping */}
+          <div>
+            <Label htmlFor="whiteSpace" className="text-sm font-medium">Text Wrapping</Label>
+            <Select
+              value={currentCaption?.style?.whiteSpace || "nowrap"}
+              onValueChange={(value: "nowrap" | "normal" | "pre-wrap") => handleStyleChange({ whiteSpace: value })}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select text wrapping" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="nowrap">No Wrap (Single Line)</SelectItem>
+                <SelectItem value="normal">Normal Wrap</SelectItem>
+                <SelectItem value="pre-wrap">Preserve Formatting</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Overflow Handling */}
+          <div>
+            <Label htmlFor="overflow" className="text-sm font-medium">Overflow Handling</Label>
+            <Select
+              value={currentCaption?.style?.overflow || "visible"}
+              onValueChange={(value: "visible" | "hidden" | "ellipsis") => handleStyleChange({ overflow: value })}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select overflow handling" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="visible">Visible (Show All)</SelectItem>
+                <SelectItem value="hidden">Hidden (Cut Off)</SelectItem>
+                <SelectItem value="ellipsis">Ellipsis (...)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Max Width */}
+          <div>
+            <Label htmlFor="maxWidth" className="text-sm font-medium">Maximum Width</Label>
+            <Input
+              id="maxWidth"
+              type="text"
+              placeholder="e.g., 300px, 50vw, 80%"
+              value={currentCaption?.style?.maxWidth || "80vw"}
+              onChange={(e) => handleStyleChange({ maxWidth: e.target.value })}
+              className="w-full mt-1"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Maximum width for text wrapping (px, vw, %, etc.)
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Apply to All Below Button */}
       {onApplyToAllBelow && currentCaption && (
         <div className="space-y-4 p-4 border rounded-md bg-accent/20">

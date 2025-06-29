@@ -71,25 +71,19 @@ export function CaptionOverlay() {
     if (!isDragging || !draggedCaptionId) return;
 
     setIsDragging(false);
-    const draggedElement = document.getElementById(draggedCaptionId);
 
-    if (draggedElement) {
-      // Re-enable transition after drag
-      draggedElement.style.transition = '';
-
-      const updatedCaption = captions.find(c => c.id === draggedCaptionId);
-      if (updatedCaption) {
-        // Update the stored position in state
-        updateCaption(draggedCaptionId, {
-          style: {
-            ...updatedCaption.style,
-            position: {
-              x: draggedPosition.x,
-              y: draggedPosition.y,
-            },
+    const updatedCaption = captions.find(c => c.id === draggedCaptionId);
+    if (updatedCaption) {
+      // Update the stored position in state
+      updateCaption(draggedCaptionId, {
+        style: {
+          ...updatedCaption.style,
+          position: {
+            x: draggedPosition.x,
+            y: draggedPosition.y,
           },
-        });
-      }
+        },
+      });
     }
     setDraggedCaptionId(null);
   }, [isDragging, draggedCaptionId, captions, updateCaption, draggedPosition]);
@@ -176,7 +170,10 @@ export function CaptionOverlay() {
               textAlign: caption.style?.textAlign,
               lineHeight: caption.style?.lineHeight,
               letterSpacing: caption.style?.letterSpacing,
-              whiteSpace: 'nowrap', // Prevent text from wrapping
+              whiteSpace: caption.style?.whiteSpace || "nowrap", // Configurable text wrapping
+              maxWidth: caption.style?.maxWidth || "80vw", // Maximum width for wrapping
+              overflow: caption.style?.overflow === "ellipsis" ? "hidden" : caption.style?.overflow || "visible",
+              textOverflow: caption.style?.overflow === "ellipsis" ? "ellipsis" : undefined,
               transition: isDragging && draggedCaptionId === caption.id ? 'none' : undefined, // Disable transition during drag
             }}
             onMouseDown={(e) => handleMouseDown(e, caption.id)}
