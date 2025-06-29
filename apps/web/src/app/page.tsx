@@ -12,13 +12,6 @@ export default async function Home() {
 
   return (
     <div>
-      <Image
-        className="fixed top-0 left-0 -z-50 size-full object-cover"
-        src="/landing-page-bg.png"
-        height={1903.5}
-        width={1269}
-        alt="landing-page.bg"
-      />
       <Header />
       <Hero signupCount={signupCount} />
       <Footer />

@@ -70,6 +70,13 @@ export function Hero({ signupCount }: HeroProps) {
 
   return (
     <div className="min-h-[calc(100vh-6rem)] supports-[height:100dvh]:min-h-[calc(100dvh-6rem)] flex flex-col justify-between items-center text-center px-4">
+      <Image
+        className="absolute top-0 left-0 -z-50 size-full object-cover"
+        src="/landing-page-bg.png"
+        height={1903.5}
+        width={1269}
+        alt="landing-page.bg"
+      />
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
