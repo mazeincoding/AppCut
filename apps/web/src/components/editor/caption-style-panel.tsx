@@ -25,7 +25,44 @@ interface CaptionStylePanelProps {
   onStyleChange: (style: Partial<Caption["style"]>) => void;
 }
 
+/**
+ * Validates a text-shadow CSS value
+ * @param value - The text-shadow value to validate
+ * @returns true if valid, false otherwise
+ */
+const validateTextShadow = (value: string): boolean => {
+  if (!value || value.trim() === "") {
+    return true; // Empty value is valid (no shadow)
+  }
+
+  // First, try using the browser's CSS parser for validation
+  try {
+    const testElement = document.createElement("div");
+    testElement.style.textShadow = value;
+    const computedValue = testElement.style.textShadow;
+    
+    // If the browser accepts it and it's not empty, it's likely valid
+    if (computedValue && computedValue !== "none") {
+      return true;
+    }
+  } catch (error) {
+    // Fall back to regex validation if browser parsing fails
+  }
+
+  // Simplified regex pattern for text-shadow validation
+  // Matches: offsetX offsetY blurRadius color
+  // Examples: "2px 2px 4px rgba(0,0,0,0.5)", "1px 1px 2px #000", "0 0 10px red"
+  const textShadowPattern = /^(\d+(?:\.\d+)?(?:px|em|rem|%)?)\s+(\d+(?:\.\d+)?(?:px|em|rem|%)?)\s+(\d+(?:\.\d+)?(?:px|em|rem|%)?)\s+(#[0-9a-fA-F]{3,6}|rgba?\([^)]+\)|hsla?\([^)]+\)|(?:red|green|blue|yellow|orange|purple|pink|brown|black|white|gray|grey|cyan|magenta|transparent|currentColor|inherit|initial|unset))$/;
+
+  return textShadowPattern.test(value.trim());
+};
+
 export function CaptionStylePanel({ currentCaption, onStyleChange }: CaptionStylePanelProps) {
+  const [isBackgroundTransparent, setIsBackgroundTransparent] = useState(
+    currentCaption?.style?.backgroundColor === "transparent"
+  );
+  const [textShadowError, setTextShadowError] = useState<string | null>(null);
+
   const handleStyleChange = (updates: Partial<NonNullable<Caption["style"]>>) => {
     if (!currentCaption) return;
     
@@ -34,9 +71,6 @@ export function CaptionStylePanel({ currentCaption, onStyleChange }: CaptionStyl
       ...updates,
     });
   };
-
-  // Determine if the background is currently transparent
-  const isBackgroundTransparent = currentCaption?.style?.backgroundColor === "transparent";
 
   const fonts = [
     "Arial",
@@ -194,12 +228,28 @@ export function CaptionStylePanel({ currentCaption, onStyleChange }: CaptionStyl
               type="text"
               placeholder="e.g., 2px 2px 4px rgba(0,0,0,0.5)"
               value={currentCaption?.style?.textShadow || ""}
-              onChange={(e) => handleStyleChange({ textShadow: e.target.value })}
-              className="w-full mt-1"
+              onChange={(e) => {
+                const value = e.target.value;
+                if (validateTextShadow(value)) {
+                  setTextShadowError(null);
+                  handleStyleChange({ textShadow: value });
+                } else if (value.trim() !== "") {
+                  setTextShadowError("Invalid text-shadow format. Use: offsetX offsetY blurRadius color");
+                } else {
+                  setTextShadowError(null);
+                  handleStyleChange({ textShadow: value });
+                }
+              }}
+              className={`w-full mt-1 ${textShadowError ? "border-red-500" : ""}`}
             />
             <p className="text-xs text-muted-foreground mt-1">
               Format: offsetX offsetY blurRadius color
             </p>
+            {textShadowError && (
+              <p className="text-xs text-red-500 mt-1">
+                {textShadowError}
+              </p>
+            )}
           </div>
         </div>
       </div>
