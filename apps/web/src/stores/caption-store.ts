@@ -27,8 +27,6 @@ export const useCaptionStore = create<CaptionStore>((set, get) => ({
     };
     set((state) => {
       const updatedCaptions = [...state.captions, newCaption];
-      console.log("Caption added:", newCaption); // DEBUG: Log new caption
-      console.log("All captions in store:", updatedCaptions); // DEBUG: Log all captions
       return { captions: updatedCaptions };
     });
   },
@@ -40,8 +38,6 @@ export const useCaptionStore = create<CaptionStore>((set, get) => ({
         ...caption,
       }));
       const updatedCaptions = [...state.captions, ...captionsToAdd];
-      console.log("Captions imported:", captionsToAdd); // DEBUG: Log imported captions
-      console.log("All captions in store after import:", updatedCaptions); // DEBUG: Log all captions
       return { captions: updatedCaptions };
     });
   },

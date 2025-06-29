@@ -227,9 +227,7 @@ export function PreviewPanel() {
           variant="outline"
           size="sm"
           onClick={() => {
-            console.log("Before clicking Add Caption, showCaptionPanel:", showCaptionPanel);
             setShowCaptionPanel(true);
-            console.log("After clicking Add Caption, showCaptionPanel:", usePanelStore.getState().showCaptionPanel);
           }}
         >
           <Plus className="h-3 w-3 mr-1" /> Add Caption

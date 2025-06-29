@@ -50,12 +50,8 @@ export function CaptionPanel({ /* onClose */ }: CaptionPanelProps) {
   const { setShowCaptionPanel } = usePanelStore();
   const { toast } = useToast();
 
-  console.log("CaptionPanel rendered.");
-
   const handleAddCaption = () => {
-    console.log("handleAddCaption called.");
     if (newCaptionText.trim() === "") {
-      console.log("Caption text is empty.");
       return;
     }
 
@@ -65,7 +61,6 @@ export function CaptionPanel({ /* onClose */ }: CaptionPanelProps) {
       endTime: currentTime + 3, // Default 3 seconds duration
       style: newCaptionDraftStyle,
     });
-    console.log("Caption added to store.");
     setNewCaptionText("");
     setNewCaptionDraftStyle({
       color: "white",
@@ -78,13 +73,11 @@ export function CaptionPanel({ /* onClose */ }: CaptionPanelProps) {
   };
 
   const handleEditClick = (captionId: string, currentText: string) => {
-    console.log(`Edit clicked for caption ID: ${captionId}`);
     setEditingCaptionId(captionId);
     setEditedCaptionText(currentText);
   };
 
   const handleSaveEdit = (captionId: string) => {
-    console.log(`Save edit for caption ID: ${captionId}`);
     if (editedCaptionText.trim() === "") return;
     updateCaption(captionId, { text: editedCaptionText });
     setEditingCaptionId(null);
@@ -92,13 +85,11 @@ export function CaptionPanel({ /* onClose */ }: CaptionPanelProps) {
   };
 
   const handleCancelEdit = () => {
-    console.log("Cancel edit.");
     setEditingCaptionId(null);
     setEditedCaptionText("");
   };
 
   const handleDeleteClick = (captionId: string) => {
-    console.log(`Delete clicked for caption ID: ${captionId}`);
     deleteCaption(captionId);
     if (selectedCaptionId === captionId) {
       setSelectedCaptionId(null);
