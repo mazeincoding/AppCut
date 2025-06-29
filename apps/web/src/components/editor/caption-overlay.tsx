@@ -12,6 +12,7 @@ export function CaptionOverlay() {
 
   const [isDragging, setIsDragging] = useState(false);
   const [draggedCaptionId, setDraggedCaptionId] = useState<string | null>(null);
+  const [draggedPosition, setDraggedPosition] = useState({ x: 0, y: 0 });
   const initialMousePos = useRef({ x: 0, y: 0 });
   const initialCaptionPos = useRef({ x: 0, y: 0 });
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -32,12 +33,11 @@ export function CaptionOverlay() {
     initialMousePos.current = { x: clientX, y: clientY };
 
     const captionElement = e.currentTarget;
-    initialCaptionPos.current = {
-      x: captionElement.offsetLeft,
-      y: captionElement.offsetTop,
-    };
-
-    captionElement.style.transition = 'none'; // Disable transition during drag
+    const currentX = captionElement.offsetLeft;
+    const currentY = captionElement.offsetTop;
+    
+    initialCaptionPos.current = { x: currentX, y: currentY };
+    setDraggedPosition({ x: currentX, y: currentY });
   }, []);
 
   const handleMouseMove = useCallback((e: MouseEvent | TouchEvent) => {
@@ -52,19 +52,18 @@ export function CaptionOverlay() {
     const newX = initialCaptionPos.current.x + dx;
     const newY = initialCaptionPos.current.y + dy;
 
-    // Apply new position directly to the DOM for smooth dragging
+    // Calculate bounded position
+    const overlayRect = overlayRef.current.getBoundingClientRect();
     const draggedElement = document.getElementById(draggedCaptionId);
+    
     if (draggedElement) {
-      // Basic boundary control
-      const overlayRect = overlayRef.current.getBoundingClientRect();
       const elementRect = draggedElement.getBoundingClientRect();
-
+      
       let boundedX = Math.max(0, Math.min(newX, overlayRect.width - elementRect.width));
       let boundedY = Math.max(0, Math.min(newY, overlayRect.height - elementRect.height));
 
-      draggedElement.style.left = `${boundedX}px`;
-      draggedElement.style.top = `${boundedY}px`;
-      draggedElement.style.position = 'absolute'; // Ensure absolute positioning for drag
+      // Update React state instead of directly manipulating DOM
+      setDraggedPosition({ x: boundedX, y: boundedY });
     }
   }, [isDragging, draggedCaptionId]);
 
@@ -85,15 +84,15 @@ export function CaptionOverlay() {
           style: {
             ...updatedCaption.style,
             position: {
-              x: parseFloat(draggedElement.style.left),
-              y: parseFloat(draggedElement.style.top),
+              x: draggedPosition.x,
+              y: draggedPosition.y,
             },
           },
         });
       }
     }
     setDraggedCaptionId(null);
-  }, [isDragging, draggedCaptionId, captions, updateCaption]);
+  }, [isDragging, draggedCaptionId, captions, updateCaption, draggedPosition]);
 
   useEffect(() => {
     if (isDragging) {
@@ -149,9 +148,19 @@ export function CaptionOverlay() {
             }`}
             style={{
               position: "absolute", // Absolute positioning for drag
-              left: caption.style?.position?.x !== undefined ? `${caption.style.position.x}px` : "50%",
-              top: caption.style?.position?.y !== undefined ? `${caption.style.position.y}px` : "50%",
-              transform: caption.style?.position?.x === undefined ? "translate(-50%, -50%)" : "none", // Center if no position
+              left: isDragging && draggedCaptionId === caption.id 
+                ? `${draggedPosition.x}px` 
+                : caption.style?.position?.x !== undefined 
+                  ? `${caption.style.position.x}px` 
+                  : "50%",
+              top: isDragging && draggedCaptionId === caption.id 
+                ? `${draggedPosition.y}px` 
+                : caption.style?.position?.y !== undefined 
+                  ? `${caption.style.position.y}px` 
+                  : "50%",
+              transform: (isDragging && draggedCaptionId === caption.id) || caption.style?.position?.x !== undefined 
+                ? "none" 
+                : "translate(-50%, -50%)", // Center if no position
               fontFamily: caption.style?.fontFamily,
               fontSize: caption.style?.fontSize,
               color: caption.style?.color || "white",
@@ -168,6 +177,7 @@ export function CaptionOverlay() {
               lineHeight: caption.style?.lineHeight,
               letterSpacing: caption.style?.letterSpacing,
               whiteSpace: 'nowrap', // Prevent text from wrapping
+              transition: isDragging && draggedCaptionId === caption.id ? 'none' : undefined, // Disable transition during drag
             }}
             onMouseDown={(e) => handleMouseDown(e, caption.id)}
             onTouchStart={(e) => handleMouseDown(e, caption.id)}
