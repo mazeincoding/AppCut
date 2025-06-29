@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState, useRef, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -158,8 +158,12 @@ export function CaptionPanel({ /* onClose */ }: CaptionPanelProps) {
     const target = e.target as HTMLElement;
     const captionItem = target.closest(".caption-item") as HTMLElement | null;
     if (captionItem) {
-      const index = parseInt(captionItem.dataset.index || "-1");
-      if (index !== -1 && index !== hoveringOverIndex && index !== draggingItemIndex) {
+      const rawIndex = captionItem.dataset.index;
+      const index = rawIndex ? parseInt(rawIndex, 10) : -1;
+      
+      // Safety check: ensure index is a valid number and within bounds
+      if (!isNaN(index) && index >= 0 && index < captions.length && 
+          index !== hoveringOverIndex && index !== draggingItemIndex) {
         setHoveringOverIndex(index);
       }
     }
@@ -247,6 +251,12 @@ export function CaptionPanel({ /* onClose */ }: CaptionPanelProps) {
   const handleCancelClear = () => {
     setIsClearConfirmOpen(false);
   };
+
+  useEffect(() => {
+    return () => {
+      stopScrolling();
+    };
+  }, []);
 
   return (
     <div className="h-full flex flex-col bg-background">

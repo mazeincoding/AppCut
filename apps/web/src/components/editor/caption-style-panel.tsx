@@ -1,6 +1,6 @@
 'use client';
 
-import React from "react";
+import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
@@ -18,6 +18,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Paintbrush, Text, AlignLeft, AlignCenter, AlignRight } from "lucide-react";
 import { Caption } from "@/types/editor";
+import { rgbaToHex, hexToRgba } from "@/lib/utils";
 
 interface CaptionStylePanelProps {
   currentCaption: Caption | null;
@@ -25,7 +26,7 @@ interface CaptionStylePanelProps {
 }
 
 export function CaptionStylePanel({ currentCaption, onStyleChange }: CaptionStylePanelProps) {
-  const handleStyleChange = (updates: Partial<Caption["style"]>) => {
+  const handleStyleChange = (updates: Partial<NonNullable<Caption["style"]>>) => {
     if (!currentCaption) return;
     
     onStyleChange({
@@ -134,18 +135,12 @@ export function CaptionStylePanel({ currentCaption, onStyleChange }: CaptionStyl
             id="backgroundColor"
             type="color"
             value={currentCaption?.style?.backgroundColor?.startsWith("rgba(") ? 
-              `#${parseInt(currentCaption.style.backgroundColor.split(',')[0].replace('rgba(', ''), 10).toString(16).padStart(2, '0')}` +
-              `${parseInt(currentCaption.style.backgroundColor.split(',')[1], 10).toString(16).padStart(2, '0')}` +
-              `${parseInt(currentCaption.style.backgroundColor.split(',')[2], 10).toString(16).padStart(2, '0')}`
+              rgbaToHex(currentCaption.style.backgroundColor)
               : currentCaption?.style?.backgroundColor || "#000000"
             }
             onChange={(e) => {
               const hex = e.target.value;
-              // Convert hex to rgba with default opacity for non-transparent backgrounds
-              const r = parseInt(hex.slice(1, 3), 16);
-              const g = parseInt(hex.slice(3, 5), 16);
-              const b = parseInt(hex.slice(5, 7), 16);
-              handleStyleChange({ backgroundColor: `rgba(${r},${g},${b},0.7)` });
+              handleStyleChange({ backgroundColor: hexToRgba(hex, 0.7) });
             }}
             className="w-full h-10 mt-1"
             disabled={isBackgroundTransparent} // Disable when transparent
