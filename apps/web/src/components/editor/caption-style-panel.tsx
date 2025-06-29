@@ -25,23 +25,12 @@ interface CaptionStylePanelProps {
 }
 
 export function CaptionStylePanel({ currentCaption, onStyleChange }: CaptionStylePanelProps) {
-  const handleStyleChange = (key: keyof Caption["style"], value: string | number | boolean) => {
+  const handleStyleChange = (updates: Partial<Caption["style"]>) => {
     if (!currentCaption) return;
-
-    let newStyleValue: string | number | undefined = value as string | number;
-
-    // Special handling for transparent background switch
-    if (key === "backgroundColor" && typeof value === "boolean") {
-      newStyleValue = value ? "transparent" : "rgba(0,0,0,0.7)"; // Default non-transparent
-      if (!value && currentCaption.style?.backgroundColor === "transparent") {
-          // If switching from transparent to non-transparent, set a default opaque color
-          newStyleValue = "rgba(0,0,0,0.7)";
-      }
-    }
     
     onStyleChange({
       ...currentCaption.style,
-      [key]: newStyleValue,
+      ...updates,
     });
   };
 
@@ -79,7 +68,7 @@ export function CaptionStylePanel({ currentCaption, onStyleChange }: CaptionStyl
           <Label htmlFor="fontFamily" className="text-sm font-medium">Font Family</Label>
           <Select
             value={currentCaption?.style?.fontFamily || ""}
-            onValueChange={(value) => handleStyleChange("fontFamily", value)}
+            onValueChange={(value) => handleStyleChange({ fontFamily: value })}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select a font" />
@@ -101,14 +90,14 @@ export function CaptionStylePanel({ currentCaption, onStyleChange }: CaptionStyl
             max={100}
             step={1}
             value={[parseInt(currentCaption?.style?.fontSize || "16")]}
-            onValueChange={(val) => handleStyleChange("fontSize", `${val[0]}px`)}
+            onValueChange={(val) => handleStyleChange({ fontSize: `${val[0]}px` })}
             className="mt-2"
           />
           <Input
             id="fontSize"
             type="number"
             value={parseInt(currentCaption?.style?.fontSize || "16")}
-            onChange={(e) => handleStyleChange("fontSize", `${e.target.value}px`)}
+            onChange={(e) => handleStyleChange({ fontSize: `${e.target.value}px` })}
             className="mt-2"
           />
         </div>
@@ -123,7 +112,7 @@ export function CaptionStylePanel({ currentCaption, onStyleChange }: CaptionStyl
             id="textColor"
             type="color"
             value={currentCaption?.style?.color || "#ffffff"}
-            onChange={(e) => handleStyleChange("color", e.target.value)}
+            onChange={(e) => handleStyleChange({ color: e.target.value })}
             className="w-full h-10 mt-1"
           />
         </div>
@@ -134,7 +123,10 @@ export function CaptionStylePanel({ currentCaption, onStyleChange }: CaptionStyl
             <Switch
               id="transparent-background"
               checked={isBackgroundTransparent}
-              onCheckedChange={(checked) => handleStyleChange("backgroundColor", checked)}
+              onCheckedChange={(checked) => {
+                const newValue = checked ? "transparent" : "rgba(0,0,0,0.7)";
+                handleStyleChange({ backgroundColor: newValue });
+              }}
             />
             <Label htmlFor="transparent-background">Transparent Background</Label>
           </div>
@@ -153,7 +145,7 @@ export function CaptionStylePanel({ currentCaption, onStyleChange }: CaptionStyl
               const r = parseInt(hex.slice(1, 3), 16);
               const g = parseInt(hex.slice(3, 5), 16);
               const b = parseInt(hex.slice(5, 7), 16);
-              handleStyleChange("backgroundColor", `rgba(${r},${g},${b},0.7)`);
+              handleStyleChange({ backgroundColor: `rgba(${r},${g},${b},0.7)` });
             }}
             className="w-full h-10 mt-1"
             disabled={isBackgroundTransparent} // Disable when transparent
@@ -175,14 +167,14 @@ export function CaptionStylePanel({ currentCaption, onStyleChange }: CaptionStyl
               max={10}
               step={0.5}
               value={[parseInt(currentCaption?.style?.borderWidth || "0")]}
-              onValueChange={(val) => handleStyleChange("borderWidth", `${val[0]}px`)}
+              onValueChange={(val) => handleStyleChange({ borderWidth: `${val[0]}px` })}
               className="mt-2"
             />
             <Input
               id="borderWidth"
               type="number"
               value={parseInt(currentCaption?.style?.borderWidth || "0")}
-              onChange={(e) => handleStyleChange("borderWidth", `${e.target.value}px`)}
+              onChange={(e) => handleStyleChange({ borderWidth: `${e.target.value}px` })}
               className="mt-2"
             />
           </div>
@@ -192,7 +184,7 @@ export function CaptionStylePanel({ currentCaption, onStyleChange }: CaptionStyl
               id="borderColor"
               type="color"
               value={currentCaption?.style?.borderColor || "#ffffff"}
-              onChange={(e) => handleStyleChange("borderColor", e.target.value)}
+              onChange={(e) => handleStyleChange({ borderColor: e.target.value })}
               className="w-full h-8 mt-1"
             />
           </div>
@@ -206,7 +198,7 @@ export function CaptionStylePanel({ currentCaption, onStyleChange }: CaptionStyl
               id="shadowColor"
               type="color"
               value={currentCaption?.style?.shadowColor || "#000000"}
-              onChange={(e) => handleStyleChange("shadowColor", e.target.value)}
+              onChange={(e) => handleStyleChange({ shadowColor: e.target.value })}
               className="w-full h-8 mt-1"
             />
           </div>
@@ -217,7 +209,7 @@ export function CaptionStylePanel({ currentCaption, onStyleChange }: CaptionStyl
               max={20}
               step={1}
               value={[parseInt(currentCaption?.style?.shadowOffsetX || "0")]}
-              onValueChange={(val) => handleStyleChange("shadowOffsetX", `${val[0]}px`)}
+              onValueChange={(val) => handleStyleChange({ shadowOffsetX: `${val[0]}px` })}
               className="mt-2"
             />
           </div>
@@ -228,7 +220,7 @@ export function CaptionStylePanel({ currentCaption, onStyleChange }: CaptionStyl
               max={20}
               step={1}
               value={[parseInt(currentCaption?.style?.shadowOffsetY || "0")]}
-              onValueChange={(val) => handleStyleChange("shadowOffsetY", `${val[0]}px`)}
+              onValueChange={(val) => handleStyleChange({ shadowOffsetY: `${val[0]}px` })}
               className="mt-2"
             />
           </div>
@@ -239,7 +231,7 @@ export function CaptionStylePanel({ currentCaption, onStyleChange }: CaptionStyl
               max={20}
               step={1}
               value={[parseInt(currentCaption?.style?.shadowBlur || "0")]}
-              onValueChange={(val) => handleStyleChange("shadowBlur", `${val[0]}px`)}
+              onValueChange={(val) => handleStyleChange({ shadowBlur: `${val[0]}px` })}
               className="mt-2"
             />
           </div>
@@ -254,7 +246,7 @@ export function CaptionStylePanel({ currentCaption, onStyleChange }: CaptionStyl
           <ToggleGroup
             type="single"
             value={currentCaption?.style?.textAlign || "center"}
-            onValueChange={(value: "left" | "center" | "right") => handleStyleChange("textAlign", value)}
+            onValueChange={(value: "left" | "center" | "right") => handleStyleChange({ textAlign: value })}
             className="mt-2 w-full justify-around"
           >
             <ToggleGroupItem value="left" aria-label="Left align">
@@ -276,7 +268,7 @@ export function CaptionStylePanel({ currentCaption, onStyleChange }: CaptionStyl
             max={2.5}
             step={0.1}
             value={[parseFloat(currentCaption?.style?.lineHeight || "1.2")]}
-            onValueChange={(val) => handleStyleChange("lineHeight", `${val[0]}`)}
+            onValueChange={(val) => handleStyleChange({ lineHeight: `${val[0]}` })}
             className="mt-2"
           />
           <Input
@@ -284,7 +276,7 @@ export function CaptionStylePanel({ currentCaption, onStyleChange }: CaptionStyl
             type="number"
             step="0.1"
             value={parseFloat(currentCaption?.style?.lineHeight || "1.2")}
-            onChange={(e) => handleStyleChange("lineHeight", e.target.value)}
+            onChange={(e) => handleStyleChange({ lineHeight: e.target.value })}
             className="mt-2"
           />
         </div>
@@ -296,7 +288,7 @@ export function CaptionStylePanel({ currentCaption, onStyleChange }: CaptionStyl
             max={10}
             step={0.5}
             value={[parseFloat(currentCaption?.style?.letterSpacing || "0")]}
-            onValueChange={(val) => handleStyleChange("letterSpacing", `${val[0]}px`)}
+            onValueChange={(val) => handleStyleChange({ letterSpacing: `${val[0]}px` })}
             className="mt-2"
           />
           <Input
@@ -304,7 +296,7 @@ export function CaptionStylePanel({ currentCaption, onStyleChange }: CaptionStyl
             type="number"
             step="0.5"
             value={parseFloat(currentCaption?.style?.letterSpacing || "0")}
-            onChange={(e) => handleStyleChange("letterSpacing", `${e.target.value}px`)}
+            onChange={(e) => handleStyleChange({ letterSpacing: `${e.target.value}px` })}
             className="mt-2"
           />
         </div>
@@ -317,7 +309,7 @@ export function CaptionStylePanel({ currentCaption, onStyleChange }: CaptionStyl
           <Label htmlFor="animation" className="text-sm font-medium">Animation</Label>
           <Select
             value={currentCaption?.style?.animation || "none"}
-            onValueChange={(value) => handleStyleChange("animation", value)}
+            onValueChange={(value) => handleStyleChange({ animation: value })}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select an animation" />
