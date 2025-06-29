@@ -1,3 +1,4 @@
+// apps/web/src/components/editor/preview-panel.tsx
 "use client";
 
 import {
@@ -11,6 +12,8 @@ import { VideoPlayer } from "@/components/ui/video-player";
 import { Button } from "@/components/ui/button";
 import { Play, Pause, Volume2, VolumeX, Plus } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { usePanelStore } from "@/stores/panel-store";
+import { CaptionOverlay } from "./caption-overlay";
 
 interface ActiveClip {
   clip: TimelineClip;
@@ -29,6 +32,8 @@ export function PreviewPanel() {
     width: 0,
     height: 0,
   });
+
+  const { showCaptionPanel, setShowCaptionPanel } = usePanelStore();
 
   // Calculate optimal preview size that fits in container while maintaining aspect ratio
   useEffect(() => {
@@ -221,6 +226,16 @@ export function PreviewPanel() {
         <Button
           variant="outline"
           size="sm"
+          onClick={() => {
+            setShowCaptionPanel(true);
+          }}
+        >
+          <Plus className="h-3 w-3 mr-1" /> Add Caption
+        </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
           onClick={toggleMute}
           className="ml-auto"
         >
@@ -233,51 +248,23 @@ export function PreviewPanel() {
         </Button>
       </div>
 
-      {/* Preview Area */}
+      {/* Video Preview */}
       <div
         ref={containerRef}
-        className="flex-1 flex flex-col items-center justify-center p-3 min-h-0 min-w-0 gap-4"
+        className="relative flex-1 flex items-center justify-center p-4 min-h-0 min-w-0"
       >
         <div
           ref={previewRef}
-          className="relative overflow-hidden rounded-sm bg-black border"
-          style={{
-            width: previewDimensions.width,
-            height: previewDimensions.height,
-          }}
+          className="relative rounded-lg shadow-lg bg-background ring-1 ring-primary/10" // Removed overflow-hidden
+          style={{ width: previewDimensions.width, height: previewDimensions.height }}
         >
-          {activeClips.length === 0 ? (
-            <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-              {tracks.length === 0
-                ? "No media added to timeline"
-                : "No clips at current time"}
-            </div>
-          ) : (
-            activeClips.map((clipData, index) => renderClip(clipData, index))
-          )}
+          {/* Active clips (video player, image, audio visualizer) */}
+          {activeClips.map((clipData, index) => renderClip(clipData, index))}
+
+          {/* Caption Overlay */}
+          <CaptionOverlay />
         </div>
-
-        <PreviewToolbar />
       </div>
-    </div>
-  );
-}
-
-function PreviewToolbar() {
-  const { isPlaying, toggle } = usePlaybackStore();
-
-  return (
-    <div
-      data-toolbar
-      className="flex items-center justify-center gap-2 px-4 pt-2 bg-background-500 w-full"
-    >
-      <Button variant="text" size="icon" onClick={toggle}>
-        {isPlaying ? (
-          <Pause className="h-3 w-3" />
-        ) : (
-          <Play className="h-3 w-3" />
-        )}
-      </Button>
     </div>
   );
 }
