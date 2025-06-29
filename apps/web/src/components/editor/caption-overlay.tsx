@@ -163,9 +163,7 @@ export function CaptionOverlay() {
                 : undefined,
               textShadow: isTransparentBackground && strokeWidth > 0
                 ? textStrokeShadow // Apply text stroke shadow
-                : (caption.style?.shadowColor && (caption.style?.shadowOffsetX || caption.style?.shadowOffsetY || caption.style?.shadowBlur)
-                  ? `${caption.style.shadowOffsetX || "0px"} ${caption.style.shadowOffsetY || "0px"} ${caption.style.shadowBlur || "0px"} ${caption.style.shadowColor}`
-                  : undefined),
+                : caption.style?.textShadow || undefined,
               textAlign: caption.style?.textAlign,
               lineHeight: caption.style?.lineHeight,
               letterSpacing: caption.style?.letterSpacing,

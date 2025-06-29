@@ -14,11 +14,7 @@ export interface Caption {
     borderRadius?: string;
     borderColor?: string;
     borderWidth?: string;
-    textShadow?: string; // This will combine shadow properties for CSS
-    shadowColor?: string;
-    shadowOffsetX?: string;
-    shadowOffsetY?: string;
-    shadowBlur?: string;
+    textShadow?: string; // CSS text-shadow property (e.g., "2px 2px 4px rgba(0,0,0,0.5)")
     textAlign?: "left" | "center" | "right";
     lineHeight?: string;
     letterSpacing?: string;

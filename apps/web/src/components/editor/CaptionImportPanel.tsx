@@ -194,7 +194,7 @@ export function CaptionImportPanel({ onImportSuccess }: CaptionImportPanelProps)
     toast({
       title: "Captions Imported",
       description: `${parsedCaptions.length} captions have been successfully imported.`,
-      variant: "success",
+      variant: "default",
     });
     onImportSuccess?.();
   };

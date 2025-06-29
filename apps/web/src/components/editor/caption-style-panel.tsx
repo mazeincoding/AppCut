@@ -193,47 +193,18 @@ export function CaptionStylePanel({ currentCaption, onStyleChange }: CaptionStyl
         <div className="space-y-2">
           <Label className="text-sm font-medium">Text Shadow</Label>
           <div>
-            <Label htmlFor="shadowColor" className="text-xs text-muted-foreground">Color</Label>
+            <Label htmlFor="textShadow" className="text-xs text-muted-foreground">CSS Text Shadow</Label>
             <Input
-              id="shadowColor"
-              type="color"
-              value={currentCaption?.style?.shadowColor || "#000000"}
-              onChange={(e) => handleStyleChange({ shadowColor: e.target.value })}
-              className="w-full h-8 mt-1"
+              id="textShadow"
+              type="text"
+              placeholder="e.g., 2px 2px 4px rgba(0,0,0,0.5)"
+              value={currentCaption?.style?.textShadow || ""}
+              onChange={(e) => handleStyleChange({ textShadow: e.target.value })}
+              className="w-full mt-1"
             />
-          </div>
-          <div>
-            <Label htmlFor="shadowOffsetX" className="text-xs text-muted-foreground">Offset X ({currentCaption?.style?.shadowOffsetX || "0px"})</Label>
-            <Slider
-              min={-20}
-              max={20}
-              step={1}
-              value={[parseInt(currentCaption?.style?.shadowOffsetX || "0")]}
-              onValueChange={(val) => handleStyleChange({ shadowOffsetX: `${val[0]}px` })}
-              className="mt-2"
-            />
-          </div>
-          <div>
-            <Label htmlFor="shadowOffsetY" className="text-xs text-muted-foreground">Offset Y ({currentCaption?.style?.shadowOffsetY || "0px"})</Label>
-            <Slider
-              min={-20}
-              max={20}
-              step={1}
-              value={[parseInt(currentCaption?.style?.shadowOffsetY || "0")]}
-              onValueChange={(val) => handleStyleChange({ shadowOffsetY: `${val[0]}px` })}
-              className="mt-2"
-            />
-          </div>
-          <div>
-            <Label htmlFor="shadowBlur" className="text-xs text-muted-foreground">Blur ({currentCaption?.style?.shadowBlur || "0px"})</Label>
-            <Slider
-              min={0}
-              max={20}
-              step={1}
-              value={[parseInt(currentCaption?.style?.shadowBlur || "0")]}
-              onValueChange={(val) => handleStyleChange({ shadowBlur: `${val[0]}px` })}
-              className="mt-2"
-            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Format: offsetX offsetY blurRadius color
+            </p>
           </div>
         </div>
       </div>
