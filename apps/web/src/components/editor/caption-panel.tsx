@@ -50,6 +50,19 @@ export function CaptionPanel({ /* onClose */ }: CaptionPanelProps) {
   const { setShowCaptionPanel } = usePanelStore();
   const { toast } = useToast();
 
+  // Reset draft style to defaults when switching captions
+  useEffect(() => {
+    if (selectedCaptionId) {
+      // When a caption is selected, reset draft style to defaults
+      setNewCaptionDraftStyle({
+        color: "white",
+        backgroundColor: "rgba(0,0,0,0.7)",
+        padding: "8px 12px",
+        borderRadius: "4px",
+      });
+    }
+  }, [selectedCaptionId]);
+
   const handleAddCaption = () => {
     if (newCaptionText.trim() === "") {
       return;
@@ -109,6 +122,26 @@ export function CaptionPanel({ /* onClose */ }: CaptionPanelProps) {
     } else {
       setNewCaptionDraftStyle(newStyle);
     }
+  };
+
+  const handleApplyToAllBelow = (style: Partial<Caption["style"]>) => {
+    if (!selectedCaptionId) return;
+
+    // Find the index of the current caption
+    const currentIndex = captions.findIndex(c => c.id === selectedCaptionId);
+    if (currentIndex === -1) return;
+
+    // Apply the style to all captions below the current one
+    const captionsToUpdate = captions.slice(currentIndex + 1);
+    
+    captionsToUpdate.forEach(caption => {
+      updateCaption(caption.id, { style: { ...caption.style, ...style } });
+    });
+
+    toast({
+      title: "Style Applied",
+      description: `Applied style to ${captionsToUpdate.length} captions below. Individual captions can still be modified separately.`,
+    });
   };
 
   const currentCaptionForStyle = useMemo(() => {
@@ -296,6 +329,7 @@ export function CaptionPanel({ /* onClose */ }: CaptionPanelProps) {
             <CaptionStylePanel
               currentCaption={currentCaptionForStyle}
               onStyleChange={handleStyleUpdate}
+              onApplyToAllBelow={handleApplyToAllBelow}
             />
           ) : (
             <div className="p-4 text-center text-gray-500">

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
@@ -19,49 +19,24 @@ import { Switch } from "@/components/ui/switch";
 import { Paintbrush, Text, AlignLeft, AlignCenter, AlignRight } from "lucide-react";
 import { Caption } from "@/types/editor";
 import { rgbaToHex, hexToRgba } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface CaptionStylePanelProps {
   currentCaption: Caption | null;
   onStyleChange: (style: Partial<Caption["style"]>) => void;
+  onApplyToAllBelow?: (style: Partial<Caption["style"]>) => void;
 }
 
-/**
- * Validates a text-shadow CSS value
- * @param value - The text-shadow value to validate
- * @returns true if valid, false otherwise
- */
-const validateTextShadow = (value: string): boolean => {
-  if (!value || value.trim() === "") {
-    return true; // Empty value is valid (no shadow)
-  }
-
-  // First, try using the browser's CSS parser for validation
-  try {
-    const testElement = document.createElement("div");
-    testElement.style.textShadow = value;
-    const computedValue = testElement.style.textShadow;
-    
-    // If the browser accepts it and it's not empty, it's likely valid
-    if (computedValue && computedValue !== "none") {
-      return true;
-    }
-  } catch (error) {
-    // Fall back to regex validation if browser parsing fails
-  }
-
-  // Simplified regex pattern for text-shadow validation
-  // Matches: offsetX offsetY blurRadius color
-  // Examples: "2px 2px 4px rgba(0,0,0,0.5)", "1px 1px 2px #000", "0 0 10px red"
-  const textShadowPattern = /^(\d+(?:\.\d+)?(?:px|em|rem|%)?)\s+(\d+(?:\.\d+)?(?:px|em|rem|%)?)\s+(\d+(?:\.\d+)?(?:px|em|rem|%)?)\s+(#[0-9a-fA-F]{3,6}|rgba?\([^)]+\)|hsla?\([^)]+\)|(?:red|green|blue|yellow|orange|purple|pink|brown|black|white|gray|grey|cyan|magenta|transparent|currentColor|inherit|initial|unset))$/;
-
-  return textShadowPattern.test(value.trim());
-};
-
-export function CaptionStylePanel({ currentCaption, onStyleChange }: CaptionStylePanelProps) {
+export function CaptionStylePanel({ currentCaption, onStyleChange, onApplyToAllBelow }: CaptionStylePanelProps) {
   const [isBackgroundTransparent, setIsBackgroundTransparent] = useState(
     currentCaption?.style?.backgroundColor === "transparent"
   );
-  const [textShadowError, setTextShadowError] = useState<string | null>(null);
+  const [isApplyingStyle, setIsApplyingStyle] = useState(false);
+
+  // Synchronize isBackgroundTransparent state with currentCaption changes
+  useEffect(() => {
+    setIsBackgroundTransparent(currentCaption?.style?.backgroundColor === "transparent");
+  }, [currentCaption?.id, currentCaption?.style?.backgroundColor]);
 
   const handleStyleChange = (updates: Partial<NonNullable<Caption["style"]>>) => {
     if (!currentCaption) return;
@@ -70,6 +45,18 @@ export function CaptionStylePanel({ currentCaption, onStyleChange }: CaptionStyl
       ...currentCaption.style,
       ...updates,
     });
+  };
+
+  const handleApplyToAllBelow = async () => {
+    if (!onApplyToAllBelow || !currentCaption) return;
+    
+    setIsApplyingStyle(true);
+    
+    // Simulate a small delay for visual feedback
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    onApplyToAllBelow(currentCaption.style || {});
+    setIsApplyingStyle(false);
   };
 
   const fonts = [
@@ -218,40 +205,6 @@ export function CaptionStylePanel({ currentCaption, onStyleChange }: CaptionStyl
             />
           </div>
         </div>
-
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">Text Shadow</Label>
-          <div>
-            <Label htmlFor="textShadow" className="text-xs text-muted-foreground">CSS Text Shadow</Label>
-            <Input
-              id="textShadow"
-              type="text"
-              placeholder="e.g., 2px 2px 4px rgba(0,0,0,0.5)"
-              value={currentCaption?.style?.textShadow || ""}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (validateTextShadow(value)) {
-                  setTextShadowError(null);
-                  handleStyleChange({ textShadow: value });
-                } else if (value.trim() !== "") {
-                  setTextShadowError("Invalid text-shadow format. Use: offsetX offsetY blurRadius color");
-                } else {
-                  setTextShadowError(null);
-                  handleStyleChange({ textShadow: value });
-                }
-              }}
-              className={`w-full mt-1 ${textShadowError ? "border-red-500" : ""}`}
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              Format: offsetX offsetY blurRadius color
-            </p>
-            {textShadowError && (
-              <p className="text-xs text-red-500 mt-1">
-                {textShadowError}
-              </p>
-            )}
-          </div>
-        </div>
       </div>
 
       {/* Alignment & Spacing */}
@@ -340,6 +293,26 @@ export function CaptionStylePanel({ currentCaption, onStyleChange }: CaptionStyl
           </Select>
         </div>
       </div>
+
+      {/* Apply to All Below Button */}
+      {onApplyToAllBelow && currentCaption && (
+        <div className="space-y-4 p-4 border rounded-md bg-accent/20">
+          <h3 className="text-lg font-semibold mb-2">Style Management</h3>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Apply current style to all captions below this one
+            </p>
+            <Button
+              onClick={handleApplyToAllBelow}
+              className="w-full"
+              variant="outline"
+              disabled={isApplyingStyle}
+            >
+              {isApplyingStyle ? "Applying..." : "Apply to All Below"}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
