@@ -18,7 +18,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Paintbrush, Text, AlignLeft, AlignCenter, AlignRight } from "lucide-react";
 import { Caption } from "@/types/editor";
-import { rgbaToHex, hexToRgba } from "@/lib/utils";
+import { rgbaToHex, hexToRgba, safeParseInt, safeParseFloat } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 interface CaptionStylePanelProps {
@@ -32,11 +32,21 @@ export function CaptionStylePanel({ currentCaption, onStyleChange, onApplyToAllB
     currentCaption?.style?.backgroundColor === "transparent"
   );
   const [isApplyingStyle, setIsApplyingStyle] = useState(false);
+  const [maxWidthError, setMaxWidthError] = useState<string | null>(null);
 
   // Synchronize isBackgroundTransparent state with currentCaption changes
   useEffect(() => {
     setIsBackgroundTransparent(currentCaption?.style?.backgroundColor === "transparent");
   }, [currentCaption?.id, currentCaption?.style?.backgroundColor]);
+
+  // CSS unit validation function
+  const isValidCSSUnit = (value: string): boolean => {
+    if (!value || value.trim() === '') return true; // Allow empty values
+    
+    // Regex pattern for valid CSS units: number + unit (px, %, vw, vh, em, rem, etc.)
+    const cssUnitPattern = /^(\d+(?:\.\d+)?)\s*(px|%|vw|vh|em|rem|ch|ex|in|cm|mm|pt|pc)$/i;
+    return cssUnitPattern.test(value.trim());
+  };
 
   const handleStyleChange = (updates: Partial<NonNullable<Caption["style"]>>) => {
     if (!currentCaption) return;
@@ -45,6 +55,25 @@ export function CaptionStylePanel({ currentCaption, onStyleChange, onApplyToAllB
       ...currentCaption.style,
       ...updates,
     });
+  };
+
+  const handleMaxWidthChange = (value: string) => {
+    // Clear previous error
+    setMaxWidthError(null);
+    
+    // If empty, allow it (will use default)
+    if (!value || value.trim() === '') {
+      handleStyleChange({ maxWidth: value });
+      return;
+    }
+    
+    // Validate the input
+    if (isValidCSSUnit(value)) {
+      handleStyleChange({ maxWidth: value });
+    } else {
+      // Show error but don't update the style
+      setMaxWidthError("Invalid format. Use: 300px, 50vw, 80%, etc.");
+    }
   };
 
   const handleApplyToAllBelow = async () => {
@@ -111,14 +140,14 @@ export function CaptionStylePanel({ currentCaption, onStyleChange, onApplyToAllB
             min={10}
             max={100}
             step={1}
-            value={[parseInt(currentCaption?.style?.fontSize || "16")]}
+            value={[safeParseInt(currentCaption?.style?.fontSize || "16")]}
             onValueChange={(val) => handleStyleChange({ fontSize: `${val[0]}px` })}
             className="mt-2"
           />
           <Input
             id="fontSize"
             type="number"
-            value={parseInt(currentCaption?.style?.fontSize || "16")}
+            value={safeParseInt(currentCaption?.style?.fontSize || "16")}
             onChange={(e) => handleStyleChange({ fontSize: `${e.target.value}px` })}
             className="mt-2"
           />
@@ -136,7 +165,12 @@ export function CaptionStylePanel({ currentCaption, onStyleChange, onApplyToAllB
             value={currentCaption?.style?.color || "#ffffff"}
             onChange={(e) => handleStyleChange({ color: e.target.value })}
             className="w-full h-10 mt-1"
+            aria-label="Select text color for caption"
+            aria-describedby="textColor-description"
           />
+          <p id="textColor-description" className="text-xs text-muted-foreground mt-1 sr-only">
+            Choose the color for the caption text. Consider contrast with background for readability.
+          </p>
         </div>
 
         <div>
@@ -149,6 +183,7 @@ export function CaptionStylePanel({ currentCaption, onStyleChange, onApplyToAllB
                 const newValue = checked ? "transparent" : "rgba(0,0,0,0.7)";
                 handleStyleChange({ backgroundColor: newValue });
               }}
+              aria-label="Toggle transparent background"
             />
             <Label htmlFor="transparent-background">Transparent Background</Label>
           </div>
@@ -164,8 +199,14 @@ export function CaptionStylePanel({ currentCaption, onStyleChange, onApplyToAllB
               handleStyleChange({ backgroundColor: hexToRgba(hex, 0.7) });
             }}
             className="w-full h-10 mt-1"
-            disabled={isBackgroundTransparent} // Disable when transparent
+            disabled={isBackgroundTransparent}
+            aria-label="Select background color for caption"
+            aria-describedby="backgroundColor-description"
+            aria-disabled={isBackgroundTransparent}
           />
+          <p id="backgroundColor-description" className="text-xs text-muted-foreground mt-1 sr-only">
+            Choose the background color for the caption. Disabled when transparent background is enabled.
+          </p>
         </div>
       </div>
 
@@ -182,14 +223,14 @@ export function CaptionStylePanel({ currentCaption, onStyleChange, onApplyToAllB
               min={0}
               max={10}
               step={0.5}
-              value={[parseInt(currentCaption?.style?.borderWidth || "0")]}
+              value={[safeParseInt(currentCaption?.style?.borderWidth || "0")]}
               onValueChange={(val) => handleStyleChange({ borderWidth: `${val[0]}px` })}
               className="mt-2"
             />
             <Input
               id="borderWidth"
               type="number"
-              value={parseInt(currentCaption?.style?.borderWidth || "0")}
+              value={safeParseInt(currentCaption?.style?.borderWidth || "0")}
               onChange={(e) => handleStyleChange({ borderWidth: `${e.target.value}px` })}
               className="mt-2"
             />
@@ -202,7 +243,15 @@ export function CaptionStylePanel({ currentCaption, onStyleChange, onApplyToAllB
               value={currentCaption?.style?.borderColor || "#ffffff"}
               onChange={(e) => handleStyleChange({ borderColor: e.target.value })}
               className="w-full h-8 mt-1"
+              aria-label={`Select ${isBackgroundTransparent ? 'text stroke' : 'border'} color`}
+              aria-describedby="borderColor-description"
             />
+            <p id="borderColor-description" className="text-xs text-muted-foreground mt-1 sr-only">
+              {isBackgroundTransparent 
+                ? "Choose the color for the text stroke outline. This helps text stand out against any background."
+                : "Choose the color for the caption border. This creates a visible border around the text."
+              }
+            </p>
           </div>
         </div>
       </div>
@@ -236,7 +285,7 @@ export function CaptionStylePanel({ currentCaption, onStyleChange, onApplyToAllB
             min={0.8}
             max={2.5}
             step={0.1}
-            value={[parseFloat(currentCaption?.style?.lineHeight || "1.2")]}
+            value={[safeParseFloat(currentCaption?.style?.lineHeight || "1.2")]}
             onValueChange={(val) => handleStyleChange({ lineHeight: `${val[0]}` })}
             className="mt-2"
           />
@@ -244,7 +293,7 @@ export function CaptionStylePanel({ currentCaption, onStyleChange, onApplyToAllB
             id="lineHeight"
             type="number"
             step="0.1"
-            value={parseFloat(currentCaption?.style?.lineHeight || "1.2")}
+            value={safeParseFloat(currentCaption?.style?.lineHeight || "1.2")}
             onChange={(e) => handleStyleChange({ lineHeight: e.target.value })}
             className="mt-2"
           />
@@ -256,7 +305,7 @@ export function CaptionStylePanel({ currentCaption, onStyleChange, onApplyToAllB
             min={-5}
             max={10}
             step={0.5}
-            value={[parseFloat(currentCaption?.style?.letterSpacing || "0")]}
+            value={[safeParseFloat(currentCaption?.style?.letterSpacing || "0")]}
             onValueChange={(val) => handleStyleChange({ letterSpacing: `${val[0]}px` })}
             className="mt-2"
           />
@@ -264,7 +313,7 @@ export function CaptionStylePanel({ currentCaption, onStyleChange, onApplyToAllB
             id="letterSpacing"
             type="number"
             step="0.5"
-            value={parseFloat(currentCaption?.style?.letterSpacing || "0")}
+            value={safeParseFloat(currentCaption?.style?.letterSpacing || "0")}
             onChange={(e) => handleStyleChange({ letterSpacing: `${e.target.value}px` })}
             className="mt-2"
           />
@@ -342,12 +391,17 @@ export function CaptionStylePanel({ currentCaption, onStyleChange, onApplyToAllB
               type="text"
               placeholder="e.g., 300px, 50vw, 80%"
               value={currentCaption?.style?.maxWidth || "80vw"}
-              onChange={(e) => handleStyleChange({ maxWidth: e.target.value })}
+              onChange={(e) => handleMaxWidthChange(e.target.value)}
               className="w-full mt-1"
             />
             <p className="text-xs text-muted-foreground mt-1">
               Maximum width for text wrapping (px, vw, %, etc.)
             </p>
+            {maxWidthError && (
+              <p className="text-xs text-red-500 mt-1">
+                {maxWidthError}
+              </p>
+            )}
           </div>
         </div>
       </div>

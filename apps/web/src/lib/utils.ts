@@ -8,6 +8,36 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * Safely parses a string to an integer with error handling
+ * @param value - The string value to parse
+ * @param defaultValue - The default value to return if parsing fails
+ * @returns The parsed integer or the default value
+ */
+export function safeParseInt(value: string | undefined | null, defaultValue: number = 0): number {
+  if (!value || typeof value !== 'string') {
+    return defaultValue;
+  }
+  
+  const parsed = parseInt(value, 10);
+  return isNaN(parsed) ? defaultValue : parsed;
+}
+
+/**
+ * Safely parses a string to a float with error handling
+ * @param value - The string value to parse
+ * @param defaultValue - The default value to return if parsing fails
+ * @returns The parsed float or the default value
+ */
+export function safeParseFloat(value: string | undefined | null, defaultValue: number = 0): number {
+  if (!value || typeof value !== 'string') {
+    return defaultValue;
+  }
+  
+  const parsed = parseFloat(value);
+  return isNaN(parsed) ? defaultValue : parsed;
+}
+
+/**
  * Converts an RGBA color string to a hex color string
  * @param rgbaString - The RGBA string in format "rgba(r,g,b,a)"
  * @returns The hex color string in format "#rrggbb" or fallback "#000000"
