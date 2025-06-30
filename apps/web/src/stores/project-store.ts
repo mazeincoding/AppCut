@@ -17,6 +17,7 @@ export const useProjectStore = create<ProjectStore>((set) => ({
     const newProject: TProject = {
       id: crypto.randomUUID(),
       name,
+      thumbnail: "",
       createdAt: new Date(),
       updatedAt: new Date(),
     };

@@ -140,9 +140,6 @@ export default async function ContributorsPage() {
                                   {contributor.login.charAt(0).toUpperCase()}
                                 </AvatarFallback>
                               </Avatar>
-                              <div className="absolute -top-2 -right-2 bg-foreground text-background rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
-                                {index + 1}
-                              </div>
                             </div>
                             <h3 className="text-xl font-semibold mb-2 group-hover:text-foreground/80 transition-colors">
                               {contributor.login}

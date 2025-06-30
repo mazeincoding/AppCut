@@ -61,7 +61,7 @@ export function Header() {
   return (
     <div className="mx-4 md:mx-0">
       <HeaderBase
-        className="bg-[#1D1D1D] border border-white/10 rounded-2xl max-w-3xl mx-auto mt-4 pl-4 pr-[14px]"
+        className="bg-accent border rounded-2xl max-w-3xl mx-auto mt-4 pl-4 pr-[14px]"
         leftContent={leftContent}
         rightContent={rightContent}
       />

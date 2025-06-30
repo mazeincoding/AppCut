@@ -22,13 +22,15 @@ import {
   TooltipProvider,
 } from "../ui/tooltip";
 import {
-  useTimelineStore,
-  type TimelineTrack,
-  type TimelineClip as TypeTimelineClip,
-} from "@/stores/timeline-store";
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "../ui/context-menu";
+import { useTimelineStore } from "@/stores/timeline-store";
 import { useMediaStore } from "@/stores/media-store";
 import { usePlaybackStore } from "@/stores/playback-store";
-import { useDragClip } from "@/hooks/use-drag-clip";
 import { processMediaFiles } from "@/lib/media-processing";
 import { toast } from "sonner";
 import { useState, useRef, useEffect, useCallback } from "react";
@@ -39,8 +41,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { TimelineClip } from "./timeline-clip";
-import { ContextMenuState } from "@/types/timeline";
+import { TimelineTrackContent } from "./timeline-track";
 
 export function Timeline() {
   // Timeline shows all tracks (video, audio, effects) and their clips.
@@ -57,7 +58,6 @@ export function Timeline() {
     selectedClips,
     clearSelectedClips,
     setSelectedClips,
-    updateClipTrim,
     splitClip,
     splitAndKeepLeft,
     splitAndKeepRight,
@@ -83,9 +83,6 @@ export function Timeline() {
   const dragCounterRef = useRef(0);
   const timelineRef = useRef<HTMLDivElement>(null);
   const [isInTimeline, setIsInTimeline] = useState(false);
-
-  // Unified context menu state
-  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
 
   // Marquee selection state
   const [marquee, setMarquee] = useState<{
@@ -128,15 +125,6 @@ export function Timeline() {
     const totalDuration = getTotalDuration();
     setDuration(Math.max(totalDuration, 10)); // Minimum 10 seconds for empty timeline
   }, [tracks, setDuration, getTotalDuration]);
-
-  // Close context menu on click elsewhere
-  useEffect(() => {
-    const handleClick = () => setContextMenu(null);
-    if (contextMenu) {
-      window.addEventListener("click", handleClick);
-      return () => window.removeEventListener("click", handleClick);
-    }
-  }, [contextMenu]);
 
   // Keyboard event for deleting selected clips
   useEffect(() => {
@@ -555,22 +543,23 @@ export function Timeline() {
       toast.error("No clips selected");
       return;
     }
-    
+
     let splitCount = 0;
     selectedClips.forEach(({ trackId, clipId }) => {
       const track = tracks.find((t) => t.id === trackId);
       const clip = track?.clips.find((c) => c.id === clipId);
       if (clip && track) {
         const effectiveStart = clip.startTime;
-        const effectiveEnd = clip.startTime + (clip.duration - clip.trimStart - clip.trimEnd);
-        
+        const effectiveEnd =
+          clip.startTime + (clip.duration - clip.trimStart - clip.trimEnd);
+
         if (currentTime > effectiveStart && currentTime < effectiveEnd) {
           splitAndKeepLeft(trackId, clipId, currentTime);
           splitCount++;
         }
       }
     });
-    
+
     if (splitCount > 0) {
       toast.success(`Split and kept left portion of ${splitCount} clip(s)`);
     } else {
@@ -583,22 +572,23 @@ export function Timeline() {
       toast.error("No clips selected");
       return;
     }
-    
+
     let splitCount = 0;
     selectedClips.forEach(({ trackId, clipId }) => {
       const track = tracks.find((t) => t.id === trackId);
       const clip = track?.clips.find((c) => c.id === clipId);
       if (clip && track) {
         const effectiveStart = clip.startTime;
-        const effectiveEnd = clip.startTime + (clip.duration - clip.trimStart - clip.trimEnd);
-        
+        const effectiveEnd =
+          clip.startTime + (clip.duration - clip.trimStart - clip.trimEnd);
+
         if (currentTime > effectiveStart && currentTime < effectiveEnd) {
           splitAndKeepRight(trackId, clipId, currentTime);
           splitCount++;
         }
       }
     });
-    
+
     if (splitCount > 0) {
       toast.success(`Split and kept right portion of ${splitCount} clip(s)`);
     } else {
@@ -611,19 +601,24 @@ export function Timeline() {
       toast.error("No clips selected");
       return;
     }
-    
+
     let separatedCount = 0;
     selectedClips.forEach(({ trackId, clipId }) => {
       const track = tracks.find((t) => t.id === trackId);
       const clip = track?.clips.find((c) => c.id === clipId);
       const mediaItem = mediaItems.find((item) => item.id === clip?.mediaId);
-      
-      if (clip && track && mediaItem?.type === "video" && track.type === "video") {
+
+      if (
+        clip &&
+        track &&
+        mediaItem?.type === "video" &&
+        track.type === "video"
+      ) {
         const audioClipId = separateAudio(trackId, clipId);
         if (audioClipId) separatedCount++;
       }
     });
-    
+
     if (separatedCount > 0) {
       toast.success(`Separated audio from ${separatedCount} video clip(s)`);
     } else {
@@ -664,8 +659,12 @@ export function Timeline() {
 
   // --- Scroll synchronization effect ---
   useEffect(() => {
-    const rulerViewport = rulerScrollRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
-    const tracksViewport = tracksScrollRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+    const rulerViewport = rulerScrollRef.current?.querySelector(
+      "[data-radix-scroll-area-viewport]"
+    ) as HTMLElement;
+    const tracksViewport = tracksScrollRef.current?.querySelector(
+      "[data-radix-scroll-area-viewport]"
+    ) as HTMLElement;
     if (!rulerViewport || !tracksViewport) return;
     const handleRulerScroll = () => {
       const now = Date.now();
@@ -683,18 +682,22 @@ export function Timeline() {
       rulerViewport.scrollLeft = tracksViewport.scrollLeft;
       isUpdatingRef.current = false;
     };
-    rulerViewport.addEventListener('scroll', handleRulerScroll);
-    tracksViewport.addEventListener('scroll', handleTracksScroll);
+    rulerViewport.addEventListener("scroll", handleRulerScroll);
+    tracksViewport.addEventListener("scroll", handleTracksScroll);
     return () => {
-      rulerViewport.removeEventListener('scroll', handleRulerScroll);
-      tracksViewport.removeEventListener('scroll', handleTracksScroll);
+      rulerViewport.removeEventListener("scroll", handleRulerScroll);
+      tracksViewport.removeEventListener("scroll", handleTracksScroll);
     };
   }, []);
 
   // --- Playhead auto-scroll effect ---
   useEffect(() => {
-    const rulerViewport = rulerScrollRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
-    const tracksViewport = tracksScrollRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+    const rulerViewport = rulerScrollRef.current?.querySelector(
+      "[data-radix-scroll-area-viewport]"
+    ) as HTMLElement;
+    const tracksViewport = tracksScrollRef.current?.querySelector(
+      "[data-radix-scroll-area-viewport]"
+    ) as HTMLElement;
     if (!rulerViewport || !tracksViewport) return;
     const playheadPx = playheadPosition * 50 * zoomLevel;
     const viewportWidth = rulerViewport.clientWidth;
@@ -798,7 +801,11 @@ export function Timeline() {
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="text" size="icon" onClick={handleSplitAndKeepLeft}>
+              <Button
+                variant="text"
+                size="icon"
+                onClick={handleSplitAndKeepLeft}
+              >
                 <ArrowLeftToLine className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
@@ -807,7 +814,11 @@ export function Timeline() {
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="text" size="icon" onClick={handleSplitAndKeepRight}>
+              <Button
+                variant="text"
+                size="icon"
+                onClick={handleSplitAndKeepRight}
+              >
                 <ArrowRightToLine className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
@@ -994,15 +1005,6 @@ export function Timeline() {
                   <div
                     key={track.id}
                     className="h-[60px] flex items-center px-3 border-b border-muted/30 bg-background group"
-                    onContextMenu={(e) => {
-                      e.preventDefault();
-                      setContextMenu({
-                        type: "track",
-                        trackId: track.id,
-                        x: e.clientX,
-                        y: e.clientY,
-                      });
-                    }}
                   >
                     <div className="flex items-center flex-1 min-w-0">
                       <div
@@ -1055,41 +1057,62 @@ export function Timeline() {
                 ) : (
                   <>
                     {tracks.map((track, index) => (
-                      <div
-                        key={track.id}
-                        className="absolute left-0 right-0 border-b border-muted/30"
-                        style={{
-                          top: `${index * 60}px`,
-                          height: "60px",
-                        }}
-                        // Show context menu on right click
-                        onContextMenu={(e) => {
-                          e.preventDefault();
-                          setContextMenu({
-                            type: "track",
-                            trackId: track.id,
-                            x: e.clientX,
-                            y: e.clientY,
-                          });
-                        }}
-                        onClick={(e) => {
-                          // If clicking empty area (not on a clip), deselect all clips
-                          if (
-                            !(e.target as HTMLElement).closest(".timeline-clip")
-                          ) {
-                            const { clearSelectedClips } =
-                              useTimelineStore.getState();
-                            clearSelectedClips();
-                          }
-                        }}
-                      >
-                        <TimelineTrackContent
-                          track={track}
-                          zoomLevel={zoomLevel}
-                          setContextMenu={setContextMenu}
-                          contextMenu={contextMenu}
-                        />
-                      </div>
+                      <ContextMenu key={track.id}>
+                        <ContextMenuTrigger asChild>
+                          <div
+                            className="absolute left-0 right-0 border-b border-muted/30"
+                            style={{
+                              top: `${index * 60}px`,
+                              height: "60px",
+                            }}
+                            onClick={(e) => {
+                              // If clicking empty area (not on a clip), deselect all clips
+                              if (
+                                !(e.target as HTMLElement).closest(
+                                  ".timeline-clip"
+                                )
+                              ) {
+                                clearSelectedClips();
+                              }
+                            }}
+                          >
+                            <TimelineTrackContent
+                              track={track}
+                              zoomLevel={zoomLevel}
+                            />
+                          </div>
+                        </ContextMenuTrigger>
+                        <ContextMenuContent>
+                          <ContextMenuItem
+                            onClick={() => {
+                              toggleTrackMute(track.id);
+                            }}
+                          >
+                            {track.muted ? (
+                              <>
+                                <Volume2 className="h-4 w-4 mr-2" />
+                                Unmute Track
+                              </>
+                            ) : (
+                              <>
+                                <VolumeX className="h-4 w-4 mr-2" />
+                                Mute Track
+                              </>
+                            )}
+                          </ContextMenuItem>
+                          <ContextMenuSeparator />
+                          <ContextMenuItem
+                            onClick={() => {
+                              removeTrack(track.id);
+                              toast.success("Track deleted");
+                            }}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete Track
+                          </ContextMenuItem>
+                        </ContextMenuContent>
+                      </ContextMenu>
                     ))}
 
                     {/* Playhead for tracks area (scrubbable) */}
@@ -1118,755 +1141,6 @@ export function Timeline() {
             </ScrollArea>
           </div>
         </div>
-      </div>
-
-      {/* Clean Unified Context Menu */}
-      {contextMenu && (
-        <div
-          className="fixed z-50 min-w-[160px] bg-popover border border-border rounded-md shadow-md py-1 text-sm"
-          style={{ left: contextMenu.x, top: contextMenu.y }}
-          onContextMenu={(e) => e.preventDefault()}
-        >
-          {contextMenu.type === "track" ? (
-            // Track context menu
-            <>
-              <button
-                className="flex items-center w-full px-3 py-2 hover:bg-accent hover:text-accent-foreground transition-colors text-left"
-                onClick={() => {
-                  const track = tracks.find(
-                    (t) => t.id === contextMenu.trackId
-                  );
-                  if (track) toggleTrackMute(track.id);
-                  setContextMenu(null);
-                }}
-              >
-                {contextMenu.trackId ? (
-                  <div className="flex items-center w-full px-3 py-2 hover:bg-accent hover:text-accent-foreground transition-colors text-left">
-                    <Volume2 className="h-4 w-4 mr-2" />
-                    Unmute Track
-                  </div>
-                ) : (
-                  <div className="flex items-center w-full px-3 py-2 hover:bg-accent hover:text-accent-foreground transition-colors text-left">
-                    <VolumeX className="h-4 w-4 mr-2" />
-                    Mute Track
-                  </div>
-                )}
-              </button>
-              <div className="h-px bg-border mx-1 my-1" />
-              <button
-                className="flex items-center w-full px-3 py-2 text-destructive hover:bg-destructive/10 transition-colors text-left"
-                onClick={() => {
-                  removeTrack(contextMenu.trackId);
-                  setContextMenu(null);
-                  toast.success("Track deleted");
-                }}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete Track
-              </button>
-            </>
-          ) : (
-            // Clip context menu
-            <>
-              <button
-                className="flex items-center w-full px-3 py-2 hover:bg-accent hover:text-accent-foreground transition-colors text-left"
-                onClick={() => {
-                  if (contextMenu.clipId) {
-                    const track = tracks.find(
-                      (t) => t.id === contextMenu.trackId
-                    );
-                    const clip = track?.clips.find(
-                      (c) => c.id === contextMenu.clipId
-                    );
-                    if (clip && track) {
-                      const splitTime = currentTime;
-                      const effectiveStart = clip.startTime;
-                      const effectiveEnd =
-                        clip.startTime +
-                        (clip.duration - clip.trimStart - clip.trimEnd);
-
-                      if (
-                        splitTime > effectiveStart &&
-                        splitTime < effectiveEnd
-                      ) {
-                        updateClipTrim(
-                          track.id,
-                          clip.id,
-                          clip.trimStart,
-                          clip.trimEnd + (effectiveEnd - splitTime)
-                        );
-                        useTimelineStore.getState().addClipToTrack(track.id, {
-                          mediaId: clip.mediaId,
-                          name: clip.name + " (split)",
-                          duration: clip.duration,
-                          startTime: splitTime,
-                          trimStart:
-                            clip.trimStart + (splitTime - effectiveStart),
-                          trimEnd: clip.trimEnd,
-                        });
-                        toast.success("Clip split successfully");
-                      } else {
-                        toast.error("Playhead must be within clip to split");
-                      }
-                    }
-                  }
-                  setContextMenu(null);
-                }}
-              >
-                <Scissors className="h-4 w-4 mr-2" />
-                Split at Playhead
-              </button>
-              <button
-                className="flex items-center w-full px-3 py-2 hover:bg-accent hover:text-accent-foreground transition-colors text-left"
-                onClick={() => {
-                  if (contextMenu.clipId) {
-                    const track = tracks.find(
-                      (t) => t.id === contextMenu.trackId
-                    );
-                    const clip = track?.clips.find(
-                      (c) => c.id === contextMenu.clipId
-                    );
-                    if (clip && track) {
-                      useTimelineStore.getState().addClipToTrack(track.id, {
-                        mediaId: clip.mediaId,
-                        name: clip.name + " (copy)",
-                        duration: clip.duration,
-                        startTime:
-                          clip.startTime +
-                          (clip.duration - clip.trimStart - clip.trimEnd) +
-                          0.1,
-                        trimStart: clip.trimStart,
-                        trimEnd: clip.trimEnd,
-                      });
-                      toast.success("Clip duplicated");
-                    }
-                  }
-                  setContextMenu(null);
-                }}
-              >
-                <Copy className="h-4 w-4 mr-2" />
-                Duplicate Clip
-              </button>
-              <div className="h-px bg-border mx-1 my-1" />
-              <button
-                className="flex items-center w-full px-3 py-2 text-destructive hover:bg-destructive/10 transition-colors text-left"
-                onClick={() => {
-                  if (contextMenu.clipId) {
-                    removeClipFromTrack(
-                      contextMenu.trackId,
-                      contextMenu.clipId
-                    );
-                    toast.success("Clip deleted");
-                  }
-                  setContextMenu(null);
-                }}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete Clip
-              </button>
-            </>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function TimelineTrackContent({
-  track,
-  zoomLevel,
-  setContextMenu,
-  contextMenu,
-}: {
-  track: TimelineTrack;
-  zoomLevel: number;
-  setContextMenu: (menu: ContextMenuState | null) => void;
-  contextMenu: ContextMenuState | null;
-}) {
-  const { mediaItems } = useMediaStore();
-  const {
-    tracks,
-    moveClipToTrack,
-    updateClipStartTime,
-    addClipToTrack,
-    selectedClips,
-    selectClip,
-    deselectClip,
-    dragState,
-    startDrag: startDragAction,
-    updateDragTime,
-    endDrag: endDragAction,
-  } = useTimelineStore();
-
-  const timelineRef = useRef<HTMLDivElement>(null);
-  const [isDropping, setIsDropping] = useState(false);
-  const [dropPosition, setDropPosition] = useState<number | null>(null);
-  const [wouldOverlap, setWouldOverlap] = useState(false);
-  const dragCounterRef = useRef(0);
-  const [mouseDownLocation, setMouseDownLocation] = useState<{
-    x: number;
-    y: number;
-  } | null>(null);
-
-  // Set up mouse event listeners for drag
-  useEffect(() => {
-    if (!dragState.isDragging) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!timelineRef.current) return;
-
-      const timelineRect = timelineRef.current.getBoundingClientRect();
-      const mouseX = e.clientX - timelineRect.left;
-      const mouseTime = Math.max(0, mouseX / (50 * zoomLevel));
-      const adjustedTime = Math.max(0, mouseTime - dragState.clickOffsetTime);
-      const snappedTime = Math.round(adjustedTime * 10) / 10;
-
-      updateDragTime(snappedTime);
-    };
-
-    const handleMouseUp = () => {
-      if (!dragState.clipId || !dragState.trackId) return;
-
-      const finalTime = dragState.currentTime;
-
-      // Check for overlaps and update position
-      const sourceTrack = tracks.find((t) => t.id === dragState.trackId);
-      const movingClip = sourceTrack?.clips.find(
-        (c) => c.id === dragState.clipId
-      );
-
-      if (movingClip) {
-        const movingClipDuration =
-          movingClip.duration - movingClip.trimStart - movingClip.trimEnd;
-        const movingClipEnd = finalTime + movingClipDuration;
-
-        const targetTrack = tracks.find((t) => t.id === track.id);
-        const hasOverlap = targetTrack?.clips.some((existingClip) => {
-          if (
-            dragState.trackId === track.id &&
-            existingClip.id === dragState.clipId
-          ) {
-            return false;
-          }
-          const existingStart = existingClip.startTime;
-          const existingEnd =
-            existingClip.startTime +
-            (existingClip.duration -
-              existingClip.trimStart -
-              existingClip.trimEnd);
-          return finalTime < existingEnd && movingClipEnd > existingStart;
-        });
-
-        if (!hasOverlap) {
-          if (dragState.trackId === track.id) {
-            updateClipStartTime(track.id, dragState.clipId, finalTime);
-          } else {
-            moveClipToTrack(dragState.trackId, track.id, dragState.clipId);
-            requestAnimationFrame(() => {
-              updateClipStartTime(track.id, dragState.clipId!, finalTime);
-            });
-          }
-        }
-      }
-
-      endDragAction();
-    };
-
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, [
-    dragState.isDragging,
-    dragState.clickOffsetTime,
-    dragState.clipId,
-    dragState.trackId,
-    dragState.currentTime,
-    zoomLevel,
-    tracks,
-    track.id,
-    updateDragTime,
-    updateClipStartTime,
-    moveClipToTrack,
-    endDragAction,
-  ]);
-
-  const handleClipMouseDown = (e: React.MouseEvent, clip: TypeTimelineClip) => {
-    setMouseDownLocation({ x: e.clientX, y: e.clientY });
-    // Handle multi-selection only in mousedown
-    if (e.metaKey || e.ctrlKey || e.shiftKey) {
-      selectClip(track.id, clip.id, true);
-    }
-
-    // Calculate the offset from the left edge of the clip to where the user clicked
-    const clipElement = e.currentTarget as HTMLElement;
-    const clipRect = clipElement.getBoundingClientRect();
-    const clickOffsetX = e.clientX - clipRect.left;
-    const clickOffsetTime = clickOffsetX / (50 * zoomLevel);
-
-    startDragAction(
-      clip.id,
-      track.id,
-      e.clientX,
-      clip.startTime,
-      clickOffsetTime
-    );
-  };
-
-  const handleClipClick = (e: React.MouseEvent, clip: TypeTimelineClip) => {
-    e.stopPropagation();
-
-    // Check if mouse moved significantly
-    if (mouseDownLocation) {
-      const deltaX = Math.abs(e.clientX - mouseDownLocation.x);
-      const deltaY = Math.abs(e.clientY - mouseDownLocation.y);
-      // If it moved more than a few pixels, consider it a drag and not a click.
-      if (deltaX > 5 || deltaY > 5) {
-        setMouseDownLocation(null); // Reset for next interaction
-        return;
-      }
-    }
-
-    // Close context menu if it's open
-    if (contextMenu) {
-      setContextMenu(null);
-      return; // Don't handle selection when closing context menu
-    }
-
-    // Skip selection logic for multi-selection (handled in mousedown)
-    if (e.metaKey || e.ctrlKey || e.shiftKey) {
-      return;
-    }
-
-    // Handle single selection/deselection
-    const isSelected = selectedClips.some(
-      (c) => c.trackId === track.id && c.clipId === clip.id
-    );
-
-    if (isSelected) {
-      // If clip is selected, deselect it
-      deselectClip(track.id, clip.id);
-    } else {
-      // If clip is not selected, select it (replacing other selections)
-      selectClip(track.id, clip.id, false);
-    }
-  };
-
-  const handleClipContextMenu = (e: React.MouseEvent, clipId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setContextMenu({
-      type: "clip",
-      trackId: track.id,
-      clipId: clipId,
-      x: e.clientX,
-      y: e.clientY,
-    });
-  };
-
-  const handleTrackDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-
-    // Handle both timeline clips and media items
-    const hasTimelineClip = e.dataTransfer.types.includes(
-      "application/x-timeline-clip"
-    );
-    const hasMediaItem = e.dataTransfer.types.includes(
-      "application/x-media-item"
-    );
-
-    if (!hasTimelineClip && !hasMediaItem) return;
-
-    if (hasMediaItem) {
-      try {
-        const mediaItemData = e.dataTransfer.getData(
-          "application/x-media-item"
-        );
-        if (mediaItemData) {
-          const { type } = JSON.parse(mediaItemData);
-          const isCompatible =
-            (track.type === "video" &&
-              (type === "video" || type === "image")) ||
-            (track.type === "audio" && type === "audio");
-
-          if (!isCompatible) {
-            e.dataTransfer.dropEffect = "none";
-            return;
-          }
-        }
-      } catch (error) {
-        console.error("Error parsing dropped media item:", error);
-      }
-    }
-
-    // Calculate drop position for overlap checking
-    const trackContainer = e.currentTarget.querySelector(
-      ".track-clips-container"
-    ) as HTMLElement;
-    let dropTime = 0;
-    if (trackContainer) {
-      const rect = trackContainer.getBoundingClientRect();
-      const mouseX = Math.max(0, e.clientX - rect.left);
-      dropTime = mouseX / (50 * zoomLevel);
-    }
-
-    // Check for potential overlaps and show appropriate feedback
-    let wouldOverlap = false;
-
-    if (hasMediaItem) {
-      try {
-        const mediaItemData = e.dataTransfer.getData(
-          "application/x-media-item"
-        );
-        if (mediaItemData) {
-          const { id } = JSON.parse(mediaItemData);
-          const mediaItem = mediaItems.find((item) => item.id === id);
-          if (mediaItem) {
-            const newClipDuration = mediaItem.duration || 5;
-            const snappedTime = Math.round(dropTime * 10) / 10;
-            const newClipEnd = snappedTime + newClipDuration;
-
-            wouldOverlap = track.clips.some((existingClip) => {
-              const existingStart = existingClip.startTime;
-              const existingEnd =
-                existingClip.startTime +
-                (existingClip.duration -
-                  existingClip.trimStart -
-                  existingClip.trimEnd);
-              return snappedTime < existingEnd && newClipEnd > existingStart;
-            });
-          }
-        }
-      } catch (error) {
-        // Continue with default behavior
-      }
-    } else if (hasTimelineClip) {
-      try {
-        const timelineClipData = e.dataTransfer.getData(
-          "application/x-timeline-clip"
-        );
-        if (timelineClipData) {
-          const { clipId, trackId: fromTrackId } = JSON.parse(timelineClipData);
-          const sourceTrack = tracks.find(
-            (t: TimelineTrack) => t.id === fromTrackId
-          );
-          const movingClip = sourceTrack?.clips.find(
-            (c: any) => c.id === clipId
-          );
-
-          if (movingClip) {
-            const movingClipDuration =
-              movingClip.duration - movingClip.trimStart - movingClip.trimEnd;
-            const snappedTime = Math.round(dropTime * 10) / 10;
-            const movingClipEnd = snappedTime + movingClipDuration;
-
-            wouldOverlap = track.clips.some((existingClip) => {
-              if (fromTrackId === track.id && existingClip.id === clipId)
-                return false;
-
-              const existingStart = existingClip.startTime;
-              const existingEnd =
-                existingClip.startTime +
-                (existingClip.duration -
-                  existingClip.trimStart -
-                  existingClip.trimEnd);
-              return snappedTime < existingEnd && movingClipEnd > existingStart;
-            });
-          }
-        }
-      } catch (error) {
-        // Continue with default behavior
-      }
-    }
-
-    if (wouldOverlap) {
-      e.dataTransfer.dropEffect = "none";
-      setWouldOverlap(true);
-      setDropPosition(Math.round(dropTime * 10) / 10);
-      return;
-    }
-
-    e.dataTransfer.dropEffect = hasTimelineClip ? "move" : "copy";
-    setWouldOverlap(false);
-    setDropPosition(Math.round(dropTime * 10) / 10);
-  };
-
-  const handleTrackDragEnter = (e: React.DragEvent) => {
-    e.preventDefault();
-
-    const hasTimelineClip = e.dataTransfer.types.includes(
-      "application/x-timeline-clip"
-    );
-    const hasMediaItem = e.dataTransfer.types.includes(
-      "application/x-media-item"
-    );
-
-    if (!hasTimelineClip && !hasMediaItem) return;
-
-    dragCounterRef.current++;
-    setIsDropping(true);
-  };
-
-  const handleTrackDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-
-    const hasTimelineClip = e.dataTransfer.types.includes(
-      "application/x-timeline-clip"
-    );
-    const hasMediaItem = e.dataTransfer.types.includes(
-      "application/x-media-item"
-    );
-
-    if (!hasTimelineClip && !hasMediaItem) return;
-
-    dragCounterRef.current--;
-
-    if (dragCounterRef.current === 0) {
-      setIsDropping(false);
-      setWouldOverlap(false);
-      setDropPosition(null);
-    }
-  };
-
-  const handleTrackDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    // Reset all drag states
-    dragCounterRef.current = 0;
-    setIsDropping(false);
-    setWouldOverlap(false);
-    const currentDropPosition = dropPosition;
-    setDropPosition(null);
-
-    const hasTimelineClip = e.dataTransfer.types.includes(
-      "application/x-timeline-clip"
-    );
-    const hasMediaItem = e.dataTransfer.types.includes(
-      "application/x-media-item"
-    );
-
-    if (!hasTimelineClip && !hasMediaItem) return;
-
-    const trackContainer = e.currentTarget.querySelector(
-      ".track-clips-container"
-    ) as HTMLElement;
-    if (!trackContainer) return;
-
-    const rect = trackContainer.getBoundingClientRect();
-    const mouseX = Math.max(0, e.clientX - rect.left);
-    const newStartTime = mouseX / (50 * zoomLevel);
-    const snappedTime = Math.round(newStartTime * 10) / 10;
-
-    try {
-      if (hasTimelineClip) {
-        // Handle timeline clip movement
-        const timelineClipData = e.dataTransfer.getData(
-          "application/x-timeline-clip"
-        );
-        if (!timelineClipData) return;
-
-        const {
-          clipId,
-          trackId: fromTrackId,
-          clickOffsetTime = 0,
-        } = JSON.parse(timelineClipData);
-
-        // Find the clip being moved
-        const sourceTrack = tracks.find(
-          (t: TimelineTrack) => t.id === fromTrackId
-        );
-        const movingClip = sourceTrack?.clips.find(
-          (c: TypeTimelineClip) => c.id === clipId
-        );
-
-        if (!movingClip) {
-          toast.error("Clip not found");
-          return;
-        }
-
-        // Adjust position based on where user clicked on the clip
-        const adjustedStartTime = snappedTime - clickOffsetTime;
-        const finalStartTime = Math.max(
-          0,
-          Math.round(adjustedStartTime * 10) / 10
-        );
-
-        // Check for overlaps with existing clips (excluding the moving clip itself)
-        const movingClipDuration =
-          movingClip.duration - movingClip.trimStart - movingClip.trimEnd;
-        const movingClipEnd = finalStartTime + movingClipDuration;
-
-        const hasOverlap = track.clips.some((existingClip) => {
-          // Skip the clip being moved if it's on the same track
-          if (fromTrackId === track.id && existingClip.id === clipId)
-            return false;
-
-          const existingStart = existingClip.startTime;
-          const existingEnd =
-            existingClip.startTime +
-            (existingClip.duration -
-              existingClip.trimStart -
-              existingClip.trimEnd);
-
-          // Check if clips overlap
-          return finalStartTime < existingEnd && movingClipEnd > existingStart;
-        });
-
-        if (hasOverlap) {
-          toast.error(
-            "Cannot move clip here - it would overlap with existing clips"
-          );
-          return;
-        }
-
-        if (fromTrackId === track.id) {
-          // Moving within same track
-          updateClipStartTime(track.id, clipId, finalStartTime);
-        } else {
-          // Moving to different track
-          moveClipToTrack(fromTrackId, track.id, clipId);
-          requestAnimationFrame(() => {
-            updateClipStartTime(track.id, clipId, finalStartTime);
-          });
-        }
-      } else if (hasMediaItem) {
-        // Handle media item drop
-        const mediaItemData = e.dataTransfer.getData(
-          "application/x-media-item"
-        );
-        if (!mediaItemData) return;
-
-        const { id, type } = JSON.parse(mediaItemData);
-        const mediaItem = mediaItems.find((item) => item.id === id);
-
-        if (!mediaItem) {
-          toast.error("Media item not found");
-          return;
-        }
-
-        // Check if track type is compatible
-        const isCompatible =
-          (track.type === "video" && (type === "video" || type === "image")) ||
-          (track.type === "audio" && type === "audio");
-
-        if (!isCompatible) {
-          toast.error(`Cannot add ${type} to ${track.type} track`);
-          return;
-        }
-
-        // Check for overlaps with existing clips
-        const newClipDuration = mediaItem.duration || 5;
-        const newClipEnd = snappedTime + newClipDuration;
-
-        const hasOverlap = track.clips.some((existingClip) => {
-          const existingStart = existingClip.startTime;
-          const existingEnd =
-            existingClip.startTime +
-            (existingClip.duration -
-              existingClip.trimStart -
-              existingClip.trimEnd);
-
-          // Check if clips overlap
-          return snappedTime < existingEnd && newClipEnd > existingStart;
-        });
-
-        if (hasOverlap) {
-          toast.error(
-            "Cannot place clip here - it would overlap with existing clips"
-          );
-          return;
-        }
-
-        addClipToTrack(track.id, {
-          mediaId: mediaItem.id,
-          name: mediaItem.name,
-          duration: mediaItem.duration || 5,
-          startTime: snappedTime,
-          trimStart: 0,
-          trimEnd: 0,
-        });
-
-        toast.success(`Added ${mediaItem.name} to ${track.name}`);
-      }
-    } catch (error) {
-      console.error("Error handling drop:", error);
-      toast.error("Failed to add media to track");
-    }
-  };
-
-  return (
-    <div
-      className="w-full h-full hover:bg-muted/20"
-      onContextMenu={(e) => {
-        e.preventDefault();
-        // Only show track menu if we didn't click on a clip
-        if (!(e.target as HTMLElement).closest(".timeline-clip")) {
-          setContextMenu({
-            type: "track",
-            trackId: track.id,
-            x: e.clientX,
-            y: e.clientY,
-          });
-        }
-      }}
-      onClick={(e) => {
-        // If clicking empty area (not on a clip), deselect all clips
-        if (!(e.target as HTMLElement).closest(".timeline-clip")) {
-          const { clearSelectedClips } = useTimelineStore.getState();
-          clearSelectedClips();
-        }
-      }}
-      onDragOver={handleTrackDragOver}
-      onDragEnter={handleTrackDragEnter}
-      onDragLeave={handleTrackDragLeave}
-      onDrop={handleTrackDrop}
-    >
-      <div
-        ref={timelineRef}
-        className="h-full relative track-clips-container min-w-full"
-      >
-        {track.clips.length === 0 ? (
-          <div
-            className={`h-full w-full rounded-sm border-2 border-dashed flex items-center justify-center text-xs text-muted-foreground transition-colors ${
-              isDropping
-                ? wouldOverlap
-                  ? "border-red-500 bg-red-500/10 text-red-600"
-                  : "border-blue-500 bg-blue-500/10 text-blue-600"
-                : "border-muted/30"
-            }`}
-          >
-            {isDropping
-              ? wouldOverlap
-                ? "Cannot drop - would overlap"
-                : "Drop clip here"
-              : "Drop media here"}
-          </div>
-        ) : (
-          <>
-            {track.clips.map((clip) => {
-              const isSelected = selectedClips.some(
-                (c) => c.trackId === track.id && c.clipId === clip.id
-              );
-
-              return (
-                <TimelineClip
-                  key={clip.id}
-                  clip={clip}
-                  track={track}
-                  zoomLevel={zoomLevel}
-                  isSelected={isSelected}
-                  onContextMenu={handleClipContextMenu}
-                  onClipMouseDown={handleClipMouseDown}
-                  onClipClick={handleClipClick}
-                />
-              );
-            })}
-          </>
-        )}
       </div>
     </div>
   );
