@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getSessionCookie } from "better-auth/cookies";
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
-  const session = getSessionCookie(request);
 
-  if (path === "/editor" && !session && process.env.NODE_ENV === "production") {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("redirect", request.url);
-    return NextResponse.redirect(loginUrl);
+  if (path === "/editor" && process.env.NODE_ENV === "production") {
+    const homeUrl = new URL("/", request.url);
+    homeUrl.searchParams.set("redirect", request.url);
+    return NextResponse.redirect(homeUrl);
   }
 
   return NextResponse.next();

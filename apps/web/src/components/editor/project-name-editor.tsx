@@ -11,7 +11,7 @@ interface ProjectNameEditorProps {
 }
 
 export function ProjectNameEditor({ className }: ProjectNameEditorProps) {
-  const { activeProject, updateProjectName } = useProjectStore();
+  const { activeProject, renameProject } = useProjectStore();
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -37,8 +37,8 @@ export function ProjectNameEditor({ className }: ProjectNameEditorProps) {
   };
 
   const handleSave = () => {
-    if (editValue.trim()) {
-      updateProjectName(editValue.trim());
+    if (editValue.trim() && activeProject) {
+      renameProject(activeProject.id, editValue.trim());
       setIsEditing(false);
     }
   };

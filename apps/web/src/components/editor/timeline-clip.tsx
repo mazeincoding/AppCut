@@ -34,7 +34,6 @@ export function TimelineClip({
   track,
   zoomLevel,
   isSelected,
-  onContextMenu,
   onClipMouseDown,
   onClipClick,
 }: TimelineClipProps) {
@@ -299,7 +298,7 @@ export function TimelineClip({
         )} ${isSelected ? "ring-2 ring-primary ring-offset-1" : ""}`}
         onClick={(e) => onClipClick && onClipClick(e, clip)}
         onMouseDown={handleClipMouseDown}
-        onContextMenu={(e) => onContextMenu && onContextMenu(e, clip.id)}
+        onContextMenu={(e) => onClipMouseDown && onClipMouseDown(e, clip)}
       >
         <div className="absolute inset-1 flex items-center p-1">
           {renderClipContent()}

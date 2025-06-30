@@ -1,4 +1,0 @@
-/* Prevent scroll jumping on Mac devices when using the editor */
-body {
-  overflow: hidden;
-} 

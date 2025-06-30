@@ -6,6 +6,7 @@ import "./globals.css";
 import { Toaster } from "../components/ui/sonner";
 import { TooltipProvider } from "../components/ui/tooltip";
 import { DevelopmentDebug } from "../components/development-debug";
+import { StorageProvider } from "../components/storage-provider";
 import { baseMetaData } from "./metadata";
 
 const inter = Inter({
@@ -25,7 +26,7 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased`}>
         <ThemeProvider attribute="class" forcedTheme="dark" enableSystem>
           <TooltipProvider>
-            {children}
+            <StorageProvider>{children}</StorageProvider>
             <Analytics />
             <Toaster />
             <DevelopmentDebug />

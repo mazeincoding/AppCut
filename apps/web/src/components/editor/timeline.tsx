@@ -355,7 +355,7 @@ export function Timeline() {
           (p) => setProgress(p)
         );
         for (const processedItem of processedItems) {
-          addMediaItem(processedItem);
+          await addMediaItem(processedItem);
           const currentMediaItems = useMediaStore.getState().mediaItems;
           const addedItem = currentMediaItems.find(
             (item) =>

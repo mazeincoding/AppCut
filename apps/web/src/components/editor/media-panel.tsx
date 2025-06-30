@@ -32,7 +32,9 @@ export function MediaPanel() {
         setProgress(p)
       );
       // Add each processed media item to the store
-      processedItems.forEach((item) => addMediaItem(item));
+      for (const item of processedItems) {
+        await addMediaItem(item);
+      }
     } catch (error) {
       // Show error toast if processing fails
       console.error("Error processing files:", error);
@@ -56,12 +58,11 @@ export function MediaPanel() {
     e.target.value = ""; // Reset input
   };
 
-  const handleRemove = (e: React.MouseEvent, id: string) => {
+  const handleRemove = async (e: React.MouseEvent, id: string) => {
     // Remove a media item from the store
     e.stopPropagation();
 
-
-    // Remove tracks automatically when delete media 
+    // Remove tracks automatically when delete media
     const { tracks, removeTrack } = useTimelineStore.getState();
     tracks.forEach((track) => {
       const clipsToRemove = track.clips.filter((clip) => clip.mediaId === id);
@@ -69,12 +70,14 @@ export function MediaPanel() {
         useTimelineStore.getState().removeClipFromTrack(track.id, clip.id);
       });
       // Only remove track if it becomes empty and has no other clips
-      const updatedTrack = useTimelineStore.getState().tracks.find(t => t.id === track.id);
+      const updatedTrack = useTimelineStore
+        .getState()
+        .tracks.find((t) => t.id === track.id);
       if (updatedTrack && updatedTrack.clips.length === 0) {
         removeTrack(track.id);
       }
     });
-    removeMediaItem(id);
+    await removeMediaItem(id);
   };
 
   const formatDuration = (duration: number) => {
