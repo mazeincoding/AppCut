@@ -1,44 +1,42 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "../ui/button";
-import {
-  MoreVertical,
-  Scissors,
-  Trash2,
-  SplitSquareHorizontal,
-  Music,
-  ChevronRight,
-  ChevronLeft,
-} from "lucide-react";
 import { useMediaStore } from "@/stores/media-store";
-import { useTimelineStore } from "@/stores/timeline-store";
 import { usePlaybackStore } from "@/stores/playback-store";
-import AudioWaveform from "./audio-waveform";
+import { useTimelineStore } from "@/stores/timeline-store";
+import { ResizeState, TimelineClipProps } from "@/types/timeline";
+import {
+  ChevronLeft,
+  ChevronRight,
+  MoreVertical,
+  Music,
+  Scissors,
+  SplitSquareHorizontal,
+  Trash2,
+} from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
-import { TimelineClipProps, ResizeState } from "@/types/timeline";
+import { Button } from "../ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { isDragging } from "motion/react";
+import AudioWaveform from "./audio-waveform";
 
 export function TimelineClip({
   clip,
   track,
   zoomLevel,
   isSelected,
-  onContextMenu,
   onClipMouseDown,
   onClipClick,
 }: TimelineClipProps) {
-  const { mediaItems } = useMediaStore();
+  const mediaItems = useMediaStore((s) => s.mediaItems);
   const {
     updateClipTrim,
     addClipToTrack,
@@ -49,7 +47,7 @@ export function TimelineClip({
     splitAndKeepRight,
     separateAudio,
   } = useTimelineStore();
-  const { currentTime } = usePlaybackStore();
+  const currentTime = usePlaybackStore((s) => s.currentTime);
 
   const [resizing, setResizing] = useState<ResizeState | null>(null);
   const [clipMenuOpen, setClipMenuOpen] = useState(false);
@@ -299,7 +297,7 @@ export function TimelineClip({
         )} ${isSelected ? "ring-2 ring-primary ring-offset-1" : ""}`}
         onClick={(e) => onClipClick && onClipClick(e, clip)}
         onMouseDown={handleClipMouseDown}
-        onContextMenu={(e) => onContextMenu && onContextMenu(e, clip.id)}
+        // onContextMenu={(e) => onContextMenu && onContextMenu(e, clip.id)}
       >
         <div className="absolute inset-1 flex items-center p-1">
           {renderClipContent()}
