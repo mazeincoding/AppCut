@@ -7,15 +7,20 @@ import { useTimelineStore } from "@/stores/timeline-store";
 import { HeaderBase } from "./header-base";
 import { formatTimeCode } from "@/lib/time";
 import { useProjectStore } from "@/stores/project-store";
+import { useRouter } from "next/navigation";
 
 export function EditorHeader() {
   const { getTotalDuration } = useTimelineStore();
   const { activeProject, createNewProject } = useProjectStore();
+  const router = useRouter();
 
-  const handleCreateNewProject = async () => {
+  const handleCreateNewProject = async (e: React.MouseEvent) => {
+    e.preventDefault();
     if (activeProject === null || !activeProject) {
       await createNewProject("Untitled Project");
     }
+
+    router.push("/projects");
   };
 
   const handleExport = () => {
@@ -25,8 +30,7 @@ export function EditorHeader() {
 
   const leftContent = (
     <div className="flex items-center gap-2">
-      <Link
-        href="/projects"
+      <button
         className="font-medium tracking-tight flex items-center gap-2 hover:opacity-80 transition-opacity"
         onClick={handleCreateNewProject}
       >
@@ -34,7 +38,7 @@ export function EditorHeader() {
         <span className="text-sm">
           {activeProject?.name || "Untitled Project"}
         </span>
-      </Link>
+      </button>
     </div>
   );
 
