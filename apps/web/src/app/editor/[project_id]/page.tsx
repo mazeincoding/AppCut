@@ -20,12 +20,10 @@ export default function Editor() {
   const {
     toolsPanel,
     previewPanel,
-    propertiesPanel,
     mainContent,
     timeline,
     setToolsPanel,
     setPreviewPanel,
-    setPropertiesPanel,
     setMainContent,
     setTimeline,
   } = usePanelStore();

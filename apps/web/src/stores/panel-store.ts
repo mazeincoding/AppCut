@@ -1,6 +1,14 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+const DEFAULT_PANEL_SIZES = {
+  toolsPanel: 45,
+  previewPanel: 75,
+  propertiesPanel: 20,
+  mainContent: 70,
+  timeline: 30,
+} as const;
+
 interface PanelState {
   // Panel sizes as percentages
   toolsPanel: number;
@@ -21,11 +29,7 @@ export const usePanelStore = create<PanelState>()(
   persist(
     (set) => ({
       // Default sizes - optimized for responsiveness
-      toolsPanel: 25,
-      previewPanel: 75,
-      propertiesPanel: 20,
-      mainContent: 70,
-      timeline: 30,
+      ...DEFAULT_PANEL_SIZES,
 
       // Actions
       setToolsPanel: (size) => set({ toolsPanel: size }),

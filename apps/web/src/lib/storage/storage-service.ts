@@ -94,7 +94,8 @@ class StorageService {
       type: mediaItem.type,
       size: mediaItem.file.size,
       lastModified: mediaItem.file.lastModified,
-      aspectRatio: mediaItem.aspectRatio,
+      width: mediaItem.width,
+      height: mediaItem.height,
       duration: mediaItem.duration,
     };
 
@@ -118,7 +119,8 @@ class StorageService {
       type: metadata.type,
       file,
       url,
-      aspectRatio: metadata.aspectRatio,
+      width: metadata.width,
+      height: metadata.height,
       duration: metadata.duration,
       // thumbnailUrl would need to be regenerated or cached separately
     };

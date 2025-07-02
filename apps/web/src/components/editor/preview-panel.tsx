@@ -5,12 +5,26 @@ import {
   type TimelineClip,
   type TimelineTrack,
 } from "@/stores/timeline-store";
-import { useMediaStore, type MediaItem } from "@/stores/media-store";
+import {
+  useMediaStore,
+  type MediaItem,
+  getMediaAspectRatio,
+} from "@/stores/media-store";
 import { usePlaybackStore } from "@/stores/playback-store";
+import { useEditorStore } from "@/stores/editor-store";
 import { VideoPlayer } from "@/components/ui/video-player";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, Volume2, VolumeX, Plus } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { Play, Pause, Volume2, VolumeX, Plus, Square } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { cn } from "@/lib/utils";
+import { formatTimeCode } from "@/lib/time";
 
 interface ActiveClip {
   clip: TimelineClip;
@@ -22,7 +36,7 @@ export function PreviewPanel() {
   const { tracks } = useTimelineStore();
   const { mediaItems } = useMediaStore();
   const { currentTime, muted, toggleMute, volume } = usePlaybackStore();
-  const [canvasSize, setCanvasSize] = useState({ width: 1920, height: 1080 });
+  const { canvasSize, canvasPresets, setCanvasSize } = useEditorStore();
   const previewRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [previewDimensions, setPreviewDimensions] = useState({
@@ -116,6 +130,9 @@ export function PreviewPanel() {
 
   const activeClips = getActiveClips();
 
+  // Check if there are any clips in the timeline at all
+  const hasAnyClips = tracks.some((track) => track.clips.length > 0);
+
   // Render a clip
   const renderClip = (clipData: ActiveClip, index: number) => {
     const { clip, mediaItem } = clipData;
@@ -183,101 +200,150 @@ export function PreviewPanel() {
     return null;
   };
 
-  // Canvas presets
-  const canvasPresets = [
-    { name: "16:9 HD", width: 1920, height: 1080 },
-    { name: "16:9 4K", width: 3840, height: 2160 },
-    { name: "9:16 Mobile", width: 1080, height: 1920 },
-    { name: "1:1 Square", width: 1080, height: 1080 },
-    { name: "4:3 Standard", width: 1440, height: 1080 },
-  ];
-
   return (
     <div className="h-full w-full flex flex-col min-h-0 min-w-0">
-      {/* Controls */}
-      <div className="border-b p-2 flex items-center gap-2 text-xs flex-shrink-0">
-        <span className="text-muted-foreground">Canvas:</span>
-        <select
-          value={`${canvasSize.width}x${canvasSize.height}`}
-          onChange={(e) => {
-            const preset = canvasPresets.find(
-              (p) => `${p.width}x${p.height}` === e.target.value
-            );
-            if (preset)
-              setCanvasSize({ width: preset.width, height: preset.height });
-          }}
-          className="bg-background border rounded px-2 py-1 text-xs"
-        >
-          {canvasPresets.map((preset) => (
-            <option
-              key={preset.name}
-              value={`${preset.width}x${preset.height}`}
-            >
-              {preset.name} ({preset.width}×{preset.height})
-            </option>
-          ))}
-        </select>
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={toggleMute}
-          className="ml-auto"
-        >
-          {muted || volume === 0 ? (
-            <VolumeX className="h-3 w-3 mr-1" />
-          ) : (
-            <Volume2 className="h-3 w-3 mr-1" />
-          )}
-          {muted || volume === 0 ? "Unmute" : "Mute"}
-        </Button>
-      </div>
-
-      {/* Preview Area */}
       <div
         ref={containerRef}
         className="flex-1 flex flex-col items-center justify-center p-3 min-h-0 min-w-0 gap-4"
       >
-        <div
-          ref={previewRef}
-          className="relative overflow-hidden rounded-sm bg-black border"
-          style={{
-            width: previewDimensions.width,
-            height: previewDimensions.height,
-          }}
-        >
-          {activeClips.length === 0 ? (
-            <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-              {tracks.length === 0
-                ? "No media added to timeline"
-                : "No clips at current time"}
-            </div>
-          ) : (
-            activeClips.map((clipData, index) => renderClip(clipData, index))
-          )}
-        </div>
+        {hasAnyClips ? (
+          <div
+            ref={previewRef}
+            className="relative overflow-hidden rounded-sm bg-black border"
+            style={{
+              width: previewDimensions.width,
+              height: previewDimensions.height,
+            }}
+          >
+            {activeClips.length === 0 ? (
+              <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                No clips at current time
+              </div>
+            ) : (
+              activeClips.map((clipData, index) => renderClip(clipData, index))
+            )}
+          </div>
+        ) : (
+          <>
+            {/* Empty div so toolbar stays at the bottom */}
+            <div className="w-full h-full"></div>
+          </>
+        )}
 
-        <PreviewToolbar />
+        <PreviewToolbar hasAnyClips={hasAnyClips} />
       </div>
     </div>
   );
 }
 
-function PreviewToolbar() {
-  const { isPlaying, toggle } = usePlaybackStore();
+function PreviewToolbar({ hasAnyClips }: { hasAnyClips: boolean }) {
+  const { isPlaying, toggle, currentTime } = usePlaybackStore();
+  const {
+    canvasSize,
+    canvasPresets,
+    setCanvasSize,
+    setCanvasSizeFromAspectRatio,
+  } = useEditorStore();
+  const { mediaItems } = useMediaStore();
+  const { tracks, getTotalDuration } = useTimelineStore();
+
+  // Find the current preset based on canvas size
+  const currentPreset = canvasPresets.find(
+    (preset) =>
+      preset.width === canvasSize.width && preset.height === canvasSize.height
+  );
+
+  const handlePresetSelect = (preset: { width: number; height: number }) => {
+    setCanvasSize({ width: preset.width, height: preset.height });
+  };
+
+  // Get the first video/image media item to determine original aspect ratio
+  const getOriginalAspectRatio = () => {
+    // Find first video or image in timeline
+    for (const track of tracks) {
+      for (const clip of track.clips) {
+        const mediaItem = mediaItems.find((item) => item.id === clip.mediaId);
+        if (
+          mediaItem &&
+          (mediaItem.type === "video" || mediaItem.type === "image")
+        ) {
+          return getMediaAspectRatio(mediaItem);
+        }
+      }
+    }
+    return 16 / 9; // Default aspect ratio
+  };
+
+  const handleOriginalSelect = () => {
+    const aspectRatio = getOriginalAspectRatio();
+    setCanvasSizeFromAspectRatio(aspectRatio);
+  };
+
+  // Check if current size is "Original" (not matching any preset)
+  const isOriginal = !currentPreset;
 
   return (
     <div
       data-toolbar
-      className="flex items-center justify-center gap-2 px-4 pt-2 bg-background-500 w-full"
+      className="flex items-end justify-between gap-2 p-1 pt-2 bg-background-500 w-full"
     >
-      <Button variant="text" size="icon" onClick={toggle}>
+      <div>
+        <p
+          className={cn(
+            "text-xs text-muted-foreground tabular-nums",
+            !hasAnyClips && "opacity-50"
+          )}
+        >
+          {formatTimeCode(currentTime, "HH:MM:SS:CS")}/
+          {formatTimeCode(getTotalDuration(), "HH:MM:SS:CS")}
+        </p>
+      </div>
+      <Button
+        variant="text"
+        size="icon"
+        onClick={toggle}
+        disabled={!hasAnyClips}
+      >
         {isPlaying ? (
           <Pause className="h-3 w-3" />
         ) : (
           <Play className="h-3 w-3" />
         )}
       </Button>
+      <div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              size="sm"
+              className="!bg-background text-foreground text-xs h-auto rounded-none border border-foreground px-0.5 py-0 font-light"
+              disabled={!hasAnyClips}
+            >
+              {currentPreset?.name || "Ratio"}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onClick={handleOriginalSelect}
+              className={cn("text-xs", isOriginal && "font-semibold")}
+            >
+              Original
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            {canvasPresets.map((preset) => (
+              <DropdownMenuItem
+                key={preset.name}
+                onClick={() => handlePresetSelect(preset)}
+                className={cn(
+                  "text-xs",
+                  currentPreset?.name === preset.name && "font-semibold"
+                )}
+              >
+                {preset.name}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   );
 }

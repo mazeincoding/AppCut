@@ -3,7 +3,7 @@ import {
   getFileType,
   generateVideoThumbnail,
   getMediaDuration,
-  getImageAspectRatio,
+  getImageDimensions,
   type MediaItem,
 } from "@/stores/media-store";
 // import { generateThumbnail, getVideoInfo } from "./ffmpeg-utils"; // Temporarily disabled
@@ -31,20 +31,23 @@ export async function processMediaFiles(
     const url = URL.createObjectURL(file);
     let thumbnailUrl: string | undefined;
     let duration: number | undefined;
-    let aspectRatio: number = 16 / 9; // Default fallback
+    let width: number | undefined;
+    let height: number | undefined;
 
     try {
       if (fileType === "image") {
-        // Get image aspect ratio
-        aspectRatio = await getImageAspectRatio(file);
+        // Get image dimensions
+        const dimensions = await getImageDimensions(file);
+        width = dimensions.width;
+        height = dimensions.height;
       } else if (fileType === "video") {
         // Use basic thumbnail generation for now
         const videoResult = await generateVideoThumbnail(file);
         thumbnailUrl = videoResult.thumbnailUrl;
-        aspectRatio = videoResult.aspectRatio;
+        width = videoResult.width;
+        height = videoResult.height;
       } else if (fileType === "audio") {
-        // For audio, use a square aspect ratio
-        aspectRatio = 1;
+        // For audio, we don't set width/height (they'll be undefined)
       }
 
       // Get duration for videos and audio (if not already set by FFmpeg)
@@ -59,7 +62,8 @@ export async function processMediaFiles(
         url,
         thumbnailUrl,
         duration,
-        aspectRatio,
+        width,
+        height,
       });
 
       // Yield back to the event loop to keep the UI responsive

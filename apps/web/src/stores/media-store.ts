@@ -9,7 +9,8 @@ export interface MediaItem {
   url: string; // Object URL for preview
   thumbnailUrl?: string; // For video thumbnails
   duration?: number; // For video/audio duration
-  aspectRatio: number; // width / height
+  width?: number; // For video/image width
+  height?: number; // For video/image height
 }
 
 interface MediaStore {
@@ -40,14 +41,17 @@ export const getFileType = (file: File): "image" | "video" | "audio" | null => {
   return null;
 };
 
-// Helper function to get image aspect ratio
-export const getImageAspectRatio = (file: File): Promise<number> => {
+// Helper function to get image dimensions
+export const getImageDimensions = (
+  file: File
+): Promise<{ width: number; height: number }> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
 
     img.addEventListener("load", () => {
-      const aspectRatio = img.naturalWidth / img.naturalHeight;
-      resolve(aspectRatio);
+      const width = img.naturalWidth;
+      const height = img.naturalHeight;
+      resolve({ width, height });
       img.remove();
     });
 
@@ -60,10 +64,10 @@ export const getImageAspectRatio = (file: File): Promise<number> => {
   });
 };
 
-// Helper function to generate video thumbnail and get aspect ratio
+// Helper function to generate video thumbnail and get dimensions
 export const generateVideoThumbnail = (
   file: File
-): Promise<{ thumbnailUrl: string; aspectRatio: number }> => {
+): Promise<{ thumbnailUrl: string; width: number; height: number }> => {
   return new Promise((resolve, reject) => {
     const video = document.createElement("video");
     const canvas = document.createElement("canvas");
@@ -85,9 +89,10 @@ export const generateVideoThumbnail = (
     video.addEventListener("seeked", () => {
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       const thumbnailUrl = canvas.toDataURL("image/jpeg", 0.8);
-      const aspectRatio = video.videoWidth / video.videoHeight;
+      const width = video.videoWidth;
+      const height = video.videoHeight;
 
-      resolve({ thumbnailUrl, aspectRatio });
+      resolve({ thumbnailUrl, width, height });
 
       // Cleanup
       video.remove();
@@ -125,6 +130,14 @@ export const getMediaDuration = (file: File): Promise<number> => {
     element.src = URL.createObjectURL(file);
     element.load();
   });
+};
+
+// Helper to get aspect ratio from MediaItem
+export const getMediaAspectRatio = (item: MediaItem): number => {
+  if (item.width && item.height) {
+    return item.width / item.height;
+  }
+  return 16 / 9; // Default aspect ratio
 };
 
 export const useMediaStore = create<MediaStore>((set, get) => ({

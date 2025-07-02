@@ -281,9 +281,9 @@ export function TimelineClip({
 
   return (
     <div
-      className={`absolute top-0 h-full select-none transition-all duration-75 ${
+      className={`absolute top-0 h-full select-none transition-all duration-75${
         isBeingDragged ? "z-50" : "z-10"
-      } ${isSelected ? "ring-2 ring-primary" : ""}`}
+      }`}
       style={{
         left: `${clipLeft}px`,
         width: `${clipWidth}px`,
@@ -293,9 +293,11 @@ export function TimelineClip({
       onMouseLeave={resizing ? handleResizeEnd : undefined}
     >
       <div
-        className={`relative h-full rounded border cursor-pointer overflow-hidden ${getTrackColor(
+        className={`relative h-full rounded-[0.15rem] cursor-pointer overflow-hidden ${getTrackColor(
           track.type
-        )} ${isSelected ? "ring-2 ring-primary ring-offset-1" : ""}`}
+        )} ${isSelected ? "border-b-[0.5px] border-t-[0.5px] border-primary" : ""} ${
+          isBeingDragged ? "z-50" : "z-10"
+        }`}
         onClick={(e) => onClipClick && onClipClick(e, clip)}
         onMouseDown={handleClipMouseDown}
         onContextMenu={(e) => onClipMouseDown && onClipMouseDown(e, clip)}
@@ -304,14 +306,18 @@ export function TimelineClip({
           {renderClipContent()}
         </div>
 
-        <div
-          className="absolute left-0 top-0 bottom-0 w-1 cursor-w-resize hover:bg-primary/50 transition-colors"
-          onMouseDown={(e) => handleResizeStart(e, clip.id, "left")}
-        />
-        <div
-          className="absolute right-0 top-0 bottom-0 w-1 cursor-e-resize hover:bg-primary/50 transition-colors"
-          onMouseDown={(e) => handleResizeStart(e, clip.id, "right")}
-        />
+        {isSelected && (
+          <>
+            <div
+              className="absolute left-0 top-0 bottom-0 w-1 cursor-w-resize bg-foreground z-50"
+              onMouseDown={(e) => handleResizeStart(e, clip.id, "left")}
+            />
+            <div
+              className="absolute right-0 top-0 bottom-0 w-1 cursor-e-resize bg-foreground z-50"
+              onMouseDown={(e) => handleResizeStart(e, clip.id, "right")}
+            />
+          </>
+        )}
 
         <div className="absolute top-1 right-1">
           <DropdownMenu open={clipMenuOpen} onOpenChange={setClipMenuOpen}>

@@ -58,6 +58,19 @@ export function TimelineTrackContent({
     const handleMouseMove = (e: MouseEvent) => {
       if (!timelineRef.current) return;
 
+      // On first mouse move during drag, ensure the clip is selected
+      if (dragState.clipId && dragState.trackId) {
+        const isSelected = selectedClips.some(
+          (c) =>
+            c.trackId === dragState.trackId && c.clipId === dragState.clipId
+        );
+
+        if (!isSelected) {
+          // Select this clip (replacing other selections) since we're dragging it
+          selectClip(dragState.trackId, dragState.clipId, false);
+        }
+      }
+
       const timelineRect = timelineRef.current.getBoundingClientRect();
       const mouseX = e.clientX - timelineRect.left;
       const mouseTime = Math.max(0, mouseX / (50 * zoomLevel));
@@ -139,8 +152,29 @@ export function TimelineTrackContent({
 
   const handleClipMouseDown = (e: React.MouseEvent, clip: TypeTimelineClip) => {
     setMouseDownLocation({ x: e.clientX, y: e.clientY });
-    // Handle multi-selection only in mousedown
-    if (e.metaKey || e.ctrlKey || e.shiftKey) {
+
+    // Detect right-click (button 2) and handle selection without starting drag
+    const isRightClick = e.button === 2;
+    const isMultiSelect = e.metaKey || e.ctrlKey || e.shiftKey;
+
+    if (isRightClick) {
+      // Handle right-click selection
+      const isSelected = selectedClips.some(
+        (c) => c.trackId === track.id && c.clipId === clip.id
+      );
+
+      // If clip is not selected, select it (keep other selections if multi-select)
+      if (!isSelected) {
+        selectClip(track.id, clip.id, isMultiSelect);
+      }
+      // If clip is already selected, keep it selected
+
+      // Don't start drag action for right-clicks
+      return;
+    }
+
+    // Handle multi-selection for left-click with modifiers
+    if (isMultiSelect) {
       selectClip(track.id, clip.id, true);
     }
 
@@ -514,8 +548,6 @@ export function TimelineTrackContent({
           trimStart: 0,
           trimEnd: 0,
         });
-
-        toast.success(`Added ${mediaItem.name} to ${track.name}`);
       }
     } catch (error) {
       console.error("Error handling drop:", error);

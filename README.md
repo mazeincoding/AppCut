@@ -10,10 +10,6 @@
   </tr>
 </table>
 
-
-
-
-
 ## Why?
 
 - **Privacy**: Your videos stay on your device
@@ -50,6 +46,7 @@ Before you begin, ensure you have the following installed on your system:
 ### Setup
 
 1.  **Clone the repository**
+
     ```bash
     git clone <repo-url>
     cd OpenCut
@@ -57,29 +54,33 @@ Before you begin, ensure you have the following installed on your system:
 
 2.  **Start backend services**
     From the project root, start the PostgreSQL and Redis services:
+
     ```bash
     docker-compose up -d
     ```
 
 3.  **Set up environment variables**
     Navigate into the web app's directory and create a `.env` file from the example:
+
     ```bash
     cd apps/web
 
-    
+
     # Unix/Linux/Mac
     cp .env.example .env.local
 
     # Windows Command Prompt
     copy .env.example .env.local
-    
+
     # Windows PowerShell
     Copy-Item .env.example .env.local
     ```
-    *The default values in the `.env` file should work for local development.*
+
+    _The default values in the `.env` file should work for local development._
 
 4.  **Install dependencies**
     Install the project dependencies using `bun` (recommended) or `npm`.
+
     ```bash
     # With bun
     bun install
@@ -90,6 +91,7 @@ Before you begin, ensure you have the following installed on your system:
 
 5.  **Run database migrations**
     Apply the database schema to your local database:
+
     ```bash
     # With bun
     bun run db:push:local
@@ -99,6 +101,7 @@ Before you begin, ensure you have the following installed on your system:
     ```
 
 6.  **Start the development server**
+
     ```bash
     # With bun
     bun run dev
@@ -109,16 +112,15 @@ Before you begin, ensure you have the following installed on your system:
 
 The application will be available at [http://localhost:3000](http://localhost:3000).
 
----
-
-
 ## Contributing
 
-Visit [CONTRIBUTING.md](.github/CONTRIBUTING.md)
----
+**Note**: We're currently moving at an extremely fast pace with rapid development and breaking changes. While we appreciate the interest, it's recommended to wait until the project stabilizes before contributing to avoid conflicts and wasted effort.
+
+## Visit [CONTRIBUTING.md](.github/CONTRIBUTING.md)
+
 We welcome contributions! Please see our [Contributing Guide](.github/CONTRIBUTING.md) for detailed setup instructions and development guidelines.
 
-Quick start for contributors:
+**Quick start for contributors:**
 
 - Fork the repo and clone locally
 - Follow the setup instructions in CONTRIBUTING.md

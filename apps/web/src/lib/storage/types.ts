@@ -14,7 +14,8 @@ export interface MediaFileData {
   type: "image" | "video" | "audio";
   size: number;
   lastModified: number;
-  aspectRatio: number;
+  width?: number;
+  height?: number;
   duration?: number;
   // File will be stored separately in OPFS
 }
