@@ -10,7 +10,13 @@ import { useProjectStore } from "@/stores/project-store";
 
 export function EditorHeader() {
   const { getTotalDuration } = useTimelineStore();
-  const { activeProject } = useProjectStore();
+  const { activeProject, createNewProject } = useProjectStore();
+
+  const handleCreateNewProject = async () => {
+    if (activeProject === null || !activeProject) {
+      await createNewProject("Untitled Project");
+    }
+  };
 
   const handleExport = () => {
     // TODO: Implement export functionality
@@ -22,9 +28,12 @@ export function EditorHeader() {
       <Link
         href="/projects"
         className="font-medium tracking-tight flex items-center gap-2 hover:opacity-80 transition-opacity"
+        onClick={handleCreateNewProject}
       >
         <ChevronLeft className="h-4 w-4" />
-        <span className="text-sm">{activeProject?.name}</span>
+        <span className="text-sm">
+          {activeProject?.name || "Untitled Project"}
+        </span>
       </Link>
     </div>
   );
