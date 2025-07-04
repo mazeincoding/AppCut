@@ -315,7 +315,7 @@ function PreviewToolbar({ hasAnyClips }: { hasAnyClips: boolean }) {
           <DropdownMenuTrigger asChild>
             <Button
               size="sm"
-              className="!bg-background text-foreground text-xs h-auto rounded-none border border-foreground px-0.5 py-0 font-light"
+              className="!bg-background text-foreground/85 text-xs h-auto rounded-none border border-muted-foreground px-0.5 py-0 font-light"
               disabled={!hasAnyClips}
             >
               {currentPreset?.name || "Ratio"}

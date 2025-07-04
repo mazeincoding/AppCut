@@ -212,18 +212,16 @@ export function TimelineTrackContent({
       return;
     }
 
-    // Handle single selection/deselection
+    // Handle single selection
     const isSelected = selectedClips.some(
       (c) => c.trackId === track.id && c.clipId === clip.id
     );
 
-    if (isSelected) {
-      // If clip is selected, deselect it
-      deselectClip(track.id, clip.id);
-    } else {
+    if (!isSelected) {
       // If clip is not selected, select it (replacing other selections)
       selectClip(track.id, clip.id, false);
     }
+    // If clip is already selected, keep it selected (do nothing)
   };
 
   const handleTrackDragOver = (e: React.DragEvent) => {

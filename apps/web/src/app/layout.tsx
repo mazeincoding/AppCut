@@ -31,7 +31,7 @@ export default function RootLayout({
             <Toaster />
             <DevelopmentDebug />
             <Script
-              src="https://app.databuddy.cc/databuddy.js"
+              src="https://cdn.databuddy.cc/databuddy.js"
               strategy="afterInteractive"
               async
               data-client-id="UP-Wcoy5arxFeK7oyjMMZ"
