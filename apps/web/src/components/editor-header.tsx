@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "./ui/button";
-import { ChevronLeft, Download } from "lucide-react";
+import { ChevronLeftIcon, DownloadIcon } from "lucide-react";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { HeaderBase } from "./header-base";
 import { formatTimeCode } from "@/lib/time";
@@ -23,7 +23,7 @@ export function EditorHeader() {
         href="/projects"
         className="font-medium tracking-tight flex items-center gap-2 hover:opacity-80 transition-opacity"
       >
-        <ChevronLeft className="h-4 w-4" />
+        <ChevronLeftIcon className="h-4 w-4" />
         <span className="text-sm">{activeProject?.name}</span>
       </Link>
     </div>
@@ -38,7 +38,7 @@ export function EditorHeader() {
   const rightContent = (
     <nav className="flex items-center gap-2">
       <Button size="sm" onClick={handleExport}>
-        <Download className="h-4 w-4" />
+        <DownloadIcon className="h-4 w-4" />
         <span className="text-sm">Export</span>
       </Button>
     </nav>

@@ -2,15 +2,15 @@
 
 import type { TrackType } from "@/types/timeline";
 import {
-  ArrowLeftToLine,
-  ArrowRightToLine,
-  Copy,
-  Pause,
-  Play,
-  Scissors,
-  Snowflake,
-  SplitSquareHorizontal,
-  Trash2,
+  ArrowLeftToLineIcon,
+  ArrowRightToLineIcon,
+  CopyIcon,
+  PauseIcon,
+  PlayIcon,
+  ScissorsIcon,
+  SnowflakeIcon,
+  SplitSquareHorizontalIcon,
+  Trash2Icon,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import {
@@ -71,9 +71,9 @@ export function TimelineToolbar({
               className="mr-2"
             >
               {isPlaying ? (
-                <Pause className="h-4 w-4" />
+                <PauseIcon className="h-4 w-4" />
               ) : (
-                <Play className="h-4 w-4" />
+                <PlayIcon className="h-4 w-4" />
               )}
             </Button>
           </TooltipTrigger>
@@ -127,7 +127,7 @@ export function TimelineToolbar({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="text" size="icon" onClick={handleSplitSelected}>
-              <Scissors className="h-4 w-4" />
+              <ScissorsIcon className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>Split clip (S)</TooltipContent>
@@ -136,7 +136,7 @@ export function TimelineToolbar({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="text" size="icon">
-              <ArrowLeftToLine className="h-4 w-4" />
+              <ArrowLeftToLineIcon className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>Split and keep left (A)</TooltipContent>
@@ -145,7 +145,7 @@ export function TimelineToolbar({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="text" size="icon">
-              <ArrowRightToLine className="h-4 w-4" />
+              <ArrowRightToLineIcon className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>Split and keep right (D)</TooltipContent>
@@ -154,7 +154,7 @@ export function TimelineToolbar({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="text" size="icon">
-              <SplitSquareHorizontal className="h-4 w-4" />
+              <SplitSquareHorizontalIcon className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>Separate audio (E)</TooltipContent>
@@ -167,7 +167,7 @@ export function TimelineToolbar({
               size="icon"
               onClick={handleDuplicateSelected}
             >
-              <Copy className="h-4 w-4" />
+              <CopyIcon className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>Duplicate clip (Ctrl+D)</TooltipContent>
@@ -176,7 +176,7 @@ export function TimelineToolbar({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="text" size="icon" onClick={handleFreezeSelected}>
-              <Snowflake className="h-4 w-4" />
+              <SnowflakeIcon className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>Freeze frame (F)</TooltipContent>
@@ -185,7 +185,7 @@ export function TimelineToolbar({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="text" size="icon" onClick={handleDeleteSelected}>
-              <Trash2 className="h-4 w-4" />
+              <Trash2Icon className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>Delete clip (Delete)</TooltipContent>

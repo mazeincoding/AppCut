@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import type { BackgroundType } from "@/types/editor";
+import Image from "next/image";
 
 interface ImageTimelineTreatmentProps {
   src: string;
@@ -52,7 +53,7 @@ export function ImageTimelineTreatment({
         <>
           {backgroundType === "blur" && (
             <div className="absolute inset-0">
-              <img
+              <Image
                 src={src}
                 alt=""
                 className="w-full h-full object-cover filter blur-xl scale-110 opacity-60"
@@ -64,7 +65,7 @@ export function ImageTimelineTreatment({
 
           {backgroundType === "mirror" && (
             <div className="absolute inset-0">
-              <img
+              <Image
                 src={src}
                 alt=""
                 className="w-full h-full object-cover opacity-30"
@@ -81,7 +82,7 @@ export function ImageTimelineTreatment({
 
       {/* Main Image Layer */}
       <div className="absolute inset-0">
-        <img
+        <Image
           src={src}
           alt={alt}
           className="w-full h-full object-cover"

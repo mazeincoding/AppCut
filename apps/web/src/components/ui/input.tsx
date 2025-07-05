@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 
 import { cn } from "../../lib/utils";
 import { Button } from "./button";
@@ -48,9 +48,9 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             aria-label={showPassword ? "Hide password" : "Show password"}
           >
             {showPassword ? (
-              <Eye className="h-4 w-4" />
+              <EyeIcon className="h-4 w-4" />
             ) : (
-              <EyeOff className="h-4 w-4" />
+              <EyeOffIcon className="h-4 w-4" />
             )}
           </Button>
         )}

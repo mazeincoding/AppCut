@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeftIcon, Loader2Icon } from "lucide-react";
 import { GoogleIcon } from "@/components/icons";
 import { useSignUp } from "@/hooks/auth/useSignUp";
 
@@ -43,7 +43,7 @@ const SignUpPage = () => {
         onClick={() => router.back()}
         className="absolute top-6 left-6"
       >
-        <ArrowLeft className="h-5 w-5" /> Back
+        <ArrowLeftIcon className="h-5 w-5" /> Back
       </Button>
       <Card className="w-[400px] shadow-lg border-0">
         <CardHeader className="text-center pb-4">
@@ -58,7 +58,7 @@ const SignUpPage = () => {
           <Suspense
             fallback={
               <div className="text-center">
-                <Loader2 className="animate-spin" />
+                <Loader2Icon className="animate-spin" />
               </div>
             }
           >
@@ -76,7 +76,7 @@ const SignUpPage = () => {
                 disabled={isAnyLoading}
               >
                 {isGoogleLoading ? (
-                  <Loader2 className="animate-spin" />
+                  <Loader2Icon className="animate-spin" />
                 ) : (
                   <GoogleIcon />
                 )}{" "}
@@ -136,7 +136,7 @@ const SignUpPage = () => {
                   size="lg"
                 >
                   {isEmailLoading ? (
-                    <Loader2 className="animate-spin" />
+                    <Loader2Icon className="animate-spin" />
                   ) : (
                     "Create account"
                   )}

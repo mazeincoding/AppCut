@@ -3,9 +3,9 @@
 import { motion } from "motion/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { RiGithubLine, RiTwitterXLine } from "react-icons/ri";
 import { getStars } from "@/lib/fetchGhStars";
 import Image from "next/image";
+import { GitHubIcon, XformerlyTwitterIcon } from "./icons";
 
 export function Footer() {
   const [star, setStar] = useState<string>();
@@ -49,7 +49,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <RiGithubLine className="h-5 w-5" />
+                <GitHubIcon className="h-5 w-5" />
               </Link>
               <Link
                 href="https://x.com/OpenCutApp"
@@ -57,7 +57,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <RiTwitterXLine className="h-5 w-5" />
+                <XformerlyTwitterIcon className="h-5 w-5" />
               </Link>
             </div>
           </div>

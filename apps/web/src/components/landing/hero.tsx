@@ -3,8 +3,7 @@
 import { motion } from "motion/react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { ArrowRight } from "lucide-react";
-import Link from "next/link";
+import { ArrowRightIcon } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -138,7 +137,7 @@ export function Hero({ signupCount }: HeroProps) {
               <span className="relative z-10">
                 {isSubmitting ? "Joining..." : "Join waitlist"}
               </span>
-              <ArrowRight className="relative z-10 ml-0.5 h-4 w-4 inline-block" />
+              <ArrowRightIcon className="relative z-10 ml-0.5 h-4 w-4 inline-block" />
             </Button>
           </form>
         </motion.div>

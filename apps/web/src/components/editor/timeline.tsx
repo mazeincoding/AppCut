@@ -3,17 +3,17 @@
 import { ScrollArea } from "../ui/scroll-area";
 import { Button } from "../ui/button";
 import {
-  Scissors,
-  ArrowLeftToLine,
-  ArrowRightToLine,
-  Trash2,
-  Snowflake,
-  Copy,
-  SplitSquareHorizontal,
-  Volume2,
-  VolumeX,
-  Pause,
-  Play,
+  ScissorsIcon,
+  ArrowLeftToLineIcon,
+  ArrowRightToLineIcon,
+  Trash2Icon,
+  SnowflakeIcon,
+  CopyIcon,
+  SplitSquareHorizontalIcon,
+  Volume2Icon,
+  VolumeXIcon,
+  PauseIcon,
+  PlayIcon,
 } from "lucide-react";
 import {
   Tooltip,
@@ -773,9 +773,9 @@ export function Timeline() {
                 className="mr-2"
               >
                 {isPlaying ? (
-                  <Pause className="h-4 w-4" />
+                  <PauseIcon className="h-4 w-4" />
                 ) : (
-                  <Play className="h-4 w-4" />
+                  <PlayIcon className="h-4 w-4" />
                 )}
               </Button>
             </TooltipTrigger>
@@ -829,7 +829,7 @@ export function Timeline() {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="text" size="icon" onClick={handleSplitSelected}>
-                <Scissors className="h-4 w-4" />
+                <ScissorsIcon className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Split clip (Ctrl+S)</TooltipContent>
@@ -842,7 +842,7 @@ export function Timeline() {
                 size="icon"
                 onClick={handleSplitAndKeepLeft}
               >
-                <ArrowLeftToLine className="h-4 w-4" />
+                <ArrowLeftToLineIcon className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Split and keep left (Ctrl+Q)</TooltipContent>
@@ -855,7 +855,7 @@ export function Timeline() {
                 size="icon"
                 onClick={handleSplitAndKeepRight}
               >
-                <ArrowRightToLine className="h-4 w-4" />
+                <ArrowRightToLineIcon className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Split and keep right (Ctrl+W)</TooltipContent>
@@ -864,7 +864,7 @@ export function Timeline() {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="text" size="icon" onClick={handleSeparateAudio}>
-                <SplitSquareHorizontal className="h-4 w-4" />
+                <SplitSquareHorizontalIcon className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Separate audio (Ctrl+D)</TooltipContent>
@@ -877,7 +877,7 @@ export function Timeline() {
                 size="icon"
                 onClick={handleDuplicateSelected}
               >
-                <Copy className="h-4 w-4" />
+                <CopyIcon className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Duplicate clip (Ctrl+D)</TooltipContent>
@@ -886,7 +886,7 @@ export function Timeline() {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="text" size="icon" onClick={handleFreezeSelected}>
-                <Snowflake className="h-4 w-4" />
+                <SnowflakeIcon className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Freeze frame (F)</TooltipContent>
@@ -895,7 +895,7 @@ export function Timeline() {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="text" size="icon" onClick={handleDeleteSelected}>
-                <Trash2 className="h-4 w-4" />
+                <Trash2Icon className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Delete clip (Delete)</TooltipContent>
@@ -1083,7 +1083,7 @@ export function Timeline() {
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center">
                       <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mb-4 mx-auto">
-                        <SplitSquareHorizontal className="h-8 w-8 text-muted-foreground" />
+                        <SplitSquareHorizontalIcon className="h-8 w-8 text-muted-foreground" />
                       </div>
                       <p className="text-sm text-muted-foreground">
                         Drop media here to start
@@ -1126,12 +1126,12 @@ export function Timeline() {
                           >
                             {track.muted ? (
                               <>
-                                <Volume2 className="h-4 w-4 mr-2" />
+                                <Volume2Icon className="h-4 w-4 mr-2" />
                                 Unmute Track
                               </>
                             ) : (
                               <>
-                                <VolumeX className="h-4 w-4 mr-2" />
+                                <VolumeXIcon className="h-4 w-4 mr-2" />
                                 Mute Track
                               </>
                             )}
@@ -1144,7 +1144,7 @@ export function Timeline() {
                             }}
                             className="text-destructive focus:text-destructive"
                           >
-                            <Trash2 className="h-4 w-4 mr-2" />
+                            <Trash2Icon className="h-4 w-4 mr-2" />
                             Delete Track
                           </ContextMenuItem>
                         </ContextMenuContent>

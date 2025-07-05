@@ -5,14 +5,14 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  ChevronLeft,
-  Plus,
-  Calendar,
-  MoreHorizontal,
-  Video,
-  Loader2,
+  ChevronLeftIcon,
+  PlusIcon,
+  CalendarIcon,
+  MoreHorizontalIcon,
+  VideoIcon,
+  Loader2Icon,
 } from "lucide-react";
-import { TProject } from "@/types/project";
+import type { TProject } from "@/types/project";
 import Image from "next/image";
 import {
   DropdownMenu,
@@ -44,7 +44,7 @@ export default function ProjectsPage() {
           href="/"
           className="flex items-center gap-1 hover:text-muted-foreground transition-colors"
         >
-          <ChevronLeft className="!size-5 shrink-0" />
+          <ChevronLeftIcon className="!size-5 shrink-0" />
           <span className="text-sm font-medium">Back</span>
         </Link>
         <div className="block md:hidden">
@@ -69,7 +69,7 @@ export default function ProjectsPage() {
 
         {isLoading || !isInitialized ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
+            <Loader2Icon className="h-8 w-8 text-muted-foreground animate-spin" />
           </div>
         ) : savedProjects.length === 0 ? (
           <NoProjects onCreateProject={handleCreateProject} />
@@ -136,7 +136,7 @@ function ProjectCard({ project }: { project: TProject }) {
                 />
               ) : (
                 <div className="w-full h-full bg-muted/50 flex items-center justify-center">
-                  <Video className="h-12 w-12 flex-shrink-0 text-muted-foreground" />
+                  <VideoIcon className="h-12 w-12 flex-shrink-0 text-muted-foreground" />
                 </div>
               )}
             </div>
@@ -162,7 +162,7 @@ function ProjectCard({ project }: { project: TProject }) {
                     }`}
                     onClick={(e) => e.preventDefault()}
                   >
-                    <MoreHorizontal />
+                    <MoreHorizontalIcon />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
@@ -209,7 +209,7 @@ function ProjectCard({ project }: { project: TProject }) {
 
             <div className="space-y-1">
               <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <Calendar className="!size-4" />
+                <CalendarIcon className="!size-4" />
                 <span>Created {formatDate(project.createdAt)}</span>
               </div>
             </div>
@@ -234,7 +234,7 @@ function ProjectCard({ project }: { project: TProject }) {
 function CreateButton({ onClick }: { onClick?: () => void }) {
   return (
     <Button className="flex" onClick={onClick}>
-      <Plus className="!size-4" />
+      <PlusIcon className="!size-4" />
       <span className="text-sm font-medium">New project</span>
     </Button>
   );
@@ -244,7 +244,7 @@ function NoProjects({ onCreateProject }: { onCreateProject: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
       <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mb-4">
-        <Video className="h-8 w-8 text-muted-foreground" />
+        <VideoIcon className="h-8 w-8 text-muted-foreground" />
       </div>
       <h3 className="text-lg font-medium mb-2">No projects yet</h3>
       <p className="text-muted-foreground mb-6 max-w-md">
@@ -252,7 +252,7 @@ function NoProjects({ onCreateProject }: { onCreateProject: () => void }) {
         professional videos.
       </p>
       <Button size="lg" className="gap-2" onClick={onCreateProject}>
-        <Plus className="h-4 w-4" />
+        <PlusIcon className="h-4 w-4" />
         Create Your First Project
       </Button>
     </div>

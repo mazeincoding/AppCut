@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "./ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRightIcon } from "lucide-react";
 import { HeaderBase } from "./header-base";
 import { useSession } from "@opencut/auth/client";
 import { getStars } from "@/lib/fetchGhStars";
@@ -44,14 +44,14 @@ export function Header() {
         <Link href="/editor/1">
           <Button size="sm" className="text-sm ml-4">
             Editor
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRightIcon className="h-4 w-4" />
           </Button>
         </Link>
       ) : (
         <Link href="https://github.com/OpenCut-app/OpenCut" target="_blank">
           <Button size="sm" className="text-sm ml-4">
             GitHub {star}+
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRightIcon className="h-4 w-4" />
           </Button>
         </Link>
       )}

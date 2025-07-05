@@ -21,10 +21,11 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Play, Pause, Volume2, VolumeX, Plus, Square } from "lucide-react";
+import { PlayIcon, PauseIcon } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { formatTimeCode } from "@/lib/time";
+import Image from "next/image";
 
 interface ActiveClip {
   clip: TimelineClip;
@@ -172,7 +173,7 @@ export function PreviewPanel() {
     if (mediaItem.type === "image") {
       return (
         <div key={clip.id} className="absolute inset-0">
-          <img
+          <Image
             src={mediaItem.url}
             alt={mediaItem.name}
             className="w-full h-full object-cover"
@@ -305,9 +306,9 @@ function PreviewToolbar({ hasAnyClips }: { hasAnyClips: boolean }) {
         disabled={!hasAnyClips}
       >
         {isPlaying ? (
-          <Pause className="h-3 w-3" />
+          <PauseIcon className="h-3 w-3" />
         ) : (
-          <Play className="h-3 w-3" />
+          <PlayIcon className="h-3 w-3" />
         )}
       </Button>
       <div>

@@ -3,20 +3,20 @@
 import { useState } from "react";
 import { Button } from "../ui/button";
 import {
-  MoreVertical,
-  Scissors,
-  Trash2,
-  SplitSquareHorizontal,
-  Music,
-  ChevronRight,
-  ChevronLeft,
+  MoreVerticalIcon,
+  ScissorsIcon,
+  Trash2Icon,
+  SplitSquareHorizontalIcon,
+  MusicIcon,
+  ChevronRightIcon,
+  ChevronLeftIcon,
 } from "lucide-react";
 import { useMediaStore } from "@/stores/media-store";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { usePlaybackStore } from "@/stores/playback-store";
 import AudioWaveform from "./audio-waveform";
 import { toast } from "sonner";
-import { TimelineClipProps, ResizeState } from "@/types/timeline";
+import type { TimelineClipProps, ResizeState } from "@/types/timeline";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,7 +27,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from "../ui/dropdown-menu";
-import { isDragging } from "motion/react";
+import Image from "next/image";
 
 export function TimelineClip({
   clip,
@@ -226,7 +226,7 @@ export function TimelineClip({
     if (mediaItem.type === "image") {
       return (
         <div className="w-full h-full flex items-center justify-center">
-          <img
+          <Image
             src={mediaItem.url}
             alt={mediaItem.name}
             className="w-full h-full object-cover"
@@ -240,7 +240,7 @@ export function TimelineClip({
       return (
         <div className="w-full h-full flex items-center gap-2">
           <div className="w-8 h-8 flex-shrink-0">
-            <img
+            <Image
               src={mediaItem.thumbnailUrl}
               alt={mediaItem.name}
               className="w-full h-full object-cover rounded-sm"
@@ -331,27 +331,27 @@ export function TimelineClip({
                   setClipMenuOpen(true);
                 }}
               >
-                <MoreVertical className="h-3 w-3" />
+                <MoreVerticalIcon className="h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               {/* Split operations - only available when playhead is within clip */}
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger disabled={!canSplitAtPlayhead()}>
-                  <Scissors className="mr-2 h-4 w-4" />
+                  <ScissorsIcon className="mr-2 h-4 w-4" />
                   Split
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
                   <DropdownMenuItem onClick={handleSplitClip}>
-                    <SplitSquareHorizontal className="mr-2 h-4 w-4" />
+                    <SplitSquareHorizontalIcon className="mr-2 h-4 w-4" />
                     Split at Playhead
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleSplitAndKeepLeft}>
-                    <ChevronLeft className="mr-2 h-4 w-4" />
+                    <ChevronLeftIcon className="mr-2 h-4 w-4" />
                     Split and Keep Left
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleSplitAndKeepRight}>
-                    <ChevronRight className="mr-2 h-4 w-4" />
+                    <ChevronRightIcon className="mr-2 h-4 w-4" />
                     Split and Keep Right
                   </DropdownMenuItem>
                 </DropdownMenuSubContent>
@@ -362,7 +362,7 @@ export function TimelineClip({
                 <>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSeparateAudio}>
-                    <Music className="mr-2 h-4 w-4" />
+                    <MusicIcon className="mr-2 h-4 w-4" />
                     Separate Audio
                   </DropdownMenuItem>
                 </>
@@ -373,7 +373,7 @@ export function TimelineClip({
                 onClick={handleDeleteClip}
                 className="text-destructive"
               >
-                <Trash2 className="mr-2 h-4 w-4" />
+                <Trash2Icon className="mr-2 h-4 w-4" />
                 Delete Clip
               </DropdownMenuItem>
             </DropdownMenuContent>

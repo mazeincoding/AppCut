@@ -4,7 +4,7 @@ import { useDragDrop } from "@/hooks/use-drag-drop";
 import { processMediaFiles } from "@/lib/media-processing";
 import { useMediaStore, type MediaItem } from "@/stores/media-store";
 import { useTimelineStore } from "@/stores/timeline-store";
-import { Image, Music, Plus, Upload, Video } from "lucide-react";
+import { ImageIcon, MusicIcon, PlusIcon, UploadIcon, VideoIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DraggableMediaItem } from "@/components/ui/draggable-item";
+import Image from "next/image";
 
 export function MediaView() {
   const { mediaItems, addMediaItem, removeMediaItem } = useMediaStore();
@@ -124,7 +125,7 @@ export function MediaView() {
     if (item.type === "image") {
       return (
         <div className="w-full h-full flex items-center justify-center">
-          <img
+          <Image
             src={item.url}
             alt={item.name}
             className="max-w-full max-h-full object-contain"
@@ -138,14 +139,14 @@ export function MediaView() {
       if (item.thumbnailUrl) {
         return (
           <div className="relative w-full h-full">
-            <img
+            <Image
               src={item.thumbnailUrl}
               alt={item.name}
               className="w-full h-full object-cover rounded"
               loading="lazy"
             />
             <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded">
-              <Video className="h-6 w-6 text-white drop-shadow-md" />
+              <VideoIcon className="h-6 w-6 text-white drop-shadow-md" />
             </div>
             {item.duration && (
               <div className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1 rounded">
@@ -157,7 +158,7 @@ export function MediaView() {
       }
       return (
         <div className="w-full h-full bg-muted/30 flex flex-col items-center justify-center text-muted-foreground rounded">
-          <Video className="h-6 w-6 mb-1" />
+          <VideoIcon className="h-6 w-6 mb-1" />
           <span className="text-xs">Video</span>
           {item.duration && (
             <span className="text-xs opacity-70">
@@ -171,7 +172,7 @@ export function MediaView() {
     if (item.type === "audio") {
       return (
         <div className="w-full h-full bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex flex-col items-center justify-center text-muted-foreground rounded border border-green-500/20">
-          <Music className="h-6 w-6 mb-1" />
+          <MusicIcon className="h-6 w-6 mb-1" />
           <span className="text-xs">Audio</span>
           {item.duration && (
             <span className="text-xs opacity-70">
@@ -184,7 +185,7 @@ export function MediaView() {
 
     return (
       <div className="w-full h-full bg-muted/30 flex flex-col items-center justify-center text-muted-foreground rounded">
-        <Image className="h-6 w-6" />
+        <ImageIcon className="h-6 w-6" />
         <span className="text-xs mt-1">Unknown</span>
       </div>
     );
@@ -242,12 +243,12 @@ export function MediaView() {
             >
               {isProcessing ? (
                 <>
-                  <Upload className="h-4 w-4 animate-spin" />
+                  <UploadIcon className="h-4 w-4 animate-spin" />
                   <span className="hidden md:inline ml-2">{progress}%</span>
                 </>
               ) : (
                 <>
-                  <Plus className="h-4 w-4" />
+                  <PlusIcon className="h-4 w-4" />
                   <span className="hidden sm:inline ml-2" aria-label="Add file">
                     Add
                   </span>
@@ -262,7 +263,7 @@ export function MediaView() {
           {filteredMediaItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center h-full">
               <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mb-4">
-                <Image className="h-8 w-8 text-muted-foreground" />
+                <ImageIcon className="h-8 w-8 text-muted-foreground" />
               </div>
               <p className="text-sm text-muted-foreground">
                 No media in project

@@ -4,7 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { useMediaStore } from "@/stores/media-store";
 import { toast } from "sonner";
-import { Copy, Scissors, Trash2 } from "lucide-react";
+import { CopyIcon, ScissorsIcon, Trash2Icon } from "lucide-react";
 import { TimelineClip } from "./timeline-clip";
 import {
   ContextMenu,
@@ -13,7 +13,7 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "../ui/context-menu";
-import {
+import type {
   TimelineTrack,
   TimelineClip as TypeTimelineClip,
 } from "@/stores/timeline-store";
@@ -663,11 +663,11 @@ export function TimelineTrackContent({
                   </ContextMenuTrigger>
                   <ContextMenuContent>
                     <ContextMenuItem onClick={handleClipSplit}>
-                      <Scissors className="h-4 w-4 mr-2" />
+                      <ScissorsIcon className="h-4 w-4 mr-2" />
                       Split at Playhead
                     </ContextMenuItem>
                     <ContextMenuItem onClick={handleClipDuplicate}>
-                      <Copy className="h-4 w-4 mr-2" />
+                      <CopyIcon className="h-4 w-4 mr-2" />
                       Duplicate Clip
                     </ContextMenuItem>
                     <ContextMenuSeparator />
@@ -675,7 +675,7 @@ export function TimelineTrackContent({
                       onClick={handleClipDelete}
                       className="text-destructive focus:text-destructive"
                     >
-                      <Trash2 className="h-4 w-4 mr-2" />
+                      <Trash2Icon className="h-4 w-4 mr-2" />
                       Delete Clip
                     </ContextMenuItem>
                   </ContextMenuContent>
