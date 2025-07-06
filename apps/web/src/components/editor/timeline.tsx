@@ -1079,18 +1079,7 @@ export function Timeline() {
                 onClick={handleTimelineClick}
                 onMouseDown={handleTimelineMouseDown}
               >
-                {tracks.length === 0 ? (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mb-4 mx-auto">
-                        <SplitSquareHorizontal className="h-8 w-8 text-muted-foreground" />
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        Drop media here to start
-                      </p>
-                    </div>
-                  </div>
-                ) : (
+                {tracks.length > 0 && (
                   <>
                     {tracks.map((track, index) => (
                       <ContextMenu key={track.id}>
@@ -1164,17 +1153,29 @@ export function Timeline() {
                     )}
                   </>
                 )}
-                {isDragOver && (
-                  <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none backdrop-blur-lg">
-                    <div>
-                      {isProcessing
-                        ? `Processing ${progress}%`
-                        : "Drop media here to add to timeline"}
-                    </div>
-                  </div>
-                )}
               </div>
             </ScrollArea>
+            {tracks.length === 0 ? (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="text-center">
+                  <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mb-4 mx-auto">
+                    <SplitSquareHorizontal className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Drop media here to start
+                  </p>
+                </div>
+              </div>
+            ) : null}
+            {isDragOver && (
+              <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none backdrop-blur-lg">
+                <div>
+                  {isProcessing
+                    ? `Processing ${progress}%`
+                    : "Drop media here to add to timeline"}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
