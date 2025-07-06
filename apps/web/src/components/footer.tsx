@@ -45,15 +45,18 @@ export function Footer() {
             <div className="flex gap-3">
               <Link
                 href="https://github.com/OpenCut-app/OpenCut"
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center"
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 <RiGithubLine className="h-5 w-5" />
+                <span className="text-foreground text-lg font-mono flex items-center">
+                  {star ? ` ${star}+` : "1k+"}
+                </span>
               </Link>
               <Link
                 href="https://x.com/OpenCutApp"
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="text-muted-foreground hover:text-foreground transition-colors  flex items-center justify-center"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -115,7 +118,9 @@ export function Footer() {
         {/* Bottom Section */}
         <div className="pt-2 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <span>© 2025 OpenCut, All Rights Reserved</span>
+            <span>
+              © {new Date().getFullYear()} OpenCut, All Rights Reserved
+            </span>
           </div>
         </div>
       </div>
