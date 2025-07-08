@@ -223,19 +223,9 @@ export function PreviewPanel() {
         );
       }
 
-      // Audio elements (visual representation)
+      // Audio elements (no visual representation)
       if (mediaItem.type === "audio") {
-        return (
-          <div
-            key={element.id}
-            className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center"
-          >
-            <div className="text-center">
-              <div className="text-2xl mb-2">🎵</div>
-              <p className="text-xs text-white">{mediaItem.name}</p>
-            </div>
-          </div>
-        );
+        return null;
       }
     }
 
