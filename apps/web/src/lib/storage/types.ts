@@ -1,4 +1,5 @@
 import { TProject } from "@/types/project";
+import { TimelineTrack } from "@/types/timeline";
 
 export interface StorageAdapter<T> {
   get(key: string): Promise<T | null>;
@@ -20,9 +21,15 @@ export interface MediaFileData {
   // File will be stored separately in OPFS
 }
 
+export interface TimelineData {
+  tracks: TimelineTrack[];
+  lastModified: string;
+}
+
 export interface StorageConfig {
   projectsDb: string;
   mediaDb: string;
+  timelineDb: string;
   version: number;
 }
 

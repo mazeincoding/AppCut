@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect } from "react";
+import { useParams } from "next/navigation";
 import {
   ResizablePanelGroup,
   ResizablePanel,
   ResizableHandle,
 } from "../../../components/ui/resizable";
 import { MediaPanel } from "../../../components/editor/media-panel";
-// import { PropertiesPanel } from "../../components/editor/properties-panel";
+import { PropertiesPanel } from "../../../components/editor/properties-panel";
 import { Timeline } from "../../../components/editor/timeline";
 import { PreviewPanel } from "../../../components/editor/preview-panel";
 import { EditorHeader } from "@/components/editor-header";
@@ -26,17 +27,31 @@ export default function Editor() {
     setPreviewPanel,
     setMainContent,
     setTimeline,
+    propertiesPanel,
+    setPropertiesPanel,
   } = usePanelStore();
 
-  const { activeProject, createNewProject } = useProjectStore();
+  const { activeProject, loadProject, createNewProject } = useProjectStore();
+  const params = useParams();
+  const projectId = params.project_id as string;
 
   usePlaybackControls();
 
   useEffect(() => {
-    if (!activeProject) {
-      createNewProject("Untitled Project");
-    }
-  }, [activeProject, createNewProject]);
+    const initializeProject = async () => {
+      if (projectId && (!activeProject || activeProject.id !== projectId)) {
+        try {
+          await loadProject(projectId);
+        } catch (error) {
+          console.error("Failed to load project:", error);
+          // If project doesn't exist, create a new one
+          await createNewProject("Untitled Project");
+        }
+      }
+    };
+
+    initializeProject();
+  }, [projectId, activeProject, loadProject, createNewProject]);
 
   return (
     <EditorProvider>
@@ -81,8 +96,8 @@ export default function Editor() {
 
                 <ResizableHandle withHandle />
 
-                {/* Properties Panel - Hidden for now but ready */}
-                {/* <ResizablePanel
+                
+                <ResizablePanel
                   defaultSize={propertiesPanel}
                   minSize={15}
                   maxSize={40}
@@ -90,7 +105,7 @@ export default function Editor() {
                   className="min-w-0"
                 >
                   <PropertiesPanel />
-                </ResizablePanel> */}
+                </ResizablePanel>
               </ResizablePanelGroup>
             </ResizablePanel>
 

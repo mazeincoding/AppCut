@@ -1,10 +1,7 @@
 "use client";
 
-import {
-  useTimelineStore,
-  type TimelineClip,
-  type TimelineTrack,
-} from "@/stores/timeline-store";
+import { useTimelineStore } from "@/stores/timeline-store";
+import { TimelineElement, TimelineTrack } from "@/types/timeline";
 import {
   useMediaStore,
   type MediaItem,
@@ -21,13 +18,13 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Play, Pause, Volume2, VolumeX, Plus, Square } from "lucide-react";
+import { Play, Pause } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { formatTimeCode } from "@/lib/time";
 
-interface ActiveClip {
-  clip: TimelineClip;
+interface ActiveElement {
+  element: TimelineElement;
   track: TimelineTrack;
   mediaItem: MediaItem | null;
 }
@@ -35,8 +32,8 @@ interface ActiveClip {
 export function PreviewPanel() {
   const { tracks } = useTimelineStore();
   const { mediaItems } = useMediaStore();
-  const { currentTime, muted, toggleMute, volume } = usePlaybackStore();
-  const { canvasSize, canvasPresets, setCanvasSize } = useEditorStore();
+  const { currentTime } = usePlaybackStore();
+  const { canvasSize } = useEditorStore();
   const previewRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [previewDimensions, setPreviewDimensions] = useState({
@@ -104,97 +101,142 @@ export function PreviewPanel() {
     return () => resizeObserver.disconnect();
   }, [canvasSize.width, canvasSize.height]);
 
-  // Get active clips at current time
-  const getActiveClips = (): ActiveClip[] => {
-    const activeClips: ActiveClip[] = [];
+  // Get active elements at current time
+  const getActiveElements = (): ActiveElement[] => {
+    const activeElements: ActiveElement[] = [];
 
     tracks.forEach((track) => {
-      track.clips.forEach((clip) => {
-        const clipStart = clip.startTime;
-        const clipEnd =
-          clip.startTime + (clip.duration - clip.trimStart - clip.trimEnd);
+      track.elements.forEach((element) => {
+        const elementStart = element.startTime;
+        const elementEnd =
+          element.startTime +
+          (element.duration - element.trimStart - element.trimEnd);
 
-        if (currentTime >= clipStart && currentTime < clipEnd) {
-          const mediaItem =
-            clip.mediaId === "test"
-              ? null // Test clips don't have a real media item
-              : mediaItems.find((item) => item.id === clip.mediaId) || null;
+        if (currentTime >= elementStart && currentTime < elementEnd) {
+          let mediaItem = null;
 
-          activeClips.push({ clip, track, mediaItem });
+          // Only get media item for media elements
+          if (element.type === "media") {
+            mediaItem =
+              element.mediaId === "test"
+                ? null // Test elements don't have a real media item
+                : mediaItems.find((item) => item.id === element.mediaId) ||
+                  null;
+          }
+
+          activeElements.push({ element, track, mediaItem });
         }
       });
     });
 
-    return activeClips;
+    return activeElements;
   };
 
-  const activeClips = getActiveClips();
+  const activeElements = getActiveElements();
 
-  // Check if there are any clips in the timeline at all
-  const hasAnyClips = tracks.some((track) => track.clips.length > 0);
+  // Check if there are any elements in the timeline at all
+  const hasAnyElements = tracks.some((track) => track.elements.length > 0);
 
-  // Render a clip
-  const renderClip = (clipData: ActiveClip, index: number) => {
-    const { clip, mediaItem } = clipData;
+  // Render an element
+  const renderElement = (elementData: ActiveElement, index: number) => {
+    const { element, mediaItem } = elementData;
 
-    // Test clips
-    if (!mediaItem || clip.mediaId === "test") {
+    // Text elements
+    if (element.type === "text") {
       return (
         <div
-          key={clip.id}
-          className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center"
+          key={element.id}
+          className="absolute flex items-center justify-center"
+          style={{
+            left: `${50 + (element.x / canvasSize.width) * 100}%`,
+            top: `${50 + (element.y / canvasSize.height) * 100}%`,
+            transform: `translate(-50%, -50%) rotate(${element.rotation}deg)`,
+            opacity: element.opacity,
+            zIndex: 100 + index, // Text elements on top
+          }}
         >
-          <div className="text-center">
-            <div className="text-2xl mb-2">🎬</div>
-            <p className="text-xs text-white">{clip.name}</p>
+          <div
+            style={{
+              fontSize: `${element.fontSize}px`,
+              fontFamily: element.fontFamily,
+              color: element.color,
+              backgroundColor: element.backgroundColor,
+              textAlign: element.textAlign,
+              fontWeight: element.fontWeight,
+              fontStyle: element.fontStyle,
+              textDecoration: element.textDecoration,
+              padding: "4px 8px",
+              borderRadius: "2px",
+              whiteSpace: "pre-wrap",
+            }}
+          >
+            {element.content}
           </div>
         </div>
       );
     }
 
-    // Video clips
-    if (mediaItem.type === "video") {
-      return (
-        <div key={clip.id} className="absolute inset-0">
-          <VideoPlayer
-            src={mediaItem.url}
-            poster={mediaItem.thumbnailUrl}
-            clipStartTime={clip.startTime}
-            trimStart={clip.trimStart}
-            trimEnd={clip.trimEnd}
-            clipDuration={clip.duration}
-          />
-        </div>
-      );
-    }
-
-    // Image clips
-    if (mediaItem.type === "image") {
-      return (
-        <div key={clip.id} className="absolute inset-0">
-          <img
-            src={mediaItem.url}
-            alt={mediaItem.name}
-            className="w-full h-full object-cover"
-            draggable={false}
-          />
-        </div>
-      );
-    }
-
-    // Audio clips (visual representation)
-    if (mediaItem.type === "audio") {
-      return (
-        <div
-          key={clip.id}
-          className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center"
-        >
-          <div className="text-center">
-            <div className="text-2xl mb-2">🎵</div>
-            <p className="text-xs text-white">{mediaItem.name}</p>
+    // Media elements
+    if (element.type === "media") {
+      // Test elements
+      if (!mediaItem || element.mediaId === "test") {
+        return (
+          <div
+            key={element.id}
+            className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center"
+          >
+            <div className="text-center">
+              <div className="text-2xl mb-2">🎬</div>
+              <p className="text-xs text-white">{element.name}</p>
+            </div>
           </div>
-        </div>
-      );
+        );
+      }
+
+      // Video elements
+      if (mediaItem.type === "video") {
+        return (
+          <div key={element.id} className="absolute inset-0">
+            <VideoPlayer
+              src={mediaItem.url!}
+              poster={mediaItem.thumbnailUrl}
+              clipStartTime={element.startTime}
+              trimStart={element.trimStart}
+              trimEnd={element.trimEnd}
+              clipDuration={element.duration}
+            />
+          </div>
+        );
+      }
+
+      // Image elements
+      if (mediaItem.type === "image") {
+        return (
+          <div key={element.id} className="absolute inset-0">
+            <img
+              src={mediaItem.url!}
+              alt={mediaItem.name}
+              className="w-full h-full object-cover"
+              draggable={false}
+            />
+          </div>
+        );
+      }
+
+      // Audio elements (visual representation)
+      if (mediaItem.type === "audio") {
+        return (
+          <div
+            key={element.id}
+            className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center"
+          >
+            <div className="text-center">
+              <div className="text-2xl mb-2">🎵</div>
+              <p className="text-xs text-white">{mediaItem.name}</p>
+            </div>
+          </div>
+        );
+      }
     }
 
     return null;
@@ -206,7 +248,7 @@ export function PreviewPanel() {
         ref={containerRef}
         className="flex-1 flex flex-col items-center justify-center p-3 min-h-0 min-w-0 gap-4"
       >
-        {hasAnyClips ? (
+        {hasAnyElements ? (
           <div
             ref={previewRef}
             className="relative overflow-hidden rounded-sm bg-black border"
@@ -215,28 +257,27 @@ export function PreviewPanel() {
               height: previewDimensions.height,
             }}
           >
-            {activeClips.length === 0 ? (
+            {activeElements.length === 0 ? (
               <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                No clips at current time
+                No elements at current time
               </div>
             ) : (
-              activeClips.map((clipData, index) => renderClip(clipData, index))
+              activeElements.map((elementData, index) =>
+                renderElement(elementData, index)
+              )
             )}
           </div>
-        ) : (
-          <>
-            {/* Empty div so toolbar stays at the bottom */}
-            <div className="w-full h-full"></div>
-          </>
-        )}
+        ) : null}
 
-        <PreviewToolbar hasAnyClips={hasAnyClips} />
+        <div className="flex-1"></div>
+
+        <PreviewToolbar hasAnyElements={hasAnyElements} />
       </div>
     </div>
   );
 }
 
-function PreviewToolbar({ hasAnyClips }: { hasAnyClips: boolean }) {
+function PreviewToolbar({ hasAnyElements }: { hasAnyElements: boolean }) {
   const { isPlaying, toggle, currentTime } = usePlaybackStore();
   const {
     canvasSize,
@@ -261,13 +302,17 @@ function PreviewToolbar({ hasAnyClips }: { hasAnyClips: boolean }) {
   const getOriginalAspectRatio = () => {
     // Find first video or image in timeline
     for (const track of tracks) {
-      for (const clip of track.clips) {
-        const mediaItem = mediaItems.find((item) => item.id === clip.mediaId);
-        if (
-          mediaItem &&
-          (mediaItem.type === "video" || mediaItem.type === "image")
-        ) {
-          return getMediaAspectRatio(mediaItem);
+      for (const element of track.elements) {
+        if (element.type === "media") {
+          const mediaItem = mediaItems.find(
+            (item) => item.id === element.mediaId
+          );
+          if (
+            mediaItem &&
+            (mediaItem.type === "video" || mediaItem.type === "image")
+          ) {
+            return getMediaAspectRatio(mediaItem);
+          }
         }
       }
     }
@@ -291,7 +336,7 @@ function PreviewToolbar({ hasAnyClips }: { hasAnyClips: boolean }) {
         <p
           className={cn(
             "text-xs text-muted-foreground tabular-nums",
-            !hasAnyClips && "opacity-50"
+            !hasAnyElements && "opacity-50"
           )}
         >
           {formatTimeCode(currentTime, "HH:MM:SS:CS")}/
@@ -302,7 +347,7 @@ function PreviewToolbar({ hasAnyClips }: { hasAnyClips: boolean }) {
         variant="text"
         size="icon"
         onClick={toggle}
-        disabled={!hasAnyClips}
+        disabled={!hasAnyElements}
       >
         {isPlaying ? (
           <Pause className="h-3 w-3" />
@@ -316,7 +361,7 @@ function PreviewToolbar({ hasAnyClips }: { hasAnyClips: boolean }) {
             <Button
               size="sm"
               className="!bg-background text-foreground/85 text-xs h-auto rounded-none border border-muted-foreground px-0.5 py-0 font-light"
-              disabled={!hasAnyClips}
+              disabled={!hasAnyElements}
             >
               {currentPreset?.name || "Ratio"}
             </Button>

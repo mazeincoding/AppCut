@@ -1,20 +1,18 @@
 "use client";
 
-import {
-  useTimelineStore,
-  type TimelineClip,
-  type TimelineTrack,
-} from "@/stores/timeline-store";
+import { useTimelineStore } from "@/stores/timeline-store";
 import { useMediaStore, type MediaItem } from "@/stores/media-store";
+import { TimelineTrack } from "@/types/timeline";
 import { usePlaybackStore } from "@/stores/playback-store";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import type { TimelineElement } from "@/types/timeline";
 
 // Only show in development
 const SHOW_DEBUG_INFO = process.env.NODE_ENV === "development";
 
-interface ActiveClip {
-  clip: TimelineClip;
+interface ActiveElement {
+  element: TimelineElement;
   track: TimelineTrack;
   mediaItem: MediaItem | null;
 }
@@ -28,31 +26,32 @@ export function DevelopmentDebug() {
   // Don't render anything in production
   if (!SHOW_DEBUG_INFO) return null;
 
-  // Get active clips at current time
-  const getActiveClips = (): ActiveClip[] => {
-    const activeClips: ActiveClip[] = [];
+  // Get active elements at current time
+  const getActiveElements = (): ActiveElement[] => {
+    const activeElements: ActiveElement[] = [];
 
     tracks.forEach((track) => {
-      track.clips.forEach((clip) => {
-        const clipStart = clip.startTime;
-        const clipEnd =
-          clip.startTime + (clip.duration - clip.trimStart - clip.trimEnd);
+      track.elements.forEach((element) => {
+        const elementStart = element.startTime;
+        const elementEnd =
+          element.startTime +
+          (element.duration - element.trimStart - element.trimEnd);
 
-        if (currentTime >= clipStart && currentTime < clipEnd) {
+        if (currentTime >= elementStart && currentTime < elementEnd) {
           const mediaItem =
-            clip.mediaId === "test"
-              ? null // Test clips don't have a real media item
-              : mediaItems.find((item) => item.id === clip.mediaId) || null;
+            element.type === "media"
+              ? mediaItems.find((item) => item.id === element.mediaId) || null
+              : null; // Text elements don't have media items
 
-          activeClips.push({ clip, track, mediaItem });
+          activeElements.push({ element, track, mediaItem });
         }
       });
     });
 
-    return activeClips;
+    return activeElements;
   };
 
-  const activeClips = getActiveClips();
+  const activeElements = getActiveElements();
 
   return (
     <div className="fixed bottom-4 right-4 z-50">
@@ -71,28 +70,30 @@ export function DevelopmentDebug() {
         {showDebug && (
           <div className="backdrop-blur-md bg-background/90 border border-border/50 rounded-lg p-3 max-w-sm">
             <div className="text-xs font-medium mb-2 text-foreground">
-              Active Clips ({activeClips.length})
+              Active Elements ({activeElements.length})
             </div>
             <div className="space-y-1 max-h-40 overflow-y-auto">
-              {activeClips.map((clipData, index) => (
+              {activeElements.map((elementData, index) => (
                 <div
-                  key={clipData.clip.id}
+                  key={elementData.element.id}
                   className="flex items-center gap-2 px-2 py-1 bg-muted/60 rounded text-xs"
                 >
                   <span className="w-4 h-4 bg-primary/20 rounded text-center text-xs leading-4 flex-shrink-0">
                     {index + 1}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate">{clipData.clip.name}</div>
+                    <div className="truncate">{elementData.element.name}</div>
                     <div className="text-muted-foreground text-[10px]">
-                      {clipData.mediaItem?.type || "test"}
+                      {elementData.element.type === "media"
+                        ? elementData.mediaItem?.type || "media"
+                        : "text"}
                     </div>
                   </div>
                 </div>
               ))}
-              {activeClips.length === 0 && (
+              {activeElements.length === 0 && (
                 <div className="text-muted-foreground text-xs py-2 text-center">
-                  No active clips
+                  No active elements
                 </div>
               )}
             </div>

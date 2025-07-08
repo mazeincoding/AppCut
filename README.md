@@ -48,7 +48,7 @@ Before you begin, ensure you have the following installed on your system:
 1.  **Clone the repository**
 
     ```bash
-    git clone <repo-url>
+    git clone https://github.com/OpenCut-app/OpenCut.git
     cd OpenCut
     ```
 
@@ -125,6 +125,12 @@ We welcome contributions! Please see our [Contributing Guide](.github/CONTRIBUTI
 - Fork the repo and clone locally
 - Follow the setup instructions in CONTRIBUTING.md
 - Create a feature branch and submit a PR
+
+## Sponsors
+
+Thanks to [Vercel](https://vercel.com?utm_source=github-opencut&utm_campaign=oss) for their support of open-source software.
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FOpenCut-app%2FOpenCut&project-name=opencut&repository-name=opencut)
 
 ## License
 

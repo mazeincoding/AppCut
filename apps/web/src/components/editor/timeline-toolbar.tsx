@@ -102,7 +102,7 @@ export function TimelineToolbar({
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    const trackId = addTrack("video");
+                    const trackId = addTrack("media");
                     addClipToTrack(trackId, {
                       mediaId: "test",
                       name: "Test Clip",

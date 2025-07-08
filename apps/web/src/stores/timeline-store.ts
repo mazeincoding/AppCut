@@ -1,10 +1,20 @@
 import { create } from "zustand";
-import type { TrackType } from "@/types/timeline";
+import {
+  TrackType,
+  TimelineElement,
+  CreateTimelineElement,
+  TimelineTrack,
+  sortTracksByOrder,
+  ensureMainTrack,
+  validateElementTrackCompatibility,
+} from "@/types/timeline";
 import { useEditorStore } from "./editor-store";
 import { useMediaStore, getMediaAspectRatio } from "./media-store";
+import { storageService } from "@/lib/storage/storage-service";
+import { useProjectStore } from "./project-store";
 
-// Helper function to manage clip naming with suffixes
-const getClipNameWithSuffix = (
+// Helper function to manage element naming with suffixes
+const getElementNameWithSuffix = (
   originalName: string,
   suffix: string
 ): string => {
@@ -18,52 +28,43 @@ const getClipNameWithSuffix = (
   return `${baseName} (${suffix})`;
 };
 
-export interface TimelineClip {
-  id: string;
-  mediaId: string;
-  name: string;
-  duration: number;
-  startTime: number;
-  trimStart: number;
-  trimEnd: number;
-}
-
-export interface TimelineTrack {
-  id: string;
-  name: string;
-  type: TrackType;
-  clips: TimelineClip[];
-  muted?: boolean;
-}
-
 interface TimelineStore {
-  tracks: TimelineTrack[];
+  // Private track storage
+  _tracks: TimelineTrack[];
   history: TimelineTrack[][];
   redoStack: TimelineTrack[][];
 
+  // Always returns properly ordered tracks with main track ensured
+  tracks: TimelineTrack[];
+
+  // Manual method if you need to force recomputation
+  getSortedTracks: () => TimelineTrack[];
+
   // Multi-selection
-  selectedClips: { trackId: string; clipId: string }[];
-  selectClip: (trackId: string, clipId: string, multi?: boolean) => void;
-  deselectClip: (trackId: string, clipId: string) => void;
-  clearSelectedClips: () => void;
-  setSelectedClips: (clips: { trackId: string; clipId: string }[]) => void;
+  selectedElements: { trackId: string; elementId: string }[];
+  selectElement: (trackId: string, elementId: string, multi?: boolean) => void;
+  deselectElement: (trackId: string, elementId: string) => void;
+  clearSelectedElements: () => void;
+  setSelectedElements: (
+    elements: { trackId: string; elementId: string }[]
+  ) => void;
 
   // Drag state
   dragState: {
     isDragging: boolean;
-    clipId: string | null;
+    elementId: string | null;
     trackId: string | null;
     startMouseX: number;
-    startClipTime: number;
+    startElementTime: number;
     clickOffsetTime: number;
     currentTime: number;
   };
   setDragState: (dragState: Partial<TimelineStore["dragState"]>) => void;
   startDrag: (
-    clipId: string,
+    elementId: string,
     trackId: string,
     startMouseX: number,
-    startClipTime: number,
+    startElementTime: number,
     clickOffsetTime: number
   ) => void;
   updateDragTime: (currentTime: number) => void;
@@ -71,44 +72,50 @@ interface TimelineStore {
 
   // Actions
   addTrack: (type: TrackType) => string;
+  insertTrackAt: (type: TrackType, index: number) => string;
   removeTrack: (trackId: string) => void;
-  addClipToTrack: (trackId: string, clip: Omit<TimelineClip, "id">) => void;
-  removeClipFromTrack: (trackId: string, clipId: string) => void;
-  moveClipToTrack: (
+  addElementToTrack: (trackId: string, element: CreateTimelineElement) => void;
+  removeElementFromTrack: (trackId: string, elementId: string) => void;
+  moveElementToTrack: (
     fromTrackId: string,
     toTrackId: string,
-    clipId: string
+    elementId: string
   ) => void;
-  updateClipTrim: (
+  updateElementTrim: (
     trackId: string,
-    clipId: string,
+    elementId: string,
     trimStart: number,
     trimEnd: number
   ) => void;
-  updateClipStartTime: (
+  updateElementDuration: (
     trackId: string,
-    clipId: string,
+    elementId: string,
+    duration: number
+  ) => void;
+  updateElementStartTime: (
+    trackId: string,
+    elementId: string,
     startTime: number
   ) => void;
   toggleTrackMute: (trackId: string) => void;
 
-  // Split operations for clips
-  splitClip: (
+  // Split operations for elements
+  splitElement: (
     trackId: string,
-    clipId: string,
+    elementId: string,
     splitTime: number
   ) => string | null;
   splitAndKeepLeft: (
     trackId: string,
-    clipId: string,
+    elementId: string,
     splitTime: number
   ) => void;
   splitAndKeepRight: (
     trackId: string,
-    clipId: string,
+    elementId: string,
     splitTime: number
   ) => void;
-  separateAudio: (trackId: string, clipId: string) => string | null;
+  separateAudio: (trackId: string, elementId: string) => string | null;
 
   // Computed values
   getTotalDuration: () => number;
@@ -117,481 +124,677 @@ interface TimelineStore {
   undo: () => void;
   redo: () => void;
   pushHistory: () => void;
+
+  // Persistence actions
+  loadProjectTimeline: (projectId: string) => Promise<void>;
+  saveProjectTimeline: (projectId: string) => Promise<void>;
+  clearTimeline: () => void;
 }
 
-export const useTimelineStore = create<TimelineStore>((set, get) => ({
-  tracks: [],
-  history: [],
-  redoStack: [],
-  selectedClips: [],
-
-  pushHistory: () => {
-    const { tracks, history, redoStack } = get();
+export const useTimelineStore = create<TimelineStore>((set, get) => {
+  // Helper to update tracks and maintain ordering
+  const updateTracks = (newTracks: TimelineTrack[]) => {
+    const tracksWithMain = ensureMainTrack(newTracks);
+    const sortedTracks = sortTracksByOrder(tracksWithMain);
     set({
-      history: [...history, JSON.parse(JSON.stringify(tracks))],
-      redoStack: [],
+      _tracks: tracksWithMain,
+      tracks: sortedTracks,
     });
-  },
+  };
 
-  undo: () => {
-    const { history, redoStack, tracks } = get();
-    if (history.length === 0) return;
-    const prev = history[history.length - 1];
-    set({
-      tracks: prev,
-      history: history.slice(0, -1),
-      redoStack: [...redoStack, JSON.parse(JSON.stringify(tracks))],
-    });
-  },
-
-  selectClip: (trackId, clipId, multi = false) => {
-    set((state) => {
-      const exists = state.selectedClips.some(
-        (c) => c.trackId === trackId && c.clipId === clipId
-      );
-      if (multi) {
-        return exists
-          ? {
-              selectedClips: state.selectedClips.filter(
-                (c) => !(c.trackId === trackId && c.clipId === clipId)
-              ),
-            }
-          : { selectedClips: [...state.selectedClips, { trackId, clipId }] };
-      } else {
-        return { selectedClips: [{ trackId, clipId }] };
-      }
-    });
-  },
-
-  deselectClip: (trackId, clipId) => {
-    set((state) => ({
-      selectedClips: state.selectedClips.filter(
-        (c) => !(c.trackId === trackId && c.clipId === clipId)
-      ),
-    }));
-  },
-
-  clearSelectedClips: () => {
-    set({ selectedClips: [] });
-  },
-
-  setSelectedClips: (clips) => set({ selectedClips: clips }),
-
-  addTrack: (type) => {
-    get().pushHistory();
-    const newTrack: TimelineTrack = {
-      id: crypto.randomUUID(),
-      name: `${type.charAt(0).toUpperCase() + type.slice(1)} Track`,
-      type,
-      clips: [],
-      muted: false,
-    };
-    set((state) => ({
-      tracks: [...state.tracks, newTrack],
-    }));
-    return newTrack.id;
-  },
-
-  removeTrack: (trackId) => {
-    get().pushHistory();
-    set((state) => ({
-      tracks: state.tracks.filter((track) => track.id !== trackId),
-    }));
-  },
-
-  addClipToTrack: (trackId, clipData) => {
-    get().pushHistory();
-
-    // Check if this is the first clip being added to the timeline
-    const currentState = get();
-    const totalClipsInTimeline = currentState.tracks.reduce(
-      (total, track) => total + track.clips.length,
-      0
-    );
-    const isFirstClip = totalClipsInTimeline === 0;
-
-    const newClip: TimelineClip = {
-      ...clipData,
-      id: crypto.randomUUID(),
-      startTime: clipData.startTime || 0,
-      trimStart: 0,
-      trimEnd: 0,
-    };
-
-    // If this is the first clip, automatically set the project canvas size
-    // to match the media's aspect ratio
-    if (isFirstClip && clipData.mediaId) {
-      const mediaStore = useMediaStore.getState();
-      const mediaItem = mediaStore.mediaItems.find(
-        (item) => item.id === clipData.mediaId
-      );
-
-      if (
-        mediaItem &&
-        (mediaItem.type === "image" || mediaItem.type === "video")
-      ) {
-        const editorStore = useEditorStore.getState();
-        editorStore.setCanvasSizeFromAspectRatio(
-          getMediaAspectRatio(mediaItem)
-        );
+  // Helper to auto-save timeline changes
+  const autoSaveTimeline = async () => {
+    const activeProject = useProjectStore.getState().activeProject;
+    if (activeProject) {
+      try {
+        await storageService.saveTimeline(activeProject.id, get()._tracks);
+      } catch (error) {
+        console.error("Failed to auto-save timeline:", error);
       }
     }
+  };
 
-    set((state) => ({
-      tracks: state.tracks.map((track) =>
-        track.id === trackId
-          ? { ...track, clips: [...track.clips, newClip] }
-          : track
-      ),
-    }));
-  },
+  // Helper to update tracks and auto-save
+  const updateTracksAndSave = (newTracks: TimelineTrack[]) => {
+    updateTracks(newTracks);
+    // Auto-save in background
+    setTimeout(autoSaveTimeline, 100);
+  };
 
-  removeClipFromTrack: (trackId, clipId) => {
-    get().pushHistory();
-    set((state) => ({
-      tracks: state.tracks
-        .map((track) =>
-          track.id === trackId
+  // Initialize with proper track ordering
+  const initialTracks = ensureMainTrack([]);
+  const sortedInitialTracks = sortTracksByOrder(initialTracks);
+
+  return {
+    _tracks: initialTracks,
+    tracks: sortedInitialTracks,
+    history: [],
+    redoStack: [],
+    selectedElements: [],
+
+    getSortedTracks: () => {
+      const { _tracks } = get();
+      const tracksWithMain = ensureMainTrack(_tracks);
+      return sortTracksByOrder(tracksWithMain);
+    },
+
+    pushHistory: () => {
+      const { _tracks, history } = get();
+      set({
+        history: [...history, JSON.parse(JSON.stringify(_tracks))],
+        redoStack: [],
+      });
+    },
+
+    undo: () => {
+      const { history, redoStack, _tracks } = get();
+      if (history.length === 0) return;
+      const prev = history[history.length - 1];
+      updateTracksAndSave(prev);
+      set({
+        history: history.slice(0, -1),
+        redoStack: [...redoStack, JSON.parse(JSON.stringify(_tracks))],
+      });
+    },
+
+    selectElement: (trackId, elementId, multi = false) => {
+      set((state) => {
+        const exists = state.selectedElements.some(
+          (c) => c.trackId === trackId && c.elementId === elementId
+        );
+        if (multi) {
+          return exists
             ? {
-                ...track,
-                clips: track.clips.filter((clip) => clip.id !== clipId),
+                selectedElements: state.selectedElements.filter(
+                  (c) => !(c.trackId === trackId && c.elementId === elementId)
+                ),
               }
-            : track
-        )
-        .filter((track) => track.clips.length > 0),
-    }));
-  },
-
-  moveClipToTrack: (fromTrackId, toTrackId, clipId) => {
-    get().pushHistory();
-    set((state) => {
-      const fromTrack = state.tracks.find((track) => track.id === fromTrackId);
-      const clipToMove = fromTrack?.clips.find((clip) => clip.id === clipId);
-
-      if (!clipToMove) return state;
-
-      return {
-        tracks: state.tracks
-          .map((track) => {
-            if (track.id === fromTrackId) {
-              return {
-                ...track,
-                clips: track.clips.filter((clip) => clip.id !== clipId),
-              };
-            } else if (track.id === toTrackId) {
-              return {
-                ...track,
-                clips: [...track.clips, clipToMove],
-              };
-            }
-            return track;
-          })
-          .filter((track) => track.clips.length > 0),
-      };
-    });
-  },
-
-  updateClipTrim: (trackId, clipId, trimStart, trimEnd) => {
-    get().pushHistory();
-    set((state) => ({
-      tracks: state.tracks.map((track) =>
-        track.id === trackId
-          ? {
-              ...track,
-              clips: track.clips.map((clip) =>
-                clip.id === clipId ? { ...clip, trimStart, trimEnd } : clip
-              ),
-            }
-          : track
-      ),
-    }));
-  },
-
-  updateClipStartTime: (trackId, clipId, startTime) => {
-    get().pushHistory();
-    set((state) => ({
-      tracks: state.tracks.map((track) =>
-        track.id === trackId
-          ? {
-              ...track,
-              clips: track.clips.map((clip) =>
-                clip.id === clipId ? { ...clip, startTime } : clip
-              ),
-            }
-          : track
-      ),
-    }));
-  },
-
-  toggleTrackMute: (trackId) => {
-    get().pushHistory();
-    set((state) => ({
-      tracks: state.tracks.map((track) =>
-        track.id === trackId ? { ...track, muted: !track.muted } : track
-      ),
-    }));
-  },
-
-  splitClip: (trackId, clipId, splitTime) => {
-    const { tracks } = get();
-    const track = tracks.find((t) => t.id === trackId);
-    const clip = track?.clips.find((c) => c.id === clipId);
-
-    if (!clip) return null;
-
-    const effectiveStart = clip.startTime;
-    const effectiveEnd =
-      clip.startTime + (clip.duration - clip.trimStart - clip.trimEnd);
-
-    if (splitTime <= effectiveStart || splitTime >= effectiveEnd) return null;
-
-    get().pushHistory();
-
-    const relativeTime = splitTime - clip.startTime;
-    const firstDuration = relativeTime;
-    const secondDuration =
-      clip.duration - clip.trimStart - clip.trimEnd - relativeTime;
-
-    const secondClipId = crypto.randomUUID();
-
-    set((state) => ({
-      tracks: state.tracks.map((track) =>
-        track.id === trackId
-          ? {
-              ...track,
-              clips: track.clips.flatMap((c) =>
-                c.id === clipId
-                  ? [
-                      {
-                        ...c,
-                        trimEnd: c.trimEnd + secondDuration,
-                        name: getClipNameWithSuffix(c.name, "left"),
-                      },
-                      {
-                        ...c,
-                        id: secondClipId,
-                        startTime: splitTime,
-                        trimStart: c.trimStart + firstDuration,
-                        name: getClipNameWithSuffix(c.name, "right"),
-                      },
-                    ]
-                  : [c]
-              ),
-            }
-          : track
-      ),
-    }));
-
-    return secondClipId;
-  },
-
-  // Split clip and keep only the left portion
-  splitAndKeepLeft: (trackId, clipId, splitTime) => {
-    const { tracks } = get();
-    const track = tracks.find((t) => t.id === trackId);
-    const clip = track?.clips.find((c) => c.id === clipId);
-
-    if (!clip) return;
-
-    const effectiveStart = clip.startTime;
-    const effectiveEnd =
-      clip.startTime + (clip.duration - clip.trimStart - clip.trimEnd);
-
-    if (splitTime <= effectiveStart || splitTime >= effectiveEnd) return;
-
-    get().pushHistory();
-
-    const relativeTime = splitTime - clip.startTime;
-    const durationToRemove =
-      clip.duration - clip.trimStart - clip.trimEnd - relativeTime;
-
-    set((state) => ({
-      tracks: state.tracks.map((track) =>
-        track.id === trackId
-          ? {
-              ...track,
-              clips: track.clips.map((c) =>
-                c.id === clipId
-                  ? {
-                      ...c,
-                      trimEnd: c.trimEnd + durationToRemove,
-                      name: getClipNameWithSuffix(c.name, "left"),
-                    }
-                  : c
-              ),
-            }
-          : track
-      ),
-    }));
-  },
-
-  // Split clip and keep only the right portion
-  splitAndKeepRight: (trackId, clipId, splitTime) => {
-    const { tracks } = get();
-    const track = tracks.find((t) => t.id === trackId);
-    const clip = track?.clips.find((c) => c.id === clipId);
-
-    if (!clip) return;
-
-    const effectiveStart = clip.startTime;
-    const effectiveEnd =
-      clip.startTime + (clip.duration - clip.trimStart - clip.trimEnd);
-
-    if (splitTime <= effectiveStart || splitTime >= effectiveEnd) return;
-
-    get().pushHistory();
-
-    const relativeTime = splitTime - clip.startTime;
-
-    set((state) => ({
-      tracks: state.tracks.map((track) =>
-        track.id === trackId
-          ? {
-              ...track,
-              clips: track.clips.map((c) =>
-                c.id === clipId
-                  ? {
-                      ...c,
-                      startTime: splitTime,
-                      trimStart: c.trimStart + relativeTime,
-                      name: getClipNameWithSuffix(c.name, "right"),
-                    }
-                  : c
-              ),
-            }
-          : track
-      ),
-    }));
-  },
-
-  // Extract audio from video clip to an audio track
-  separateAudio: (trackId, clipId) => {
-    const { tracks } = get();
-    const track = tracks.find((t) => t.id === trackId);
-    const clip = track?.clips.find((c) => c.id === clipId);
-
-    if (!clip || track?.type !== "video") return null;
-
-    get().pushHistory();
-
-    // Find existing audio track or prepare to create one
-    const existingAudioTrack = tracks.find((t) => t.type === "audio");
-    const audioClipId = crypto.randomUUID();
-
-    if (existingAudioTrack) {
-      // Add audio clip to existing audio track
-      set((state) => ({
-        tracks: state.tracks.map((track) =>
-          track.id === existingAudioTrack.id
-            ? {
-                ...track,
-                clips: [
-                  ...track.clips,
-                  {
-                    ...clip,
-                    id: audioClipId,
-                    name: getClipNameWithSuffix(clip.name, "audio"),
-                  },
+            : {
+                selectedElements: [
+                  ...state.selectedElements,
+                  { trackId, elementId },
                 ],
-              }
-            : track
+              };
+        } else {
+          return { selectedElements: [{ trackId, elementId }] };
+        }
+      });
+    },
+
+    deselectElement: (trackId, elementId) => {
+      set((state) => ({
+        selectedElements: state.selectedElements.filter(
+          (c) => !(c.trackId === trackId && c.elementId === elementId)
         ),
       }));
-    } else {
-      // Create new audio track with the audio clip in a single atomic update
-      const newAudioTrack: TimelineTrack = {
+    },
+
+    clearSelectedElements: () => {
+      set({ selectedElements: [] });
+    },
+
+    setSelectedElements: (elements) => set({ selectedElements: elements }),
+
+    addTrack: (type) => {
+      get().pushHistory();
+
+      // Generate proper track name based on type
+      const trackName =
+        type === "media"
+          ? "Media Track"
+          : type === "text"
+            ? "Text Track"
+            : type === "audio"
+              ? "Audio Track"
+              : "Track";
+
+      const newTrack: TimelineTrack = {
         id: crypto.randomUUID(),
-        name: "Audio Track",
-        type: "audio",
-        clips: [
-          {
-            ...clip,
-            id: audioClipId,
-            name: getClipNameWithSuffix(clip.name, "audio"),
-          },
-        ],
+        name: trackName,
+        type,
+        elements: [],
         muted: false,
       };
 
+      updateTracksAndSave([...get()._tracks, newTrack]);
+      return newTrack.id;
+    },
+
+    insertTrackAt: (type, index) => {
+      get().pushHistory();
+
+      // Generate proper track name based on type
+      const trackName =
+        type === "media"
+          ? "Media Track"
+          : type === "text"
+            ? "Text Track"
+            : type === "audio"
+              ? "Audio Track"
+              : "Track";
+
+      const newTrack: TimelineTrack = {
+        id: crypto.randomUUID(),
+        name: trackName,
+        type,
+        elements: [],
+        muted: false,
+      };
+
+      const newTracks = [...get()._tracks];
+      newTracks.splice(index, 0, newTrack);
+      updateTracksAndSave(newTracks);
+      return newTrack.id;
+    },
+
+    removeTrack: (trackId) => {
+      get().pushHistory();
+      updateTracksAndSave(
+        get()._tracks.filter((track) => track.id !== trackId)
+      );
+    },
+
+    addElementToTrack: (trackId, elementData) => {
+      get().pushHistory();
+
+      // Validate element type matches track type
+      const track = get()._tracks.find((t) => t.id === trackId);
+      if (!track) {
+        console.error("Track not found:", trackId);
+        return;
+      }
+
+      // Use utility function for validation
+      const validation = validateElementTrackCompatibility(elementData, track);
+      if (!validation.isValid) {
+        console.error(validation.errorMessage);
+        return;
+      }
+
+      // For media elements, validate mediaId exists
+      if (elementData.type === "media" && !elementData.mediaId) {
+        console.error("Media element must have mediaId");
+        return;
+      }
+
+      // For text elements, validate required text properties
+      if (elementData.type === "text" && !elementData.content) {
+        console.error("Text element must have content");
+        return;
+      }
+
+      // Check if this is the first element being added to the timeline
+      const currentState = get();
+      const totalElementsInTimeline = currentState._tracks.reduce(
+        (total, track) => total + track.elements.length,
+        0
+      );
+      const isFirstElement = totalElementsInTimeline === 0;
+
+      const newElement: TimelineElement = {
+        ...elementData,
+        id: crypto.randomUUID(),
+        startTime: elementData.startTime || 0,
+        trimStart: 0,
+        trimEnd: 0,
+      } as TimelineElement; // Type assertion since we trust the caller passes valid data
+
+      // If this is the first element and it's a media element, automatically set the project canvas size
+      // to match the media's aspect ratio
+      if (isFirstElement && newElement.type === "media") {
+        const mediaStore = useMediaStore.getState();
+        const mediaItem = mediaStore.mediaItems.find(
+          (item) => item.id === newElement.mediaId
+        );
+
+        if (
+          mediaItem &&
+          (mediaItem.type === "image" || mediaItem.type === "video")
+        ) {
+          const editorStore = useEditorStore.getState();
+          editorStore.setCanvasSizeFromAspectRatio(
+            getMediaAspectRatio(mediaItem)
+          );
+        }
+      }
+
+      updateTracksAndSave(
+        get()._tracks.map((track) =>
+          track.id === trackId
+            ? { ...track, elements: [...track.elements, newElement] }
+            : track
+        )
+      );
+    },
+
+    removeElementFromTrack: (trackId, elementId) => {
+      get().pushHistory();
+      updateTracksAndSave(
+        get()
+          ._tracks.map((track) =>
+            track.id === trackId
+              ? {
+                  ...track,
+                  elements: track.elements.filter(
+                    (element) => element.id !== elementId
+                  ),
+                }
+              : track
+          )
+          .filter((track) => track.elements.length > 0)
+      );
+    },
+
+    moveElementToTrack: (fromTrackId, toTrackId, elementId) => {
+      get().pushHistory();
+
+      const fromTrack = get()._tracks.find((track) => track.id === fromTrackId);
+      const toTrack = get()._tracks.find((track) => track.id === toTrackId);
+      const elementToMove = fromTrack?.elements.find(
+        (element) => element.id === elementId
+      );
+
+      if (!elementToMove || !toTrack) return;
+
+      // Validate element type compatibility with target track
+      const validation = validateElementTrackCompatibility(
+        elementToMove,
+        toTrack
+      );
+      if (!validation.isValid) {
+        console.error(validation.errorMessage);
+        return;
+      }
+
+      const newTracks = get()
+        ._tracks.map((track) => {
+          if (track.id === fromTrackId) {
+            return {
+              ...track,
+              elements: track.elements.filter(
+                (element) => element.id !== elementId
+              ),
+            };
+          } else if (track.id === toTrackId) {
+            return {
+              ...track,
+              elements: [...track.elements, elementToMove],
+            };
+          }
+          return track;
+        })
+        .filter((track) => track.elements.length > 0);
+
+      updateTracksAndSave(newTracks);
+    },
+
+    updateElementTrim: (trackId, elementId, trimStart, trimEnd) => {
+      get().pushHistory();
+      updateTracksAndSave(
+        get()._tracks.map((track) =>
+          track.id === trackId
+            ? {
+                ...track,
+                elements: track.elements.map((element) =>
+                  element.id === elementId
+                    ? { ...element, trimStart, trimEnd }
+                    : element
+                ),
+              }
+            : track
+        )
+      );
+    },
+
+    updateElementDuration: (trackId, elementId, duration) => {
+      get().pushHistory();
+      updateTracksAndSave(
+        get()._tracks.map((track) =>
+          track.id === trackId
+            ? {
+                ...track,
+                elements: track.elements.map((element) =>
+                  element.id === elementId ? { ...element, duration } : element
+                ),
+              }
+            : track
+        )
+      );
+    },
+
+    updateElementStartTime: (trackId, elementId, startTime) => {
+      get().pushHistory();
+      updateTracksAndSave(
+        get()._tracks.map((track) =>
+          track.id === trackId
+            ? {
+                ...track,
+                elements: track.elements.map((element) =>
+                  element.id === elementId ? { ...element, startTime } : element
+                ),
+              }
+            : track
+        )
+      );
+    },
+
+    toggleTrackMute: (trackId) => {
+      get().pushHistory();
+      updateTracksAndSave(
+        get()._tracks.map((track) =>
+          track.id === trackId ? { ...track, muted: !track.muted } : track
+        )
+      );
+    },
+
+    splitElement: (trackId, elementId, splitTime) => {
+      const { _tracks } = get();
+      const track = _tracks.find((t) => t.id === trackId);
+      const element = track?.elements.find((c) => c.id === elementId);
+
+      if (!element) return null;
+
+      const effectiveStart = element.startTime;
+      const effectiveEnd =
+        element.startTime +
+        (element.duration - element.trimStart - element.trimEnd);
+
+      if (splitTime <= effectiveStart || splitTime >= effectiveEnd) return null;
+
+      get().pushHistory();
+
+      const relativeTime = splitTime - element.startTime;
+      const firstDuration = relativeTime;
+      const secondDuration =
+        element.duration - element.trimStart - element.trimEnd - relativeTime;
+
+      const secondElementId = crypto.randomUUID();
+
+      updateTracksAndSave(
+        get()._tracks.map((track) =>
+          track.id === trackId
+            ? {
+                ...track,
+                elements: track.elements.flatMap((c) =>
+                  c.id === elementId
+                    ? [
+                        {
+                          ...c,
+                          trimEnd: c.trimEnd + secondDuration,
+                          name: getElementNameWithSuffix(c.name, "left"),
+                        },
+                        {
+                          ...c,
+                          id: secondElementId,
+                          startTime: splitTime,
+                          trimStart: c.trimStart + firstDuration,
+                          name: getElementNameWithSuffix(c.name, "right"),
+                        },
+                      ]
+                    : [c]
+                ),
+              }
+            : track
+        )
+      );
+
+      return secondElementId;
+    },
+
+    // Split element and keep only the left portion
+    splitAndKeepLeft: (trackId, elementId, splitTime) => {
+      const { _tracks } = get();
+      const track = _tracks.find((t) => t.id === trackId);
+      const element = track?.elements.find((c) => c.id === elementId);
+
+      if (!element) return;
+
+      const effectiveStart = element.startTime;
+      const effectiveEnd =
+        element.startTime +
+        (element.duration - element.trimStart - element.trimEnd);
+
+      if (splitTime <= effectiveStart || splitTime >= effectiveEnd) return;
+
+      get().pushHistory();
+
+      const relativeTime = splitTime - element.startTime;
+      const durationToRemove =
+        element.duration - element.trimStart - element.trimEnd - relativeTime;
+
+      updateTracksAndSave(
+        get()._tracks.map((track) =>
+          track.id === trackId
+            ? {
+                ...track,
+                elements: track.elements.map((c) =>
+                  c.id === elementId
+                    ? {
+                        ...c,
+                        trimEnd: c.trimEnd + durationToRemove,
+                        name: getElementNameWithSuffix(c.name, "left"),
+                      }
+                    : c
+                ),
+              }
+            : track
+        )
+      );
+    },
+
+    // Split element and keep only the right portion
+    splitAndKeepRight: (trackId, elementId, splitTime) => {
+      const { _tracks } = get();
+      const track = _tracks.find((t) => t.id === trackId);
+      const element = track?.elements.find((c) => c.id === elementId);
+
+      if (!element) return;
+
+      const effectiveStart = element.startTime;
+      const effectiveEnd =
+        element.startTime +
+        (element.duration - element.trimStart - element.trimEnd);
+
+      if (splitTime <= effectiveStart || splitTime >= effectiveEnd) return;
+
+      get().pushHistory();
+
+      const relativeTime = splitTime - element.startTime;
+
+      updateTracksAndSave(
+        get()._tracks.map((track) =>
+          track.id === trackId
+            ? {
+                ...track,
+                elements: track.elements.map((c) =>
+                  c.id === elementId
+                    ? {
+                        ...c,
+                        startTime: splitTime,
+                        trimStart: c.trimStart + relativeTime,
+                        name: getElementNameWithSuffix(c.name, "right"),
+                      }
+                    : c
+                ),
+              }
+            : track
+        )
+      );
+    },
+
+    // Extract audio from video element to an audio track
+    separateAudio: (trackId, elementId) => {
+      const { _tracks } = get();
+      const track = _tracks.find((t) => t.id === trackId);
+      const element = track?.elements.find((c) => c.id === elementId);
+
+      if (!element || track?.type !== "media") return null;
+
+      get().pushHistory();
+
+      // Find existing audio track or prepare to create one
+      const existingAudioTrack = _tracks.find((t) => t.type === "audio");
+      const audioElementId = crypto.randomUUID();
+
+      if (existingAudioTrack) {
+        // Add audio element to existing audio track
+        updateTracksAndSave(
+          get()._tracks.map((track) =>
+            track.id === existingAudioTrack.id
+              ? {
+                  ...track,
+                  elements: [
+                    ...track.elements,
+                    {
+                      ...element,
+                      id: audioElementId,
+                      name: getElementNameWithSuffix(element.name, "audio"),
+                    },
+                  ],
+                }
+              : track
+          )
+        );
+      } else {
+        // Create new audio track with the audio element in a single atomic update
+        const newAudioTrack: TimelineTrack = {
+          id: crypto.randomUUID(),
+          name: "Audio Track",
+          type: "audio",
+          elements: [
+            {
+              ...element,
+              id: audioElementId,
+              name: getElementNameWithSuffix(element.name, "audio"),
+            },
+          ],
+          muted: false,
+        };
+
+        updateTracksAndSave([...get()._tracks, newAudioTrack]);
+      }
+
+      return audioElementId;
+    },
+
+    getTotalDuration: () => {
+      const { _tracks } = get();
+      if (_tracks.length === 0) return 0;
+
+      const trackEndTimes = _tracks.map((track) =>
+        track.elements.reduce((maxEnd, element) => {
+          const elementEnd =
+            element.startTime +
+            element.duration -
+            element.trimStart -
+            element.trimEnd;
+          return Math.max(maxEnd, elementEnd);
+        }, 0)
+      );
+
+      return Math.max(...trackEndTimes, 0);
+    },
+
+    redo: () => {
+      const { redoStack } = get();
+      if (redoStack.length === 0) return;
+      const next = redoStack[redoStack.length - 1];
+      updateTracksAndSave(next);
+      set({ redoStack: redoStack.slice(0, -1) });
+    },
+
+    dragState: {
+      isDragging: false,
+      elementId: null,
+      trackId: null,
+      startMouseX: 0,
+      startElementTime: 0,
+      clickOffsetTime: 0,
+      currentTime: 0,
+    },
+
+    setDragState: (dragState) =>
       set((state) => ({
-        tracks: [...state.tracks, newAudioTrack],
+        dragState: { ...state.dragState, ...dragState },
+      })),
+
+    startDrag: (
+      elementId,
+      trackId,
+      startMouseX,
+      startElementTime,
+      clickOffsetTime
+    ) => {
+      set({
+        dragState: {
+          isDragging: true,
+          elementId,
+          trackId,
+          startMouseX,
+          startElementTime,
+          clickOffsetTime,
+          currentTime: startElementTime,
+        },
+      });
+    },
+
+    updateDragTime: (currentTime) => {
+      set((state) => ({
+        dragState: {
+          ...state.dragState,
+          currentTime,
+        },
       }));
-    }
+    },
 
-    return audioClipId;
-  },
+    endDrag: () => {
+      set({
+        dragState: {
+          isDragging: false,
+          elementId: null,
+          trackId: null,
+          startMouseX: 0,
+          startElementTime: 0,
+          clickOffsetTime: 0,
+          currentTime: 0,
+        },
+      });
+    },
 
-  getTotalDuration: () => {
-    const { tracks } = get();
-    if (tracks.length === 0) return 0;
+    // Persistence methods
+    loadProjectTimeline: async (projectId) => {
+      try {
+        const tracks = await storageService.loadTimeline(projectId);
+        if (tracks) {
+          updateTracks(tracks);
+        } else {
+          // No timeline saved yet, initialize with default
+          const defaultTracks = ensureMainTrack([]);
+          updateTracks(defaultTracks);
+        }
+        // Clear history when loading a project
+        set({ history: [], redoStack: [] });
+      } catch (error) {
+        console.error("Failed to load timeline:", error);
+        // Initialize with default on error
+        const defaultTracks = ensureMainTrack([]);
+        updateTracks(defaultTracks);
+        set({ history: [], redoStack: [] });
+      }
+    },
 
-    const trackEndTimes = tracks.map((track) =>
-      track.clips.reduce((maxEnd, clip) => {
-        const clipEnd =
-          clip.startTime + clip.duration - clip.trimStart - clip.trimEnd;
-        return Math.max(maxEnd, clipEnd);
-      }, 0)
-    );
+    saveProjectTimeline: async (projectId) => {
+      try {
+        await storageService.saveTimeline(projectId, get()._tracks);
+      } catch (error) {
+        console.error("Failed to save timeline:", error);
+      }
+    },
 
-    return Math.max(...trackEndTimes, 0);
-  },
-
-  redo: () => {
-    const { redoStack } = get();
-    if (redoStack.length === 0) return;
-    const next = redoStack[redoStack.length - 1];
-    set({ tracks: next, redoStack: redoStack.slice(0, -1) });
-  },
-
-  dragState: {
-    isDragging: false,
-    clipId: null,
-    trackId: null,
-    startMouseX: 0,
-    startClipTime: 0,
-    clickOffsetTime: 0,
-    currentTime: 0,
-  },
-
-  setDragState: (dragState) =>
-    set((state) => ({
-      dragState: { ...state.dragState, ...dragState },
-    })),
-
-  startDrag: (clipId, trackId, startMouseX, startClipTime, clickOffsetTime) => {
-    set({
-      dragState: {
-        isDragging: true,
-        clipId,
-        trackId,
-        startMouseX,
-        startClipTime,
-        clickOffsetTime,
-        currentTime: startClipTime,
-      },
-    });
-  },
-
-  updateDragTime: (currentTime) => {
-    set((state) => ({
-      dragState: {
-        ...state.dragState,
-        currentTime,
-      },
-    }));
-  },
-
-  endDrag: () => {
-    set({
-      dragState: {
-        isDragging: false,
-        clipId: null,
-        trackId: null,
-        startMouseX: 0,
-        startClipTime: 0,
-        clickOffsetTime: 0,
-        currentTime: 0,
-      },
-    });
-  },
-}));
+    clearTimeline: () => {
+      const defaultTracks = ensureMainTrack([]);
+      updateTracks(defaultTracks);
+      set({ history: [], redoStack: [], selectedElements: [] });
+    },
+  };
+});

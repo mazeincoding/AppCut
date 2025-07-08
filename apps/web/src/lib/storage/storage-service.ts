@@ -2,18 +2,23 @@ import { TProject } from "@/types/project";
 import { MediaItem } from "@/stores/media-store";
 import { IndexedDBAdapter } from "./indexeddb-adapter";
 import { OPFSAdapter } from "./opfs-adapter";
-import { MediaFileData, StorageConfig, SerializedProject } from "./types";
+import {
+  MediaFileData,
+  StorageConfig,
+  SerializedProject,
+  TimelineData,
+} from "./types";
+import { TimelineTrack } from "@/types/timeline";
 
 class StorageService {
   private projectsAdapter: IndexedDBAdapter<SerializedProject>;
-  private mediaMetadataAdapter: IndexedDBAdapter<MediaFileData>;
-  private mediaFilesAdapter: OPFSAdapter;
   private config: StorageConfig;
 
   constructor() {
     this.config = {
       projectsDb: "video-editor-projects",
       mediaDb: "video-editor-media",
+      timelineDb: "video-editor-timelines",
       version: 1,
     };
 
@@ -22,14 +27,28 @@ class StorageService {
       "projects",
       this.config.version
     );
+  }
 
-    this.mediaMetadataAdapter = new IndexedDBAdapter<MediaFileData>(
-      this.config.mediaDb,
+  // Helper to get project-specific media adapters
+  private getProjectMediaAdapters(projectId: string) {
+    const mediaMetadataAdapter = new IndexedDBAdapter<MediaFileData>(
+      `${this.config.mediaDb}-${projectId}`,
       "media-metadata",
       this.config.version
     );
 
-    this.mediaFilesAdapter = new OPFSAdapter("media-files");
+    const mediaFilesAdapter = new OPFSAdapter(`media-files-${projectId}`);
+
+    return { mediaMetadataAdapter, mediaFilesAdapter };
+  }
+
+  // Helper to get project-specific timeline adapter
+  private getProjectTimelineAdapter(projectId: string) {
+    return new IndexedDBAdapter<TimelineData>(
+      `${this.config.timelineDb}-${projectId}`,
+      "timeline",
+      this.config.version
+    );
   }
 
   // Project operations
@@ -82,12 +101,15 @@ class StorageService {
     await this.projectsAdapter.remove(id);
   }
 
-  // Media operations
-  async saveMediaItem(mediaItem: MediaItem): Promise<void> {
-    // Save file to OPFS
-    await this.mediaFilesAdapter.set(mediaItem.id, mediaItem.file);
+  // Media operations - now project-specific
+  async saveMediaItem(projectId: string, mediaItem: MediaItem): Promise<void> {
+    const { mediaMetadataAdapter, mediaFilesAdapter } =
+      this.getProjectMediaAdapters(projectId);
 
-    // Save metadata to IndexedDB
+    // Save file to project-specific OPFS
+    await mediaFilesAdapter.set(mediaItem.id, mediaItem.file);
+
+    // Save metadata to project-specific IndexedDB
     const metadata: MediaFileData = {
       id: mediaItem.id,
       name: mediaItem.name,
@@ -99,13 +121,19 @@ class StorageService {
       duration: mediaItem.duration,
     };
 
-    await this.mediaMetadataAdapter.set(mediaItem.id, metadata);
+    await mediaMetadataAdapter.set(mediaItem.id, metadata);
   }
 
-  async loadMediaItem(id: string): Promise<MediaItem | null> {
+  async loadMediaItem(
+    projectId: string,
+    id: string
+  ): Promise<MediaItem | null> {
+    const { mediaMetadataAdapter, mediaFilesAdapter } =
+      this.getProjectMediaAdapters(projectId);
+
     const [file, metadata] = await Promise.all([
-      this.mediaFilesAdapter.get(id),
-      this.mediaMetadataAdapter.get(id),
+      mediaFilesAdapter.get(id),
+      mediaMetadataAdapter.get(id),
     ]);
 
     if (!file || !metadata) return null;
@@ -126,12 +154,14 @@ class StorageService {
     };
   }
 
-  async loadAllMediaItems(): Promise<MediaItem[]> {
-    const mediaIds = await this.mediaMetadataAdapter.list();
+  async loadAllMediaItems(projectId: string): Promise<MediaItem[]> {
+    const { mediaMetadataAdapter } = this.getProjectMediaAdapters(projectId);
+
+    const mediaIds = await mediaMetadataAdapter.list();
     const mediaItems: MediaItem[] = [];
 
     for (const id of mediaIds) {
-      const item = await this.loadMediaItem(id);
+      const item = await this.loadMediaItem(projectId, id);
       if (item) {
         mediaItems.push(item);
       }
@@ -140,38 +170,87 @@ class StorageService {
     return mediaItems;
   }
 
-  async deleteMediaItem(id: string): Promise<void> {
+  async deleteMediaItem(projectId: string, id: string): Promise<void> {
+    const { mediaMetadataAdapter, mediaFilesAdapter } =
+      this.getProjectMediaAdapters(projectId);
+
     await Promise.all([
-      this.mediaFilesAdapter.remove(id),
-      this.mediaMetadataAdapter.remove(id),
+      mediaFilesAdapter.remove(id),
+      mediaMetadataAdapter.remove(id),
     ]);
+  }
+
+  async deleteProjectMedia(projectId: string): Promise<void> {
+    const { mediaMetadataAdapter, mediaFilesAdapter } =
+      this.getProjectMediaAdapters(projectId);
+
+    await Promise.all([
+      mediaMetadataAdapter.clear(),
+      mediaFilesAdapter.clear(),
+    ]);
+  }
+
+  // Timeline operations - now project-specific
+  async saveTimeline(
+    projectId: string,
+    tracks: TimelineTrack[]
+  ): Promise<void> {
+    const timelineAdapter = this.getProjectTimelineAdapter(projectId);
+    const timelineData: TimelineData = {
+      tracks,
+      lastModified: new Date().toISOString(),
+    };
+    await timelineAdapter.set("timeline", timelineData);
+  }
+
+  async loadTimeline(projectId: string): Promise<TimelineTrack[] | null> {
+    const timelineAdapter = this.getProjectTimelineAdapter(projectId);
+    const timelineData = await timelineAdapter.get("timeline");
+    return timelineData ? timelineData.tracks : null;
+  }
+
+  async deleteProjectTimeline(projectId: string): Promise<void> {
+    const timelineAdapter = this.getProjectTimelineAdapter(projectId);
+    await timelineAdapter.remove("timeline");
   }
 
   // Utility methods
   async clearAllData(): Promise<void> {
-    await Promise.all([
-      this.projectsAdapter.clear(),
-      this.mediaMetadataAdapter.clear(),
-      this.mediaFilesAdapter.clear(),
-    ]);
+    // Clear all projects
+    await this.projectsAdapter.clear();
+
+    // Note: Project-specific media and timelines will be cleaned up when projects are deleted
   }
 
   async getStorageInfo(): Promise<{
     projects: number;
-    mediaItems: number;
     isOPFSSupported: boolean;
     isIndexedDBSupported: boolean;
   }> {
-    const [projectIds, mediaIds] = await Promise.all([
-      this.projectsAdapter.list(),
-      this.mediaMetadataAdapter.list(),
-    ]);
+    const projectIds = await this.projectsAdapter.list();
 
     return {
       projects: projectIds.length,
-      mediaItems: mediaIds.length,
       isOPFSSupported: this.isOPFSSupported(),
       isIndexedDBSupported: this.isIndexedDBSupported(),
+    };
+  }
+
+  async getProjectStorageInfo(projectId: string): Promise<{
+    mediaItems: number;
+    hasTimeline: boolean;
+  }> {
+    const { mediaMetadataAdapter } = this.getProjectMediaAdapters(projectId);
+    const timelineAdapter = this.getProjectTimelineAdapter(projectId);
+
+    const [mediaIds, timelineData] = await Promise.all([
+      mediaMetadataAdapter.list(),
+      timelineAdapter.get("timeline"),
+    ]);
+
+    return {
+      mediaItems: mediaIds.length,
+      hasTimeline: !!timelineData,
     };
   }
 

@@ -34,6 +34,10 @@ export function DraggableMediaItem({
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
   const dragRef = useRef<HTMLDivElement>(null);
 
+  const emptyImg = new window.Image();
+  emptyImg.src =
+    "data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=";
+
   useEffect(() => {
     if (!isDragging) return;
 
@@ -49,10 +53,6 @@ export function DraggableMediaItem({
   }, [isDragging]);
 
   const handleDragStart = (e: React.DragEvent) => {
-    // Hide the default ghost image
-    const emptyImg = new Image();
-    emptyImg.src =
-      "data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=";
     e.dataTransfer.setDragImage(emptyImg, 0, 0);
 
     // Set drag data
@@ -75,16 +75,16 @@ export function DraggableMediaItem({
 
   return (
     <>
-      <div ref={dragRef} className="relative group">
-        <Button
-          variant="outline"
-          className={`flex flex-col gap-1 p-0 h-auto w-full relative border-none !bg-transparent cursor-default ${className}`}
+      <div ref={dragRef} className="relative group w-28 h-28">
+        <div
+          className={`flex flex-col gap-1 p-0 h-auto w-full relative cursor-default ${className}`}
         >
           <AspectRatio
             ratio={aspectRatio}
             className={cn(
               "bg-accent relative overflow-hidden",
-              rounded && "rounded-md"
+              rounded && "rounded-md",
+              "[&::-webkit-drag-ghost]:opacity-0" // Webkit-specific ghost hiding
             )}
             draggable={true}
             onDragStart={handleDragStart}
@@ -106,7 +106,7 @@ export function DraggableMediaItem({
                 : name}
             </span>
           )}
-        </Button>
+        </div>
       </div>
 
       {/* Custom drag preview */}

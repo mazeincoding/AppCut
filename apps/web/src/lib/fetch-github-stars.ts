@@ -10,7 +10,7 @@ export async function getStars(): Promise<string> {
     if (!res.ok) {
       throw new Error(`GitHub API error: ${res.status} ${res.statusText}`);
     }
-    const data = await res.json();
+    const data = (await res.json()) as { stargazers_count: number };
     const count = data.stargazers_count;
 
     if (typeof count !== "number") {

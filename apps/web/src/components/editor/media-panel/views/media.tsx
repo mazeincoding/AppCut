@@ -24,9 +24,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DraggableMediaItem } from "@/components/ui/draggable-item";
+import { useProjectStore } from "@/stores/project-store";
 
 export function MediaView() {
   const { mediaItems, addMediaItem, removeMediaItem } = useMediaStore();
+  const { activeProject } = useProjectStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -35,6 +37,11 @@ export function MediaView() {
 
   const processFiles = async (files: FileList | File[]) => {
     if (!files || files.length === 0) return;
+    if (!activeProject) {
+      toast.error("No active project");
+      return;
+    }
+
     setIsProcessing(true);
     setProgress(0);
     try {
@@ -44,7 +51,7 @@ export function MediaView() {
       );
       // Add each processed media item to the store
       for (const item of processedItems) {
-        await addMediaItem(item);
+        await addMediaItem(activeProject.id, item);
       }
     } catch (error) {
       // Show error toast if processing fails
@@ -73,22 +80,31 @@ export function MediaView() {
     // Remove a media item from the store
     e.stopPropagation();
 
-    // Remove tracks automatically when delete media
+    if (!activeProject) {
+      toast.error("No active project");
+      return;
+    }
+
+    // Remove elements automatically when delete media
     const { tracks, removeTrack } = useTimelineStore.getState();
     tracks.forEach((track) => {
-      const clipsToRemove = track.clips.filter((clip) => clip.mediaId === id);
-      clipsToRemove.forEach((clip) => {
-        useTimelineStore.getState().removeClipFromTrack(track.id, clip.id);
+      const elementsToRemove = track.elements.filter(
+        (element) => element.type === "media" && element.mediaId === id
+      );
+      elementsToRemove.forEach((element) => {
+        useTimelineStore
+          .getState()
+          .removeElementFromTrack(track.id, element.id);
       });
-      // Only remove track if it becomes empty and has no other clips
+      // Only remove track if it becomes empty and has no other elements
       const updatedTrack = useTimelineStore
         .getState()
         .tracks.find((t) => t.id === track.id);
-      if (updatedTrack && updatedTrack.clips.length === 0) {
+      if (updatedTrack && updatedTrack.elements.length === 0) {
         removeTrack(track.id);
       }
     });
-    await removeMediaItem(id);
+    await removeMediaItem(activeProject.id, id);
   };
 
   const formatDuration = (duration: number) => {

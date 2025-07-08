@@ -4,7 +4,6 @@ import { motion } from "motion/react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { ArrowRight } from "lucide-react";
-import Link from "next/link";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -42,7 +41,7 @@ export function Hero({ signupCount }: HeroProps) {
         body: JSON.stringify({ email: email.trim() }),
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as { error: string };
 
       if (response.ok) {
         toast({
@@ -53,7 +52,9 @@ export function Hero({ signupCount }: HeroProps) {
       } else {
         toast({
           title: "Oops!",
-          description: data.error || "Something went wrong. Please try again.",
+          description:
+            (data as { error: string }).error ||
+            "Something went wrong. Please try again.",
           variant: "destructive",
         });
       }
@@ -132,7 +133,7 @@ export function Hero({ signupCount }: HeroProps) {
             <Button
               type="submit"
               size="lg"
-              className="px-6 h-11 text-base"
+              className="px-6 h-11 text-base !bg-foreground"
               disabled={isSubmitting}
             >
               <span className="relative z-10">

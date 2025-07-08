@@ -1,31 +1,45 @@
 import { create } from "zustand";
 import { storageService } from "@/lib/storage/storage-service";
+import { useProjectStore } from "./project-store";
+
+export type MediaType = "image" | "video" | "audio";
 
 export interface MediaItem {
   id: string;
   name: string;
-  type: "image" | "video" | "audio";
+  type: MediaType;
   file: File;
-  url: string; // Object URL for preview
+  url?: string; // Object URL for preview
   thumbnailUrl?: string; // For video thumbnails
   duration?: number; // For video/audio duration
   width?: number; // For video/image width
   height?: number; // For video/image height
+  // Text-specific properties
+  content?: string; // Text content
+  fontSize?: number; // Font size
+  fontFamily?: string; // Font family
+  color?: string; // Text color
+  backgroundColor?: string; // Background color
+  textAlign?: "left" | "center" | "right"; // Text alignment
 }
 
 interface MediaStore {
   mediaItems: MediaItem[];
   isLoading: boolean;
 
-  // Actions
-  addMediaItem: (item: Omit<MediaItem, "id">) => Promise<void>;
-  removeMediaItem: (id: string) => Promise<void>;
-  loadAllMedia: () => Promise<void>;
-  clearAllMedia: () => Promise<void>;
+  // Actions - now require projectId
+  addMediaItem: (
+    projectId: string,
+    item: Omit<MediaItem, "id">
+  ) => Promise<void>;
+  removeMediaItem: (projectId: string, id: string) => Promise<void>;
+  loadProjectMedia: (projectId: string) => Promise<void>;
+  clearProjectMedia: (projectId: string) => Promise<void>;
+  clearAllMedia: () => void; // Clear local state only
 }
 
 // Helper function to determine file type
-export const getFileType = (file: File): "image" | "video" | "audio" | null => {
+export const getFileType = (file: File): MediaType | null => {
   const { type } = file;
 
   if (type.startsWith("image/")) {
@@ -46,7 +60,7 @@ export const getImageDimensions = (
   file: File
 ): Promise<{ width: number; height: number }> => {
   return new Promise((resolve, reject) => {
-    const img = new Image();
+    const img = new window.Image();
 
     img.addEventListener("load", () => {
       const width = img.naturalWidth;
@@ -69,8 +83,8 @@ export const generateVideoThumbnail = (
   file: File
 ): Promise<{ thumbnailUrl: string; width: number; height: number }> => {
   return new Promise((resolve, reject) => {
-    const video = document.createElement("video");
-    const canvas = document.createElement("canvas");
+    const video = document.createElement("video") as HTMLVideoElement;
+    const canvas = document.createElement("canvas") as HTMLCanvasElement;
     const ctx = canvas.getContext("2d");
 
     if (!ctx) {
@@ -115,7 +129,7 @@ export const getMediaDuration = (file: File): Promise<number> => {
   return new Promise((resolve, reject) => {
     const element = document.createElement(
       file.type.startsWith("video/") ? "video" : "audio"
-    ) as HTMLVideoElement | HTMLAudioElement;
+    ) as HTMLVideoElement;
 
     element.addEventListener("loadedmetadata", () => {
       resolve(element.duration);
@@ -144,7 +158,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
   mediaItems: [],
   isLoading: false,
 
-  addMediaItem: async (item) => {
+  addMediaItem: async (projectId, item) => {
     const newItem: MediaItem = {
       ...item,
       id: crypto.randomUUID(),
@@ -157,22 +171,22 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
 
     // Save to persistent storage in background
     try {
-      await storageService.saveMediaItem(newItem);
+      await storageService.saveMediaItem(projectId, newItem);
     } catch (error) {
       console.error("Failed to save media item:", error);
       // Remove from local state if save failed
       set((state) => ({
-        mediaItems: state.mediaItems.filter((item) => item.id !== newItem.id),
+        mediaItems: state.mediaItems.filter((media) => media.id !== newItem.id),
       }));
     }
   },
 
-  removeMediaItem: async (id) => {
+  removeMediaItem: async (projectId, id: string) => {
     const state = get();
-    const item = state.mediaItems.find((item) => item.id === id);
+    const item = state.mediaItems.find((media) => media.id === id);
 
     // Cleanup object URLs to prevent memory leaks
-    if (item) {
+    if (item && item.url) {
       URL.revokeObjectURL(item.url);
       if (item.thumbnailUrl) {
         URL.revokeObjectURL(item.thumbnailUrl);
@@ -181,23 +195,22 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
 
     // Remove from local state immediately
     set((state) => ({
-      mediaItems: state.mediaItems.filter((item) => item.id !== id),
+      mediaItems: state.mediaItems.filter((media) => media.id !== id),
     }));
 
     // Remove from persistent storage
     try {
-      await storageService.deleteMediaItem(id);
+      await storageService.deleteMediaItem(projectId, id);
     } catch (error) {
       console.error("Failed to delete media item:", error);
-      // Could re-add to local state here if needed
     }
   },
 
-  loadAllMedia: async () => {
+  loadProjectMedia: async (projectId) => {
     set({ isLoading: true });
 
     try {
-      const mediaItems = await storageService.loadAllMediaItems();
+      const mediaItems = await storageService.loadAllMediaItems(projectId);
       set({ mediaItems });
     } catch (error) {
       console.error("Failed to load media items:", error);
@@ -206,12 +219,14 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     }
   },
 
-  clearAllMedia: async () => {
+  clearProjectMedia: async (projectId) => {
     const state = get();
 
     // Cleanup all object URLs
     state.mediaItems.forEach((item) => {
-      URL.revokeObjectURL(item.url);
+      if (item.url) {
+        URL.revokeObjectURL(item.url);
+      }
       if (item.thumbnailUrl) {
         URL.revokeObjectURL(item.thumbnailUrl);
       }
@@ -224,10 +239,27 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     try {
       const mediaIds = state.mediaItems.map((item) => item.id);
       await Promise.all(
-        mediaIds.map((id) => storageService.deleteMediaItem(id))
+        mediaIds.map((id) => storageService.deleteMediaItem(projectId, id))
       );
     } catch (error) {
       console.error("Failed to clear media items from storage:", error);
     }
+  },
+
+  clearAllMedia: () => {
+    const state = get();
+
+    // Cleanup all object URLs
+    state.mediaItems.forEach((item) => {
+      if (item.url) {
+        URL.revokeObjectURL(item.url);
+      }
+      if (item.thumbnailUrl) {
+        URL.revokeObjectURL(item.thumbnailUrl);
+      }
+    });
+
+    // Clear local state
+    set({ mediaItems: [] });
   },
 }));

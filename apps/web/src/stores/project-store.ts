@@ -2,6 +2,8 @@ import { TProject } from "@/types/project";
 import { create } from "zustand";
 import { storageService } from "@/lib/storage/storage-service";
 import { toast } from "sonner";
+import { useMediaStore } from "./media-store";
+import { useTimelineStore } from "./timeline-store";
 
 interface ProjectStore {
   activeProject: TProject | null;
@@ -53,13 +55,28 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       set({ isLoading: true });
     }
 
+    // Clear media and timeline immediately to prevent flickering when switching projects
+    const mediaStore = useMediaStore.getState();
+    const timelineStore = useTimelineStore.getState();
+    mediaStore.clearAllMedia();
+    timelineStore.clearTimeline();
+
     try {
       const project = await storageService.loadProject(id);
       if (project) {
         set({ activeProject: project });
+
+        // Load project-specific data in parallel
+        await Promise.all([
+          mediaStore.loadProjectMedia(id),
+          timelineStore.loadProjectTimeline(id),
+        ]);
+      } else {
+        throw new Error(`Project with id ${id} not found`);
       }
     } catch (error) {
       console.error("Failed to load project:", error);
+      throw error; // Re-throw so the editor page can handle it
     } finally {
       set({ isLoading: false });
     }
@@ -70,7 +87,12 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     if (!activeProject) return;
 
     try {
-      await storageService.saveProject(activeProject);
+      // Save project metadata and timeline data in parallel
+      const timelineStore = useTimelineStore.getState();
+      await Promise.all([
+        storageService.saveProject(activeProject),
+        timelineStore.saveProjectTimeline(activeProject.id),
+      ]);
       await get().loadAllProjects(); // Refresh the list
     } catch (error) {
       console.error("Failed to save project:", error);
@@ -94,13 +116,22 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
   deleteProject: async (id: string) => {
     try {
-      await storageService.deleteProject(id);
+      // Delete project data in parallel
+      await Promise.all([
+        storageService.deleteProjectMedia(id),
+        storageService.deleteProjectTimeline(id),
+        storageService.deleteProject(id),
+      ]);
       await get().loadAllProjects(); // Refresh the list
 
-      // If we deleted the active project, close it
+      // If we deleted the active project, close it and clear data
       const { activeProject } = get();
       if (activeProject?.id === id) {
         set({ activeProject: null });
+        const mediaStore = useMediaStore.getState();
+        const timelineStore = useTimelineStore.getState();
+        mediaStore.clearAllMedia();
+        timelineStore.clearTimeline();
       }
     } catch (error) {
       console.error("Failed to delete project:", error);
@@ -109,6 +140,12 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
   closeProject: () => {
     set({ activeProject: null });
+
+    // Clear data from stores when closing project
+    const mediaStore = useMediaStore.getState();
+    const timelineStore = useTimelineStore.getState();
+    mediaStore.clearAllMedia();
+    timelineStore.clearTimeline();
   },
 
   renameProject: async (id: string, name: string) => {

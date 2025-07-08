@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { RiGithubLine, RiTwitterXLine } from "react-icons/ri";
-import { getStars } from "@/lib/fetchGhStars";
+import { getStars } from "@/lib/fetch-github-stars";
 import Image from "next/image";
 
 export function Footer() {

@@ -4,4 +4,5 @@ export interface TProject {
   thumbnail: string;
   createdAt: Date;
   updatedAt: Date;
+  mediaItems?: string[];
 }

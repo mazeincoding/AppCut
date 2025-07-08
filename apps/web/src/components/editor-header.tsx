@@ -37,7 +37,7 @@ export function EditorHeader() {
 
   const rightContent = (
     <nav className="flex items-center gap-2">
-      <Button size="sm" onClick={handleExport}>
+      <Button size="sm" variant="primary" onClick={handleExport}>
         <Download className="h-4 w-4" />
         <span className="text-sm">Export</span>
       </Button>

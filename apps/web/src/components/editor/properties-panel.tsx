@@ -25,27 +25,29 @@ export function PropertiesPanel() {
   const [backgroundType, setBackgroundType] = useState<BackgroundType>("blur");
   const [backgroundColor, setBackgroundColor] = useState("#000000");
 
-  // Get the first video clip for preview (simplified)
-  const firstVideoClip = tracks
-    .flatMap((track) => track.clips)
-    .find((clip) => {
-      const mediaItem = mediaItems.find((item) => item.id === clip.mediaId);
+  // Get the first video element for preview (simplified)
+  const firstVideoElement = tracks
+    .flatMap((track) => track.elements)
+    .find((element) => {
+      if (element.type !== "media") return false;
+      const mediaItem = mediaItems.find((item) => item.id === element.mediaId);
       return mediaItem?.type === "video";
     });
 
-  const firstVideoItem = firstVideoClip
-    ? mediaItems.find((item) => item.id === firstVideoClip.mediaId)
+  const firstVideoItem = firstVideoElement && firstVideoElement.type === "media"
+    ? mediaItems.find((item) => item.id === firstVideoElement.mediaId)
     : null;
 
-  const firstImageClip = tracks
-    .flatMap((track) => track.clips)
-    .find((clip) => {
-      const mediaItem = mediaItems.find((item) => item.id === clip.mediaId);
+  const firstImageElement = tracks
+    .flatMap((track) => track.elements)
+    .find((element) => {
+      if (element.type !== "media") return false;
+      const mediaItem = mediaItems.find((item) => item.id === element.mediaId);
       return mediaItem?.type === "image";
     });
 
-  const firstImageItem = firstImageClip
-    ? mediaItems.find((item) => item.id === firstImageClip.mediaId)
+  const firstImageItem = firstImageElement && firstImageElement.type === "media"
+    ? mediaItems.find((item) => item.id === firstImageElement.mediaId)
     : null;
 
   return (
@@ -62,7 +64,7 @@ export function PropertiesPanel() {
                   <Label>Preview</Label>
                   <div className="w-full aspect-video max-w-48">
                     <ImageTimelineTreatment
-                      src={firstImageItem.url}
+                      src={firstImageItem.url!}
                       alt={firstImageItem.name}
                       targetAspectRatio={16 / 9}
                       className="rounded-sm border"

@@ -5,7 +5,7 @@ import { Button } from "./ui/button";
 import { ArrowRight } from "lucide-react";
 import { HeaderBase } from "./header-base";
 import { useSession } from "@opencut/auth/client";
-import { getStars } from "@/lib/fetchGhStars";
+import { getStars } from "@/lib/fetch-github-stars";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 

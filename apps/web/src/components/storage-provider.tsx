@@ -36,7 +36,6 @@ export function StorageProvider({ children }: StorageProviderProps) {
   });
 
   const loadAllProjects = useProjectStore((state) => state.loadAllProjects);
-  const loadAllMedia = useMediaStore((state) => state.loadAllMedia);
 
   useEffect(() => {
     const initializeStorage = async () => {
@@ -52,8 +51,8 @@ export function StorageProvider({ children }: StorageProviderProps) {
           );
         }
 
-        // Load saved data in parallel
-        await Promise.all([loadAllProjects(), loadAllMedia()]);
+        // Load saved projects (media will be loaded when a project is loaded)
+        await loadAllProjects();
 
         setStatus({
           isInitialized: true,
@@ -73,7 +72,7 @@ export function StorageProvider({ children }: StorageProviderProps) {
     };
 
     initializeStorage();
-  }, [loadAllProjects, loadAllMedia]);
+  }, [loadAllProjects]);
 
   return (
     <StorageContext.Provider value={status}>{children}</StorageContext.Provider>

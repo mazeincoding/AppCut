@@ -17,7 +17,6 @@ export function TextView() {
           content: "Default text",
         }}
         aspectRatio={1}
-        className="w-24"
         showLabel={false}
       />
     </div>
