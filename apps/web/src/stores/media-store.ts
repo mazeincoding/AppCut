@@ -193,27 +193,6 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
       }
     }
 
-    // CASCADE DELETION - Remove timeline elements that use this media
-    const { tracks, removeElementFromTrack, removeTrack } =
-      useTimelineStore.getState();
-
-    tracks.forEach((track) => {
-      const elementsToRemove = track.elements.filter(
-        (element) => element.type === "media" && element.mediaId === id
-      );
-      elementsToRemove.forEach((element) => {
-        removeElementFromTrack(track.id, element.id);
-      });
-    });
-
-    // Clean up empty tracks after removing elements
-    const updatedTracks = useTimelineStore.getState().tracks;
-    updatedTracks.forEach((track) => {
-      if (track.elements.length === 0) {
-        removeTrack(track.id);
-      }
-    });
-
     // Remove from local state immediately
     set((state) => ({
       mediaItems: state.mediaItems.filter((media) => media.id !== id),
