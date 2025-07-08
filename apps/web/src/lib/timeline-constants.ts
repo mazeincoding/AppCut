@@ -8,17 +8,17 @@ export const TRACK_COLORS: Record<
   media: {
     solid: "bg-blue-500",
     background: "bg-blue-500/20",
-    border: "border-blue-500/30",
+    border: "border-white/80",
   },
   text: {
     solid: "bg-[#9C4937]",
     background: "bg-[#9C4937]",
-    border: "border-[#9C4937]/40",
+    border: "border-white/80",
   },
   audio: {
     solid: "bg-green-500",
     background: "bg-green-500/20",
-    border: "border-green-500/30",
+    border: "border-white/80",
   },
 } as const;
 
