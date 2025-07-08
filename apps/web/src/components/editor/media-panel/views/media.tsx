@@ -297,7 +297,7 @@ export function MediaView() {
               {/* Render each media item as a draggable button */}
               {filteredMediaItems.map((item) => (
                 <ContextMenu key={item.id}>
-                  <ContextMenuTrigger asChild>
+                  <ContextMenuTrigger>
                     <DraggableMediaItem
                       name={item.name}
                       preview={renderPreview(item)}
