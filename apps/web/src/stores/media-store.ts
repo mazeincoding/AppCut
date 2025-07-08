@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { storageService } from "@/lib/storage/storage-service";
-import { useProjectStore } from "./project-store";
 
 export type MediaType = "image" | "video" | "audio";
 
