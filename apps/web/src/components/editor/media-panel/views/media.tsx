@@ -3,7 +3,6 @@
 import { useDragDrop } from "@/hooks/use-drag-drop";
 import { processMediaFiles } from "@/lib/media-processing";
 import { useMediaStore, type MediaItem } from "@/stores/media-store";
-import { useTimelineStore } from "@/stores/timeline-store";
 import { Image, Music, Plus, Upload, Video } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -85,25 +84,7 @@ export function MediaView() {
       return;
     }
 
-    // Remove elements automatically when delete media
-    const { tracks, removeTrack } = useTimelineStore.getState();
-    tracks.forEach((track) => {
-      const elementsToRemove = track.elements.filter(
-        (element) => element.type === "media" && element.mediaId === id
-      );
-      elementsToRemove.forEach((element) => {
-        useTimelineStore
-          .getState()
-          .removeElementFromTrack(track.id, element.id);
-      });
-      // Only remove track if it becomes empty and has no other elements
-      const updatedTrack = useTimelineStore
-        .getState()
-        .tracks.find((t) => t.id === track.id);
-      if (updatedTrack && updatedTrack.elements.length === 0) {
-        removeTrack(track.id);
-      }
-    });
+    // Media store now handles cascade deletion automatically
     await removeMediaItem(activeProject.id, id);
   };
 
