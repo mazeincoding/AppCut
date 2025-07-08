@@ -115,7 +115,9 @@ export function Footer() {
         {/* Bottom Section */}
         <div className="pt-2 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <span>© 2025 OpenCut, All Rights Reserved</span>
+            <span>
+              © {new Date().getFullYear()} OpenCut, All Rights Reserved
+            </span>
           </div>
         </div>
       </div>

@@ -39,7 +39,7 @@ export function TextView() {
                 </div>
               }
               dragData={{
-                id: "default-text",
+                id: new Date().getMilliseconds().toString(),
                 type: "text",
                 name: text,
                 content: text,
