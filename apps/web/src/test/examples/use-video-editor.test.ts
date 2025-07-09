@@ -93,6 +93,10 @@ const useVideoEditor = () => {
     setState(prev => ({ ...prev, currentTime: Math.max(0, Math.min(time, prev.duration)) }))
   }
 
+  const setDuration = (duration: number) => {
+    setState(prev => ({ ...prev, duration: Math.max(0, duration) }))
+  }
+
   const play = () => {
     setState(prev => ({ ...prev, isPlaying: true }))
   }
@@ -112,6 +116,7 @@ const useVideoEditor = () => {
     removeClip,
     selectClip,
     setCurrentTime,
+    setDuration,
     play,
     pause,
     togglePlayPause,
@@ -319,26 +324,52 @@ describe('useVideoEditor Hook', () => {
 
   it('sets current time within bounds', () => {
     const { result } = renderHook(() => useVideoEditor())
-    
-    // Assume duration is set to 10 seconds
+
+    // Set duration to 10 seconds first
+    act(() => {
+      result.current.setDuration(10)
+    })
+
+    expect(result.current.duration).toBe(10)
+
+    // Test setting time within bounds
     act(() => {
       result.current.setCurrentTime(5)
     })
-    
+
     expect(result.current.currentTime).toBe(5)
-    
+
     // Test lower bound
     act(() => {
       result.current.setCurrentTime(-1)
     })
-    
+
     expect(result.current.currentTime).toBe(0)
-    
-    // Test upper bound (assuming duration is 0 initially)
+
+    // Test upper bound - should be clamped to duration (10)
     act(() => {
       result.current.setCurrentTime(15)
     })
-    
-    expect(result.current.currentTime).toBe(0) // Clamped to duration
+
+    expect(result.current.currentTime).toBe(10) // Clamped to duration
+  })
+
+  it('sets duration correctly', () => {
+    const { result } = renderHook(() => useVideoEditor())
+
+    expect(result.current.duration).toBe(0) // Initial duration
+
+    act(() => {
+      result.current.setDuration(30)
+    })
+
+    expect(result.current.duration).toBe(30)
+
+    // Test that negative duration is clamped to 0
+    act(() => {
+      result.current.setDuration(-5)
+    })
+
+    expect(result.current.duration).toBe(0)
   })
 })

@@ -9,32 +9,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '../utils'
 import userEvent from '@testing-library/user-event'
-
-// Example Button component (this would be imported from your actual component)
-interface ButtonProps {
-  children: React.ReactNode
-  onClick?: () => void
-  disabled?: boolean
-  variant?: 'primary' | 'secondary' | 'danger'
-  size?: 'sm' | 'md' | 'lg'
-}
-
-const Button = ({ 
-  children, 
-  onClick, 
-  disabled = false, 
-  variant = 'primary',
-  size = 'md' 
-}: ButtonProps) => (
-  <button
-    onClick={onClick}
-    disabled={disabled}
-    className={`btn btn-${variant} btn-${size}`}
-    data-testid="button"
-  >
-    {children}
-  </button>
-)
+import { Button } from '../../components/ui/button'
 
 describe('Button Component', () => {
   it('renders with correct text', () => {
@@ -69,24 +44,24 @@ describe('Button Component', () => {
 
   it('applies correct CSS classes for variants', () => {
     const { rerender } = render(<Button variant="primary">Primary</Button>)
-    expect(screen.getByTestId('button')).toHaveClass('btn-primary')
+    expect(screen.getByRole('button')).toHaveClass('bg-primary')
 
     rerender(<Button variant="secondary">Secondary</Button>)
-    expect(screen.getByTestId('button')).toHaveClass('btn-secondary')
+    expect(screen.getByRole('button')).toHaveClass('bg-secondary')
 
-    rerender(<Button variant="danger">Danger</Button>)
-    expect(screen.getByTestId('button')).toHaveClass('btn-danger')
+    rerender(<Button variant="destructive">Destructive</Button>)
+    expect(screen.getByRole('button')).toHaveClass('bg-destructive')
   })
 
   it('applies correct CSS classes for sizes', () => {
     const { rerender } = render(<Button size="sm">Small</Button>)
-    expect(screen.getByTestId('button')).toHaveClass('btn-sm')
+    expect(screen.getByRole('button')).toHaveClass('h-8')
 
-    rerender(<Button size="md">Medium</Button>)
-    expect(screen.getByTestId('button')).toHaveClass('btn-md')
+    rerender(<Button size="default">Default</Button>)
+    expect(screen.getByRole('button')).toHaveClass('h-9')
 
     rerender(<Button size="lg">Large</Button>)
-    expect(screen.getByTestId('button')).toHaveClass('btn-lg')
+    expect(screen.getByRole('button')).toHaveClass('h-10')
   })
 
   it('supports keyboard navigation', async () => {
