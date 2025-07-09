@@ -2,13 +2,10 @@
 
 import { useTimelineStore } from "@/stores/timeline-store";
 import { TimelineElement, TimelineTrack } from "@/types/timeline";
-import {
-  useMediaStore,
-  type MediaItem,
-  getMediaAspectRatio,
-} from "@/stores/media-store";
+import { useMediaStore, type MediaItem } from "@/stores/media-store";
 import { usePlaybackStore } from "@/stores/playback-store";
 import { useEditorStore } from "@/stores/editor-store";
+import { useAspectRatio } from "@/hooks/use-aspect-ratio";
 import { VideoPlayer } from "@/components/ui/video-player";
 import { Button } from "@/components/ui/button";
 import {
@@ -269,53 +266,24 @@ export function PreviewPanel() {
 
 function PreviewToolbar({ hasAnyElements }: { hasAnyElements: boolean }) {
   const { isPlaying, toggle, currentTime } = usePlaybackStore();
+  const { setCanvasSize, setCanvasSizeToOriginal } = useEditorStore();
+  const { getTotalDuration } = useTimelineStore();
   const {
-    canvasSize,
+    currentPreset,
+    isOriginal,
+    getOriginalAspectRatio,
+    getDisplayName,
     canvasPresets,
-    setCanvasSize,
-    setCanvasSizeFromAspectRatio,
-  } = useEditorStore();
-  const { mediaItems } = useMediaStore();
-  const { tracks, getTotalDuration } = useTimelineStore();
-
-  // Find the current preset based on canvas size
-  const currentPreset = canvasPresets.find(
-    (preset) =>
-      preset.width === canvasSize.width && preset.height === canvasSize.height
-  );
+  } = useAspectRatio();
 
   const handlePresetSelect = (preset: { width: number; height: number }) => {
     setCanvasSize({ width: preset.width, height: preset.height });
   };
 
-  // Get the first video/image media item to determine original aspect ratio
-  const getOriginalAspectRatio = () => {
-    // Find first video or image in timeline
-    for (const track of tracks) {
-      for (const element of track.elements) {
-        if (element.type === "media") {
-          const mediaItem = mediaItems.find(
-            (item) => item.id === element.mediaId
-          );
-          if (
-            mediaItem &&
-            (mediaItem.type === "video" || mediaItem.type === "image")
-          ) {
-            return getMediaAspectRatio(mediaItem);
-          }
-        }
-      }
-    }
-    return 16 / 9; // Default aspect ratio
-  };
-
   const handleOriginalSelect = () => {
     const aspectRatio = getOriginalAspectRatio();
-    setCanvasSizeFromAspectRatio(aspectRatio);
+    setCanvasSizeToOriginal(aspectRatio);
   };
-
-  // Check if current size is "Original" (not matching any preset)
-  const isOriginal = !currentPreset;
 
   return (
     <div
@@ -353,7 +321,7 @@ function PreviewToolbar({ hasAnyElements }: { hasAnyElements: boolean }) {
               className="!bg-background text-foreground/85 text-xs h-auto rounded-none border border-muted-foreground px-0.5 py-0 font-light"
               disabled={!hasAnyElements}
             >
-              {currentPreset?.name || "Ratio"}
+              {getDisplayName()}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
