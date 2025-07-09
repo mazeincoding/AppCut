@@ -41,9 +41,9 @@ export function Header() {
         </Button>
       </Link>
       {process.env.NODE_ENV === "development" ? (
-        <Link href="/editor/1">
+        <Link href="/projects">
           <Button size="sm" className="text-sm ml-4">
-            Editor
+            Projects
             <ArrowRight className="h-4 w-4" />
           </Button>
         </Link>

@@ -39,7 +39,7 @@
     --sidebar-ring: 0 0% 3.9%;
   }
   .dark {
-    --background: 0 0% 8%;
+    --background: 0 0% 4%;
     --foreground: 0 0% 89%;
     --card: 0 0% 14.9%;
     --card-foreground: 0 0% 98%;
@@ -71,6 +71,8 @@
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 0 0% 14.9%;
     --sidebar-ring: 0 0% 83.1%;
+    --panel-background: 0 0% 11%;
+    --panel-accent: 0 0% 15%;
   }
 }
 

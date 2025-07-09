@@ -749,7 +749,7 @@ export function Timeline() {
 
   return (
     <div
-      className={`h-full flex flex-col transition-colors duration-200 relative`}
+      className={`h-full flex flex-col transition-colors duration-200 relative bg-panel rounded-sm overflow-hidden`}
       {...dragProps}
       onMouseEnter={() => setIsInTimeline(true)}
       onMouseLeave={() => setIsInTimeline(false)}
@@ -885,7 +885,8 @@ export function Timeline() {
             </TooltipTrigger>
             <TooltipContent>Delete element (Delete)</TooltipContent>
           </Tooltip>
-          <div className="w-px h-6 bg-border mx-1" />c{/* Speed Control */}
+          <div className="w-px h-6 bg-border mx-1" />
+          {/* Speed Control */}
           <Tooltip>
             <TooltipTrigger asChild>
               <Select
@@ -911,7 +912,7 @@ export function Timeline() {
       {/* Timeline Container */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Timeline Header with Ruler */}
-        <div className="flex border-b bg-background sticky top-0 z-10">
+        <div className="flex border-b bg-panel-accent sticky top-0 z-10">
           {/* Track Labels Header */}
           <div className="w-48 flex-shrink-0 bg-muted/30 border-r flex items-center justify-between px-3 py-2">
             <span className="text-sm font-medium text-muted-foreground">
@@ -1019,12 +1020,12 @@ export function Timeline() {
         <div className="flex-1 flex overflow-hidden">
           {/* Track Labels */}
           {tracks.length > 0 && (
-            <div className="w-48 flex-shrink-0 border-r bg-background overflow-y-auto">
+            <div className="w-48 flex-shrink-0 border-r bg-panel-accent overflow-y-auto">
               <div className="flex flex-col">
                 {tracks.map((track) => (
                   <div
                     key={track.id}
-                    className="flex items-center px-3 border-b border-muted/30 bg-background group"
+                    className="flex items-center px-3 border-b border-muted/30 group"
                     style={{ height: `${getTrackHeight(track.type)}px` }}
                   >
                     <div className="flex items-center flex-1 min-w-0">

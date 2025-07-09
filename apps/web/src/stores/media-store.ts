@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { storageService } from "@/lib/storage/storage-service";
-import { useProjectStore } from "./project-store";
+import { useTimelineStore } from "./timeline-store";
 
 export type MediaType = "image" | "video" | "audio";
 

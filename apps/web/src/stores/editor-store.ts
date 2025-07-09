@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { CanvasSize, CanvasPreset } from "@/types/editor";
 
+type CanvasMode = "preset" | "original" | "custom";
+
 interface EditorState {
   // Loading states
   isInitializing: boolean;
@@ -8,6 +10,7 @@ interface EditorState {
 
   // Canvas/Project settings
   canvasSize: CanvasSize;
+  canvasMode: CanvasMode;
   canvasPresets: CanvasPreset[];
 
   // Actions
@@ -15,6 +18,7 @@ interface EditorState {
   setPanelsReady: (ready: boolean) => void;
   initializeApp: () => Promise<void>;
   setCanvasSize: (size: CanvasSize) => void;
+  setCanvasSizeToOriginal: (aspectRatio: number) => void;
   setCanvasSizeFromAspectRatio: (aspectRatio: number) => void;
 }
 
@@ -65,6 +69,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   isInitializing: true,
   isPanelsReady: false,
   canvasSize: { width: 1920, height: 1080 }, // Default 16:9 HD
+  canvasMode: "preset" as CanvasMode,
   canvasPresets: DEFAULT_CANVAS_PRESETS,
 
   // Actions
@@ -85,15 +90,16 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   setCanvasSize: (size) => {
-    set({ canvasSize: size });
+    set({ canvasSize: size, canvasMode: "preset" });
+  },
+
+  setCanvasSizeToOriginal: (aspectRatio) => {
+    const newCanvasSize = findBestCanvasPreset(aspectRatio);
+    set({ canvasSize: newCanvasSize, canvasMode: "original" });
   },
 
   setCanvasSizeFromAspectRatio: (aspectRatio) => {
     const newCanvasSize = findBestCanvasPreset(aspectRatio);
-    console.log(
-      `Setting canvas size based on aspect ratio ${aspectRatio}:`,
-      newCanvasSize
-    );
-    set({ canvasSize: newCanvasSize });
+    set({ canvasSize: newCanvasSize, canvasMode: "custom" });
   },
 }));

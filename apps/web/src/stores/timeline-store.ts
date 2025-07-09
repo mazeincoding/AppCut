@@ -117,6 +117,13 @@ interface TimelineStore {
   ) => void;
   separateAudio: (trackId: string, elementId: string) => string | null;
 
+  // Replace media for an element
+  replaceElementMedia: (
+    trackId: string,
+    elementId: string,
+    newFile: File
+  ) => Promise<boolean>;
+
   // Computed values
   getTotalDuration: () => number;
 
@@ -675,6 +682,102 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       }
 
       return audioElementId;
+    },
+
+    // Replace media for an element
+    replaceElementMedia: async (trackId, elementId, newFile) => {
+      const { _tracks } = get();
+      const track = _tracks.find((t) => t.id === trackId);
+      const element = track?.elements.find((c) => c.id === elementId);
+
+      if (!element || element.type !== "media") return false;
+
+      try {
+        const mediaStore = useMediaStore.getState();
+        const projectStore = useProjectStore.getState();
+
+        if (!projectStore.activeProject) return false;
+
+        // Import required media processing functions
+        const {
+          getFileType,
+          getImageDimensions,
+          generateVideoThumbnail,
+          getMediaDuration,
+        } = await import("./media-store");
+
+        const fileType = getFileType(newFile);
+        if (!fileType) return false;
+
+        // Process the new media file
+        let mediaData: any = {
+          name: newFile.name,
+          type: fileType,
+          file: newFile,
+          url: URL.createObjectURL(newFile),
+        };
+
+        // Get media-specific metadata
+        if (fileType === "image") {
+          const { width, height } = await getImageDimensions(newFile);
+          mediaData.width = width;
+          mediaData.height = height;
+        } else if (fileType === "video") {
+          const [duration, { thumbnailUrl, width, height }] = await Promise.all(
+            [getMediaDuration(newFile), generateVideoThumbnail(newFile)]
+          );
+          mediaData.duration = duration;
+          mediaData.thumbnailUrl = thumbnailUrl;
+          mediaData.width = width;
+          mediaData.height = height;
+        } else if (fileType === "audio") {
+          mediaData.duration = await getMediaDuration(newFile);
+        }
+
+        // Add new media item to store
+        await mediaStore.addMediaItem(projectStore.activeProject.id, mediaData);
+
+        // Find the newly created media item
+        const newMediaItem = mediaStore.mediaItems.find(
+          (item) => item.file === newFile
+        );
+
+        if (!newMediaItem) return false;
+
+        get().pushHistory();
+
+        // Update the timeline element to reference the new media
+        updateTracksAndSave(
+          _tracks.map((track) =>
+            track.id === trackId
+              ? {
+                  ...track,
+                  elements: track.elements.map((c) =>
+                    c.id === elementId
+                      ? {
+                          ...c,
+                          mediaId: newMediaItem.id,
+                          name: newMediaItem.name,
+                          // Update duration if the new media has a different duration
+                          duration: newMediaItem.duration || c.duration,
+                        }
+                      : c
+                  ),
+                }
+              : track
+          )
+        );
+
+        return true;
+      } catch (error) {
+        console.log(
+          JSON.stringify({
+            error: "Failed to replace element media",
+            details: error,
+          })
+        );
+        return false;
+      }
     },
 
     getTotalDuration: () => {

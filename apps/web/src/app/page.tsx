@@ -2,7 +2,6 @@ import { Hero } from "@/components/landing/hero";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { getWaitlistCount } from "@/lib/waitlist";
-import Image from "next/image";
 
 // Force dynamic rendering so waitlist count updates in real-time
 export const dynamic = "force-dynamic";

@@ -4,15 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { useMediaStore } from "@/stores/media-store";
 import { toast } from "sonner";
-import { Copy, Scissors, Trash2 } from "lucide-react";
 import { TimelineElement } from "./timeline-element";
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuSeparator,
-  ContextMenuTrigger,
-} from "../ui/context-menu";
 import {
   TimelineTrack,
   sortTracksByOrder,
@@ -882,38 +874,15 @@ export function TimelineTrackContent({
               };
 
               return (
-                <ContextMenu key={element.id}>
-                  <ContextMenuTrigger asChild>
-                    <div>
-                      <TimelineElement
-                        element={element}
-                        track={track}
-                        zoomLevel={zoomLevel}
-                        isSelected={isSelected}
-                        onElementMouseDown={handleElementMouseDown}
-                        onElementClick={handleElementClick}
-                      />
-                    </div>
-                  </ContextMenuTrigger>
-                  <ContextMenuContent>
-                    <ContextMenuItem onClick={handleElementSplit}>
-                      <Scissors className="h-4 w-4 mr-2" />
-                      Split at playhead
-                    </ContextMenuItem>
-                    <ContextMenuItem onClick={handleElementDuplicate}>
-                      <Copy className="h-4 w-4 mr-2" />
-                      Duplicate {element.type === "text" ? "text" : "clip"}
-                    </ContextMenuItem>
-                    <ContextMenuSeparator />
-                    <ContextMenuItem
-                      onClick={handleElementDelete}
-                      className="text-destructive focus:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete {element.type === "text" ? "text" : "clip"}
-                    </ContextMenuItem>
-                  </ContextMenuContent>
-                </ContextMenu>
+                <TimelineElement
+                  key={element.id}
+                  element={element}
+                  track={track}
+                  zoomLevel={zoomLevel}
+                  isSelected={isSelected}
+                  onElementMouseDown={handleElementMouseDown}
+                  onElementClick={handleElementClick}
+                />
               );
             })}
           </>

@@ -2,13 +2,10 @@
 
 import { useTimelineStore } from "@/stores/timeline-store";
 import { TimelineElement, TimelineTrack } from "@/types/timeline";
-import {
-  useMediaStore,
-  type MediaItem,
-  getMediaAspectRatio,
-} from "@/stores/media-store";
+import { useMediaStore, type MediaItem } from "@/stores/media-store";
 import { usePlaybackStore } from "@/stores/playback-store";
 import { useEditorStore } from "@/stores/editor-store";
+import { useAspectRatio } from "@/hooks/use-aspect-ratio";
 import { VideoPlayer } from "@/components/ui/video-player";
 import { Button } from "@/components/ui/button";
 import {
@@ -223,19 +220,9 @@ export function PreviewPanel() {
         );
       }
 
-      // Audio elements (visual representation)
+      // Audio elements (no visual representation)
       if (mediaItem.type === "audio") {
-        return (
-          <div
-            key={element.id}
-            className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center"
-          >
-            <div className="text-center">
-              <div className="text-2xl mb-2">🎵</div>
-              <p className="text-xs text-white">{mediaItem.name}</p>
-            </div>
-          </div>
-        );
+        return null;
       }
     }
 
@@ -243,11 +230,12 @@ export function PreviewPanel() {
   };
 
   return (
-    <div className="h-full w-full flex flex-col min-h-0 min-w-0">
+    <div className="h-full w-full flex flex-col min-h-0 min-w-0 bg-panel rounded-sm">
       <div
         ref={containerRef}
-        className="flex-1 flex flex-col items-center justify-center p-3 min-h-0 min-w-0 gap-4"
+        className="flex-1 flex flex-col items-center justify-center p-3 min-h-0 min-w-0"
       >
+        <div className="flex-1"></div>
         {hasAnyElements ? (
           <div
             ref={previewRef}
@@ -279,58 +267,29 @@ export function PreviewPanel() {
 
 function PreviewToolbar({ hasAnyElements }: { hasAnyElements: boolean }) {
   const { isPlaying, toggle, currentTime } = usePlaybackStore();
+  const { setCanvasSize, setCanvasSizeToOriginal } = useEditorStore();
+  const { getTotalDuration } = useTimelineStore();
   const {
-    canvasSize,
+    currentPreset,
+    isOriginal,
+    getOriginalAspectRatio,
+    getDisplayName,
     canvasPresets,
-    setCanvasSize,
-    setCanvasSizeFromAspectRatio,
-  } = useEditorStore();
-  const { mediaItems } = useMediaStore();
-  const { tracks, getTotalDuration } = useTimelineStore();
-
-  // Find the current preset based on canvas size
-  const currentPreset = canvasPresets.find(
-    (preset) =>
-      preset.width === canvasSize.width && preset.height === canvasSize.height
-  );
+  } = useAspectRatio();
 
   const handlePresetSelect = (preset: { width: number; height: number }) => {
     setCanvasSize({ width: preset.width, height: preset.height });
   };
 
-  // Get the first video/image media item to determine original aspect ratio
-  const getOriginalAspectRatio = () => {
-    // Find first video or image in timeline
-    for (const track of tracks) {
-      for (const element of track.elements) {
-        if (element.type === "media") {
-          const mediaItem = mediaItems.find(
-            (item) => item.id === element.mediaId
-          );
-          if (
-            mediaItem &&
-            (mediaItem.type === "video" || mediaItem.type === "image")
-          ) {
-            return getMediaAspectRatio(mediaItem);
-          }
-        }
-      }
-    }
-    return 16 / 9; // Default aspect ratio
-  };
-
   const handleOriginalSelect = () => {
     const aspectRatio = getOriginalAspectRatio();
-    setCanvasSizeFromAspectRatio(aspectRatio);
+    setCanvasSizeToOriginal(aspectRatio);
   };
-
-  // Check if current size is "Original" (not matching any preset)
-  const isOriginal = !currentPreset;
 
   return (
     <div
       data-toolbar
-      className="flex items-end justify-between gap-2 p-1 pt-2 bg-background-500 w-full"
+      className="flex items-end justify-between gap-2 p-1 pt-2 w-full"
     >
       <div>
         <p
@@ -348,6 +307,7 @@ function PreviewToolbar({ hasAnyElements }: { hasAnyElements: boolean }) {
         size="icon"
         onClick={toggle}
         disabled={!hasAnyElements}
+        className="h-auto p-0"
       >
         {isPlaying ? (
           <Pause className="h-3 w-3" />
@@ -360,10 +320,10 @@ function PreviewToolbar({ hasAnyElements }: { hasAnyElements: boolean }) {
           <DropdownMenuTrigger asChild>
             <Button
               size="sm"
-              className="!bg-background text-foreground/85 text-xs h-auto rounded-none border border-muted-foreground px-0.5 py-0 font-light"
+              className="!bg-panel-accent text-foreground/85 text-xs h-auto rounded-none border border-muted-foreground px-0.5 py-0 font-light"
               disabled={!hasAnyElements}
             >
-              {currentPreset?.name || "Ratio"}
+              {getDisplayName()}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">

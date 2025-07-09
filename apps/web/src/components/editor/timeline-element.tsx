@@ -11,6 +11,8 @@ import {
   ChevronRight,
   ChevronLeft,
   Type,
+  Copy,
+  RefreshCw,
 } from "lucide-react";
 import { useMediaStore } from "@/stores/media-store";
 import { useTimelineStore } from "@/stores/timeline-store";
@@ -33,6 +35,13 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from "../ui/dropdown-menu";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "../ui/context-menu";
 
 export function TimelineElement({
   element,
@@ -52,6 +61,8 @@ export function TimelineElement({
     splitAndKeepLeft,
     splitAndKeepRight,
     separateAudio,
+    addElementToTrack,
+    replaceElementMedia,
   } = useTimelineStore();
   const { currentTime } = usePlaybackStore();
 
@@ -172,6 +183,69 @@ export function TimelineElement({
     return mediaItem?.type === "video" && track.type === "media";
   };
 
+  const handleElementSplitContext = () => {
+    const effectiveStart = element.startTime;
+    const effectiveEnd =
+      element.startTime +
+      (element.duration - element.trimStart - element.trimEnd);
+
+    if (currentTime > effectiveStart && currentTime < effectiveEnd) {
+      const secondElementId = splitElement(track.id, element.id, currentTime);
+      if (!secondElementId) {
+        toast.error("Failed to split element");
+      }
+    } else {
+      toast.error("Playhead must be within element to split");
+    }
+  };
+
+  const handleElementDuplicateContext = () => {
+    const { id, ...elementWithoutId } = element;
+    addElementToTrack(track.id, {
+      ...elementWithoutId,
+      name: element.name + " (copy)",
+      startTime:
+        element.startTime +
+        (element.duration - element.trimStart - element.trimEnd) +
+        0.1,
+    });
+  };
+
+  const handleElementDeleteContext = () => {
+    removeElementFromTrack(track.id, element.id);
+  };
+
+  const handleReplaceClip = () => {
+    if (element.type !== "media") {
+      toast.error("Replace is only available for media clips");
+      return;
+    }
+
+    // Create a file input to select replacement media
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "video/*,audio/*,image/*";
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      try {
+        const success = await replaceElementMedia(track.id, element.id, file);
+        if (success) {
+          toast.success("Clip replaced successfully");
+        } else {
+          toast.error("Failed to replace clip");
+        }
+      } catch (error) {
+        toast.error("Failed to replace clip");
+        console.log(
+          JSON.stringify({ error: "Failed to replace clip", details: error })
+        );
+      }
+    };
+    input.click();
+  };
+
   const renderElementContent = () => {
     if (element.type === "text") {
       return (
@@ -255,47 +329,75 @@ export function TimelineElement({
   };
 
   return (
-    <div
-      className={`absolute top-0 h-full select-none timeline-element ${
-        isBeingDragged ? "z-50" : "z-10"
-      }`}
-      style={{
-        left: `${elementLeft}px`,
-        width: `${elementWidth}px`,
-      }}
-      onMouseMove={resizing ? handleResizeMove : undefined}
-      onMouseUp={resizing ? handleResizeEnd : undefined}
-      onMouseLeave={resizing ? handleResizeEnd : undefined}
-    >
-      <div
-        className={`relative h-full rounded-[0.15rem] cursor-pointer overflow-hidden ${getTrackElementClasses(
-          track.type
-        )} ${isSelected ? "border-b-[0.5px] border-t-[0.5px] border-foreground" : ""} ${
-          isBeingDragged ? "z-50" : "z-10"
-        }`}
-        onClick={(e) => onElementClick && onElementClick(e, element)}
-        onMouseDown={handleElementMouseDown}
-        onContextMenu={(e) =>
-          onElementMouseDown && onElementMouseDown(e, element)
-        }
-      >
-        <div className="absolute inset-0 flex items-center h-full">
-          {renderElementContent()}
-        </div>
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <div
+          className={`absolute top-0 h-full select-none timeline-element ${
+            isBeingDragged ? "z-50" : "z-10"
+          }`}
+          style={{
+            left: `${elementLeft}px`,
+            width: `${elementWidth}px`,
+          }}
+          onMouseMove={resizing ? handleResizeMove : undefined}
+          onMouseUp={resizing ? handleResizeEnd : undefined}
+          onMouseLeave={resizing ? handleResizeEnd : undefined}
+        >
+          <div
+            className={`relative h-full rounded-[0.15rem] cursor-pointer overflow-hidden ${getTrackElementClasses(
+              track.type
+            )} ${isSelected ? "border-b-[0.5px] border-t-[0.5px] border-foreground" : ""} ${
+              isBeingDragged ? "z-50" : "z-10"
+            }`}
+            onClick={(e) => onElementClick && onElementClick(e, element)}
+            onMouseDown={handleElementMouseDown}
+            onContextMenu={(e) =>
+              onElementMouseDown && onElementMouseDown(e, element)
+            }
+          >
+            <div className="absolute inset-0 flex items-center h-full">
+              {renderElementContent()}
+            </div>
 
-        {isSelected && (
-          <>
-            <div
-              className="absolute left-0 top-0 bottom-0 w-1 cursor-w-resize bg-foreground z-50"
-              onMouseDown={(e) => handleResizeStart(e, element.id, "left")}
-            />
-            <div
-              className="absolute right-0 top-0 bottom-0 w-1 cursor-e-resize bg-foreground z-50"
-              onMouseDown={(e) => handleResizeStart(e, element.id, "right")}
-            />
-          </>
+            {isSelected && (
+              <>
+                <div
+                  className="absolute left-0 top-0 bottom-0 w-1 cursor-w-resize bg-foreground z-50"
+                  onMouseDown={(e) => handleResizeStart(e, element.id, "left")}
+                />
+                <div
+                  className="absolute right-0 top-0 bottom-0 w-1 cursor-e-resize bg-foreground z-50"
+                  onMouseDown={(e) => handleResizeStart(e, element.id, "right")}
+                />
+              </>
+            )}
+          </div>
+        </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem onClick={handleElementSplitContext}>
+          <Scissors className="h-4 w-4 mr-2" />
+          Split at playhead
+        </ContextMenuItem>
+        <ContextMenuItem onClick={handleElementDuplicateContext}>
+          <Copy className="h-4 w-4 mr-2" />
+          Duplicate {element.type === "text" ? "text" : "clip"}
+        </ContextMenuItem>
+        {element.type === "media" && (
+          <ContextMenuItem onClick={handleReplaceClip}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Replace clip
+          </ContextMenuItem>
         )}
-      </div>
-    </div>
+        <ContextMenuSeparator />
+        <ContextMenuItem
+          onClick={handleElementDeleteContext}
+          className="text-destructive focus:text-destructive"
+        >
+          <Trash2 className="h-4 w-4 mr-2" />
+          Delete {element.type === "text" ? "text" : "clip"}
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 }

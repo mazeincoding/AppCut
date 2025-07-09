@@ -30,14 +30,14 @@ export function EditorHeader() {
   );
 
   const centerContent = (
-    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+    <div className="flex items-center gap-2 text-xs">
       <span>{formatTimeCode(getTotalDuration(), "HH:MM:SS:CS")}</span>
     </div>
   );
 
   const rightContent = (
     <nav className="flex items-center gap-2">
-      <Button size="sm" variant="primary" onClick={handleExport}>
+      <Button size="sm" variant="primary" className="h-7 text-xs" onClick={handleExport}>
         <Download className="h-4 w-4" />
         <span className="text-sm">Export</span>
       </Button>
@@ -49,7 +49,7 @@ export function EditorHeader() {
       leftContent={leftContent}
       centerContent={centerContent}
       rightContent={rightContent}
-      className="bg-background border-b"
+      className="bg-background h-[3.2rem] px-4"
     />
   );
 }
