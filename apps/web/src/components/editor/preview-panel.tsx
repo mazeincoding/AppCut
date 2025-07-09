@@ -233,8 +233,9 @@ export function PreviewPanel() {
     <div className="h-full w-full flex flex-col min-h-0 min-w-0">
       <div
         ref={containerRef}
-        className="flex-1 flex flex-col items-center justify-center p-3 min-h-0 min-w-0 gap-4"
+        className="flex-1 flex flex-col items-start justify-center p-3 min-h-0 min-w-0"
       >
+        <div className="flex-1"></div>
         {hasAnyElements ? (
           <div
             ref={previewRef}
