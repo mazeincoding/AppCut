@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "destination": "https://opencut.app/why-not-capcut",
+      "permanent": true
+    }
+  ]
+}
