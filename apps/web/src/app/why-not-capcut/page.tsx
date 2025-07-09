@@ -2,7 +2,7 @@ import { Header } from "@/components/header";
 
 export default function WhyNotCapcut() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background px-5">
       <Header />
 
       <main className="relative mt-12">
