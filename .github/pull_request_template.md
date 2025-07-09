@@ -20,13 +20,25 @@ Please delete options that are not relevant.
 
 Please describe the tests that you ran to verify your changes. Provide instructions so we can reproduce. Please also list any relevant details for your test configuration
 
-- [ ] Test A
-- [ ] Test B
+**Manual Testing:**
+- [ ] Tested in development environment
+- [ ] Tested video upload functionality (if applicable)
+- [ ] Tested timeline interactions (if applicable)
+- [ ] Tested export functionality (if applicable)
+- [ ] Cross-browser testing completed
+
+**Automated Testing:**
+- [ ] Unit tests written and passing
+- [ ] Integration tests written and passing
+- [ ] Existing tests still pass
+- [ ] Test coverage maintained or improved
 
 **Test Configuration**:
+* Bun version:
 * Node version:
-* Browser (if applicable):
+* Browser(s) tested:
 * Operating System:
+* Video formats tested (if applicable):
 
 ## Screenshots (if applicable)
 

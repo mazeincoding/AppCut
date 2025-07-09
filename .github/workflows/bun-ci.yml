@@ -49,5 +49,12 @@ jobs:
 
       - name: Run tests
         working-directory: apps/web
-        run: echo "No tests implemented yet"
+        run: |
+          if [ -f "package.json" ] && grep -q '"test"' package.json; then
+            echo "Running tests..."
+            bun test
+          else
+            echo "No tests implemented yet - setting up testing framework is in progress"
+            echo "See CONTRIBUTING.md for testing guidelines"
+          fi
         continue-on-error: true
