@@ -188,6 +188,8 @@ If you want to contribute tests, here's how to set up the testing environment:
      test: {
        environment: 'jsdom',
        setupFiles: ['./src/test/setup.ts'],
+       globals: true,
+       css: true,
      },
      resolve: {
        alias: {
