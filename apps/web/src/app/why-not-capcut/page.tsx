@@ -164,20 +164,22 @@ export default function WhyNotCapcut() {
 
               <div>
                 <h2 className="text-3xl font-bold mb-6">
-                  Yes, this is why we're building our own
+                  Yes, this is fucking satire, you fuck
                 </h2>
                 <p className="text-lg mb-6">
-                  We're not actually saying all video editors should be basic as
-                  shit. What we're saying is that all the problems we have with
+                  I'm not actually saying all video editors should be basic as
+                  shit. What I'm saying is that all the problems we have with
                   video editing apps are{" "}
                   <strong>ones they create themselves</strong>. Video editors
                   aren't broken by default - they edit videos, export them, and
-                  let you use basic features. CapCut breaks them. They turn them
-                  into payment processors with video editing as a side feature.
+                  let you use basic features without constantly begging for
+                  money. CapCut breaks them. They turn them into payment
+                  processors with video editing as a side feature.
                 </p>
                 <p className="text-lg">
                   <em>"Good software gets out of your way."</em>
-                  <br />- Some smart motherfucker who wasn't working at CapCut
+                  <br />- Some smart motherfucker who definitely wasn't working
+                  at CapCut
                 </p>
               </div>
             </div>
