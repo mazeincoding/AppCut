@@ -172,7 +172,7 @@ If you want to contribute tests, here's how to set up the testing environment:
 
    ```bash
    cd apps/web
-   bun add -d vitest @testing-library/react @testing-library/jest-dom @testing-library/user-event jsdom
+   bun add -d vitest @testing-library/react @testing-library/jest-dom @testing-library/user-event jsdom @vitejs/plugin-react
    ```
 
 2. **Create test configuration files:**
