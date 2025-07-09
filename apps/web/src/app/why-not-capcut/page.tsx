@@ -18,7 +18,7 @@ export default function WhyNotCapcut() {
                 Fuck CapCut
               </h1>
               <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
-                And it's fucking terrible.
+                Roasting time, so get ready motherfucker.
               </p>
             </div>
 
