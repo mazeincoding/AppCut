@@ -7,9 +7,10 @@
  */
 
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '../utils'
+import { render, screen, waitFor } from '../utils'
 import userEvent from '@testing-library/user-event'
 import { Button } from '../../components/ui/button'
+import { useState } from 'react'
 
 describe('Button Component', () => {
   it('renders with correct text', () => {
@@ -135,34 +136,108 @@ describe('Video Editor Button Integration', () => {
 describe('Video Processing Button', () => {
   it('shows loading state during video export', async () => {
     const user = userEvent.setup()
-    let isExporting = false
-    
-    const ExportButton = () => (
-      <Button 
-        disabled={isExporting}
-        onClick={async () => {
-          isExporting = true
+
+    const ExportButton = () => {
+      const [isExporting, setIsExporting] = useState(false)
+
+      const handleExport = async () => {
+        setIsExporting(true)
+        try {
           // Simulate video export
           await new Promise(resolve => setTimeout(resolve, 100))
-          isExporting = false
-        }}
-      >
-        {isExporting ? 'Exporting...' : 'Export Video'}
-      </Button>
-    )
-    
-    const { rerender } = render(<ExportButton />)
-    
+        } finally {
+          setIsExporting(false)
+        }
+      }
+
+      return (
+        <Button
+          disabled={isExporting}
+          onClick={handleExport}
+        >
+          {isExporting ? 'Exporting...' : 'Export Video'}
+        </Button>
+      )
+    }
+
+    render(<ExportButton />)
+
     // Initially shows Export Video
     expect(screen.getByRole('button', { name: /export video/i })).toBeInTheDocument()
     expect(screen.getByRole('button')).not.toBeDisabled()
-    
+
     // Click to start export
     await user.click(screen.getByRole('button'))
-    rerender(<ExportButton />)
-    
-    // Shows loading state
-    expect(screen.getByRole('button', { name: /exporting/i })).toBeInTheDocument()
+
+    // Wait for loading state to appear
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /exporting/i })).toBeInTheDocument()
+    })
     expect(screen.getByRole('button')).toBeDisabled()
+
+    // Wait for export to complete
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /export video/i })).toBeInTheDocument()
+    })
+    expect(screen.getByRole('button')).not.toBeDisabled()
+  })
+
+  it('handles export errors gracefully', async () => {
+    const user = userEvent.setup()
+    const mockConsoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const ExportButton = () => {
+      const [isExporting, setIsExporting] = useState(false)
+      const [error, setError] = useState<string | null>(null)
+
+      const handleExport = async () => {
+        setIsExporting(true)
+        setError(null)
+        try {
+          // Simulate export failure
+          await new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Export failed')), 50)
+          )
+        } catch (err) {
+          setError('Export failed')
+          console.error('Export error:', err)
+        } finally {
+          setIsExporting(false)
+        }
+      }
+
+      return (
+        <div>
+          <Button
+            disabled={isExporting}
+            onClick={handleExport}
+          >
+            {isExporting ? 'Exporting...' : 'Export Video'}
+          </Button>
+          {error && <div role="alert">{error}</div>}
+        </div>
+      )
+    }
+
+    render(<ExportButton />)
+
+    // Click to start export
+    await user.click(screen.getByRole('button', { name: /export video/i }))
+
+    // Wait for loading state
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /exporting/i })).toBeInTheDocument()
+    })
+
+    // Wait for error to appear
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent('Export failed')
+    })
+
+    // Button should be enabled again
+    expect(screen.getByRole('button', { name: /export video/i })).toBeInTheDocument()
+    expect(screen.getByRole('button')).not.toBeDisabled()
+
+    mockConsoleError.mockRestore()
   })
 })
