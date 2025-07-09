@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { randomUUID } from "crypto";
+import { v4 as uuidv4 } from "uuid";
 
 export function TextView() {
   const [text, setText] = useState<string>("Default text");
@@ -40,7 +40,7 @@ export function TextView() {
                 </div>
               }
               dragData={{
-                id: randomUUID(),
+                id: uuidv4(),
                 type: "text",
                 name: text,
                 content: text,
