@@ -39,7 +39,7 @@ export function useSignUp() {
                 provider: "google",
             });
 
-            router.push("/editor");
+            router.push("/projects");
         } catch (error) {
             setError("Failed to sign up with Google. Please try again.");
             setIsGoogleLoading(false);
