@@ -8,6 +8,14 @@ import { useTimelineStore } from "@/stores/timeline-store";
 import { Input } from "../ui/input";
 import { MediaElement, TextElement } from "@/types/timeline";
 import { useMediaStore } from "@/stores/media-store";
+import { Bold, Italic, Underline } from "lucide-react";
+import { Button } from "../ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 
 export function PropertiesPanel() {
   const { activeProject } = useProjectStore();
@@ -30,17 +38,131 @@ export function PropertiesPanel() {
     </div>
   );
 
-  const TextProperties = (element: TextElement, trackId: string) => (
-    <div className="space-y-4 p-5">
-      <Input
-        placeholder="Name"
-        defaultValue={element.content}
-        onChange={(e) =>
-          updateTextElement(trackId, element.id, { content: e.target.value })
-        }
-      />
-    </div>
-  );
+  const TextProperties = (element: TextElement, trackId: string) => {
+    return (
+      <div className="space-y-4 p-5">
+        <div>
+          <Label>Content</Label>
+          <Input
+            placeholder="Name"
+            defaultValue={element.content}
+            onChange={(e) =>
+              updateTextElement(trackId, element.id, { content: e.target.value })
+            }
+          />
+        </div>
+        <div>
+          <Label>Font</Label>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="w-full">
+                {element.fontFamily}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem
+                onClick={() =>
+                  updateTextElement(trackId, element.id, { fontFamily: "Arial" })
+                }
+              >
+                Arial
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  updateTextElement(trackId, element.id, {
+                    fontFamily: "Helvetica",
+                  })
+                }
+              >
+                Helvetica
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  updateTextElement(trackId, element.id, {
+                    fontFamily: "Times New Roman",
+                  })
+                }
+              >
+                Times New Roman
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
+            <Label>Size</Label>
+            <Input
+              type="number"
+              value={element.fontSize}
+              onChange={(e) =>
+                updateTextElement(trackId, element.id, {
+                  fontSize: parseInt(e.target.value),
+                })
+              }
+              className="w-full"
+            />
+          </div>
+          <div className="flex-1">
+            <Label>Color</Label>
+            <input
+              type="color"
+              value={element.color}
+              onChange={(e) =>
+                updateTextElement(trackId, element.id, {
+                  color: e.target.value,
+                })
+              }
+              className="w-full h-9"
+            />
+          </div>
+        </div>
+        <div>
+          <Label>Style</Label>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={element.fontWeight === "bold" ? "secondary" : "outline"}
+              size="icon"
+              onClick={() =>
+                updateTextElement(trackId, element.id, {
+                  fontWeight: element.fontWeight === "bold" ? "normal" : "bold",
+                })
+              }
+            >
+              <Bold />
+            </Button>
+            <Button
+              variant={element.fontStyle === "italic" ? "secondary" : "outline"}
+              size="icon"
+              onClick={() =>
+                updateTextElement(trackId, element.id, {
+                  fontStyle:
+                    element.fontStyle === "italic" ? "normal" : "italic",
+                })
+              }
+            >
+              <Italic />
+            </Button>
+            <Button
+              variant={
+                element.textDecoration === "underline" ? "secondary" : "outline"
+              }
+              size="icon"
+              onClick={() =>
+                updateTextElement(trackId, element.id, {
+                  textDecoration:
+                    element.textDecoration === "underline"
+                      ? "none"
+                      : "underline",
+                })
+              }
+            >
+              <Underline />
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const MediaProperties = (element: MediaElement) => {
     const mediaItem = mediaItems.find((item) => item.id === element.mediaId);
