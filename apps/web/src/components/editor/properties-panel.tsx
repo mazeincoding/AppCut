@@ -42,7 +42,7 @@ export function PropertiesPanel() {
     return (
       <div className="space-y-4 p-5">
         <div>
-          <Label>Content</Label>
+          <PropertyItem label="Content" value="" />
           <Input
             placeholder="Name"
             defaultValue={element.content}
@@ -52,7 +52,7 @@ export function PropertiesPanel() {
           />
         </div>
         <div>
-          <Label>Font</Label>
+          <PropertyItem label="Font" value={element.fontFamily} />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="w-full">
@@ -90,7 +90,7 @@ export function PropertiesPanel() {
         </div>
         <div className="flex items-center gap-4">
           <div className="flex-1">
-            <Label>Size</Label>
+            <PropertyItem label="Size" value={element.fontSize.toString()} />
             <Input
               type="number"
               value={element.fontSize}
@@ -103,7 +103,7 @@ export function PropertiesPanel() {
             />
           </div>
           <div className="flex-1">
-            <Label>Color</Label>
+            <PropertyItem label="Color" value={element.color} />
             <input
               type="color"
               value={element.color}
@@ -117,7 +117,7 @@ export function PropertiesPanel() {
           </div>
         </div>
         <div>
-          <Label>Style</Label>
+          <PropertyItem label="Style" value="" />
           <div className="flex items-center gap-2">
             <Button
               variant={element.fontWeight === "bold" ? "secondary" : "outline"}
