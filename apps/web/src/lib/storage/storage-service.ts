@@ -124,7 +124,6 @@ class StorageService {
       width: mediaItem.width,
       height: mediaItem.height,
       duration: mediaItem.duration,
-      thumbnailData: mediaItem.thumbnailUrl, // Store the thumbnail data URL
     };
 
     await mediaMetadataAdapter.set(mediaItem.id, metadata);
@@ -156,7 +155,7 @@ class StorageService {
       width: metadata.width,
       height: metadata.height,
       duration: metadata.duration,
-      thumbnailUrl: metadata.thumbnailData, // Restore the thumbnail data URL
+      // thumbnailUrl would need to be regenerated or cached separately
     };
   }
 
