@@ -18,6 +18,8 @@ export interface MediaFileData {
   width?: number;
   height?: number;
   duration?: number;
+  // Thumbnail data for persistence across reloads
+  thumbnailData?: string; // Base64 data URL for the thumbnail
   // File will be stored separately in OPFS
 }
 

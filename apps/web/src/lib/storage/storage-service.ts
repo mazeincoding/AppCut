@@ -2,7 +2,7 @@ import { TProject } from "@/types/project";
 import { MediaItem } from "@/stores/media-store";
 import { IndexedDBAdapter } from "./indexeddb-adapter";
 import { OPFSAdapter } from "./opfs-adapter";
-import { SafariFileAdapter } from "./file-adapter";
+
 import {
   MediaFileData,
   StorageConfig,
@@ -38,10 +38,11 @@ class StorageService {
       this.config.version
     );
 
-    // Use Safari-compatible file adapter if needed, otherwise use OPFS
-    const mediaFilesAdapter = SafariFileAdapter.shouldUse() 
-      ? new SafariFileAdapter(`media-files-${projectId}`, "files", this.config.version)
-      : new OPFSAdapter(`media-files-${projectId}`);
+    // Use IndexedDB for Safari or when OPFS is not supported, otherwise use OPFS
+    const hasOPFS = 'storage' in navigator && 'getDirectory' in navigator.storage;
+    const mediaFilesAdapter = hasOPFS && !this.isSafari()
+      ? new OPFSAdapter(`media-files-${projectId}`)
+      : new IndexedDBAdapter<File>(`media-files-${projectId}`, "files", this.config.version);
 
     return { mediaMetadataAdapter, mediaFilesAdapter };
   }
@@ -110,7 +111,7 @@ class StorageService {
     const { mediaMetadataAdapter, mediaFilesAdapter } =
       this.getProjectMediaAdapters(projectId);
 
-    // Save file to project-specific OPFS
+    // Save file to project-specific storage
     await mediaFilesAdapter.set(mediaItem.id, mediaItem.file);
 
     // Save metadata to project-specific IndexedDB
@@ -123,6 +124,7 @@ class StorageService {
       width: mediaItem.width,
       height: mediaItem.height,
       duration: mediaItem.duration,
+      thumbnailData: mediaItem.thumbnailUrl, // Store the thumbnail data URL
     };
 
     await mediaMetadataAdapter.set(mediaItem.id, metadata);
@@ -154,7 +156,7 @@ class StorageService {
       width: metadata.width,
       height: metadata.height,
       duration: metadata.duration,
-      // thumbnailUrl would need to be regenerated or cached separately
+      thumbnailUrl: metadata.thumbnailData, // Restore the thumbnail data URL
     };
   }
 
@@ -259,6 +261,10 @@ class StorageService {
   }
 
   // Check browser support
+  isSafari(): boolean {
+    return navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome');
+  }
+
   isOPFSSupported(): boolean {
     return OPFSAdapter.isSupported();
   }
