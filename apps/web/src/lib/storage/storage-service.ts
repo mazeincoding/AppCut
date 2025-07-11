@@ -2,6 +2,7 @@ import { TProject } from "@/types/project";
 import { MediaItem } from "@/stores/media-store";
 import { IndexedDBAdapter } from "./indexeddb-adapter";
 import { OPFSAdapter } from "./opfs-adapter";
+import { SafariFileAdapter } from "./file-adapter";
 import {
   MediaFileData,
   StorageConfig,
@@ -37,7 +38,10 @@ class StorageService {
       this.config.version
     );
 
-    const mediaFilesAdapter = new OPFSAdapter(`media-files-${projectId}`);
+    // Use Safari-compatible file adapter if needed, otherwise use OPFS
+    const mediaFilesAdapter = SafariFileAdapter.shouldUse() 
+      ? new SafariFileAdapter(`${this.config.mediaDb}-${projectId}-files`, "files", this.config.version)
+      : new OPFSAdapter(`media-files-${projectId}`);
 
     return { mediaMetadataAdapter, mediaFilesAdapter };
   }
