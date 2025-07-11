@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { storageService } from "@/lib/storage/storage-service";
-import { useTimelineStore } from "./timeline-store";
 
 export type MediaType = "image" | "video" | "audio";
 
@@ -61,7 +60,7 @@ export const getImageDimensions = (
 ): Promise<{ width: number; height: number }> => {
   return new Promise((resolve, reject) => {
     // Check if this is Safari
-    const isSafari = navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome');
+    const isSafari = storageService.isSafari();
     
     if (isSafari) {
       // Use FileReader with base64 data URL for Safari compatibility
@@ -371,7 +370,7 @@ export const getMediaDuration = (file: File): Promise<number> => {
       });
       
       element.addEventListener("error", () => {
-        reject(new Error("Could not load media"));
+        resolve(0); // Return default duration on error
         URL.revokeObjectURL(objectUrl);
         element.remove();
       });
