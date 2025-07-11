@@ -40,7 +40,7 @@ class StorageService {
 
     // Use Safari-compatible file adapter if needed, otherwise use OPFS
     const mediaFilesAdapter = SafariFileAdapter.shouldUse() 
-      ? new SafariFileAdapter(`${this.config.mediaDb}-${projectId}-files`, "files", this.config.version)
+      ? new SafariFileAdapter(`media-files-${projectId}`, "files", this.config.version)
       : new OPFSAdapter(`media-files-${projectId}`);
 
     return { mediaMetadataAdapter, mediaFilesAdapter };
