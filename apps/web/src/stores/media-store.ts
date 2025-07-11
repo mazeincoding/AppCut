@@ -127,7 +127,7 @@ export const generateVideoThumbnail = (
 ): Promise<{ thumbnailUrl: string; width: number; height: number }> => {
   return new Promise((resolve, reject) => {
     // Check if this is Safari
-    const isSafari = navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome');
+    const isSafari = storageService.isSafari();
     
     if (isSafari) {
       // Use FileReader with base64 data URL for Safari compatibility
@@ -294,7 +294,7 @@ export const generateVideoThumbnail = (
 export const getMediaDuration = (file: File): Promise<number> => {
   return new Promise((resolve, reject) => {
     // Check if this is Safari
-    const isSafari = navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome');
+    const isSafari = storageService.isSafari();
     
     if (isSafari) {
       // Use FileReader with base64 data URL for Safari compatibility
