@@ -1,7 +1,7 @@
 {
   "name": "@opencut/db",
   "version": "0.0.0",
-  "description": "Database package for OpenCut",
+  "description": "Database package for PeachyCut",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {

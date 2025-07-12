@@ -1,6 +1,6 @@
 name: Feature request
-description: Suggest an idea for OpenCut
-title: '[FEATURE] '
+description: Suggest an idea for PeachyCut
+title: "[FEATURE] "
 labels: enhancement
 body:
   - type: markdown

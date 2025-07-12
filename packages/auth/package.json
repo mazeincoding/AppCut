@@ -1,7 +1,7 @@
 {
   "name": "@opencut/auth",
   "version": "0.0.0",
-  "description": "Authentication package for OpenCut",
+  "description": "Authentication package for PeachyCut",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
@@ -16,4 +16,4 @@
   "devDependencies": {
     "@types/node": "^22.10.2"
   }
-} 
+}

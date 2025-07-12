@@ -15,6 +15,13 @@
       "when": 1750689835736,
       "tag": "0001_tricky_jackpot",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1752335627121,
+      "tag": "0002_sweet_sabra",
+      "breakpoints": true
     }
   ]
 }

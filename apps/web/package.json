@@ -1,5 +1,5 @@
 {
-  "name": "opencut",
+  "name": "peachycut",
   "version": "0.1.0",
   "private": true,
   "packageManager": "bun@1.2.17",
@@ -22,7 +22,7 @@
     "@opencut/auth": "workspace:*",
     "@opencut/db": "workspace:*",
     "@upstash/ratelimit": "^2.0.5",
-    "@upstash/redis": "^1.35.0",
+    "@upstash/redis": "^1.35.1",
     "@vercel/analytics": "^1.4.1",
     "better-auth": "^1.2.7",
     "class-variance-authority": "^0.7.1",
