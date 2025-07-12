@@ -35,19 +35,79 @@ export class IndexedDBAdapter<T> implements StorageAdapter<T> {
     return new Promise((resolve, reject) => {
       const request = store.get(key);
       request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve(request.result || null);
+      request.onsuccess = () => {
+        const result = request.result;
+        if (!result) {
+          resolve(null);
+          return;
+        }
+        
+        // If this looks like a stored File object, reconstruct it
+        if (result.buffer && result.name && result.type) {
+          try {
+            const file = new File([result.buffer], result.name, {
+              type: result.type,
+              lastModified: result.lastModified
+            });
+            resolve(file as T);
+          } catch (error) {
+            reject(error);
+          }
+        } else {
+          resolve(result);
+        }
+      };
     });
   }
 
   async set(key: string, value: T): Promise<void> {
+    let dataToStore: any;
+    
+    // Handle File objects specially for Safari compatibility
+    // Convert File to ArrayBuffer BEFORE creating the transaction
+    // This prevents the transaction from timing out during the async operation
+    if (value instanceof File) {
+      try {
+        const buffer = await value.arrayBuffer();
+        dataToStore = {
+          id: key,
+          name: value.name,
+          type: value.type,
+          size: value.size,
+          lastModified: value.lastModified,
+          buffer: buffer
+        };
+      } catch (error) {
+        throw error;
+      }
+    } else {
+      dataToStore = { id: key, ...value };
+    }
+
+    // Now create the transaction and store the data immediately
     const db = await this.getDB();
     const transaction = db.transaction([this.storeName], "readwrite");
     const store = transaction.objectStore(this.storeName);
 
     return new Promise((resolve, reject) => {
-      const request = store.put({ id: key, ...value });
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve();
+      // Add transaction error handlers
+      transaction.onerror = () => {
+        reject(transaction.error);
+      };
+
+      transaction.onabort = () => {
+        reject(new Error("Transaction was aborted"));
+      };
+
+      const request = store.put(dataToStore);
+      
+      request.onerror = () => {
+        reject(request.error);
+      };
+      
+      request.onsuccess = () => {
+        resolve();
+      };
     });
   }
 

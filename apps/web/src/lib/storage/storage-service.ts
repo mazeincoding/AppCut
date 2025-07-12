@@ -2,6 +2,7 @@ import { TProject } from "@/types/project";
 import { MediaItem } from "@/stores/media-store";
 import { IndexedDBAdapter } from "./indexeddb-adapter";
 import { OPFSAdapter } from "./opfs-adapter";
+
 import {
   MediaFileData,
   StorageConfig,
@@ -37,7 +38,11 @@ class StorageService {
       this.config.version
     );
 
-    const mediaFilesAdapter = new OPFSAdapter(`media-files-${projectId}`);
+    // Use IndexedDB for Safari or when OPFS is not supported, otherwise use OPFS
+    const hasOPFS = 'storage' in navigator && 'getDirectory' in navigator.storage;
+    const mediaFilesAdapter = hasOPFS && !this.isSafari()
+      ? new OPFSAdapter(`media-files-${projectId}`)
+      : new IndexedDBAdapter<File>(`media-files-${projectId}`, "files", this.config.version);
 
     return { mediaMetadataAdapter, mediaFilesAdapter };
   }
@@ -112,7 +117,7 @@ class StorageService {
     const { mediaMetadataAdapter, mediaFilesAdapter } =
       this.getProjectMediaAdapters(projectId);
 
-    // Save file to project-specific OPFS
+    // Save file to project-specific storage
     await mediaFilesAdapter.set(mediaItem.id, mediaItem.file);
 
     // Save metadata to project-specific IndexedDB
@@ -261,6 +266,10 @@ class StorageService {
   }
 
   // Check browser support
+  isSafari(): boolean {
+    return navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome');
+  }
+
   isOPFSSupported(): boolean {
     return OPFSAdapter.isSupported();
   }
