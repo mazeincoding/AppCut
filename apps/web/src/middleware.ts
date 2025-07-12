@@ -3,7 +3,6 @@ import type { NextRequest } from "next/server";
 import createMiddleware from 'next-intl/middleware';
 import { routing } from './i18n/routing';
 
-// 创建 next-intl 中间件
 const handleI18nRouting = createMiddleware(routing);
 
 export async function middleware(request: NextRequest) {
