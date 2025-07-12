@@ -28,6 +28,7 @@ import { useProjectStore } from "@/stores/project-store";
 import { useRouter } from "next/navigation";
 import { DeleteProjectDialog } from "@/components/delete-project-dialog";
 import { RenameProjectDialog } from "@/components/rename-project-dialog";
+import CreateProjectDialog from "@/components/create-project-dialog";
 
 export default function ProjectsPage() {
   const {
@@ -44,8 +45,8 @@ export default function ProjectsPage() {
   );
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
 
-  const handleCreateProject = async () => {
-    const projectId = await createNewProject("New Project");
+  const handleCreateProject = async (projectName: string) => {
+    const projectId = await createNewProject(projectName);
     console.log("projectId", projectId);
     router.push(`/editor/${projectId}`);
   };
@@ -120,7 +121,7 @@ export default function ProjectsPage() {
               )}
             </div>
           ) : (
-            <CreateButton onClick={handleCreateProject} />
+            <CreateProjectDialog onCreateProject={handleCreateProject} />
           )}
         </div>
       </div>
@@ -166,7 +167,7 @@ export default function ProjectsPage() {
                 >
                   Select Projects
                 </Button>
-                <CreateButton onClick={handleCreateProject} />
+                <CreateProjectDialog onCreateProject={handleCreateProject} />
               </div>
             )}
           </div>
@@ -204,7 +205,7 @@ export default function ProjectsPage() {
             <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
           </div>
         ) : savedProjects.length === 0 ? (
-          <NoProjects onCreateProject={handleCreateProject} />
+          <NoProjects onCreateProject={() => handleCreateProject("New Project")} />
         ) : (
           <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
             {savedProjects.map((project) => (
@@ -282,16 +283,14 @@ function ProjectCard({
       {isSelectionMode ? (
         <div onClick={handleCardClick} className="block group cursor-pointer">
           <Card
-            className={`overflow-hidden bg-background border-none p-0 transition-all ${
-              isSelectionMode && isSelected ? "ring-2 ring-primary" : ""
-            }`}
+            className={`overflow-hidden bg-background border-none p-0 transition-all ${isSelectionMode && isSelected ? "ring-2 ring-primary" : ""
+              }`}
           >
             <div
-              className={`relative aspect-square bg-muted transition-opacity ${
-                isDropdownOpen
-                  ? "opacity-65"
-                  : "opacity-100 group-hover:opacity-65"
-              }`}
+              className={`relative aspect-square bg-muted transition-opacity ${isDropdownOpen
+                ? "opacity-65"
+                : "opacity-100 group-hover:opacity-65"
+                }`}
             >
               {/* Selection checkbox */}
               {isSelectionMode && (
@@ -340,11 +339,10 @@ function ProjectCard({
                       <Button
                         variant="text"
                         size="sm"
-                        className={`size-6 p-0 transition-all shrink-0 ml-2 ${
-                          isDropdownOpen
-                            ? "opacity-100"
-                            : "opacity-0 group-hover:opacity-100"
-                        }`}
+                        className={`size-6 p-0 transition-all shrink-0 ml-2 ${isDropdownOpen
+                          ? "opacity-100"
+                          : "opacity-0 group-hover:opacity-100"
+                          }`}
                         onClick={(e) => e.preventDefault()}
                       >
                         <MoreHorizontal />
@@ -405,16 +403,14 @@ function ProjectCard({
       ) : (
         <Link href={`/editor/${project.id}`} className="block group">
           <Card
-            className={`overflow-hidden bg-background border-none p-0 transition-all ${
-              isSelectionMode && isSelected ? "ring-2 ring-primary" : ""
-            }`}
+            className={`overflow-hidden bg-background border-none p-0 transition-all ${isSelectionMode && isSelected ? "ring-2 ring-primary" : ""
+              }`}
           >
             <div
-              className={`relative aspect-square bg-muted transition-opacity ${
-                isDropdownOpen
-                  ? "opacity-65"
-                  : "opacity-100 group-hover:opacity-65"
-              }`}
+              className={`relative aspect-square bg-muted transition-opacity ${isDropdownOpen
+                ? "opacity-65"
+                : "opacity-100 group-hover:opacity-65"
+                }`}
             >
               {/* Thumbnail preview or placeholder */}
               <div className="absolute inset-0">
@@ -446,11 +442,10 @@ function ProjectCard({
                     <Button
                       variant="text"
                       size="sm"
-                      className={`size-6 p-0 transition-all shrink-0 ml-2 ${
-                        isDropdownOpen
-                          ? "opacity-100"
-                          : "opacity-0 group-hover:opacity-100"
-                      }`}
+                      className={`size-6 p-0 transition-all shrink-0 ml-2 ${isDropdownOpen
+                        ? "opacity-100"
+                        : "opacity-0 group-hover:opacity-100"
+                        }`}
                       onClick={(e) => e.preventDefault()}
                     >
                       <MoreHorizontal />
@@ -523,14 +518,7 @@ function ProjectCard({
   );
 }
 
-function CreateButton({ onClick }: { onClick?: () => void }) {
-  return (
-    <Button className="flex" onClick={onClick}>
-      <Plus className="!size-4" />
-      <span className="text-sm font-medium">New project</span>
-    </Button>
-  );
-}
+
 
 function NoProjects({ onCreateProject }: { onCreateProject: () => void }) {
   return (
