@@ -36,6 +36,7 @@ import { useTimelineZoom } from "@/hooks/use-timeline-zoom";
 import { processMediaFiles } from "@/lib/media-processing";
 import { toast } from "sonner";
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import {
   Select,
   SelectContent,
@@ -59,6 +60,8 @@ import {
 } from "@/constants/timeline-constants";
 
 export function Timeline() {
+  const t = useTranslations('editor');
+  
   // Timeline shows all tracks (video, audio, effects) and their elements.
   // You can drag media here to add it to your project.
   // elements can be trimmed, deleted, and moved.
@@ -369,7 +372,7 @@ export function Timeline() {
           addElementToTrack(newTrackId, {
             type: "text",
             name: dragData.name || "Text",
-            content: dragData.content || "Default Text",
+            content: dragData.content || t('defaultText'),
             duration: TIMELINE_CONSTANTS.DEFAULT_TEXT_DURATION,
             startTime: 0,
             trimStart: 0,
@@ -730,7 +733,7 @@ export function Timeline() {
                       addElementToTrack(trackId, {
                         type: "media",
                         mediaId: "test",
-                        name: "Test Clip",
+                        name: t('testClip'),
                         duration: TIMELINE_CONSTANTS.DEFAULT_TEXT_DURATION,
                         startTime: 0,
                         trimStart: 0,
@@ -813,7 +816,7 @@ export function Timeline() {
                 <Trash2 className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Delete element (Delete)</TooltipContent>
+            <TooltipContent>{t('deleteElement')}</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </div>
@@ -872,7 +875,7 @@ export function Timeline() {
                     if (pixelsPerSecond >= 200) return 0.1; // Every 0.1s when very zoomed in
                     if (pixelsPerSecond >= 100) return 0.5; // Every 0.5s when zoomed in
                     if (pixelsPerSecond >= 50) return 1; // Every 1s at normal zoom
-                    if (pixelsPerSecond >= 25) return 2; // Every 2s when zoomed out
+                    if (pixelsPerSecond >= 25) return 2; // Every 2s when more zoomed out
                     if (pixelsPerSecond >= 12) return 5; // Every 5s when more zoomed out
                     if (pixelsPerSecond >= 6) return 10; // Every 10s when very zoomed out
                     return 30; // Every 30s when extremely zoomed out
@@ -1023,7 +1026,7 @@ export function Timeline() {
                           <ContextMenuItem
                             onClick={() => toggleTrackMute(track.id)}
                           >
-                            {track.muted ? "Unmute Track" : "Mute Track"}
+                            {track.muted ? t('unmuteTrack') : t('muteTrack')}
                           </ContextMenuItem>
                           <ContextMenuItem>
                             Track settings (soon)

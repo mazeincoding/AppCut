@@ -26,6 +26,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
+import { useTranslations } from "next-intl";
 
 interface TimelineToolbarProps {
   isPlaying: boolean;
@@ -58,6 +59,8 @@ export function TimelineToolbar({
   handleFreezeSelected,
   handleDeleteSelected,
 }: TimelineToolbarProps) {
+  const t = useTranslations("editor");
+
   return (
     <div className="border-b flex items-center px-2 py-1 gap-1">
       <TooltipProvider delayDuration={500}>
@@ -78,7 +81,7 @@ export function TimelineToolbar({
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            {isPlaying ? "Pause (Space)" : "Play (Space)"}
+            {isPlaying ? t("pause") : t("play")}
           </TooltipContent>
         </Tooltip>
 
@@ -105,7 +108,7 @@ export function TimelineToolbar({
                     const trackId = addTrack("media");
                     addClipToTrack(trackId, {
                       mediaId: "test",
-                      name: "Test Clip",
+                      name: t('testClip'),
                       duration: 5,
                       startTime: 0,
                       trimStart: 0,
@@ -188,7 +191,7 @@ export function TimelineToolbar({
               <Trash2 className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Delete clip (Delete)</TooltipContent>
+          <TooltipContent>{t('deleteClip')}</TooltipContent>
         </Tooltip>
 
         <div className="w-px h-6 bg-border mx-1" />

@@ -20,14 +20,15 @@ export function Hero({ signupCount }: HeroProps) {
   const { toast } = useToast();
   const t = useTranslations('home');
   const tCommon = useTranslations('common');
+  const tMessages = useTranslations('messages');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!email.trim()) {
       toast({
-        title: "Email required",
-        description: "Please enter your email address.",
+        title: tMessages('emailRequired'),
+        description: tMessages('emailRequiredDesc'),
         variant: "destructive",
       });
       return;
@@ -48,23 +49,23 @@ export function Hero({ signupCount }: HeroProps) {
 
       if (response.ok) {
         toast({
-          title: "Welcome to the waitlist! 🎉",
-          description: "You'll be notified when we launch.",
+          title: tMessages('welcomeWaitlist'),
+          description: tMessages('welcomeWaitlistDesc'),
         });
         setEmail("");
       } else {
         toast({
-          title: "Oops!",
+          title: tMessages('oops'),
           description:
             (data as { error: string }).error ||
-            "Something went wrong. Please try again.",
+            tMessages('somethingWrong'),
           variant: "destructive",
         });
       }
     } catch (error) {
       toast({
-        title: "Network error",
-        description: "Please check your connection and try again.",
+        title: tMessages('networkError'),
+        description: tMessages('networkErrorDesc'),
         variant: "destructive",
       });
     } finally {
@@ -126,7 +127,7 @@ export function Hero({ signupCount }: HeroProps) {
             <div className="relative w-full">
               <Input
                 type="email"
-                placeholder="Enter your email"
+                placeholder={t('emailPlaceholder')}
                 className="h-11 text-base flex-1"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -141,7 +142,7 @@ export function Hero({ signupCount }: HeroProps) {
               disabled={isSubmitting}
             >
               <span className="relative z-10">
-                {isSubmitting ? tCommon('loading') : "Join waitlist"}
+                {isSubmitting ? t('joinWaitlistLoading') : t('joinWaitlist')}
               </span>
               <ArrowRight className="relative z-10 ml-0.5 h-4 w-4 inline-block" />
             </Button>
@@ -156,7 +157,7 @@ export function Hero({ signupCount }: HeroProps) {
             className="mt-8 inline-flex items-center gap-2 text-sm text-muted-foreground justify-center"
           >
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span>{signupCount.toLocaleString()} people already joined</span>
+            <span>{t('peopleJoined', { count: signupCount.toLocaleString() })}</span>
           </motion.div>
         )}
       </motion.div>

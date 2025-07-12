@@ -21,21 +21,59 @@
     "settings": "设置"
   },
   "home": {
-    "title": "开源视频编辑器",
+    "title": "开源",
     "subtitle": "简单而强大的视频编辑器，能够完成工作。支持任何平台。",
     "getStarted": "开始使用",
-    "learnMore": "了解更多"
+    "learnMore": "了解更多",
+    "joinWaitlist": "加入等候名单",
+    "joinWaitlistLoading": "加入中...",
+    "emailPlaceholder": "输入您的邮箱",
+    "peopleJoined": "{count} 人已加入"
   },
   "editor": {
     "title": "视频编辑器",
     "newProject": "新建项目",
     "openProject": "打开项目",
     "export": "导出",
-    "import": "导入"
+    "import": "导入",
+    "deleteElement": "删除元素 (Delete)",
+    "deleteClip": "删除片段 (Delete)",
+    "defaultText": "默认文本",
+    "testClip": "测试片段",
+    "muteTrack": "静音轨道",
+    "unmuteTrack": "取消静音",
+    "properties": {
+      "audio": "音频属性",
+      "video": "视频属性",
+      "text": "文本属性"
+    }
   },
   "projects": {
     "title": "我的项目",
     "noProjects": "暂无项目",
-    "createFirst": "创建您的第一个项目"
+    "createFirst": "创建您的第一个项目",
+    "renameProject": "重命名项目",
+    "renameProjectDesc": "输入项目的新名称。",
+    "enterNewName": "输入新名称",
+    "rename": "重命名"
+  },
+  "messages": {
+    "emailRequired": "邮箱必填",
+    "emailRequiredDesc": "请输入您的邮箱地址。",
+    "welcomeWaitlist": "欢迎加入等候名单！🎉",
+    "welcomeWaitlistDesc": "我们发布时会通知您。",
+    "oops": "糟糕！",
+    "somethingWrong": "出了点问题。请重试。",
+    "networkError": "网络错误",
+    "networkErrorDesc": "请检查您的网络连接并重试。"
+  },
+  "footer": {
+    "description": "简单而强大的开源视频编辑器。适用于任何平台。",
+    "resources": "资源",
+    "company": "公司",
+    "privacyPolicy": "隐私政策",
+    "termsOfUse": "使用条款",
+    "about": "关于我们",
+    "copyright": "© 2025 OpenCut，保留所有权利"
   }
 }

@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 export function RenameProjectDialog({
   isOpen,
@@ -21,6 +22,8 @@ export function RenameProjectDialog({
   onConfirm: (name: string) => void;
   projectName: string;
 }) {
+  const t = useTranslations("projects");
+  const tCommon = useTranslations("common");
   const [name, setName] = useState(projectName);
 
   // Reset the name when dialog opens - this is better UX than syncing with every prop change
@@ -35,9 +38,9 @@ export function RenameProjectDialog({
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Rename Project</DialogTitle>
+          <DialogTitle>{t('renameProject')}</DialogTitle>
           <DialogDescription>
-            Enter a new name for your project.
+            {t('renameProjectDesc')}
           </DialogDescription>
         </DialogHeader>
 
@@ -50,7 +53,7 @@ export function RenameProjectDialog({
               onConfirm(name);
             }
           }}
-          placeholder="Enter a new name"
+          placeholder={t('enterNewName')}
           className="mt-4"
         />
 
@@ -63,9 +66,9 @@ export function RenameProjectDialog({
               onOpenChange(false);
             }}
           >
-            Cancel
+            {tCommon('cancel')}
           </Button>
-          <Button onClick={() => onConfirm(name)}>Rename</Button>
+          <Button onClick={() => onConfirm(name)}>{t('rename')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

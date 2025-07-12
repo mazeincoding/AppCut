@@ -21,21 +21,59 @@
     "settings": "Settings"
   },
   "home": {
-    "title": "The Open Source Video Editer",
+    "title": "The Open Source",
     "subtitle": "A simple but powerful video editor that gets the job done. Works on any platform.",
     "getStarted": "Get Started",
-    "learnMore": "Learn More"
+    "learnMore": "Learn More",
+    "joinWaitlist": "Join waitlist",
+    "joinWaitlistLoading": "Joining...",
+    "emailPlaceholder": "Enter your email",
+    "peopleJoined": "{count} people already joined"
   },
   "editor": {
     "title": "Video Editor",
     "newProject": "New Project",
     "openProject": "Open Project",
     "export": "Export",
-    "import": "Import"
+    "import": "Import",
+    "deleteElement": "Delete element (Delete)",
+    "deleteClip": "Delete clip (Delete)",
+    "defaultText": "Default Text",
+    "testClip": "Test Clip",
+    "muteTrack": "Mute Track",
+    "unmuteTrack": "Unmute Track",
+    "properties": {
+      "audio": "Audio Properties",
+      "video": "Video Properties",
+      "text": "Text Properties"
+    }
   },
   "projects": {
     "title": "My Projects",
     "noProjects": "No projects yet",
-    "createFirst": "Create your first project"
+    "createFirst": "Create your first project",
+    "renameProject": "Rename Project",
+    "renameProjectDesc": "Enter a new name for your project.",
+    "enterNewName": "Enter a new name",
+    "rename": "Rename"
+  },
+  "messages": {
+    "emailRequired": "Email required",
+    "emailRequiredDesc": "Please enter your email address.",
+    "welcomeWaitlist": "Welcome to the waitlist! 🎉",
+    "welcomeWaitlistDesc": "You'll be notified when we launch.",
+    "oops": "Oops!",
+    "somethingWrong": "Something went wrong. Please try again.",
+    "networkError": "Network error",
+    "networkErrorDesc": "Please check your connection and try again."
+  },
+  "footer": {
+    "description": "The open source video editor that gets the job done. Simple, powerful, and works on any platform.",
+    "resources": "Resources",
+    "company": "Company",
+    "privacyPolicy": "Privacy policy",
+    "termsOfUse": "Terms of use",
+    "about": "About",
+    "copyright": "© 2025 OpenCut, All Rights Reserved"
   }
 }
