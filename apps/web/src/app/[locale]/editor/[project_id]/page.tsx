@@ -6,11 +6,11 @@ import {
   ResizablePanelGroup,
   ResizablePanel,
   ResizableHandle,
-} from "../../../components/ui/resizable";
-import { MediaPanel } from "../../../components/editor/media-panel";
-import { PropertiesPanel } from "../../../components/editor/properties-panel";
-import { Timeline } from "../../../components/editor/timeline";
-import { PreviewPanel } from "../../../components/editor/preview-panel";
+} from "@/components/ui/resizable";
+import { MediaPanel } from "@/components/editor/media-panel";
+import { PropertiesPanel } from "@/components/editor/properties-panel";
+import { Timeline } from "@/components/editor/timeline";
+import { PreviewPanel } from "@/components/editor/preview-panel";
 import { EditorHeader } from "@/components/editor-header";
 import { usePanelStore } from "@/stores/panel-store";
 import { useProjectStore } from "@/stores/project-store";

@@ -1,0 +1,41 @@
+{
+  "metadata": {
+    "title": "OpenCut - 免费在线视频编辑器",
+    "description": "使用我们的免费在线视频编辑器创建精美视频。无需下载 - 直接在浏览器中编辑视频。"
+  },
+  "navigation": {
+    "home": "首页",
+    "editor": "编辑器",
+    "projects": "项目",
+    "contributors": "贡献者"
+  },
+  "common": {
+    "loading": "加载中...",
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "edit": "编辑",
+    "create": "创建",
+    "close": "关闭",
+    "open": "打开",
+    "settings": "设置"
+  },
+  "home": {
+    "title": "开源视频编辑器",
+    "subtitle": "简单而强大的视频编辑器，能够完成工作。支持任何平台。",
+    "getStarted": "开始使用",
+    "learnMore": "了解更多"
+  },
+  "editor": {
+    "title": "视频编辑器",
+    "newProject": "新建项目",
+    "openProject": "打开项目",
+    "export": "导出",
+    "import": "导入"
+  },
+  "projects": {
+    "title": "我的项目",
+    "noProjects": "暂无项目",
+    "createFirst": "创建您的第一个项目"
+  }
+}

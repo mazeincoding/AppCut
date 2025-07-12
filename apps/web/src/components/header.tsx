@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Button } from "./ui/button";
 import { ArrowRight } from "lucide-react";
 import { HeaderBase } from "./header-base";
@@ -8,10 +7,14 @@ import { useSession } from "@opencut/auth/client";
 import { getStars } from "@/lib/fetch-github-stars";
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { Link } from "@/i18n/navigation";
+import { LanguageSwitcher } from "./language-switcher";
+import { useTranslations } from "next-intl";
 
 export function Header() {
   const { data: session } = useSession();
   const [star, setStar] = useState<string>("");
+  const t = useTranslations('navigation');
 
   useEffect(() => {
     const fetchStars = async () => {
@@ -35,15 +38,16 @@ export function Header() {
 
   const rightContent = (
     <nav className="flex items-center gap-3">
+      <LanguageSwitcher />
       <Link href="/contributors">
         <Button variant="text" className="text-sm p-0">
-          Contributors
+          {t('contributors')}
         </Button>
       </Link>
       {process.env.NODE_ENV === "development" ? (
         <Link href="/projects">
           <Button size="sm" className="text-sm ml-4">
-            Projects
+            {t('projects')}
             <ArrowRight className="h-4 w-4" />
           </Button>
         </Link>

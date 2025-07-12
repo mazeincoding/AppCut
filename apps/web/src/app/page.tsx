@@ -1,19 +1,7 @@
-import { Hero } from "@/components/landing/hero";
-import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
-import { getWaitlistCount } from "@/lib/waitlist";
+import { redirect } from 'next/navigation';
 
-// Force dynamic rendering so waitlist count updates in real-time
-export const dynamic = "force-dynamic";
-
-export default async function Home() {
-  const signupCount = await getWaitlistCount();
-
-  return (
-    <div>
-      <Header />
-      <Hero signupCount={signupCount} />
-      <Footer />
-    </div>
-  );
+// 这个页面只在用户访问根路径时运行
+// 用户将被重定向到默认语言的页面
+export default function RootPage() {
+  redirect('/en');
 }

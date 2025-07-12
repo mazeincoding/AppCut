@@ -1,14 +1,16 @@
 "use client";
 
 import { motion } from "motion/react";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { RiGithubLine, RiTwitterXLine } from "react-icons/ri";
 import { getStars } from "@/lib/fetch-github-stars";
+import { Link } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 
 export function Footer() {
   const [star, setStar] = useState<string>();
+  const t = useTranslations('navigation');
 
   useEffect(() => {
     const fetchStars = async () => {
@@ -94,7 +96,7 @@ export function Footer() {
                     href="/contributors"
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    Contributors
+                    {t('contributors')}
                   </Link>
                 </li>
                 <li>

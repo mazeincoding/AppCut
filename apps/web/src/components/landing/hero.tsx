@@ -6,7 +6,7 @@ import { Input } from "../ui/input";
 import { ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 
 interface HeroProps {
@@ -17,6 +17,8 @@ export function Hero({ signupCount }: HeroProps) {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const t = useTranslations('home');
+  const tCommon = useTranslations('common');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,7 +92,7 @@ export function Hero({ signupCount }: HeroProps) {
           transition={{ delay: 0.2, duration: 0.8 }}
           className="inline-block font-bold tracking-tighter text-4xl md:text-[4rem]"
         >
-          <h1>The Open Source</h1>
+          <h1>{t('title')}</h1>
           <div className="flex justify-center gap-4 leading-[4rem] mt-0 md:mt-2">
             <div className="relative -rotate-[2.76deg] max-w-[250px] md:max-w-[454px] mt-2">
               <Image src="/frame.svg" height={79} width={459} alt="frame" />
@@ -107,8 +109,7 @@ export function Hero({ signupCount }: HeroProps) {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4, duration: 0.8 }}
         >
-          A simple but powerful video editor that gets the job done. Works on
-          any platform.
+          {t('subtitle')}
         </motion.p>
 
         <motion.div
@@ -139,7 +140,7 @@ export function Hero({ signupCount }: HeroProps) {
               disabled={isSubmitting}
             >
               <span className="relative z-10">
-                {isSubmitting ? "Joining..." : "Join waitlist"}
+                {isSubmitting ? tCommon('loading') : "Join waitlist"}
               </span>
               <ArrowRight className="relative z-10 ml-0.5 h-4 w-4 inline-block" />
             </Button>

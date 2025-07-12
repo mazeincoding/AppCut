@@ -13,7 +13,7 @@ import { memo, Suspense } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { GoogleIcon } from "@/components/icons";

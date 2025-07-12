@@ -1,0 +1,41 @@
+{
+  "metadata": {
+    "title": "OpenCut - Free Online Video Editor",
+    "description": "Create stunning videos with our free online video editor. No downloads required - edit videos directly in your browser."
+  },
+  "navigation": {
+    "home": "Home",
+    "editor": "Editor",
+    "projects": "Projects",
+    "contributors": "Contributors"
+  },
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "close": "Close",
+    "open": "Open",
+    "settings": "Settings"
+  },
+  "home": {
+    "title": "The Open Source Video Editer",
+    "subtitle": "A simple but powerful video editor that gets the job done. Works on any platform.",
+    "getStarted": "Get Started",
+    "learnMore": "Learn More"
+  },
+  "editor": {
+    "title": "Video Editor",
+    "newProject": "New Project",
+    "openProject": "Open Project",
+    "export": "Export",
+    "import": "Import"
+  },
+  "projects": {
+    "title": "My Projects",
+    "noProjects": "No projects yet",
+    "createFirst": "Create your first project"
+  }
+}

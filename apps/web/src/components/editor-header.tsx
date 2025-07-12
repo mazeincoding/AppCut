@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { Button } from "./ui/button";
 import { ChevronLeft, Download } from "lucide-react";
 import { useTimelineStore } from "@/stores/timeline-store";

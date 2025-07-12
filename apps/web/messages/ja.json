@@ -1,0 +1,41 @@
+{
+  "metadata": {
+    "title": "OpenCut - 無料オンライン動画エディター",
+    "description": "無料のオンライン動画エディターで素晴らしい動画を作成しましょう。ダウンロード不要 - ブラウザで直接動画を編集できます。"
+  },
+  "navigation": {
+    "home": "ホーム",
+    "editor": "エディター",
+    "projects": "プロジェクト",
+    "contributors": "貢献者"
+  },
+  "common": {
+    "loading": "読み込み中...",
+    "save": "保存",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "edit": "編集",
+    "create": "作成",
+    "close": "閉じる",
+    "open": "開く",
+    "settings": "設定"
+  },
+  "home": {
+    "title": "オープンソース",
+    "subtitle": "シンプルながら強力な動画エディター。どんなプラットフォームでも動作します。",
+    "getStarted": "始める",
+    "learnMore": "詳細を見る"
+  },
+  "editor": {
+    "title": "動画エディター",
+    "newProject": "新しいプロジェクト",
+    "openProject": "プロジェクトを開く",
+    "export": "エクスポート",
+    "import": "インポート"
+  },
+  "projects": {
+    "title": "マイプロジェクト",
+    "noProjects": "プロジェクトがありません",
+    "createFirst": "最初のプロジェクトを作成"
+  }
+}

@@ -17,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html suppressHydrationWarning>
       <body className={`${defaultFont.className} font-sans antialiased`}>
         <ThemeProvider attribute="class" forcedTheme="dark">
           <TooltipProvider>

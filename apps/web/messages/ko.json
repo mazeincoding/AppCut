@@ -1,0 +1,41 @@
+{
+  "metadata": {
+    "title": "OpenCut - 무료 온라인 비디오 편집기",
+    "description": "무료 온라인 비디오 편집기로 멋진 동영상을 만드세요. 다운로드 없이 브라우저에서 바로 동영상을 편집하세요."
+  },
+  "navigation": {
+    "home": "홈",
+    "editor": "편집기",
+    "projects": "프로젝트",
+    "contributors": "기여자"
+  },
+  "common": {
+    "loading": "로딩 중...",
+    "save": "저장",
+    "cancel": "취소",
+    "delete": "삭제",
+    "edit": "편집",
+    "create": "생성",
+    "close": "닫기",
+    "open": "열기",
+    "settings": "설정"
+  },
+  "home": {
+    "title": "오픈 소스",
+    "subtitle": "일을 완료하는 간단하지만 강력한 비디오 편집기. 모든 플랫폼에서 작동합니다.",
+    "getStarted": "시작하기",
+    "learnMore": "더 알아보기"
+  },
+  "editor": {
+    "title": "비디오 편집기",
+    "newProject": "새 프로젝트",
+    "openProject": "프로젝트 열기",
+    "export": "내보내기",
+    "import": "가져오기"
+  },
+  "projects": {
+    "title": "내 프로젝트",
+    "noProjects": "프로젝트가 없습니다",
+    "createFirst": "첫 번째 프로젝트 만들기"
+  }
+}
