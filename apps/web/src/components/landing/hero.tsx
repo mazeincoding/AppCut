@@ -8,6 +8,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
+import { Handlebars } from "./handlebars";
 
 interface HeroProps {
   signupCount: number;

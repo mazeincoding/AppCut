@@ -25,7 +25,7 @@ export function useLogin() {
             return;
         }
 
-        router.push("/editor");
+        router.push("/projects");
     }, [router, email, password]);
 
     const handleGoogleLogin = async () => {
@@ -35,7 +35,7 @@ export function useLogin() {
         try {
             await signIn.social({
                 provider: "google",
-                callbackURL: "/editor",
+                callbackURL: "/projects",
             });
         } catch (error) {
             setError("Failed to sign in with Google. Please try again.");
