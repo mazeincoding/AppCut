@@ -352,13 +352,13 @@ function ProjectCard({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
                       align="end"
-                      onCloseAutoFocus={(e) => {
+                      onCloseAutoFocus={(e: any) => {
                         e.preventDefault();
                         e.stopPropagation();
                       }}
                     >
                       <DropdownMenuItem
-                        onClick={(e) => {
+                        onClick={(e: React.MouseEvent) => {
                           e.preventDefault();
                           e.stopPropagation();
                           setIsDropdownOpen(false);
@@ -368,7 +368,7 @@ function ProjectCard({
                         Rename
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={(e) => {
+                        onClick={(e: React.MouseEvent) => {
                           e.preventDefault();
                           e.stopPropagation();
                           handleDuplicateProject();
@@ -379,7 +379,7 @@ function ProjectCard({
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
                         variant="destructive"
-                        onClick={(e) => {
+                        onClick={(e: React.MouseEvent) => {
                           e.preventDefault();
                           e.stopPropagation();
                           setIsDropdownOpen(false);
@@ -458,13 +458,13 @@ function ProjectCard({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     align="end"
-                    onCloseAutoFocus={(e) => {
+                    onCloseAutoFocus={(e: any) => {
                       e.preventDefault();
                       e.stopPropagation();
                     }}
                   >
                     <DropdownMenuItem
-                      onClick={(e) => {
+                      onClick={(e: React.MouseEvent) => {
                         e.preventDefault();
                         e.stopPropagation();
                         setIsDropdownOpen(false);
@@ -474,7 +474,7 @@ function ProjectCard({
                       Rename
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      onClick={(e) => {
+                      onClick={(e: React.MouseEvent) => {
                         e.preventDefault();
                         e.stopPropagation();
                         handleDuplicateProject();
@@ -485,7 +485,7 @@ function ProjectCard({
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       variant="destructive"
-                      onClick={(e) => {
+                      onClick={(e: React.MouseEvent) => {
                         e.preventDefault();
                         e.stopPropagation();
                         setIsDropdownOpen(false);
