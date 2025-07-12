@@ -6,12 +6,14 @@ import { ReactNode, useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { usePlaybackStore } from "@/stores/playback-store";
 
 export interface DraggableMediaItemProps {
   name: string;
   preview: ReactNode;
   dragData: Record<string, any>;
   onDragStart?: (e: React.DragEvent) => void;
+  onAddToTimeline?: (currentTime: number) => void;
   aspectRatio?: number;
   className?: string;
   showPlusOnDrag?: boolean;
@@ -24,6 +26,7 @@ export function DraggableMediaItem({
   preview,
   dragData,
   onDragStart,
+  onAddToTimeline,
   aspectRatio = 16 / 9,
   className = "",
   showPlusOnDrag = true,
@@ -33,6 +36,11 @@ export function DraggableMediaItem({
   const [isDragging, setIsDragging] = useState(false);
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
   const dragRef = useRef<HTMLDivElement>(null);
+  const currentTime = usePlaybackStore((state) => state.currentTime);
+
+  const handleAddToTimeline = () => {
+    onAddToTimeline?.(currentTime);
+  };
 
   const emptyImg = new window.Image();
   emptyImg.src =
@@ -92,7 +100,10 @@ export function DraggableMediaItem({
           >
             {preview}
             {!isDragging && (
-              <PlusButton className="opacity-0 group-hover:opacity-100" />
+              <PlusButton
+                className="opacity-0 group-hover:opacity-100"
+                onClick={handleAddToTimeline}
+              />
             )}
           </AspectRatio>
           {showLabel && (
@@ -128,7 +139,7 @@ export function DraggableMediaItem({
                 <div className="w-full h-full [&_img]:w-full [&_img]:h-full [&_img]:object-cover [&_img]:rounded-none">
                   {preview}
                 </div>
-                {showPlusOnDrag && <PlusButton />}
+                {showPlusOnDrag && <PlusButton onClick={handleAddToTimeline} tooltipText="Add to timeline or drag to position" />}
               </AspectRatio>
             </div>
           </div>,
@@ -138,11 +149,16 @@ export function DraggableMediaItem({
   );
 }
 
-function PlusButton({ className }: { className?: string }) {
+function PlusButton({ className, onClick }: { className?: string; onClick?: () => void }) {
   return (
     <Button
       size="icon"
       className={cn("absolute bottom-2 right-2 size-4", className)}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onClick?.();
+      }}
     >
       <Plus className="!size-3" />
     </Button>
