@@ -8,7 +8,6 @@ services:
       POSTGRES_DB: opencut
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    # Only expose port for development - remove in production
     ports:
       - "5432:5432"
     healthcheck:
@@ -21,21 +20,10 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    # Only expose port for development - remove in production
     ports:
       - "6379:6379"
-    command: redis-server --requirepass ${REDIS_PASSWORD:-defaultredispass}
-    environment:
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-defaultredispass}
     healthcheck:
-      test:
-        [
-          "CMD",
-          "redis-cli",
-          "-a",
-          "${REDIS_PASSWORD:-defaultredispass}",
-          "ping",
-        ]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -48,7 +36,7 @@ services:
     environment:
       SRH_MODE: env
       SRH_TOKEN: ${REDIS_HTTP_TOKEN:-example_token}
-      SRH_CONNECTION_STRING: "redis://:${REDIS_PASSWORD:-defaultredispass}@redis:6379"
+      SRH_CONNECTION_STRING: "redis://redis:6379"
     depends_on:
       redis:
         condition: service_healthy
@@ -68,7 +56,7 @@ services:
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://opencut:${POSTGRES_PASSWORD:-opencutthegoat}@db:5432/opencut
-      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3100}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3000}
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:-your-production-secret-key-here}
       - UPSTASH_REDIS_REST_URL=http://serverless-redis-http:80
       - UPSTASH_REDIS_REST_TOKEN=${REDIS_HTTP_TOKEN:-example_token}
