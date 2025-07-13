@@ -24,6 +24,13 @@
 - No watermarks or subscriptions
 - Analytics provided by [Databuddy](https://www.databuddy.cc?utm_source=opencut), 100% Anonymized & Non-invasive.
 
+## Screenshots
+
+![Project View](screenshots/projects.png)
+![Timeline View](screenshots/timeline.png)
+
+You can test it out at https://opencut.app/projects. OpenCut currently under heavy development so several features are not yet implemented. Feel free to contribute! See [CONTRIBUTING.md](.github/CONTRIBUTING.md).
+
 ## Project Structure
 
 - `apps/web/` – Main Next.js web application
