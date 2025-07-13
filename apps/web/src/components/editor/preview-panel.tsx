@@ -422,7 +422,7 @@ export function PreviewPanel() {
 }
 
 function Draggable({ trackId, elementId, children }: { trackId: string, elementId: string, children: React.ReactElement }) {
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: elementId,
     data: { trackId },
   });
@@ -435,7 +435,7 @@ function Draggable({ trackId, elementId, children }: { trackId: string, elementI
       ...children.props.style,
       position: 'absolute' as const,
       transform: CSS.Translate.toString(transform),
-      cursor: 'grab',
+      cursor: isDragging ? 'grabbing' : 'grab',
     },
   });
 }
