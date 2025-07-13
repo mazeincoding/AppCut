@@ -1,5 +1,10 @@
 "use client";
 
+import { useState, useRef, useEffect, cloneElement } from "react";
+import { Play, Pause, Expand } from "lucide-react";
+import { DndContext, useDraggable, useDroppable, type DragEndEvent } from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
+
 import { useTimelineStore } from "@/stores/timeline-store";
 import { TimelineElement, TimelineTrack } from "@/types/timeline";
 import { useMediaStore, type MediaItem } from "@/stores/media-store";
@@ -16,8 +21,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Play, Pause, Expand } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { formatTimeCode } from "@/lib/time";
 import { FONT_CLASS_MAP } from "@/lib/font-config";
@@ -123,7 +126,7 @@ export function PreviewPanel() {
               element.mediaId === "test"
                 ? null // Test elements don't have a real media item
                 : mediaItems.find((item) => item.id === element.mediaId) ||
-                  null;
+                null;
           }
 
           activeElements.push({ element, track, mediaItem });
@@ -220,7 +223,7 @@ export function PreviewPanel() {
 
   // Render an element
   const renderElement = (elementData: ActiveElement, index: number) => {
-    const { element, mediaItem } = elementData;
+    const { track, element, mediaItem } = elementData;
 
     // Text elements
     if (element.type === "text") {
@@ -230,37 +233,38 @@ export function PreviewPanel() {
       const scaleRatio = previewDimensions.width / canvasSize.width;
 
       return (
-        <div
-          key={element.id}
-          className="absolute flex items-center justify-center"
-          style={{
-            left: `${50 + (element.x / canvasSize.width) * 100}%`,
-            top: `${50 + (element.y / canvasSize.height) * 100}%`,
-            transform: `translate(-50%, -50%) rotate(${element.rotation}deg) scale(${scaleRatio})`,
-            opacity: element.opacity,
-            zIndex: 100 + index, // Text elements on top
-          }}
-        >
+        <Draggable key={element.id} trackId={track.id} elementId={element.id}>
           <div
-            className={fontClassName}
+            className="absolute flex items-center justify-center"
             style={{
-              fontSize: `${element.fontSize}px`,
-              color: element.color,
-              backgroundColor: element.backgroundColor,
-              textAlign: element.textAlign,
-              fontWeight: element.fontWeight,
-              fontStyle: element.fontStyle,
-              textDecoration: element.textDecoration,
-              padding: "4px 8px",
-              borderRadius: "2px",
-              whiteSpace: "nowrap",
-              // Fallback for system fonts that don't have classes
-              ...(fontClassName === "" && { fontFamily: element.fontFamily }),
+              left: `${50 + (element.x / canvasSize.width) * 100}%`,
+              top: `${50 + (element.y / canvasSize.height) * 100}%`,
+              transform: `translate(-50%, -50%) rotate(${element.rotation}deg) scale(${scaleRatio})`,
+              opacity: element.opacity,
+              zIndex: 100 + index, // Text elements on top
             }}
           >
-            {element.content}
+            <div
+              className={fontClassName}
+              style={{
+                fontSize: `${element.fontSize}px`,
+                color: element.color,
+                backgroundColor: element.backgroundColor,
+                textAlign: element.textAlign,
+                fontWeight: element.fontWeight,
+                fontStyle: element.fontStyle,
+                textDecoration: element.textDecoration,
+                padding: "4px 8px",
+                borderRadius: "2px",
+                whiteSpace: "nowrap",
+                // Fallback for system fonts that don't have classes
+                ...(fontClassName === "" && { fontFamily: element.fontFamily }),
+              }}
+            >
+              {element.content}
+            </div>
           </div>
-        </div>
+        </Draggable>
       );
     }
 
@@ -337,6 +341,31 @@ export function PreviewPanel() {
     return null;
   };
 
+
+  const { updateTextElement } = useTimelineStore();
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { delta, active } = event;
+    const elementId = active.id;
+    const { trackId } = active.data.current as { trackId: string };
+
+    // Find the current element to get its position
+    const track = tracks.find(t => t.id === trackId);
+    const element = track?.elements.find(e => e.id === elementId);
+
+    if (element && element.type === "text") {
+      // Calculate new position by adding delta to current position
+      const newX = element.x + (delta.x / previewDimensions.width) * canvasSize.width;
+      const newY = element.y + (delta.y / previewDimensions.height) * canvasSize.height;
+
+      updateTextElement(trackId, String(active.id), {
+        x: newX,
+        y: newY,
+      });
+    }
+
+  };
+
   return (
     <div className="h-full w-full flex flex-col min-h-0 min-w-0 bg-panel rounded-sm">
       <div
@@ -357,24 +386,30 @@ export function PreviewPanel() {
                   : activeProject?.backgroundColor || "#000000",
             }}
           >
-            {renderBlurBackground()}
-            {activeElements.length === 0 ? (
-              <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                No elements at current time
-              </div>
-            ) : (
-              activeElements.map((elementData, index) =>
-                renderElement(elementData, index)
-              )
-            )}
-            {/* Show message when blur is selected but no media available */}
-            {activeProject?.backgroundType === "blur" &&
-              blurBackgroundElements.length === 0 &&
-              activeElements.length > 0 && (
-                <div className="absolute bottom-2 left-2 right-2 bg-black/70 text-white text-xs p-2 rounded">
-                  Add a video or image to use blur background
-                </div>
-              )}
+            <DndContext onDragEnd={handleDragEnd}>
+              <DroppableArea>
+                {renderBlurBackground()}
+
+                {activeElements.length === 0 ? (
+                  <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                    No elements at current time
+                  </div>
+                ) : (
+                  activeElements.map((elementData, index) =>
+                    renderElement(elementData, index)
+                  )
+                )}
+
+                {/* Show message when blur is selected but no media available */}
+                {activeProject?.backgroundType === "blur" &&
+                  blurBackgroundElements.length === 0 &&
+                  activeElements.length > 0 && (
+                    <div className="absolute bottom-2 left-2 right-2 bg-black/70 text-white text-xs p-2 rounded">
+                      Add a video or image to use blur background
+                    </div>
+                  )}
+              </DroppableArea>
+            </DndContext>
           </div>
         ) : null}
 
@@ -382,6 +417,35 @@ export function PreviewPanel() {
 
         <PreviewToolbar hasAnyElements={hasAnyElements} />
       </div>
+    </div>
+  );
+}
+
+function Draggable({ trackId, elementId, children }: { trackId: string, elementId: string, children: React.ReactElement }) {
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    id: elementId,
+    data: { trackId },
+  });
+
+  return cloneElement(children, {
+    ...attributes,
+    ...listeners,
+    ref: setNodeRef,
+    style: {
+      ...children.props.style,
+      position: 'absolute' as const,
+      transform: CSS.Translate.toString(transform),
+      cursor: 'grab',
+    },
+  });
+}
+
+function DroppableArea({ children }: { children: React.ReactNode }) {
+  const { setNodeRef } = useDroppable({ id: 'droppable-area' });
+
+  return (
+    <div ref={setNodeRef} className="w-full h-full">
+      {children}
     </div>
   );
 }
