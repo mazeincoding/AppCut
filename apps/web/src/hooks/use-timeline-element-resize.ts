@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { ResizeState, TimelineElement, TimelineTrack } from "@/types/timeline";
 import { useMediaStore } from "@/stores/media-store";
+import { TIMELINE_CONSTANTS } from "@/constants/timeline-constants";
 
 interface UseTimelineElementResizeProps {
   element: TimelineElement;
@@ -9,6 +10,7 @@ interface UseTimelineElementResizeProps {
   onUpdateTrim: (
     trackId: string,
     elementId: string,
+    startTime: number,
     trimStart: number,
     trimEnd: number
   ) => void;
@@ -101,12 +103,35 @@ export function useTimelineElementResize({
 
     if (resizing.side === "left") {
       // Left resize - only trim within original duration
+
       const maxAllowed = element.duration - resizing.initialTrimEnd - 0.1;
       const calculated = resizing.initialTrimStart + deltaTime;
       const newTrimStart = Math.max(0, Math.min(maxAllowed, calculated));
 
-      onUpdateTrim(track.id, element.id, newTrimStart, resizing.initialTrimEnd);
-    } else {
+      const deltaTrimStart = newTrimStart - resizing.initialTrimStart;
+      const newStartTime = element.startTime + deltaTrimStart;
+
+      const newElementWidth =
+        (element.duration - newTrimStart - resizing.initialTrimEnd) *
+        50 *
+        zoomLevel;
+
+      // can't compress element width below min width
+      if (newElementWidth < TIMELINE_CONSTANTS.ELEMENT_MIN_WIDTH) {
+        return;
+      }
+
+      onUpdateTrim(
+        track.id,
+        element.id,
+        newStartTime,
+        newTrimStart,
+        resizing.initialTrimEnd
+      );
+      return;
+    }
+
+    if (resizing.side === "right") {
       // Right resize - can extend duration for supported element types
       const calculated = resizing.initialTrimEnd - deltaTime;
 
@@ -123,12 +148,19 @@ export function useTimelineElementResize({
           onUpdateTrim(
             track.id,
             element.id,
+            element.startTime,
             resizing.initialTrimStart,
             newTrimEnd
           );
         } else {
           // Can't extend - just set trimEnd to 0 (maximum possible extension)
-          onUpdateTrim(track.id, element.id, resizing.initialTrimStart, 0);
+          onUpdateTrim(
+            track.id,
+            element.id,
+            element.startTime,
+            resizing.initialTrimStart,
+            0
+          );
         }
       } else {
         // Normal trimming within original duration
@@ -138,10 +170,13 @@ export function useTimelineElementResize({
         onUpdateTrim(
           track.id,
           element.id,
+          element.startTime,
           resizing.initialTrimStart,
           newTrimEnd
         );
       }
+
+      return;
     }
   };
 

@@ -86,6 +86,7 @@ interface TimelineStore {
   updateElementTrim: (
     trackId: string,
     elementId: string,
+    startTime: number,
     trimStart: number,
     trimEnd: number
   ) => void;
@@ -467,7 +468,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       updateTracksAndSave(newTracks);
     },
 
-    updateElementTrim: (trackId, elementId, trimStart, trimEnd) => {
+    updateElementTrim: (trackId, elementId, startTime, trimStart, trimEnd) => {
       get().pushHistory();
       updateTracksAndSave(
         get()._tracks.map((track) =>
@@ -476,7 +477,12 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
                 ...track,
                 elements: track.elements.map((element) =>
                   element.id === elementId
-                    ? { ...element, trimStart, trimEnd }
+                    ? {
+                        ...element,
+                        trimStart,
+                        trimEnd,
+                        startTime,
+                      }
                     : element
                 ),
               }
