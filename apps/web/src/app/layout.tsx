@@ -30,10 +30,11 @@ export default function RootLayout({
               strategy="afterInteractive"
               async
               data-client-id="UP-Wcoy5arxFeK7oyjMMZ"
-              data-track-attributes={true}
+              data-track-attributes={false}
               data-track-errors={true}
-              data-track-outgoing-links={true}
-              data-track-web-vitals={true}
+              data-track-outgoing-links={false}
+              data-track-web-vitals={false}
+              data-track-sessions={false}
             />
           </TooltipProvider>
         </ThemeProvider>
