@@ -154,10 +154,10 @@ Comprehensive testing strategy for the video export functionality. Each test tas
 - [x] Test UI recovery after errors
 - [x] Test retry mechanisms
 
-### 3.8 Test Format Conversion (3 min)
-- [ ] Test different format outputs
-- [ ] Test codec selection
-- [ ] Test quality settings
+### 3.8 Test Format Conversion (3 min) ✅
+- [x] Test different format outputs
+- [x] Test codec selection
+- [x] Test quality settings
 
 ### 3.9 Test Timeline Processing (3 min)
 - [ ] Test element collection
