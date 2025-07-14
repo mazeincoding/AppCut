@@ -24,6 +24,8 @@ import { useTimelineElementResize } from "@/hooks/use-timeline-element-resize";
 import {
   getTrackElementClasses,
   TIMELINE_CONSTANTS,
+  getTrackHeight,
+  calculateMediaTiling,
 } from "@/constants/timeline-constants";
 import {
   DropdownMenu,
@@ -268,34 +270,75 @@ export function TimelineElement({
     }
 
     if (mediaItem.type === "image") {
+      // Use utility function to calculate optimal tiling
+      const tiling = calculateMediaTiling(elementWidth, track.type, "image");
+
       return (
-        <div className="w-full h-full flex items-center justify-center">
-          <div className="bg-[#004D52] py-3 w-full h-full">
-            <img
-              src={mediaItem.url}
-              alt={mediaItem.name}
-              className="w-full h-full object-cover"
-              draggable={false}
-            />
+        <div className="w-full h-full flex items-center justify-start overflow-hidden">
+          <div className="bg-[#004D52]/20 h-full flex">
+            {Array.from({ length: tiling.totalTiles }, (_, index) => {
+              const isPartialTile =
+                index === tiling.numCompleteTiles && tiling.showPartialTile;
+              const tileWidthToUse = isPartialTile
+                ? tiling.remainingWidth
+                : tiling.tileWidth;
+
+              return (
+                <div
+                  key={index}
+                  className="flex-shrink-0 h-full overflow-hidden"
+                  style={{ width: `${tileWidthToUse}px` }}
+                >
+                  <img
+                    src={mediaItem.url}
+                    alt={mediaItem.name}
+                    className="w-full h-full object-cover"
+                    draggable={false}
+                  />
+                </div>
+              );
+            })}
           </div>
         </div>
       );
     }
 
     if (mediaItem.type === "video" && mediaItem.thumbnailUrl) {
+      // Use utility function to calculate optimal tiling
+      const tiling = calculateMediaTiling(elementWidth, track.type, "video");
+
       return (
-        <div className="w-full h-full flex items-center gap-2">
-          <div className="w-8 h-8 flex-shrink-0">
-            <img
-              src={mediaItem.thumbnailUrl}
-              alt={mediaItem.name}
-              className="w-full h-full object-cover rounded-sm"
-              draggable={false}
-            />
+        <div className="w-full h-full flex items-center overflow-hidden relative">
+          <div className="flex h-full">
+            {Array.from({ length: tiling.totalTiles }, (_, index) => {
+              const isPartialTile =
+                index === tiling.numCompleteTiles && tiling.showPartialTile;
+              const tileWidthToUse = isPartialTile
+                ? tiling.remainingWidth
+                : tiling.tileWidth;
+
+              return (
+                <div
+                  key={index}
+                  className="flex-shrink-0 h-full flex items-center justify-center p-1 overflow-hidden"
+                  style={{ width: `${tileWidthToUse}px` }}
+                >
+                  <img
+                    src={mediaItem.thumbnailUrl}
+                    alt={mediaItem.name}
+                    className="w-full h-full object-cover rounded-sm"
+                    draggable={false}
+                  />
+                </div>
+              );
+            })}
           </div>
-          <span className="text-xs text-foreground/80 truncate flex-1">
-            {element.name}
-          </span>
+          {/* Show name overlay on the right if there's sufficient space */}
+          {tiling.canShowOverlay && (
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/70 text-white text-xs px-2 py-1 rounded pointer-events-none max-w-[40%] truncate">
+              {element.name}
+            </div>
+          )}
         </div>
       );
     }
