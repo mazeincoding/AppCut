@@ -15,6 +15,10 @@ import {
   Video,
   Music,
   TypeIcon,
+  Magnet,
+  Grid3X3,
+  Move,
+  Target,
 } from "lucide-react";
 import {
   Tooltip,
@@ -50,6 +54,8 @@ import {
 } from "./timeline-playhead";
 import { SelectionBox } from "./selection-box";
 import { useSelectionBox } from "@/hooks/use-selection-box";
+import { SnapIndicator } from "./snap-indicator";
+import { useTimelineSnapping } from "@/hooks/use-timeline-snapping";
 import type { DragData, TimelineTrack } from "@/types/timeline";
 import {
   getTrackHeight,
@@ -78,6 +84,17 @@ export function Timeline() {
     separateAudio,
     undo,
     redo,
+    snappingEnabled,
+    gridSnappingEnabled,
+    elementSnappingEnabled,
+    playheadSnappingEnabled,
+    snapThreshold,
+    gridInterval,
+    toggleSnapping,
+    toggleGridSnapping,
+    toggleElementSnapping,
+    togglePlayheadSnapping,
+    dragState,
   } = useTimelineStore();
   const { mediaItems, addMediaItem } = useMediaStore();
   const { activeProject } = useProjectStore();
@@ -144,6 +161,20 @@ export function Timeline() {
       setSelectedElements(elements);
     },
   });
+
+  // Initialize snapping functionality
+  const { snapElementPosition } = useTimelineSnapping({
+    snapThreshold,
+    gridInterval,
+    enableGridSnapping: snappingEnabled && gridSnappingEnabled,
+    enableElementSnapping: snappingEnabled && elementSnappingEnabled,
+    enablePlayheadSnapping: snappingEnabled && playheadSnappingEnabled,
+  });
+
+  // Calculate snap indicator state
+  const [currentSnapPoint, setCurrentSnapPoint] = useState<any>(null);
+  const showSnapIndicator =
+    dragState.isDragging && snappingEnabled && currentSnapPoint;
 
   // Timeline content click to seek handler
   const handleTimelineContentClick = useCallback(
@@ -309,6 +340,34 @@ export function Timeline() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [redo]);
+
+  // Keyboard shortcuts for snapping
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger when typing in input fields or textareas
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      ) {
+        return;
+      }
+
+      // Only trigger when timeline is focused or mouse is over timeline
+      if (
+        !isInTimeline &&
+        !timelineRef.current?.contains(document.activeElement)
+      ) {
+        return;
+      }
+
+      if (e.key === "s" || e.key === "S") {
+        e.preventDefault();
+        toggleSnapping();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [toggleSnapping, isInTimeline]);
 
   // Old marquee system removed - using new SelectionBox component instead
 
@@ -815,6 +874,72 @@ export function Timeline() {
             </TooltipTrigger>
             <TooltipContent>Delete element (Delete)</TooltipContent>
           </Tooltip>
+
+          <div className="w-px h-6 bg-border mx-1" />
+
+          {/* Snapping Controls */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={snappingEnabled ? "default" : "text"}
+                size="icon"
+                onClick={toggleSnapping}
+              >
+                <Magnet className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Toggle snapping (S)</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={
+                  gridSnappingEnabled && snappingEnabled ? "default" : "text"
+                }
+                size="icon"
+                onClick={toggleGridSnapping}
+                disabled={!snappingEnabled}
+              >
+                <Grid3X3 className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Toggle grid snapping</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={
+                  elementSnappingEnabled && snappingEnabled ? "default" : "text"
+                }
+                size="icon"
+                onClick={toggleElementSnapping}
+                disabled={!snappingEnabled}
+              >
+                <Move className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Toggle element snapping</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={
+                  playheadSnappingEnabled && snappingEnabled
+                    ? "default"
+                    : "text"
+                }
+                size="icon"
+                onClick={togglePlayheadSnapping}
+                disabled={!snappingEnabled}
+              >
+                <Target className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Toggle playhead snapping</TooltipContent>
+          </Tooltip>
         </TooltipProvider>
       </div>
 
@@ -1033,6 +1158,17 @@ export function Timeline() {
                     ))}
                   </>
                 )}
+
+                {/* Snap Indicator */}
+                <SnapIndicator
+                  snapPoint={currentSnapPoint}
+                  zoomLevel={zoomLevel}
+                  timelineHeight={Math.max(
+                    200,
+                    Math.min(800, getTotalTracksHeight(tracks))
+                  )}
+                  isVisible={showSnapIndicator}
+                />
               </div>
             </ScrollArea>
           </div>
