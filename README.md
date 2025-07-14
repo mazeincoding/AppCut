@@ -51,14 +51,14 @@ Before you begin, ensure you have the following installed:
    cd OpenCut
    ```
 
-2. **Navigate to the web app**
-   ```bash
-   cd apps/web
-   ```
-
-3. **Install dependencies**
+2. **Install all workspace dependencies**
    ```bash
    bun install
+   ```
+
+3. **Navigate to the web app**
+   ```bash
+   cd apps/web
    ```
 
 4. **Start development server**
@@ -69,12 +69,6 @@ Before you begin, ensure you have the following installed:
 > **Note**: This basic setup runs without a database. For full functionality, follow the Development Setup below.
 
 ## Development Setup
-
-### Prerequisites
-
-- Node.js 18+
-- Bun (latest version)
-- Docker (for local database)
 
 ### Local Development
 
@@ -154,10 +148,6 @@ The application will be available at [http://localhost:3000](http://localhost:30
 
 ## Contributing
 
-**Note**: We're currently moving at an extremely fast pace with rapid development and breaking changes. While we appreciate the interest, it's recommended to wait until the project stabilizes before contributing to avoid conflicts and wasted effort.
-
-## Visit [CONTRIBUTING.md](.github/CONTRIBUTING.md)
-
 We welcome contributions! Please see our [Contributing Guide](.github/CONTRIBUTING.md) for detailed setup instructions and development guidelines.
 
 **Quick start for contributors:**
@@ -165,6 +155,8 @@ We welcome contributions! Please see our [Contributing Guide](.github/CONTRIBUTI
 - Fork the repo and clone locally
 - Follow the setup instructions in CONTRIBUTING.md
 - Create a feature branch and submit a PR
+
+**Note**: We're currently moving at an extremely fast pace with rapid development and breaking changes. While we appreciate the interest, it's recommended to wait until the project stabilizes before contributing to avoid conflicts and wasted effort.
 
 ## Sponsors
 
