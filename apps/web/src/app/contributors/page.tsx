@@ -7,6 +7,7 @@ import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { GithubIcon } from "@/components/icons";
 import { Badge } from "@/components/ui/badge";
+import { Footer } from "@/components/footer";
 
 export const metadata: Metadata = {
   title: "Contributors - OpenCut",
@@ -272,6 +273,7 @@ export default async function ContributorsPage() {
           </div>
         </div>
       </main>
+      <Footer />
     </div>
   );
 }

@@ -6,6 +6,7 @@ const openGraphImageUrl = "https://opencut.app/opengraph-image.jpg";
 const twitterImageUrl = "/opengraph-image.jpg";
 
 export const baseMetaData: Metadata = {
+    metadataBase: new URL("https://opencut.app"),
     title: title,
     description: description,
     openGraph: {
