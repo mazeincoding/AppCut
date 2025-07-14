@@ -4,12 +4,14 @@ export interface VideoRecorderOptions {
   canvas: HTMLCanvasElement;
   settings: ExportSettings;
   fps: number;
+  audioStream?: MediaStream;
 }
 
 export class VideoRecorder {
   private canvas: HTMLCanvasElement;
   private settings: ExportSettings;
   private fps: number;
+  private audioStream: MediaStream | null = null;
   private mediaRecorder: MediaRecorder | null = null;
   private recordedChunks: Blob[] = [];
   private stream: MediaStream | null = null;
@@ -18,6 +20,7 @@ export class VideoRecorder {
     this.canvas = options.canvas;
     this.settings = options.settings;
     this.fps = options.fps;
+    this.audioStream = options.audioStream || null;
   }
 
   /**
@@ -29,10 +32,25 @@ export class VideoRecorder {
     }
 
     // Get canvas stream
-    this.stream = this.canvas.captureStream(this.fps);
+    const canvasStream = this.canvas.captureStream(this.fps);
     
-    if (!this.stream) {
+    if (!canvasStream) {
       throw new Error("Could not capture canvas stream");
+    }
+
+    // Combine video and audio streams
+    this.stream = new MediaStream();
+    
+    // Add video tracks
+    canvasStream.getVideoTracks().forEach(track => {
+      this.stream!.addTrack(track);
+    });
+    
+    // Add audio tracks if available
+    if (this.audioStream) {
+      this.audioStream.getAudioTracks().forEach(track => {
+        this.stream!.addTrack(track);
+      });
     }
 
     // Determine MIME type based on format and browser support
@@ -109,6 +127,13 @@ export class VideoRecorder {
     
     // Clamp to reasonable ranges
     return Math.max(1000000, Math.min(10000000, baseBitrate)); // 1-10 Mbps
+  }
+
+  /**
+   * Set audio stream for recording
+   */
+  setAudioStream(audioStream: MediaStream | null): void {
+    this.audioStream = audioStream;
   }
 
   /**

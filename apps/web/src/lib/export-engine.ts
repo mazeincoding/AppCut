@@ -3,6 +3,19 @@ import { TimelineElement } from "@/types/timeline";
 import { CanvasRenderer } from "@/lib/canvas-renderer";
 import { FrameCaptureService } from "@/lib/frame-capture";
 import { VideoRecorder } from "@/lib/video-recorder";
+import { AudioMixer, AudioTrackInfo } from "@/lib/audio-mixer";
+import { 
+  ExportError, 
+  MediaRecorderError, 
+  AudioMixerError, 
+  CanvasRenderError,
+  BrowserCompatibilityError,
+  MemoryError,
+  getUserFriendlyErrorMessage,
+  logExportError,
+  checkBrowserCompatibility,
+  estimateMemoryUsage 
+} from "@/lib/export-errors";
 
 export interface ExportEngineOptions {
   canvas: HTMLCanvasElement;
@@ -26,6 +39,7 @@ export class ExportEngine {
   private renderer: CanvasRenderer;
   private captureService: FrameCaptureService;
   private recorder: VideoRecorder;
+  private audioMixer: AudioMixer;
   private isExporting = false;
   private shouldCancel = false;
 
@@ -54,6 +68,11 @@ export class ExportEngine {
       settings: this.settings,
       fps: this.fps,
     });
+    this.audioMixer = new AudioMixer({
+      sampleRate: 44100,
+      channels: 2,
+      duration: this.duration,
+    });
   }
 
   /**
@@ -61,18 +80,26 @@ export class ExportEngine {
    */
   async startExport(): Promise<Blob> {
     if (this.isExporting) {
-      throw new Error("Export already in progress");
-    }
-
-    if (!VideoRecorder.isSupported()) {
-      throw new Error("Video recording not supported in this browser");
+      throw new ExportError("Export already in progress", "EXPORT_IN_PROGRESS");
     }
 
     try {
+      // Pre-flight checks
+      this.performPreflightChecks();
+      
       this.isExporting = true;
       this.shouldCancel = false;
       
       this.onProgress?.(0, "Initializing export...");
+      
+      // Collect and prepare audio tracks
+      await this.prepareAudioTracks();
+      
+      // Create audio stream from mixed audio
+      const audioStream = await this.createAudioStream();
+      if (audioStream) {
+        this.recorder.setAudioStream(audioStream);
+      }
       
       // Start recording
       await this.recorder.startRecording();
@@ -84,12 +111,10 @@ export class ExportEngine {
       return videoBlob;
       
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      this.onError?.(errorMessage);
+      this.handleExportError(error);
       throw error;
     } finally {
-      this.isExporting = false;
-      this.recorder.cleanup();
+      this.cleanupResources();
     }
   }
 
@@ -158,18 +183,30 @@ export class ExportEngine {
    * Render a single frame to the canvas
    */
   private renderSingleFrame(frameData: { frameNumber: number; timestamp: number; elements: TimelineElement[] }): void {
-    // Clear canvas
-    this.renderer.clearFrame(this.getBackgroundColor());
-    
-    // Get visible elements for this timestamp
-    const visibleElements = this.captureService.getVisibleElements(
-      this.timelineElements,
-      frameData.timestamp
-    );
-    
-    // Render each element
-    for (const element of visibleElements) {
-      this.renderElement(element, frameData.timestamp);
+    try {
+      // Clear canvas
+      this.renderer.clearFrame(this.getBackgroundColor());
+      
+      // Get visible elements for this timestamp
+      const visibleElements = this.captureService.getVisibleElements(
+        this.timelineElements,
+        frameData.timestamp
+      );
+      
+      // Render each element
+      for (const element of visibleElements) {
+        try {
+          this.renderElement(element, frameData.timestamp);
+        } catch (error) {
+          console.warn(`Failed to render element ${element.id}:`, error);
+          // Continue rendering other elements
+        }
+      }
+    } catch (error) {
+      throw new CanvasRenderError(
+        `Failed to render frame ${frameData.frameNumber}`,
+        { frameNumber: frameData.frameNumber, timestamp: frameData.timestamp, error }
+      );
     }
   }
 
@@ -260,6 +297,205 @@ export class ExportEngine {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  }
+
+  /**
+   * Prepare audio tracks for export
+   */
+  private async prepareAudioTracks(): Promise<void> {
+    try {
+      this.onProgress?.(5, "Preparing audio tracks...");
+      
+      // Clear existing tracks
+      this.audioMixer.clearTracks();
+      
+      // Collect audio elements from timeline
+      const audioElements = this.getAudioElements();
+      
+      // Load and add each audio track
+      for (const element of audioElements) {
+        try {
+          const audioTrack = await this.createAudioTrack(element);
+          if (audioTrack) {
+            this.audioMixer.addAudioTrack(audioTrack);
+          }
+        } catch (error) {
+          console.warn(`Failed to load audio track ${element.id}:`, error);
+        }
+      }
+    } catch (error) {
+      throw new AudioMixerError(
+        "Failed to prepare audio tracks",
+        { error, elementCount: this.timelineElements.length }
+      );
+    }
+  }
+
+  /**
+   * Get all audio elements from timeline
+   */
+  private getAudioElements(): TimelineElement[] {
+    return this.timelineElements.filter(element => 
+      element.type === "audio" || (element.type === "video" && element.hasAudio)
+    );
+  }
+
+  /**
+   * Create audio track info from timeline element
+   */
+  private async createAudioTrack(element: TimelineElement): Promise<AudioTrackInfo | null> {
+    if (!element.src) {
+      return null;
+    }
+
+    try {
+      // Load audio buffer
+      const audioBuffer = await this.audioMixer.loadAudioBufferFromUrl(element.src);
+      
+      // Calculate timing
+      const startTime = element.startTime || 0;
+      const endTime = element.endTime || (startTime + (element.duration || 0));
+      
+      // Get volume and pan settings
+      const volume = element.volume !== undefined ? element.volume : 1.0;
+      const pan = element.pan !== undefined ? element.pan : 0.0;
+      
+      return {
+        element,
+        audioBuffer,
+        startTime,
+        endTime,
+        volume,
+        pan,
+      };
+    } catch (error) {
+      console.error(`Failed to create audio track for ${element.id}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Get audio sources and timestamps for all tracks
+   */
+  getAudioSources(): Array<{
+    elementId: string;
+    src: string;
+    startTime: number;
+    endTime: number;
+    volume: number;
+    pan: number;
+  }> {
+    const audioElements = this.getAudioElements();
+    
+    return audioElements.map(element => ({
+      elementId: element.id,
+      src: element.src || "",
+      startTime: element.startTime || 0,
+      endTime: element.endTime || (element.startTime || 0) + (element.duration || 0),
+      volume: element.volume !== undefined ? element.volume : 1.0,
+      pan: element.pan !== undefined ? element.pan : 0.0,
+    }));
+  }
+
+  /**
+   * Create audio stream from mixed audio tracks
+   */
+  private async createAudioStream(): Promise<MediaStream | null> {
+    try {
+      this.onProgress?.(10, "Mixing audio tracks...");
+      
+      // Mix all audio tracks
+      const mixedAudioBuffer = await this.audioMixer.mixTracks();
+      
+      // Create audio stream from buffer
+      const audioContext = this.audioMixer.getAudioContext();
+      const source = audioContext.createBufferSource();
+      source.buffer = mixedAudioBuffer;
+      
+      // Create MediaStreamDestination
+      const destination = audioContext.createMediaStreamDestination();
+      source.connect(destination);
+      
+      // Start playback (this will stream the audio)
+      source.start();
+      
+      return destination.stream;
+    } catch (error) {
+      console.warn("Failed to create audio stream:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Perform pre-flight checks before starting export
+   */
+  private performPreflightChecks(): void {
+    // Check browser compatibility
+    const compatibility = checkBrowserCompatibility();
+    if (!compatibility.supported) {
+      throw new BrowserCompatibilityError(
+        `Browser not compatible: ${compatibility.issues.join(", ")}`,
+        compatibility.issues
+      );
+    }
+
+    // Check memory usage
+    const memoryEstimate = estimateMemoryUsage(
+      this.settings.width,
+      this.settings.height,
+      this.duration,
+      this.fps
+    );
+    
+    if (memoryEstimate.estimatedMB > 3000) {
+      throw new MemoryError(
+        `Export may exceed available memory (${memoryEstimate.estimatedMB}MB estimated)`,
+        memoryEstimate
+      );
+    }
+
+    // Check canvas availability
+    if (!this.canvas) {
+      throw new CanvasRenderError("Canvas not available for export");
+    }
+
+    // Check if timeline has elements
+    if (!this.timelineElements || this.timelineElements.length === 0) {
+      throw new ExportError("No timeline elements to export", "NO_CONTENT");
+    }
+  }
+
+  /**
+   * Handle export errors with proper logging and user-friendly messages
+   */
+  private handleExportError(error: unknown): void {
+    const exportError = error instanceof Error ? error : new Error("Unknown error");
+    
+    // Log error for debugging
+    logExportError(exportError, "ExportEngine.startExport");
+    
+    // Provide user-friendly error message
+    const userMessage = getUserFriendlyErrorMessage(exportError);
+    this.onError?.(userMessage);
+  }
+
+  /**
+   * Clean up resources after export
+   */
+  private cleanupResources(): void {
+    this.isExporting = false;
+    
+    try {
+      this.recorder.cleanup();
+    } catch (error) {
+      console.warn("Failed to cleanup recorder:", error);
+    }
+    
+    try {
+      this.audioMixer.dispose();
+    } catch (error) {
+      console.warn("Failed to dispose audio mixer:", error);
+    }
   }
 
   /**
