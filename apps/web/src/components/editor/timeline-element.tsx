@@ -25,7 +25,6 @@ import {
   getTrackElementClasses,
   TIMELINE_CONSTANTS,
   getTrackHeight,
-  calculateMediaTiling,
 } from "@/constants/timeline-constants";
 import {
   DropdownMenu,
@@ -270,71 +269,45 @@ export function TimelineElement({
     }
 
     if (mediaItem.type === "image") {
-      // Use utility function to calculate optimal tiling
-      const tiling = calculateMediaTiling(elementWidth, track.type, "image");
+      // Calculate tile size based on 16:9 aspect ratio
+      const trackHeight = getTrackHeight(track.type);
+      const tileHeight = trackHeight - 8; // Account for padding
+      const tileWidth = tileHeight * (16 / 9);
 
       return (
         <div className="w-full h-full flex items-center justify-start overflow-hidden">
-          <div className="bg-[#004D52]/20 h-full flex">
-            {Array.from({ length: tiling.totalTiles }, (_, index) => {
-              const isPartialTile =
-                index === tiling.numCompleteTiles && tiling.showPartialTile;
-              const tileWidthToUse = isPartialTile
-                ? tiling.remainingWidth
-                : tiling.tileWidth;
-
-              return (
-                <div
-                  key={index}
-                  className="flex-shrink-0 h-full overflow-hidden"
-                  style={{ width: `${tileWidthToUse}px` }}
-                >
-                  <img
-                    src={mediaItem.url}
-                    alt={mediaItem.name}
-                    className="w-full h-full object-cover"
-                    draggable={false}
-                  />
-                </div>
-              );
-            })}
-          </div>
+          <div
+            className="bg-[#004D52]/20 h-full w-full"
+            style={{
+              backgroundImage: `url(${mediaItem.url})`,
+              backgroundRepeat: "repeat-x",
+              backgroundSize: `${tileWidth}px ${tileHeight}px`,
+              backgroundPosition: "left center",
+            }}
+          />
         </div>
       );
     }
 
     if (mediaItem.type === "video" && mediaItem.thumbnailUrl) {
-      // Use utility function to calculate optimal tiling
-      const tiling = calculateMediaTiling(elementWidth, track.type, "video");
+      // Calculate tile size based on 16:9 aspect ratio
+      const trackHeight = getTrackHeight(track.type);
+      const tileHeight = trackHeight - 16; // Account for padding
+      const tileWidth = tileHeight * (16 / 9);
 
       return (
         <div className="w-full h-full flex items-center overflow-hidden relative">
-          <div className="flex h-full">
-            {Array.from({ length: tiling.totalTiles }, (_, index) => {
-              const isPartialTile =
-                index === tiling.numCompleteTiles && tiling.showPartialTile;
-              const tileWidthToUse = isPartialTile
-                ? tiling.remainingWidth
-                : tiling.tileWidth;
-
-              return (
-                <div
-                  key={index}
-                  className="flex-shrink-0 h-full flex items-center justify-center p-1 overflow-hidden"
-                  style={{ width: `${tileWidthToUse}px` }}
-                >
-                  <img
-                    src={mediaItem.thumbnailUrl}
-                    alt={mediaItem.name}
-                    className="w-full h-full object-cover rounded-sm"
-                    draggable={false}
-                  />
-                </div>
-              );
-            })}
-          </div>
+          <div
+            className="h-full w-full"
+            style={{
+              backgroundImage: `url(${mediaItem.thumbnailUrl})`,
+              backgroundRepeat: "repeat-x",
+              backgroundSize: `${tileWidth}px ${tileHeight}px`,
+              backgroundPosition: "left center",
+            }}
+          />
           {/* Show name overlay on the right if there's sufficient space */}
-          {tiling.canShowOverlay && (
+          {elementWidth > tileWidth * 1.5 && (
             <div className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/70 text-white text-xs px-2 py-1 rounded pointer-events-none max-w-[40%] truncate">
               {element.name}
             </div>
