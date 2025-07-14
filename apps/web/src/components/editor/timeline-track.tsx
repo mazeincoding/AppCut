@@ -22,6 +22,7 @@ import {
   TIMELINE_CONSTANTS,
 } from "@/constants/timeline-constants";
 import { useProjectStore } from "@/stores/project-store";
+import { useTimelineSnapping } from "@/hooks/use-timeline-snapping";
 
 export function TimelineTrackContent({
   track,
@@ -45,7 +46,24 @@ export function TimelineTrackContent({
     endDrag: endDragAction,
     clearSelectedElements,
     insertTrackAt,
+    snappingEnabled,
+    gridSnappingEnabled,
+    elementSnappingEnabled,
+    playheadSnappingEnabled,
+    snapThreshold,
+    gridInterval,
   } = useTimelineStore();
+
+  const { currentTime } = usePlaybackStore();
+
+  // Initialize snapping hook
+  const { snapElementPosition } = useTimelineSnapping({
+    snapThreshold,
+    gridInterval,
+    enableGridSnapping: snappingEnabled && gridSnappingEnabled,
+    enableElementSnapping: snappingEnabled && elementSnappingEnabled,
+    enablePlayheadSnapping: snappingEnabled && playheadSnappingEnabled,
+  });
 
   const timelineRef = useRef<HTMLDivElement>(null);
   const [isDropping, setIsDropping] = useState(false);
@@ -85,12 +103,26 @@ export function TimelineTrackContent({
         mouseX / (TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel)
       );
       const adjustedTime = Math.max(0, mouseTime - dragState.clickOffsetTime);
-      // Use frame snapping if project has FPS, otherwise use decimal snapping
-      const projectStore = useProjectStore.getState();
-      const projectFps = projectStore.activeProject?.fps || 30;
-      const snappedTime = snapTimeToFrame(adjustedTime, projectFps);
 
-      updateDragTime(snappedTime);
+      // Apply snapping if enabled
+      let finalTime = adjustedTime;
+      if (snappingEnabled) {
+        const snapResult = snapElementPosition(
+          adjustedTime,
+          tracks,
+          currentTime,
+          zoomLevel,
+          dragState.elementId || undefined
+        );
+        finalTime = snapResult.snappedTime;
+      } else {
+        // Use frame snapping if project has FPS, otherwise use decimal snapping
+        const projectStore = useProjectStore.getState();
+        const projectFps = projectStore.activeProject?.fps || 30;
+        finalTime = snapTimeToFrame(adjustedTime, projectFps);
+      }
+
+      updateDragTime(finalTime);
     };
 
     const handleMouseUp = (e: MouseEvent) => {
