@@ -4,11 +4,12 @@ import { motion } from "motion/react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { ArrowRight } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 import Image from "next/image";
 import { Handlebars } from "./handlebars";
+import { ChevronUp } from "lucide-react";
 
 interface HeroProps {
   signupCount: number;
@@ -17,6 +18,15 @@ interface HeroProps {
 export function Hero({ signupCount }: HeroProps) {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 200);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,6 +154,15 @@ export function Hero({ signupCount }: HeroProps) {
           </motion.div>
         )}
       </motion.div>
+      {showBackToTop && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          className="fixed bottom-8 right-8 z-50 bg-foreground text-background p-3 rounded-full shadow-lg hover:bg-primary transition"
+          aria-label="Back to top"
+        >
+          <ChevronUp className="h-6 w-6" />
+        </button>
+      )}
     </div>
   );
 }
