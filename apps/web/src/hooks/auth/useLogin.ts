@@ -20,7 +20,7 @@ export function useLogin() {
         });
 
         if (error) {
-            setError(error.message || "An unexpected error occurred.");
+            setError(getFriendlyError(error));
             setIsEmailLoading(false);
             return;
         }
@@ -57,4 +57,17 @@ export function useLogin() {
         handleLogin,
         handleGoogleLogin,
     };
+}
+
+function getFriendlyError(error: any) {
+    if (!error) return "An unexpected error occurred. Please try again.";
+    const msg = error.message?.toLowerCase() || "";
+    if (msg.includes("invalid") || msg.includes("credentials")) {
+        return "Invalid email or password. Please try again.";
+    }
+    if (msg.includes("not found")) {
+        return "No account found with this email.";
+    }
+    // Add more mappings as needed
+    return "An unexpected error occurred. Please try again.";
 }
