@@ -20,17 +20,17 @@ Comprehensive testing strategy for the video export functionality. Each test tas
 - [x] Mock AudioContext API
 - [x] Mock canvas.captureStream()
 
-### 1.4 Test ExportSettings Types (3 min)
-- [ ] Create `/apps/web/src/__tests__/types/export.test.ts`
-- [ ] Test ExportFormat enum values
-- [ ] Test ExportQuality enum values
-- [ ] Test ExportSettings interface validation
+### 1.4 Test ExportSettings Types (3 min) ✅
+- [x] Create `/apps/web/src/__tests__/types/export.test.ts`
+- [x] Test ExportFormat enum values
+- [x] Test ExportQuality enum values
+- [x] Test ExportSettings interface validation
 
-### 1.5 Test Export Store (3 min)
-- [ ] Create `/apps/web/src/__tests__/stores/export-store.test.ts`
-- [ ] Test initial state
-- [ ] Test updateSettings action
-- [ ] Test updateProgress action
+### 1.5 Test Export Store (3 min) ✅
+- [x] Create `/apps/web/src/__tests__/stores/export-store.test.ts`
+- [x] Test initial state
+- [x] Test updateSettings action
+- [x] Test updateProgress action
 
 ### 1.6 Test Canvas Renderer (3 min) ✅
 - [x] Create `/apps/web/src/__tests__/lib/canvas-renderer.test.ts`
@@ -44,23 +44,23 @@ Comprehensive testing strategy for the video export functionality. Each test tas
 - [x] Test addAudioTrack method
 - [x] Test mixing calculations
 
-### 1.8 Test Frame Capture Service (3 min)
-- [ ] Create `/apps/web/src/__tests__/lib/frame-capture.test.ts`
-- [ ] Test frame iteration logic
-- [ ] Test element visibility calculations
-- [ ] Test layer sorting
+### 1.8 Test Frame Capture Service (3 min) ✅
+- [x] Create `/apps/web/src/__tests__/lib/frame-capture.test.ts`
+- [x] Test frame iteration logic
+- [x] Test element visibility calculations
+- [x] Test layer sorting
 
-### 1.9 Test Video Recorder (3 min)
-- [ ] Create `/apps/web/src/__tests__/lib/video-recorder.test.ts`
-- [ ] Test MediaRecorder setup
-- [ ] Test MIME type detection
-- [ ] Test recording state management
+### 1.9 Test Video Recorder (3 min) ✅
+- [x] Create `/apps/web/src/__tests__/lib/video-recorder.test.ts`
+- [x] Test MediaRecorder setup
+- [x] Test MIME type detection
+- [x] Test recording state management
 
-### 1.10 Test Error Handling (3 min)
-- [ ] Create `/apps/web/src/__tests__/lib/export-errors.test.ts`
-- [ ] Test custom error classes
-- [ ] Test getUserFriendlyErrorMessage
-- [ ] Test browser compatibility checks
+### 1.10 Test Error Handling (3 min) ✅
+- [x] Create `/apps/web/src/__tests__/lib/export-errors.test.ts`
+- [x] Test custom error classes
+- [x] Test getUserFriendlyErrorMessage
+- [x] Test browser compatibility checks
 
 ## Phase 2: Component Testing (30 min total)
 
