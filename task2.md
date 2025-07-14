@@ -159,10 +159,10 @@ Comprehensive testing strategy for the video export functionality. Each test tas
 - [x] Test codec selection
 - [x] Test quality settings
 
-### 3.9 Test Timeline Processing (3 min)
-- [ ] Test element collection
-- [ ] Test visibility filtering
-- [ ] Test layer ordering
+### 3.9 Test Timeline Processing (3 min) ✅
+- [x] Test element collection
+- [x] Test visibility filtering
+- [x] Test layer ordering
 
 ### 3.10 Test Download Mechanism (3 min)
 - [ ] Test blob creation
