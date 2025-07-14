@@ -5,12 +5,18 @@ interface AudioWaveformProps {
   audioUrl: string;
   height?: number;
   className?: string;
+  fadeIn?: number;
+  fadeOut?: number;
+  duration?: number;
 }
 
 const AudioWaveform: React.FC<AudioWaveformProps> = ({ 
   audioUrl, 
   height = 32, 
-  className = '' 
+  className = '',
+  fadeIn = 0,
+  fadeOut = 0,
+  duration = 0
 }) => {
   const waveformRef = useRef<HTMLDivElement>(null);
   const wavesurfer = useRef<WaveSurfer | null>(null);
@@ -26,13 +32,11 @@ const AudioWaveform: React.FC<AudioWaveformProps> = ({
       try {
         // Clean up any existing instance
         if (wavesurfer.current) {
-          try {
-            wavesurfer.current.destroy();
-          } catch (e) {
-            // Silently ignore destroy errors
-          }
           wavesurfer.current = null;
         }
+
+        // Clear the container
+        waveformRef.current.innerHTML = '';
 
         wavesurfer.current = WaveSurfer.create({
           container: waveformRef.current,
@@ -77,14 +81,7 @@ const AudioWaveform: React.FC<AudioWaveformProps> = ({
 
     return () => {
       mounted = false;
-      if (wavesurfer.current) {
-        try {
-          wavesurfer.current.destroy();
-        } catch (e) {
-          // Silently ignore destroy errors
-        }
-        wavesurfer.current = null;
-      }
+      wavesurfer.current = null;
     };
   }, [audioUrl, height]);
 
@@ -108,6 +105,23 @@ const AudioWaveform: React.FC<AudioWaveformProps> = ({
         className={`w-full transition-opacity duration-200 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
         style={{ height }}
       />
+      {/* Fade overlays */}
+      {!isLoading && duration > 0 && (fadeIn > 0 || fadeOut > 0) && (
+        <>
+          {fadeIn > 0 && (
+            <div 
+              className="absolute top-0 left-0 h-full bg-gradient-to-r from-black/40 to-transparent pointer-events-none"
+              style={{ width: `${(fadeIn / duration) * 100}%` }}
+            />
+          )}
+          {fadeOut > 0 && (
+            <div 
+              className="absolute top-0 right-0 h-full bg-gradient-to-l from-black/40 to-transparent pointer-events-none"
+              style={{ width: `${(fadeOut / duration) * 100}%` }}
+            />
+          )}
+        </>
+      )}
     </div>
   );
 };

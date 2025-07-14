@@ -328,6 +328,10 @@ export function PreviewPanel() {
               trimEnd={element.trimEnd}
               clipDuration={element.duration}
               trackMuted={elementData.track.muted}
+              elementVolume={element.volume}
+              elementMuted={element.muted}
+              fadeIn={element.fadeIn}
+              fadeOut={element.fadeOut}
             />
           </div>
         );

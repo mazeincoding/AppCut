@@ -17,6 +17,11 @@ interface BaseTimelineElement {
 export interface MediaElement extends BaseTimelineElement {
   type: "media";
   mediaId: string;
+  // Audio-specific properties
+  volume?: number; // 0-200 (percentage)
+  fadeIn?: number; // seconds
+  fadeOut?: number; // seconds
+  muted?: boolean;
 }
 
 // Text element with embedded text data

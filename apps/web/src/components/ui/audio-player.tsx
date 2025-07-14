@@ -11,6 +11,10 @@ interface AudioPlayerProps {
   trimEnd: number;
   clipDuration: number;
   trackMuted?: boolean;
+  elementVolume?: number;
+  elementMuted?: boolean;
+  fadeIn?: number;
+  fadeOut?: number;
 }
 
 export function AudioPlayer({
@@ -21,6 +25,10 @@ export function AudioPlayer({
   trimEnd,
   clipDuration,
   trackMuted = false,
+  elementVolume = 100,
+  elementMuted = false,
+  fadeIn = 0,
+  fadeOut = 0,
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const { isPlaying, currentTime, volume, speed, muted } = usePlaybackStore();
@@ -108,10 +116,12 @@ export function AudioPlayer({
     const audio = audioRef.current;
     if (!audio) return;
 
-    audio.volume = volume;
-    audio.muted = muted || trackMuted;
+    // Calculate final volume (global volume * element volume)
+    const finalVolume = (volume * (elementVolume / 100)) / 100;
+    audio.volume = Math.max(0, Math.min(1, finalVolume));
+    audio.muted = muted || trackMuted || elementMuted;
     audio.playbackRate = speed;
-  }, [volume, speed, muted, trackMuted]);
+  }, [volume, speed, muted, trackMuted, elementVolume, elementMuted]);
 
   return (
     <audio
@@ -120,7 +130,7 @@ export function AudioPlayer({
       className={className}
       preload="auto"
       controls={false}
-      style={{ display: "none" }} // Audio elements don't need visual representation
+      style={{ width: '300px', height: '60px', background:'red' }} // Audio elements don't need visual representation
       onContextMenu={(e) => e.preventDefault()}
     />
   );
