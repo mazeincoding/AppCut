@@ -32,4 +32,5 @@ node_modules
 # cursor
 
 .cursor/
+bun.lock
 bun.lockb
