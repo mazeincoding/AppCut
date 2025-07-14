@@ -8,7 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { ExportFormat, ExportQuality } from "@/types/export";
 import { useExportStore } from "@/stores/export-store";
-import { useState, useEffect } from "react";
+import { ExportCanvas, ExportCanvasRef } from "@/components/export-canvas";
+import { ExportEngine } from "@/lib/export-engine";
+import { useState, useEffect, useRef } from "react";
 import { Download, X } from "lucide-react";
 
 interface ExportDialogProps {
@@ -18,6 +20,7 @@ interface ExportDialogProps {
 
 export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
   const { settings, progress, updateSettings, updateProgress, resetExport } = useExportStore();
+  const canvasRef = useRef<ExportCanvasRef>(null);
   
   // Initialize local state from store
   const [format, setFormat] = useState<ExportFormat>(settings.format);
@@ -70,23 +73,44 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
   const estimatedSize = getEstimatedSize(quality);
 
   const handleExport = async () => {
+    const canvas = canvasRef.current?.getCanvas();
+    if (!canvas) {
+      updateProgress({ isExporting: false });
+      return;
+    }
+
     updateProgress({ isExporting: true, progress: 0, status: "Initializing export..." });
     
-    // Simulate export progress
-    for (let i = 0; i <= 100; i += 10) {
-      await new Promise(resolve => setTimeout(resolve, 200));
-      let status = "Exporting...";
-      if (i === 0) status = "Preparing timeline...";
-      else if (i === 20) status = "Rendering frames...";
-      else if (i === 60) status = "Encoding video...";
-      else if (i === 90) status = "Finalizing...";
-      else if (i === 100) status = "Export complete!";
+    try {
+      // Create export engine
+      const exportEngine = new ExportEngine({
+        canvas,
+        settings,
+        timelineElements: [], // TODO: Get from timeline store
+        duration: 10, // TODO: Get from timeline store
+        fps: 30, // TODO: Get from project settings
+        onProgress: (progress, status) => {
+          updateProgress({ progress, status });
+        },
+        onError: (error) => {
+          updateProgress({ isExporting: false, status: `Error: ${error}` });
+        },
+      });
+
+      // Start export
+      const videoBlob = await exportEngine.startExport();
       
-      updateProgress({ progress: i, status });
+      // Create download
+      const fullFilename = `${filename}.${format}`;
+      ExportEngine.createDownloadLink(videoBlob, fullFilename);
+      
+      updateProgress({ isExporting: false, progress: 100, status: "Export complete!" });
+      setTimeout(() => onOpenChange(false), 1000);
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      updateProgress({ isExporting: false, status: `Error: ${errorMessage}` });
     }
-    
-    updateProgress({ isExporting: false });
-    setTimeout(() => onOpenChange(false), 1000);
   };
 
   const handleCancel = () => {
@@ -200,6 +224,12 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
             </div>
           </div>
         )}
+        
+        <ExportCanvas
+          ref={canvasRef}
+          settings={settings}
+          className="export-canvas"
+        />
         
         <DialogFooter>
           <Button
