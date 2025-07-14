@@ -341,34 +341,6 @@ export function Timeline() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [redo]);
 
-  // Keyboard shortcuts for snapping
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger when typing in input fields or textareas
-      if (
-        e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLTextAreaElement
-      ) {
-        return;
-      }
-
-      // Only trigger when timeline is focused or mouse is over timeline
-      if (
-        !isInTimeline &&
-        !timelineRef.current?.contains(document.activeElement)
-      ) {
-        return;
-      }
-
-      if (e.key === "s" || e.key === "S") {
-        e.preventDefault();
-        toggleSnapping();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [toggleSnapping, isInTimeline]);
-
   // Old marquee system removed - using new SelectionBox component instead
 
   const handleDragEnter = (e: React.DragEvent) => {
