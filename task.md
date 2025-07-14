@@ -5,112 +5,112 @@ Breaking down the video export feature into small, focused tasks. Each task shou
 
 ## Phase 1: Export Dialog UI Components (30 min total)
 
-### 1.1 Create Export Dialog Component File (3 min)
-- [ ] Create `/apps/web/src/components/export-dialog.tsx`
-- [ ] Add basic React component structure
-- [ ] Import Dialog components from `@/components/ui/dialog`
+### 1.1 Create Export Dialog Component File (3 min) ✅
+- [x] Create `/apps/web/src/components/export-dialog.tsx`
+- [x] Add basic React component structure
+- [x] Import Dialog components from `@/components/ui/dialog`
 
-### 1.2 Add Dialog Trigger Integration (3 min)
-- [ ] Update `editor-header.tsx` to import ExportDialog
-- [ ] Replace console.log with dialog open trigger
-- [ ] Add state for dialog open/close
+### 1.2 Add Dialog Trigger Integration (3 min) ✅
+- [x] Update `editor-header.tsx` to import ExportDialog
+- [x] Replace console.log with dialog open trigger
+- [x] Add state for dialog open/close
 
-### 1.3 Create Export Settings Type (3 min)
-- [ ] Create `/apps/web/src/types/export.ts`
-- [ ] Define ExportFormat enum (MP4, WEBM, MOV)
-- [ ] Define ExportQuality enum (1080p, 720p, 480p)
-- [ ] Define ExportSettings interface
+### 1.3 Create Export Settings Type (3 min) ✅
+- [x] Create `/apps/web/src/types/export.ts`
+- [x] Define ExportFormat enum (MP4, WEBM, MOV)
+- [x] Define ExportQuality enum (1080p, 720p, 480p)
+- [x] Define ExportSettings interface
 
-### 1.4 Add Format Selection UI (3 min)
-- [ ] Add RadioGroup for format selection in export dialog
-- [ ] Create format options with labels
-- [ ] Wire up to local state
+### 1.4 Add Format Selection UI (3 min) ✅
+- [x] Add RadioGroup for format selection in export dialog
+- [x] Create format options with labels
+- [x] Wire up to local state
 
-### 1.5 Add Quality Selection UI (3 min)
-- [ ] Add RadioGroup for quality selection
-- [ ] Create quality preset options
-- [ ] Wire up to local state
+### 1.5 Add Quality Selection UI (3 min) ✅
+- [x] Add RadioGroup for quality selection
+- [x] Create quality preset options
+- [x] Wire up to local state
 
-### 1.6 Add Resolution Display (3 min)
-- [ ] Calculate resolution based on quality selection
-- [ ] Display resolution info (e.g., "1920x1080")
-- [ ] Show estimated file size placeholder
+### 1.6 Add Resolution Display (3 min) ✅
+- [x] Calculate resolution based on quality selection
+- [x] Display resolution info (e.g., "1920x1080")
+- [x] Show estimated file size placeholder
 
-### 1.7 Add Export Button and Cancel (3 min)
-- [ ] Add DialogFooter with action buttons
-- [ ] Style Export button as primary action
-- [ ] Add loading state preparation
+### 1.7 Add Export Button and Cancel (3 min) ✅
+- [x] Add DialogFooter with action buttons
+- [x] Style Export button as primary action
+- [x] Add loading state preparation
 
-### 1.8 Add Filename Input (3 min)
-- [ ] Add Input component for filename
-- [ ] Set default filename with timestamp
-- [ ] Add basic validation
+### 1.8 Add Filename Input (3 min) ✅
+- [x] Add Input component for filename
+- [x] Set default filename with timestamp
+- [x] Add basic validation
 
-### 1.9 Create Export Progress Component (3 min)
-- [ ] Create progress bar component
-- [ ] Add percentage display
-- [ ] Add estimated time remaining placeholder
+### 1.9 Create Export Progress Component (3 min) ✅
+- [x] Create progress bar component
+- [x] Add percentage display
+- [x] Add estimated time remaining placeholder
 
-### 1.10 Add Dialog Close Handlers (3 min)
-- [ ] Implement cancel button handler
-- [ ] Add ESC key handling
-- [ ] Prevent close during export
+### 1.10 Add Dialog Close Handlers (3 min) ✅
+- [x] Implement cancel button handler
+- [x] Add ESC key handling
+- [x] Prevent close during export
 
 ## Phase 2: Export State Management (15 min total)
 
-### 2.1 Create Export Store File (3 min)
-- [ ] Create `/apps/web/src/stores/export-store.ts`
-- [ ] Set up basic Zustand store structure
-- [ ] Add TypeScript types
+### 2.1 Create Export Store File (3 min) ✅
+- [x] Create `/apps/web/src/stores/export-store.ts`
+- [x] Set up basic Zustand store structure
+- [x] Add TypeScript types
 
-### 2.2 Add Export State Properties (3 min)
-- [ ] Add isExporting boolean
-- [ ] Add exportProgress number (0-100)
-- [ ] Add exportSettings state
-- [ ] Add error state
+### 2.2 Add Export State Properties (3 min) ✅
+- [x] Add isExporting boolean
+- [x] Add exportProgress number (0-100)
+- [x] Add exportSettings state
+- [x] Add error state
 
-### 2.3 Add Export Actions (3 min)
-- [ ] Create startExport action
-- [ ] Create updateProgress action
-- [ ] Create completeExport action
-- [ ] Create cancelExport action
+### 2.3 Add Export Actions (3 min) ✅
+- [x] Create startExport action
+- [x] Create updateProgress action
+- [x] Create completeExport action
+- [x] Create cancelExport action
 
-### 2.4 Connect Dialog to Store (3 min)
-- [ ] Import useExportStore in export dialog
-- [ ] Connect settings to store
-- [ ] Connect progress to UI
+### 2.4 Connect Dialog to Store (3 min) ✅
+- [x] Import useExportStore in export dialog
+- [x] Connect settings to store
+- [x] Connect progress to UI
 
-### 2.5 Add Export Status Messages (3 min)
-- [ ] Create status message state
-- [ ] Add status update action
-- [ ] Display current export step
+### 2.5 Add Export Status Messages (3 min) ✅
+- [x] Create status message state
+- [x] Add status update action
+- [x] Display current export step
 
 ## Phase 3: Canvas Setup (15 min total)
 
-### 3.1 Create Canvas Export Component (3 min)
-- [ ] Create `/apps/web/src/components/export-canvas.tsx`
-- [ ] Add hidden canvas element
-- [ ] Set up refs
+### 3.1 Create Canvas Export Component (3 min) ✅
+- [x] Create `/apps/web/src/components/export-canvas.tsx`
+- [x] Add hidden canvas element
+- [x] Set up refs
 
-### 3.2 Add Canvas Initialization (3 min)
-- [ ] Set canvas dimensions based on export quality
-- [ ] Get 2D context
-- [ ] Add error handling
+### 3.2 Add Canvas Initialization (3 min) ✅
+- [x] Set canvas dimensions based on export quality
+- [x] Get 2D context
+- [x] Add error handling
 
-### 3.3 Create Canvas Render Manager (3 min)
-- [ ] Create `/apps/web/src/lib/canvas-renderer.ts`
-- [ ] Add CanvasRenderer class structure
-- [ ] Define render method signatures
+### 3.3 Create Canvas Render Manager (3 min) ✅
+- [x] Create `/apps/web/src/lib/canvas-renderer.ts`
+- [x] Add CanvasRenderer class structure
+- [x] Define render method signatures
 
-### 3.4 Add Clear Frame Method (3 min)
-- [ ] Implement clearFrame method
-- [ ] Handle background color/transparency
-- [ ] Test with solid color
+### 3.4 Add Clear Frame Method (3 min) ✅
+- [x] Implement clearFrame method
+- [x] Handle background color/transparency
+- [x] Test with solid color
 
-### 3.5 Add Draw Image Method (3 min)
-- [ ] Implement drawImage for video frames
-- [ ] Handle aspect ratio preservation
-- [ ] Add position calculations
+### 3.5 Add Draw Image Method (3 min) ✅
+- [x] Implement drawImage for video frames
+- [x] Handle aspect ratio preservation
+- [x] Add position calculations
 
 ## Phase 4: Frame Rendering Pipeline (21 min total)
 

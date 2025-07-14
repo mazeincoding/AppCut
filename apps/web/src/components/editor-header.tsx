@@ -7,14 +7,16 @@ import { useTimelineStore } from "@/stores/timeline-store";
 import { HeaderBase } from "./header-base";
 import { formatTimeCode } from "@/lib/time";
 import { useProjectStore } from "@/stores/project-store";
+import { ExportDialog } from "./export-dialog";
+import { useState } from "react";
 
 export function EditorHeader() {
   const { getTotalDuration } = useTimelineStore();
   const { activeProject } = useProjectStore();
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
 
   const handleExport = () => {
-    // TODO: Implement export functionality
-    console.log("Export project");
+    setExportDialogOpen(true);
   };
 
   const leftContent = (
@@ -56,11 +58,17 @@ export function EditorHeader() {
   );
 
   return (
-    <HeaderBase
-      leftContent={leftContent}
-      centerContent={centerContent}
-      rightContent={rightContent}
-      className="bg-background h-[3.2rem] px-4"
-    />
+    <>
+      <HeaderBase
+        leftContent={leftContent}
+        centerContent={centerContent}
+        rightContent={rightContent}
+        className="bg-background h-[3.2rem] px-4"
+      />
+      <ExportDialog 
+        open={exportDialogOpen} 
+        onOpenChange={setExportDialogOpen} 
+      />
+    </>
   );
 }

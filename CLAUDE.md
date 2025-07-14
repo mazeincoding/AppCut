@@ -1,0 +1,215 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Overview
+
+OpenCut is a privacy-focused, open-source web-based video editor that runs entirely in the browser. It's designed as a free alternative to CapCut with the core principle that "your videos stay on your device."
+
+## Architecture
+
+### Monorepo Structure
+This is a **Turborepo monorepo** with the following structure:
+- `apps/web/` - Main Next.js 15 application
+- `packages/auth/` - Authentication package (`@opencut/auth`)
+- `packages/db/` - Database package (`@opencut/db`)
+
+### Technology Stack
+- **Framework**: Next.js 15 with App Router, React 18, TypeScript
+- **Styling**: Tailwind CSS with custom design system
+- **State Management**: Zustand with multiple specialized stores
+- **Database**: PostgreSQL with Drizzle ORM
+- **Authentication**: Better Auth with Google OAuth support
+- **Video Processing**: FFmpeg.js for client-side video processing
+- **Storage**: Hybrid approach using OPFS + IndexedDB for privacy
+- **Build Tool**: Turborepo with Bun package manager
+
+### Key State Management Stores
+- `editor-store.ts` - Canvas settings and editor initialization
+- `project-store.ts` - Project CRUD operations and metadata
+- `timeline-store.ts` - Timeline tracks, elements, and editing operations
+- `media-store.ts` - Media file management and storage
+- `playback-store.ts` - Video playback controls and timing
+
+### Storage Architecture
+OpenCut uses a **hybrid client-side storage system** for privacy:
+- **OPFS (Origin Private File System)**: Large media files
+- **IndexedDB**: Project metadata and timeline data
+- **No server uploads**: All processing happens in the browser
+
+## Development Commands
+
+### Setup (Required)
+```bash
+# 1. Start database services (PostgreSQL + Redis)
+docker-compose up -d
+
+# 2. Navigate to web app
+cd apps/web
+
+# 3. Copy environment file
+cp .env.example .env.local
+
+# 4. Install dependencies
+bun install
+
+# 5. Run database migrations
+bun run db:migrate
+
+# 6. Start development server
+bun run dev
+```
+
+### Common Development Tasks
+```bash
+# From project root
+turbo run dev          # Start all apps in development mode
+turbo run build        # Build all apps
+turbo run lint         # Lint all packages
+turbo run format       # Format code with Biome
+turbo run check-types  # Type check all packages
+
+# From apps/web/
+bun run dev            # Start Next.js dev server
+bun run build          # Build for production
+bun run lint           # Lint web app
+bun run db:generate    # Generate Drizzle schema
+bun run db:migrate     # Run database migrations
+bun run db:push:local  # Push schema to local DB
+bun run db:push:prod   # Push schema to production DB
+```
+
+### Code Quality
+```bash
+# Format code (from apps/web/)
+bunx biome format --write .
+
+# Check linting
+bun run lint
+```
+
+## Environment Configuration
+
+### Required Environment Variables
+```bash
+# Database (matches docker-compose.yaml)
+DATABASE_URL="postgresql://opencut:opencutthegoat@localhost:5432/opencut"
+
+# Better Auth (generate secure secret)
+BETTER_AUTH_SECRET="your-generated-secret-here"
+BETTER_AUTH_URL="http://localhost:3000"
+
+# Redis (matches docker-compose.yaml)
+UPSTASH_REDIS_REST_URL="http://localhost:8079"
+UPSTASH_REDIS_REST_TOKEN="example_token"
+
+# Development
+NODE_ENV="development"
+```
+
+### Generate BETTER_AUTH_SECRET
+```bash
+# Cross-platform method
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+
+# Or use: https://generate-secret.vercel.app/32
+```
+
+## Key Architecture Patterns
+
+### Timeline System
+The timeline supports **multi-track editing** with the following structure:
+- **Tracks**: Different types (media, text, audio) with drag-and-drop support
+- **Elements**: Individual media items with trim/split/move operations
+- **Playback**: Real-time preview with frame-accurate seeking
+- **Persistence**: Auto-save to IndexedDB with undo/redo support
+
+### Video Processing Pipeline
+All video processing happens **client-side** using FFmpeg.js:
+- **Thumbnail generation**: Create preview images for timeline
+- **Video trimming**: Extract segments without re-encoding
+- **Format conversion**: Convert between video formats
+- **Metadata extraction**: Get duration, resolution, frame rate
+- **Audio separation**: Extract audio tracks from video
+
+### Canvas System
+Supports multiple aspect ratios and export formats:
+- **Presets**: 16:9, 9:16, 1:1, 4:3 with customizable dimensions
+- **Real-time preview**: HTML-based rendering for performance
+- **Export rendering**: Canvas-based frame capture for video export
+
+## Database Schema
+
+### Core Tables
+- `users` - User authentication and profiles
+- `projects` - Project metadata and settings
+- `sessions` - Better Auth session management
+- `waitlist` - Email collection for updates
+
+### Security Features
+- **Row-level security (RLS)** enabled on all tables
+- **Proper foreign key constraints** for data integrity
+- **Token-based authentication** with Better Auth
+
+## Important File Locations
+
+### Configuration Files
+- `turbo.json` - Turborepo build configuration
+- `apps/web/next.config.ts` - Next.js configuration
+- `apps/web/tailwind.config.ts` - Tailwind CSS configuration
+- `apps/web/tsconfig.json` - TypeScript configuration
+- `biome.json` - Biome linter/formatter configuration
+
+### Core Libraries
+- `apps/web/src/lib/ffmpeg-utils.ts` - Video processing utilities
+- `apps/web/src/lib/storage/` - Client-side storage system
+- `apps/web/src/lib/time.ts` - Time formatting utilities
+
+### Database
+- `apps/web/migrations/` - Drizzle database migrations
+- `packages/db/` - Database schemas and configuration
+
+## Development Guidelines
+
+### Code Style
+- Use **Biome** for linting and formatting (not ESLint/Prettier)
+- Follow **TypeScript strict mode** patterns
+- Use **Zustand** for state management over Context API
+- Implement **component-based architecture** with shadcn/ui
+
+### Performance Considerations
+- **Lazy load** heavy video processing components
+- Use **Web Workers** for background processing tasks
+- Implement **proper dependency arrays** to prevent unnecessary re-renders
+- **Memory management** is crucial for large video files
+
+### Privacy & Security
+- **No server uploads**: All processing stays in browser
+- **Validate all inputs** with Zod schemas
+- **Use RLS** for database access control
+- **Rate limiting** with Redis for API endpoints
+
+## Common Issues & Solutions
+
+### Database Connection Issues
+- Ensure Docker services are running: `docker-compose up -d`
+- Check DATABASE_URL matches docker-compose.yaml
+- Run migrations: `bun run db:migrate`
+
+### Video Processing Issues
+- FFmpeg.js loads from local files in `/public/ffmpeg/`
+- Large video files may require OPFS feature detection
+- Browser compatibility varies for video codecs
+
+### Build Issues
+- Use **Bun** as package manager (not npm/yarn)
+- Turborepo handles workspace dependencies automatically
+- Check `turbo.json` for build task configuration
+
+## Testing
+
+Currently, OpenCut does not have a comprehensive test suite. When adding tests:
+- Use the testing framework appropriate for the component type
+- Test video processing utilities thoroughly
+- Mock FFmpeg.js for unit tests
+- Test storage operations with fake IndexedDB
