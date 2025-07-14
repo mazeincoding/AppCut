@@ -64,17 +64,17 @@ Comprehensive testing strategy for the video export functionality. Each test tas
 
 ## Phase 2: Component Testing (30 min total)
 
-### 2.1 Test Export Dialog Component (3 min)
-- [ ] Create `/apps/web/src/__tests__/components/export-dialog.test.tsx`
-- [ ] Test dialog open/close behavior
-- [ ] Test format selection
-- [ ] Test quality selection
+### 2.1 Test Export Dialog Component (3 min) ✅
+- [x] Create `/apps/web/src/__tests__/components/export-dialog.test.tsx`
+- [x] Test dialog open/close behavior
+- [x] Test format selection
+- [x] Test quality selection
 
-### 2.2 Test Export Canvas Component (3 min)
-- [ ] Create `/apps/web/src/__tests__/components/export-canvas.test.tsx`
-- [ ] Test canvas ref exposure
-- [ ] Test canvas dimensions
-- [ ] Test high-DPI scaling
+### 2.2 Test Export Canvas Component (3 min) ✅
+- [x] Create `/apps/web/src/__tests__/components/export-canvas.test.tsx`
+- [x] Test canvas ref exposure
+- [x] Test canvas dimensions
+- [x] Test high-DPI scaling
 
 ### 2.3 Test Form Validation (3 min)
 - [ ] Test filename validation
