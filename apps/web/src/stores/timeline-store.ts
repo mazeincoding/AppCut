@@ -42,6 +42,22 @@ interface TimelineStore {
   // Manual method if you need to force recomputation
   getSortedTracks: () => TimelineTrack[];
 
+  // Snapping settings
+  snappingEnabled: boolean;
+  gridSnappingEnabled: boolean;
+  elementSnappingEnabled: boolean;
+  playheadSnappingEnabled: boolean;
+  snapThreshold: number;
+  gridInterval: number;
+
+  // Snapping actions
+  toggleSnapping: () => void;
+  toggleGridSnapping: () => void;
+  toggleElementSnapping: () => void;
+  togglePlayheadSnapping: () => void;
+  setSnapThreshold: (threshold: number) => void;
+  setGridInterval: (interval: number) => void;
+
   // Multi-selection
   selectedElements: { trackId: string; elementId: string }[];
   selectElement: (trackId: string, elementId: string, multi?: boolean) => void;
@@ -202,6 +218,14 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
     history: [],
     redoStack: [],
     selectedElements: [],
+
+    // Snapping settings defaults
+    snappingEnabled: true,
+    gridSnappingEnabled: true,
+    elementSnappingEnabled: true,
+    playheadSnappingEnabled: true,
+    snapThreshold: 10, // pixels
+    gridInterval: 1, // seconds
 
     getSortedTracks: () => {
       const { _tracks } = get();
@@ -948,6 +972,35 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       const defaultTracks = ensureMainTrack([]);
       updateTracks(defaultTracks);
       set({ history: [], redoStack: [], selectedElements: [] });
+    },
+
+    // Snapping actions
+    toggleSnapping: () => {
+      set((state) => ({ snappingEnabled: !state.snappingEnabled }));
+    },
+
+    toggleGridSnapping: () => {
+      set((state) => ({ gridSnappingEnabled: !state.gridSnappingEnabled }));
+    },
+
+    toggleElementSnapping: () => {
+      set((state) => ({
+        elementSnappingEnabled: !state.elementSnappingEnabled,
+      }));
+    },
+
+    togglePlayheadSnapping: () => {
+      set((state) => ({
+        playheadSnappingEnabled: !state.playheadSnappingEnabled,
+      }));
+    },
+
+    setSnapThreshold: (threshold) => {
+      set({ snapThreshold: threshold });
+    },
+
+    setGridInterval: (interval) => {
+      set({ gridInterval: interval });
     },
   };
 });
