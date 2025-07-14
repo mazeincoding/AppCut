@@ -157,7 +157,7 @@ export function Hero({ signupCount }: HeroProps) {
       {showBackToTop && (
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-8 right-8 z-50 bg-foreground text-background p-3 rounded-full shadow-lg hover:bg-primary transition"
+          className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50 bg-foreground text-background p-3 rounded-full shadow-lg hover:bg-foreground/80 transition-colors duration-200"
           aria-label="Back to top"
         >
           <ChevronUp className="h-6 w-6" />
