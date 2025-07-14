@@ -7,7 +7,7 @@ export const auth = betterAuth({
     provider: "pg",
     usePlural: true,
   }),
-  secret: process.env.BETTER_AUTH_SECRET!,
+  secret: process.env.BETTER_AUTH_SECRET,
   user: {
     deleteUser: {
       enabled: true,

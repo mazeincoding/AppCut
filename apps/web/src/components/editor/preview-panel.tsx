@@ -7,6 +7,7 @@ import { usePlaybackStore } from "@/stores/playback-store";
 import { useEditorStore } from "@/stores/editor-store";
 import { useAspectRatio } from "@/hooks/use-aspect-ratio";
 import { VideoPlayer } from "@/components/ui/video-player";
+import { AudioPlayer } from "@/components/ui/audio-player";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,10 +16,13 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Play, Pause } from "lucide-react";
+import { Play, Pause, Expand } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { formatTimeCode } from "@/lib/time";
+import { FONT_CLASS_MAP } from "@/lib/font-config";
+import { BackgroundSettings } from "../background-settings";
+import { useProjectStore } from "@/stores/project-store";
 
 interface ActiveElement {
   element: TimelineElement;
@@ -37,6 +41,7 @@ export function PreviewPanel() {
     width: 0,
     height: 0,
   });
+  const { activeProject } = useProjectStore();
 
   // Calculate optimal preview size that fits in container while maintaining aspect ratio
   useEffect(() => {
@@ -134,12 +139,96 @@ export function PreviewPanel() {
   // Check if there are any elements in the timeline at all
   const hasAnyElements = tracks.some((track) => track.elements.length > 0);
 
+  // Get media elements for blur background (video/image only)
+  const getBlurBackgroundElements = (): ActiveElement[] => {
+    return activeElements.filter(
+      ({ element, mediaItem }) =>
+        element.type === "media" &&
+        mediaItem &&
+        (mediaItem.type === "video" || mediaItem.type === "image") &&
+        element.mediaId !== "test" // Exclude test elements
+    );
+  };
+
+  const blurBackgroundElements = getBlurBackgroundElements();
+
+  // Render blur background layer
+  const renderBlurBackground = () => {
+    if (
+      !activeProject?.backgroundType ||
+      activeProject.backgroundType !== "blur" ||
+      blurBackgroundElements.length === 0
+    ) {
+      return null;
+    }
+
+    // Use the first media element for background (could be enhanced to use primary/focused element)
+    const backgroundElement = blurBackgroundElements[0];
+    const { element, mediaItem } = backgroundElement;
+
+    if (!mediaItem) return null;
+
+    const blurIntensity = activeProject.blurIntensity || 8;
+
+    if (mediaItem.type === "video") {
+      return (
+        <div
+          key={`blur-${element.id}`}
+          className="absolute inset-0 overflow-hidden"
+          style={{
+            filter: `blur(${blurIntensity}px)`,
+            transform: "scale(1.1)", // Slightly zoom to avoid blur edge artifacts
+            transformOrigin: "center",
+          }}
+        >
+          <VideoPlayer
+            src={mediaItem.url!}
+            poster={mediaItem.thumbnailUrl}
+            clipStartTime={element.startTime}
+            trimStart={element.trimStart}
+            trimEnd={element.trimEnd}
+            clipDuration={element.duration}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      );
+    }
+
+    if (mediaItem.type === "image") {
+      return (
+        <div
+          key={`blur-${element.id}`}
+          className="absolute inset-0 overflow-hidden"
+          style={{
+            filter: `blur(${blurIntensity}px)`,
+            transform: "scale(1.1)", // Slightly zoom to avoid blur edge artifacts
+            transformOrigin: "center",
+          }}
+        >
+          <img
+            src={mediaItem.url!}
+            alt={mediaItem.name}
+            className="w-full h-full object-cover"
+            draggable={false}
+          />
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   // Render an element
   const renderElement = (elementData: ActiveElement, index: number) => {
     const { element, mediaItem } = elementData;
 
     // Text elements
     if (element.type === "text") {
+      const fontClassName =
+        FONT_CLASS_MAP[element.fontFamily as keyof typeof FONT_CLASS_MAP] || "";
+
+      const scaleRatio = previewDimensions.width / canvasSize.width;
+
       return (
         <div
           key={element.id}
@@ -147,15 +236,15 @@ export function PreviewPanel() {
           style={{
             left: `${50 + (element.x / canvasSize.width) * 100}%`,
             top: `${50 + (element.y / canvasSize.height) * 100}%`,
-            transform: `translate(-50%, -50%) rotate(${element.rotation}deg)`,
+            transform: `translate(-50%, -50%) rotate(${element.rotation}deg) scale(${scaleRatio})`,
             opacity: element.opacity,
             zIndex: 100 + index, // Text elements on top
           }}
         >
           <div
+            className={fontClassName}
             style={{
               fontSize: `${element.fontSize}px`,
-              fontFamily: element.fontFamily,
               color: element.color,
               backgroundColor: element.backgroundColor,
               textAlign: element.textAlign,
@@ -164,7 +253,9 @@ export function PreviewPanel() {
               textDecoration: element.textDecoration,
               padding: "4px 8px",
               borderRadius: "2px",
-              whiteSpace: "pre-wrap",
+              whiteSpace: "nowrap",
+              // Fallback for system fonts that don't have classes
+              ...(fontClassName === "" && { fontFamily: element.fontFamily }),
             }}
           >
             {element.content}
@@ -193,7 +284,10 @@ export function PreviewPanel() {
       // Video elements
       if (mediaItem.type === "video") {
         return (
-          <div key={element.id} className="absolute inset-0">
+          <div
+            key={element.id}
+            className="absolute inset-0 flex items-center justify-center"
+          >
             <VideoPlayer
               src={mediaItem.url!}
               poster={mediaItem.thumbnailUrl}
@@ -209,11 +303,14 @@ export function PreviewPanel() {
       // Image elements
       if (mediaItem.type === "image") {
         return (
-          <div key={element.id} className="absolute inset-0">
+          <div
+            key={element.id}
+            className="absolute inset-0 flex items-center justify-center"
+          >
             <img
               src={mediaItem.url!}
               alt={mediaItem.name}
-              className="w-full h-full object-cover"
+              className="max-w-full max-h-full object-contain"
               draggable={false}
             />
           </div>
@@ -222,7 +319,18 @@ export function PreviewPanel() {
 
       // Audio elements (no visual representation)
       if (mediaItem.type === "audio") {
-        return null;
+        return (
+          <div key={element.id} className="absolute inset-0">
+            <AudioPlayer
+              src={mediaItem.url!}
+              clipStartTime={element.startTime}
+              trimStart={element.trimStart}
+              trimEnd={element.trimEnd}
+              clipDuration={element.duration}
+              trackMuted={elementData.track.muted}
+            />
+          </div>
+        );
       }
     }
 
@@ -230,21 +338,26 @@ export function PreviewPanel() {
   };
 
   return (
-    <div className="h-full w-full flex flex-col min-h-0 min-w-0">
+    <div className="h-full w-full flex flex-col min-h-0 min-w-0 bg-panel rounded-sm">
       <div
         ref={containerRef}
-        className="flex-1 flex flex-col items-start justify-center p-3 min-h-0 min-w-0"
+        className="flex-1 flex flex-col items-center justify-center p-3 min-h-0 min-w-0"
       >
         <div className="flex-1"></div>
         {hasAnyElements ? (
           <div
             ref={previewRef}
-            className="relative overflow-hidden rounded-sm bg-black border"
+            className="relative overflow-hidden rounded-sm border"
             style={{
               width: previewDimensions.width,
               height: previewDimensions.height,
+              backgroundColor:
+                activeProject?.backgroundType === "blur"
+                  ? "transparent"
+                  : activeProject?.backgroundColor || "#000000",
             }}
           >
+            {renderBlurBackground()}
             {activeElements.length === 0 ? (
               <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
                 No elements at current time
@@ -254,6 +367,14 @@ export function PreviewPanel() {
                 renderElement(elementData, index)
               )
             )}
+            {/* Show message when blur is selected but no media available */}
+            {activeProject?.backgroundType === "blur" &&
+              blurBackgroundElements.length === 0 &&
+              activeElements.length > 0 && (
+                <div className="absolute bottom-2 left-2 right-2 bg-black/70 text-white text-xs p-2 rounded">
+                  Add a video or image to use blur background
+                </div>
+              )}
           </div>
         ) : null}
 
@@ -269,6 +390,7 @@ function PreviewToolbar({ hasAnyElements }: { hasAnyElements: boolean }) {
   const { isPlaying, toggle, currentTime } = usePlaybackStore();
   const { setCanvasSize, setCanvasSizeToOriginal } = useEditorStore();
   const { getTotalDuration } = useTimelineStore();
+  const { activeProject } = useProjectStore();
   const {
     currentPreset,
     isOriginal,
@@ -289,17 +411,30 @@ function PreviewToolbar({ hasAnyElements }: { hasAnyElements: boolean }) {
   return (
     <div
       data-toolbar
-      className="flex items-end justify-between gap-2 p-1 pt-2 bg-background-500 w-full"
+      className="flex items-end justify-between gap-2 p-1 pt-2 w-full"
     >
       <div>
         <p
           className={cn(
-            "text-xs text-muted-foreground tabular-nums",
+            "text-[0.75rem] text-muted-foreground flex items-center gap-1",
             !hasAnyElements && "opacity-50"
           )}
         >
-          {formatTimeCode(currentTime, "HH:MM:SS:CS")}/
-          {formatTimeCode(getTotalDuration(), "HH:MM:SS:CS")}
+          <span className="text-primary tabular-nums">
+            {formatTimeCode(
+              currentTime,
+              "HH:MM:SS:FF",
+              activeProject?.fps || 30
+            )}
+          </span>
+          <span className="opacity-50">/</span>
+          <span className="tabular-nums">
+            {formatTimeCode(
+              getTotalDuration(),
+              "HH:MM:SS:FF",
+              activeProject?.fps || 30
+            )}
+          </span>
         </p>
       </div>
       <Button
@@ -307,6 +442,7 @@ function PreviewToolbar({ hasAnyElements }: { hasAnyElements: boolean }) {
         size="icon"
         onClick={toggle}
         disabled={!hasAnyElements}
+        className="h-auto p-0"
       >
         {isPlaying ? (
           <Pause className="h-3 w-3" />
@@ -314,12 +450,13 @@ function PreviewToolbar({ hasAnyElements }: { hasAnyElements: boolean }) {
           <Play className="h-3 w-3" />
         )}
       </Button>
-      <div>
+      <div className="flex items-center gap-3">
+        <BackgroundSettings />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               size="sm"
-              className="!bg-background text-foreground/85 text-xs h-auto rounded-none border border-muted-foreground px-0.5 py-0 font-light"
+              className="!bg-panel-accent text-foreground/85 text-[0.70rem] h-4 rounded-none border border-muted-foreground px-0.5 py-0 font-light"
               disabled={!hasAnyElements}
             >
               {getDisplayName()}
@@ -347,6 +484,13 @@ function PreviewToolbar({ hasAnyElements }: { hasAnyElements: boolean }) {
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
+        <Button
+          variant="text"
+          size="icon"
+          className="!size-4 text-muted-foreground"
+        >
+          <Expand className="!size-4" />
+        </Button>
       </div>
     </div>
   );

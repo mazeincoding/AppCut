@@ -17,7 +17,11 @@ import type {
   TimelineElement as TimelineElementType,
   DragData,
 } from "@/types/timeline";
-import { TIMELINE_CONSTANTS } from "@/lib/timeline-constants";
+import {
+  snapTimeToFrame,
+  TIMELINE_CONSTANTS,
+} from "@/constants/timeline-constants";
+import { useProjectStore } from "@/stores/project-store";
 
 export function TimelineTrackContent({
   track,
@@ -80,7 +84,10 @@ export function TimelineTrackContent({
         mouseX / (TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel)
       );
       const adjustedTime = Math.max(0, mouseTime - dragState.clickOffsetTime);
-      const snappedTime = Math.round(adjustedTime * 10) / 10;
+      // Use frame snapping if project has FPS, otherwise use decimal snapping
+      const projectStore = useProjectStore.getState();
+      const projectFps = projectStore.activeProject?.fps || 30;
+      const snappedTime = snapTimeToFrame(adjustedTime, projectFps);
 
       updateDragTime(snappedTime);
     };
@@ -88,65 +95,115 @@ export function TimelineTrackContent({
     const handleMouseUp = (e: MouseEvent) => {
       if (!dragState.elementId || !dragState.trackId) return;
 
-      // Check if the mouse is actually over this track
+      // If this track initiated the drag, we should handle the mouse up regardless of where it occurs
+      const isTrackThatStartedDrag = dragState.trackId === track.id;
+
       const timelineRect = timelineRef.current?.getBoundingClientRect();
-      if (!timelineRect) return;
+      if (!timelineRect) {
+        if (isTrackThatStartedDrag) {
+          updateElementStartTime(
+            track.id,
+            dragState.elementId,
+            dragState.currentTime
+          );
+          endDragAction();
+        }
+        return;
+      }
 
       const isMouseOverThisTrack =
         e.clientY >= timelineRect.top && e.clientY <= timelineRect.bottom;
 
-      // Only handle if mouse is over this track
-      if (!isMouseOverThisTrack) return;
+      if (!isMouseOverThisTrack && !isTrackThatStartedDrag) return;
 
       const finalTime = dragState.currentTime;
 
-      // Check for overlaps and update position
-      const sourceTrack = tracks.find((t) => t.id === dragState.trackId);
-      const movingElement = sourceTrack?.elements.find(
-        (c) => c.id === dragState.elementId
-      );
+      if (isMouseOverThisTrack) {
+        const sourceTrack = tracks.find((t) => t.id === dragState.trackId);
+        const movingElement = sourceTrack?.elements.find(
+          (c) => c.id === dragState.elementId
+        );
 
-      if (movingElement) {
-        const movingElementDuration =
-          movingElement.duration -
-          movingElement.trimStart -
-          movingElement.trimEnd;
-        const movingElementEnd = finalTime + movingElementDuration;
+        if (movingElement) {
+          const movingElementDuration =
+            movingElement.duration -
+            movingElement.trimStart -
+            movingElement.trimEnd;
+          const movingElementEnd = finalTime + movingElementDuration;
 
-        const targetTrack = tracks.find((t) => t.id === track.id);
-        const hasOverlap = targetTrack?.elements.some((existingElement) => {
-          if (
-            dragState.trackId === track.id &&
-            existingElement.id === dragState.elementId
-          ) {
-            return false;
+          const targetTrack = tracks.find((t) => t.id === track.id);
+          const hasOverlap = targetTrack?.elements.some((existingElement) => {
+            if (
+              dragState.trackId === track.id &&
+              existingElement.id === dragState.elementId
+            ) {
+              return false;
+            }
+            const existingStart = existingElement.startTime;
+            const existingEnd =
+              existingElement.startTime +
+              (existingElement.duration -
+                existingElement.trimStart -
+                existingElement.trimEnd);
+            return finalTime < existingEnd && movingElementEnd > existingStart;
+          });
+
+          if (!hasOverlap) {
+            if (dragState.trackId === track.id) {
+              updateElementStartTime(track.id, dragState.elementId, finalTime);
+            } else {
+              moveElementToTrack(
+                dragState.trackId,
+                track.id,
+                dragState.elementId
+              );
+              requestAnimationFrame(() => {
+                updateElementStartTime(
+                  track.id,
+                  dragState.elementId!,
+                  finalTime
+                );
+              });
+            }
           }
-          const existingStart = existingElement.startTime;
-          const existingEnd =
-            existingElement.startTime +
-            (existingElement.duration -
-              existingElement.trimStart -
-              existingElement.trimEnd);
-          return finalTime < existingEnd && movingElementEnd > existingStart;
-        });
+        }
+      } else if (isTrackThatStartedDrag) {
+        // Mouse is not over this track, but this track started the drag
+        // This means user released over ruler/outside - update position within same track
+        const sourceTrack = tracks.find((t) => t.id === dragState.trackId);
+        const movingElement = sourceTrack?.elements.find(
+          (c) => c.id === dragState.elementId
+        );
 
-        if (!hasOverlap) {
-          if (dragState.trackId === track.id) {
+        if (movingElement) {
+          const movingElementDuration =
+            movingElement.duration -
+            movingElement.trimStart -
+            movingElement.trimEnd;
+          const movingElementEnd = finalTime + movingElementDuration;
+
+          const hasOverlap = track.elements.some((existingElement) => {
+            if (existingElement.id === dragState.elementId) {
+              return false;
+            }
+            const existingStart = existingElement.startTime;
+            const existingEnd =
+              existingElement.startTime +
+              (existingElement.duration -
+                existingElement.trimStart -
+                existingElement.trimEnd);
+            return finalTime < existingEnd && movingElementEnd > existingStart;
+          });
+
+          if (!hasOverlap) {
             updateElementStartTime(track.id, dragState.elementId, finalTime);
-          } else {
-            moveElementToTrack(
-              dragState.trackId,
-              track.id,
-              dragState.elementId
-            );
-            requestAnimationFrame(() => {
-              updateElementStartTime(track.id, dragState.elementId!, finalTime);
-            });
           }
         }
       }
 
-      endDragAction();
+      if (isTrackThatStartedDrag) {
+        endDragAction();
+      }
     };
 
     document.addEventListener("mousemove", handleMouseMove);
@@ -292,7 +349,9 @@ export function TimelineTrackContent({
           if (dragData.type === "text") {
             // Text elements have default duration of 5 seconds
             const newElementDuration = 5;
-            const snappedTime = Math.round(dropTime * 10) / 10;
+            const projectStore = useProjectStore.getState();
+            const projectFps = projectStore.activeProject?.fps || 30;
+            const snappedTime = snapTimeToFrame(dropTime, projectFps);
             const newElementEnd = snappedTime + newElementDuration;
 
             wouldOverlap = track.elements.some((existingElement) => {
@@ -311,7 +370,9 @@ export function TimelineTrackContent({
             );
             if (mediaItem) {
               const newElementDuration = mediaItem.duration || 5;
-              const snappedTime = Math.round(dropTime * 10) / 10;
+              const projectStore = useProjectStore.getState();
+              const projectFps = projectStore.activeProject?.fps || 30;
+              const snappedTime = snapTimeToFrame(dropTime, projectFps);
               const newElementEnd = snappedTime + newElementDuration;
 
               wouldOverlap = track.elements.some((existingElement) => {
@@ -351,7 +412,9 @@ export function TimelineTrackContent({
               movingElement.duration -
               movingElement.trimStart -
               movingElement.trimEnd;
-            const snappedTime = Math.round(dropTime * 10) / 10;
+            const projectStore = useProjectStore.getState();
+            const projectFps = projectStore.activeProject?.fps || 30;
+            const snappedTime = snapTimeToFrame(dropTime, projectFps);
             const movingElementEnd = snappedTime + movingElementDuration;
 
             wouldOverlap = track.elements.some((existingElement) => {
@@ -378,13 +441,17 @@ export function TimelineTrackContent({
     if (wouldOverlap) {
       e.dataTransfer.dropEffect = "none";
       setWouldOverlap(true);
-      setDropPosition(Math.round(dropTime * 10) / 10);
+      const projectStore = useProjectStore.getState();
+      const projectFps = projectStore.activeProject?.fps || 30;
+      setDropPosition(snapTimeToFrame(dropTime, projectFps));
       return;
     }
 
     e.dataTransfer.dropEffect = hasTimelineElement ? "move" : "copy";
     setWouldOverlap(false);
-    setDropPosition(Math.round(dropTime * 10) / 10);
+    const projectStore = useProjectStore.getState();
+    const projectFps = projectStore.activeProject?.fps || 30;
+    setDropPosition(snapTimeToFrame(dropTime, projectFps));
   };
 
   const handleTrackDragEnter = (e: React.DragEvent) => {
@@ -452,7 +519,9 @@ export function TimelineTrackContent({
     const mouseY = e.clientY - rect.top; // Get Y position relative to this track
     const newStartTime =
       mouseX / (TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel);
-    const snappedTime = Math.round(newStartTime * 10) / 10;
+    const projectStore = useProjectStore.getState();
+    const projectFps = projectStore.activeProject?.fps || 30;
+    const snappedTime = snapTimeToFrame(newStartTime, projectFps);
 
     // Calculate drop position relative to tracks
     const currentTrackIndex = tracks.findIndex((t) => t.id === track.id);
@@ -498,7 +567,7 @@ export function TimelineTrackContent({
         const adjustedStartTime = snappedTime - clickOffsetTime;
         const finalStartTime = Math.max(
           0,
-          Math.round(adjustedStartTime * 10) / 10
+          snapTimeToFrame(adjustedStartTime, projectFps)
         );
 
         // Check for overlaps with existing elements (excluding the moving element itself)

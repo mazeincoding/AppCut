@@ -118,7 +118,7 @@ export function VideoPlayer({
       ref={videoRef}
       src={src}
       poster={poster}
-      className={`w-full h-full object-cover ${className}`}
+      className={`max-w-full max-h-full object-contain ${className}`}
       playsInline
       preload="auto"
       controls={false}

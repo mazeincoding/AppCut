@@ -235,7 +235,7 @@ export function MediaView() {
               size="sm"
               onClick={handleFileSelect}
               disabled={isProcessing}
-              className="flex-none min-w-[30px] whitespace-nowrap overflow-hidden px-2 justify-center items-center"
+              className="flex-none bg-transparent min-w-[30px] whitespace-nowrap overflow-hidden px-2 justify-center items-center"
             >
               {isProcessing ? (
                 <>

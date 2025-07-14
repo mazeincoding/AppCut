@@ -24,7 +24,7 @@ import { useTimelineElementResize } from "@/hooks/use-timeline-element-resize";
 import {
   getTrackElementClasses,
   TIMELINE_CONSTANTS,
-} from "@/lib/timeline-constants";
+} from "@/constants/timeline-constants";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -249,7 +249,7 @@ export function TimelineElement({
   const renderElementContent = () => {
     if (element.type === "text") {
       return (
-        <div className="w-full h-full flex items-center justify-center">
+        <div className="w-full h-full flex items-center justify-start pl-2">
           <span className="text-xs text-foreground/80 truncate">
             {element.content}
           </span>
@@ -339,6 +339,8 @@ export function TimelineElement({
             left: `${elementLeft}px`,
             width: `${elementWidth}px`,
           }}
+          data-element-id={element.id}
+          data-track-id={track.id}
           onMouseMove={resizing ? handleResizeMove : undefined}
           onMouseUp={resizing ? handleResizeEnd : undefined}
           onMouseLeave={resizing ? handleResizeEnd : undefined}

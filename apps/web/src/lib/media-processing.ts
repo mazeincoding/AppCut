@@ -6,7 +6,7 @@ import {
   getImageDimensions,
   type MediaItem,
 } from "@/stores/media-store";
-// import { generateThumbnail, getVideoInfo } from "./ffmpeg-utils"; // Temporarily disabled
+import { generateThumbnail, getVideoInfo } from "./ffmpeg-utils";
 
 export interface ProcessedMediaItem extends Omit<MediaItem, "id"> {}
 
@@ -33,6 +33,7 @@ export async function processMediaFiles(
     let duration: number | undefined;
     let width: number | undefined;
     let height: number | undefined;
+    let fps: number | undefined;
 
     try {
       if (fileType === "image") {
@@ -41,17 +42,31 @@ export async function processMediaFiles(
         width = dimensions.width;
         height = dimensions.height;
       } else if (fileType === "video") {
-        // Use basic thumbnail generation for now
-        const videoResult = await generateVideoThumbnail(file);
-        thumbnailUrl = videoResult.thumbnailUrl;
-        width = videoResult.width;
-        height = videoResult.height;
-      } else if (fileType === "audio") {
-        // For audio, we don't set width/height (they'll be undefined)
-      }
+        try {
+          // Use FFmpeg for comprehensive video info extraction
+          const videoInfo = await getVideoInfo(file);
+          duration = videoInfo.duration;
+          width = videoInfo.width;
+          height = videoInfo.height;
+          fps = videoInfo.fps;
 
-      // Get duration for videos and audio (if not already set by FFmpeg)
-      if ((fileType === "video" || fileType === "audio") && !duration) {
+          // Generate thumbnail using FFmpeg
+          thumbnailUrl = await generateThumbnail(file, 1);
+        } catch (error) {
+          console.warn(
+            "FFmpeg processing failed, falling back to basic processing:",
+            error
+          );
+          // Fallback to basic processing
+          const videoResult = await generateVideoThumbnail(file);
+          thumbnailUrl = videoResult.thumbnailUrl;
+          width = videoResult.width;
+          height = videoResult.height;
+          duration = await getMediaDuration(file);
+          // FPS will remain undefined for fallback
+        }
+      } else if (fileType === "audio") {
+        // For audio, we don't set width/height/fps (they'll be undefined)
         duration = await getMediaDuration(file);
       }
 
@@ -64,6 +79,7 @@ export async function processMediaFiles(
         duration,
         width,
         height,
+        fps,
       });
 
       // Yield back to the event loop to keep the UI responsive

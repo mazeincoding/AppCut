@@ -52,7 +52,7 @@ services:
       dockerfile: ./apps/web/Dockerfile
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3100:3000" # app is running on 3000 so we run this at 3100
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://opencut:opencutthegoat@db:5432/opencut

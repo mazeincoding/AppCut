@@ -45,70 +45,95 @@ Before you begin, ensure you have the following installed on your system:
 
 ### Setup
 
-1.  **Clone the repository**
+## Getting Started
 
-    ```bash
-    git clone https://github.com/OpenCut-app/OpenCut.git
-    cd OpenCut
-    ```
+1. Fork the repository
+2. Clone your fork locally
+3. Navigate to the web app directory: `cd apps/web`
+4. Install dependencies: `bun install`
+5. Start the development server: `bun run dev`
 
-2.  **Start backend services**
-    From the project root, start the PostgreSQL and Redis services:
+## Development Setup
 
-    ```bash
-    docker-compose up -d
-    ```
+### Prerequisites
 
-3.  **Set up environment variables**
-    Navigate into the web app's directory and create a `.env` file from the example:
+- Node.js 18+
+- Bun (latest version)
+- Docker (for local database)
 
-    ```bash
-    cd apps/web
+### Local Development
 
+1. Start the database and Redis services:
 
-    # Unix/Linux/Mac
-    cp .env.example .env.local
+   ```bash
+   # From project root
+   docker-compose up -d
+   ```
 
-    # Windows Command Prompt
-    copy .env.example .env.local
+2. Navigate to the web app directory:
 
-    # Windows PowerShell
-    Copy-Item .env.example .env.local
-    ```
+   ```bash
+   cd apps/web
+   ```
 
-    _The default values in the `.env` file should work for local development._
+3. Copy `.env.example` to `.env.local`:
 
-4.  **Install dependencies**
-    Install the project dependencies using `bun` (recommended) or `npm`.
+   ```bash
+   # Unix/Linux/Mac
+   cp .env.example .env.local
 
-    ```bash
-    # With bun
-    bun install
+   # Windows Command Prompt
+   copy .env.example .env.local
 
-    # Or with npm
-    npm install
-    ```
+   # Windows PowerShell
+   Copy-Item .env.example .env.local
+   ```
 
-5.  **Run database migrations**
-    Apply the database schema to your local database:
+4. Configure required environment variables in `.env.local`:
 
-    ```bash
-    # With bun
-    bun run db:push:local
+   **Required Variables:**
 
-    # Or with npm
-    npm run db:push:local
-    ```
+   ```bash
+   # Database (matches docker-compose.yaml)
+   DATABASE_URL="postgresql://opencut:opencutthegoat@localhost:5432/opencut"
 
-6.  **Start the development server**
+   # Generate a secure secret for Better Auth
+   BETTER_AUTH_SECRET="your-generated-secret-here"
+   BETTER_AUTH_URL="http://localhost:3000"
 
-    ```bash
-    # With bun
-    bun run dev
+   # Redis (matches docker-compose.yaml)
+   UPSTASH_REDIS_REST_URL="http://localhost:8079"
+   UPSTASH_REDIS_REST_TOKEN="example_token"
 
-    # Or with npm
-    npm run dev
-    ```
+   # Development
+   NODE_ENV="development"
+   ```
+
+   **Generate BETTER_AUTH_SECRET:**
+
+   ```bash
+   # Unix/Linux/Mac
+   openssl rand -base64 32
+
+   # Windows PowerShell (simple method)
+   [System.Web.Security.Membership]::GeneratePassword(32, 0)
+
+   # Cross-platform (using Node.js)
+   node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+
+   # Or use an online generator: https://generate-secret.vercel.app/32
+   ```
+
+   **Optional Variables (for Google OAuth):**
+
+   ```bash
+   # Only needed if you want to test Google login
+   GOOGLE_CLIENT_ID="your-google-client-id"
+   GOOGLE_CLIENT_SECRET="your-google-client-secret"
+   ```
+
+5. Run database migrations: `bun run db:migrate` from (inside apps/web)
+6. Start the development server: `bun run dev` from (inside apps/web)
 
 The application will be available at [http://localhost:3000](http://localhost:3000).
 
@@ -135,3 +160,7 @@ Thanks to [Vercel](https://vercel.com?utm_source=github-opencut&utm_campaign=oss
 ## License
 
 [MIT LICENSE](LICENSE)
+
+---
+
+![Star History Chart](https://api.star-history.com/svg?repos=opencut-app/opencut&type=Date)

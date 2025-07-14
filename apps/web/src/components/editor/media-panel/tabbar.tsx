@@ -69,7 +69,7 @@ export function TabBar() {
       />
       <div
         ref={scrollContainerRef}
-        className="h-12 bg-accent/50 px-3 flex justify-start items-center gap-5 overflow-x-auto scrollbar-x-hidden relative"
+        className="h-12 bg-panel-accent px-3 flex justify-start items-center gap-5 overflow-x-auto scrollbar-x-hidden relative"
       >
         {(Object.keys(tabs) as Tab[]).map((tabKey) => {
           const tab = tabs[tabKey];
@@ -111,7 +111,7 @@ function ScrollButton({
   const Icon = direction === "left" ? ChevronLeft : ChevronRight;
 
   return (
-    <div className="bg-accent/50 w-12 h-full flex items-center justify-center">
+    <div className="bg-panel-accent w-12 h-full flex items-center justify-center">
       <Button
         size="icon"
         className="rounded-[0.4rem] w-4 h-7 !bg-foreground/10"

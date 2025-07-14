@@ -1,4 +1,5 @@
 import { MediaType } from "@/stores/media-store";
+import { generateUUID } from "@/lib/utils";
 
 export type TrackType = "media" | "text" | "audio";
 
@@ -111,7 +112,7 @@ export function ensureMainTrack(tracks: TimelineTrack[]): TimelineTrack[] {
   if (!hasMainTrack) {
     // Create main track if it doesn't exist
     const mainTrack: TimelineTrack = {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       name: "Main Track",
       type: "media",
       elements: [],

@@ -10,10 +10,11 @@ import {
   Snowflake,
   Copy,
   SplitSquareHorizontal,
-  Volume2,
-  VolumeX,
   Pause,
   Play,
+  Video,
+  Music,
+  TypeIcon,
 } from "lucide-react";
 import {
   Tooltip,
@@ -25,13 +26,13 @@ import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
-  ContextMenuSeparator,
   ContextMenuTrigger,
 } from "../ui/context-menu";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { useMediaStore } from "@/stores/media-store";
 import { usePlaybackStore } from "@/stores/playback-store";
 import { useProjectStore } from "@/stores/project-store";
+import { useTimelineZoom } from "@/hooks/use-timeline-zoom";
 import { processMediaFiles } from "@/lib/media-processing";
 import { toast } from "sonner";
 import { useState, useRef, useEffect, useCallback } from "react";
@@ -43,14 +44,19 @@ import {
   SelectValue,
 } from "../ui/select";
 import { TimelineTrackContent } from "./timeline-track";
-import type { DragData } from "@/types/timeline";
 import {
-  getTrackLabelColor,
+  TimelinePlayhead,
+  useTimelinePlayheadRuler,
+} from "./timeline-playhead";
+import { SelectionBox } from "./selection-box";
+import { useSelectionBox } from "@/hooks/use-selection-box";
+import type { DragData, TimelineTrack } from "@/types/timeline";
+import {
   getTrackHeight,
   getCumulativeHeightBefore,
   getTotalTracksHeight,
   TIMELINE_CONSTANTS,
-} from "@/lib/timeline-constants";
+} from "@/constants/timeline-constants";
 
 export function Timeline() {
   // Timeline shows all tracks (video, audio, effects) and their elements.
@@ -68,47 +74,30 @@ export function Timeline() {
     splitElement,
     splitAndKeepLeft,
     splitAndKeepRight,
+    toggleTrackMute,
     separateAudio,
     undo,
     redo,
   } = useTimelineStore();
   const { mediaItems, addMediaItem } = useMediaStore();
   const { activeProject } = useProjectStore();
-  const {
-    currentTime,
-    duration,
-    seek,
-    setDuration,
-    isPlaying,
-    toggle,
-    setSpeed,
-    speed,
-  } = usePlaybackStore();
+  const { currentTime, duration, seek, setDuration, isPlaying, toggle } =
+    usePlaybackStore();
   const [isDragOver, setIsDragOver] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [zoomLevel, setZoomLevel] = useState(1);
   const dragCounterRef = useRef(0);
   const timelineRef = useRef<HTMLDivElement>(null);
+  const rulerRef = useRef<HTMLDivElement>(null);
   const [isInTimeline, setIsInTimeline] = useState(false);
 
-  // Marquee selection state
-  const [marquee, setMarquee] = useState<{
-    startX: number;
-    startY: number;
-    endX: number;
-    endY: number;
-    active: boolean;
-    additive: boolean;
-  } | null>(null);
+  // Timeline zoom functionality
+  const { zoomLevel, setZoomLevel, handleWheel } = useTimelineZoom({
+    containerRef: timelineRef,
+    isInTimeline,
+  });
 
-  // Playhead scrubbing state
-  const [isScrubbing, setIsScrubbing] = useState(false);
-  const [scrubTime, setScrubTime] = useState<number | null>(null);
-
-  // Add new state for ruler drag detection
-  const [isDraggingRuler, setIsDraggingRuler] = useState(false);
-  const [hasDraggedRuler, setHasDraggedRuler] = useState(false);
+  // Old marquee selection removed - using new SelectionBox component instead
 
   // Dynamic timeline width calculation based on playhead position and duration
   const dynamicTimelineWidth = Math.max(
@@ -120,9 +109,135 @@ export function Timeline() {
   // Scroll synchronization and auto-scroll to playhead
   const rulerScrollRef = useRef<HTMLDivElement>(null);
   const tracksScrollRef = useRef<HTMLDivElement>(null);
+  const trackLabelsRef = useRef<HTMLDivElement>(null);
+  const playheadRef = useRef<HTMLDivElement>(null);
+  const trackLabelsScrollRef = useRef<HTMLDivElement>(null);
   const isUpdatingRef = useRef(false);
   const lastRulerSync = useRef(0);
   const lastTracksSync = useRef(0);
+  const lastVerticalSync = useRef(0);
+
+  // Timeline playhead ruler handlers
+  const { handleRulerMouseDown, isDraggingRuler } = useTimelinePlayheadRuler({
+    currentTime,
+    duration,
+    zoomLevel,
+    seek,
+    rulerRef,
+    rulerScrollRef,
+    tracksScrollRef,
+    playheadRef,
+  });
+
+  // Selection box functionality
+  const tracksContainerRef = useRef<HTMLDivElement>(null);
+  const {
+    selectionBox,
+    handleMouseDown: handleSelectionMouseDown,
+    isSelecting,
+    justFinishedSelecting,
+  } = useSelectionBox({
+    containerRef: tracksContainerRef,
+    playheadRef,
+    onSelectionComplete: (elements) => {
+      console.log(JSON.stringify({ onSelectionComplete: elements.length }));
+      setSelectedElements(elements);
+    },
+  });
+
+  // Timeline content click to seek handler
+  const handleTimelineContentClick = useCallback(
+    (e: React.MouseEvent) => {
+      console.log(
+        JSON.stringify({
+          timelineClick: {
+            isSelecting,
+            justFinishedSelecting,
+            willReturn: isSelecting || justFinishedSelecting,
+          },
+        })
+      );
+
+      // Don't seek if this was a selection box operation
+      if (isSelecting || justFinishedSelecting) {
+        return;
+      }
+
+      // Don't seek if clicking on timeline elements, but still deselect
+      if ((e.target as HTMLElement).closest(".timeline-element")) {
+        return;
+      }
+
+      // Don't seek if clicking on playhead
+      if (playheadRef.current?.contains(e.target as Node)) {
+        return;
+      }
+
+      // Don't seek if clicking on track labels
+      if ((e.target as HTMLElement).closest("[data-track-labels]")) {
+        clearSelectedElements();
+        return;
+      }
+
+      // Clear selected elements when clicking empty timeline area
+      console.log(JSON.stringify({ clearingSelectedElements: true }));
+      clearSelectedElements();
+
+      // Determine if we're clicking in ruler or tracks area
+      const isRulerClick = (e.target as HTMLElement).closest(
+        "[data-ruler-area]"
+      );
+
+      let mouseX: number;
+      let scrollLeft = 0;
+
+      if (isRulerClick) {
+        // Calculate based on ruler position
+        const rulerContent = rulerScrollRef.current?.querySelector(
+          "[data-radix-scroll-area-viewport]"
+        ) as HTMLElement;
+        if (!rulerContent) return;
+        const rect = rulerContent.getBoundingClientRect();
+        mouseX = e.clientX - rect.left;
+        scrollLeft = rulerContent.scrollLeft;
+      } else {
+        // Calculate based on tracks content position
+        const tracksContent = tracksScrollRef.current?.querySelector(
+          "[data-radix-scroll-area-viewport]"
+        ) as HTMLElement;
+        if (!tracksContent) return;
+        const rect = tracksContent.getBoundingClientRect();
+        mouseX = e.clientX - rect.left;
+        scrollLeft = tracksContent.scrollLeft;
+      }
+
+      const rawTime = Math.max(
+        0,
+        Math.min(
+          duration,
+          (mouseX + scrollLeft) /
+            (TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel)
+        )
+      );
+
+      // Use frame snapping for timeline clicking
+      const projectFps = activeProject?.fps || 30;
+      const { snapTimeToFrame } = require("@/constants/timeline-constants");
+      const time = snapTimeToFrame(rawTime, projectFps);
+
+      seek(time);
+    },
+    [
+      duration,
+      zoomLevel,
+      seek,
+      rulerScrollRef,
+      tracksScrollRef,
+      clearSelectedElements,
+      isSelecting,
+      justFinishedSelecting,
+    ]
+  );
 
   // Update timeline duration when tracks change
   useEffect(() => {
@@ -133,6 +248,22 @@ export function Timeline() {
   // Keyboard event for deleting selected elements
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger when typing in input fields or textareas
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      ) {
+        return;
+      }
+
+      // Only trigger when timeline is focused or mouse is over timeline
+      if (
+        !isInTimeline &&
+        !timelineRef.current?.contains(document.activeElement)
+      ) {
+        return;
+      }
+
       if (
         (e.key === "Delete" || e.key === "Backspace") &&
         selectedElements.length > 0
@@ -145,7 +276,12 @@ export function Timeline() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedElements, removeElementFromTrack, clearSelectedElements]);
+  }, [
+    selectedElements,
+    removeElementFromTrack,
+    clearSelectedElements,
+    isInTimeline,
+  ]);
 
   // Keyboard event for undo (Cmd+Z)
   useEffect(() => {
@@ -174,115 +310,7 @@ export function Timeline() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [redo]);
 
-  // Mouse down on timeline background to start marquee
-  const handleTimelineMouseDown = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget && e.button === 0) {
-      setMarquee({
-        startX: e.clientX,
-        startY: e.clientY,
-        endX: e.clientX,
-        endY: e.clientY,
-        active: true,
-        additive: e.metaKey || e.ctrlKey || e.shiftKey,
-      });
-    }
-  };
-
-  // Add new click handler for deselection
-  const handleTimelineClick = (e: React.MouseEvent) => {
-    // If clicking empty area (not on an element) and not starting marquee, deselect all elements
-    if (!(e.target as HTMLElement).closest(".timeline-element")) {
-      clearSelectedElements();
-    }
-  };
-
-  // Mouse move to update marquee
-  useEffect(() => {
-    if (!marquee || !marquee.active) return;
-    const handleMouseMove = (e: MouseEvent) => {
-      setMarquee(
-        (prev) => prev && { ...prev, endX: e.clientX, endY: e.clientY }
-      );
-    };
-    const handleMouseUp = (e: MouseEvent) => {
-      setMarquee(
-        (prev) =>
-          prev && { ...prev, endX: e.clientX, endY: e.clientY, active: false }
-      );
-    };
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, [marquee]);
-
-  // On marquee end, select elements in box
-  useEffect(() => {
-    if (!marquee || marquee.active) return;
-    const timeline = timelineRef.current;
-    if (!timeline) return;
-    const rect = timeline.getBoundingClientRect();
-    const x1 = Math.min(marquee.startX, marquee.endX) - rect.left;
-    const x2 = Math.max(marquee.startX, marquee.endX) - rect.left;
-    const y1 = Math.min(marquee.startY, marquee.endY) - rect.top;
-    const y2 = Math.max(marquee.startY, marquee.endY) - rect.top;
-    // Validation: skip if too small
-    if (Math.abs(x2 - x1) < 5 || Math.abs(y2 - y1) < 5) {
-      setMarquee(null);
-      return;
-    }
-    // Clamp to timeline bounds
-    const clamp = (val: number, min: number, max: number) =>
-      Math.max(min, Math.min(max, val));
-    const bx1 = clamp(x1, 0, rect.width);
-    const bx2 = clamp(x2, 0, rect.width);
-    const by1 = clamp(y1, 0, rect.height);
-    const by2 = clamp(y2, 0, rect.height);
-    let newSelection: { trackId: string; elementId: string }[] = [];
-    tracks.forEach((track, trackIdx) => {
-      track.elements.forEach((element) => {
-        const clipLeft =
-          element.startTime * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel;
-        const clipTop = getCumulativeHeightBefore(tracks, trackIdx);
-        const clipBottom = clipTop + getTrackHeight(track.type);
-        const clipRight = clipLeft + getTrackHeight(track.type);
-        if (
-          bx1 < clipRight &&
-          bx2 > clipLeft &&
-          by1 < clipBottom &&
-          by2 > clipTop
-        ) {
-          newSelection.push({ trackId: track.id, elementId: element.id });
-        }
-      });
-    });
-    if (newSelection.length > 0) {
-      if (marquee.additive) {
-        const selectedSet = new Set(
-          selectedElements.map((c) => c.trackId + ":" + c.elementId)
-        );
-        newSelection = [
-          ...selectedElements,
-          ...newSelection.filter(
-            (c) => !selectedSet.has(c.trackId + ":" + c.elementId)
-          ),
-        ];
-      }
-      setSelectedElements(newSelection);
-    } else if (!marquee.additive) {
-      clearSelectedElements();
-    }
-    setMarquee(null);
-  }, [
-    marquee,
-    tracks,
-    zoomLevel,
-    selectedElements,
-    setSelectedElements,
-    clearSelectedElements,
-  ]);
+  // Old marquee system removed - using new SelectionBox component instead
 
   const handleDragEnter = (e: React.DragEvent) => {
     // When something is dragged over the timeline, show overlay
@@ -432,102 +460,6 @@ export function Timeline() {
     }
   };
 
-  const handleWheel = (e: React.WheelEvent) => {
-    // Only zoom if user is using pinch gesture (ctrlKey or metaKey is true)
-    if (e.ctrlKey || e.metaKey) {
-      e.preventDefault();
-      const delta = e.deltaY > 0 ? -0.05 : 0.05;
-      setZoomLevel((prev) => Math.max(0.1, Math.min(10, prev + delta)));
-    }
-    // Otherwise, allow normal scrolling
-  };
-
-  // --- Playhead Scrubbing Handlers ---
-  const handlePlayheadMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation(); // Prevent ruler drag from triggering
-      setIsScrubbing(true);
-      handleScrub(e);
-    },
-    [duration, zoomLevel]
-  );
-
-  // Add new ruler mouse down handler
-  const handleRulerMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      // Only handle left mouse button
-      if (e.button !== 0) return;
-
-      // Don't interfere if clicking on the playhead itself
-      if ((e.target as HTMLElement).closest(".playhead")) return;
-
-      e.preventDefault();
-      setIsDraggingRuler(true);
-      setHasDraggedRuler(false);
-
-      // Start scrubbing immediately
-      setIsScrubbing(true);
-      handleScrub(e);
-    },
-    [duration, zoomLevel]
-  );
-
-  const handleScrub = useCallback(
-    (e: MouseEvent | React.MouseEvent) => {
-      const timeline = timelineRef.current;
-      if (!timeline) return;
-      const rect = timeline.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const time = Math.max(0, Math.min(duration, x / (50 * zoomLevel)));
-      setScrubTime(time);
-      seek(time); // update video preview in real time
-    },
-    [duration, zoomLevel, seek]
-  );
-
-  useEffect(() => {
-    if (!isScrubbing) return;
-    const onMouseMove = (e: MouseEvent) => {
-      handleScrub(e);
-      // Mark that we've dragged if ruler drag is active
-      if (isDraggingRuler) {
-        setHasDraggedRuler(true);
-      }
-    };
-    const onMouseUp = (e: MouseEvent) => {
-      setIsScrubbing(false);
-      if (scrubTime !== null) seek(scrubTime); // finalize seek
-      setScrubTime(null);
-
-      // Handle ruler click vs drag
-      if (isDraggingRuler) {
-        setIsDraggingRuler(false);
-        // If we didn't drag, treat it as a click-to-seek
-        if (!hasDraggedRuler) {
-          handleScrub(e);
-        }
-        setHasDraggedRuler(false);
-      }
-    };
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-    return () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-    };
-  }, [
-    isScrubbing,
-    scrubTime,
-    seek,
-    handleScrub,
-    isDraggingRuler,
-    hasDraggedRuler,
-  ]);
-
-  const playheadPosition =
-    isScrubbing && scrubTime !== null ? scrubTime : currentTime;
-
   const dragProps = {
     onDragEnter: handleDragEnter,
     onDragOver: handleDragOver,
@@ -667,26 +599,6 @@ export function Timeline() {
     clearSelectedElements();
   };
 
-  // Prevent explorer zooming in/out when in timeline
-  useEffect(() => {
-    const preventZoom = (e: WheelEvent) => {
-      // if (isInTimeline && (e.ctrlKey || e.metaKey)) {
-      if (
-        isInTimeline &&
-        (e.ctrlKey || e.metaKey) &&
-        timelineRef.current?.contains(e.target as Node)
-      ) {
-        e.preventDefault();
-      }
-    };
-
-    document.addEventListener("wheel", preventZoom, { passive: false });
-
-    return () => {
-      document.removeEventListener("wheel", preventZoom);
-    };
-  }, [isInTimeline]);
-
   // --- Scroll synchronization effect ---
   useEffect(() => {
     const rulerViewport = rulerScrollRef.current?.querySelector(
@@ -695,7 +607,13 @@ export function Timeline() {
     const tracksViewport = tracksScrollRef.current?.querySelector(
       "[data-radix-scroll-area-viewport]"
     ) as HTMLElement;
+    const trackLabelsViewport = trackLabelsScrollRef.current?.querySelector(
+      "[data-radix-scroll-area-viewport]"
+    ) as HTMLElement;
+
     if (!rulerViewport || !tracksViewport) return;
+
+    // Horizontal scroll synchronization between ruler and tracks
     const handleRulerScroll = () => {
       const now = Date.now();
       if (isUpdatingRef.current || now - lastRulerSync.current < 16) return;
@@ -712,48 +630,60 @@ export function Timeline() {
       rulerViewport.scrollLeft = tracksViewport.scrollLeft;
       isUpdatingRef.current = false;
     };
+
     rulerViewport.addEventListener("scroll", handleRulerScroll);
     tracksViewport.addEventListener("scroll", handleTracksScroll);
+
+    // Vertical scroll synchronization between track labels and tracks content
+    if (trackLabelsViewport) {
+      const handleTrackLabelsScroll = () => {
+        const now = Date.now();
+        if (isUpdatingRef.current || now - lastVerticalSync.current < 16)
+          return;
+        lastVerticalSync.current = now;
+        isUpdatingRef.current = true;
+        tracksViewport.scrollTop = trackLabelsViewport.scrollTop;
+        isUpdatingRef.current = false;
+      };
+      const handleTracksVerticalScroll = () => {
+        const now = Date.now();
+        if (isUpdatingRef.current || now - lastVerticalSync.current < 16)
+          return;
+        lastVerticalSync.current = now;
+        isUpdatingRef.current = true;
+        trackLabelsViewport.scrollTop = tracksViewport.scrollTop;
+        isUpdatingRef.current = false;
+      };
+
+      trackLabelsViewport.addEventListener("scroll", handleTrackLabelsScroll);
+      tracksViewport.addEventListener("scroll", handleTracksVerticalScroll);
+
+      return () => {
+        rulerViewport.removeEventListener("scroll", handleRulerScroll);
+        tracksViewport.removeEventListener("scroll", handleTracksScroll);
+        trackLabelsViewport.removeEventListener(
+          "scroll",
+          handleTrackLabelsScroll
+        );
+        tracksViewport.removeEventListener(
+          "scroll",
+          handleTracksVerticalScroll
+        );
+      };
+    }
+
     return () => {
       rulerViewport.removeEventListener("scroll", handleRulerScroll);
       tracksViewport.removeEventListener("scroll", handleTracksScroll);
     };
   }, []);
 
-  // --- Playhead auto-scroll effect ---
-  useEffect(() => {
-    const rulerViewport = rulerScrollRef.current?.querySelector(
-      "[data-radix-scroll-area-viewport]"
-    ) as HTMLElement;
-    const tracksViewport = tracksScrollRef.current?.querySelector(
-      "[data-radix-scroll-area-viewport]"
-    ) as HTMLElement;
-    if (!rulerViewport || !tracksViewport) return;
-    const playheadPx =
-      playheadPosition * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel;
-    const viewportWidth = rulerViewport.clientWidth;
-    const scrollMin = 0;
-    const scrollMax = rulerViewport.scrollWidth - viewportWidth;
-    // Center the playhead if it's not visible (100px buffer)
-    const desiredScroll = Math.max(
-      scrollMin,
-      Math.min(scrollMax, playheadPx - viewportWidth / 2)
-    );
-    if (
-      playheadPx < rulerViewport.scrollLeft + 100 ||
-      playheadPx > rulerViewport.scrollLeft + viewportWidth - 100
-    ) {
-      rulerViewport.scrollLeft = tracksViewport.scrollLeft = desiredScroll;
-    }
-  }, [playheadPosition, duration, zoomLevel]);
-
   return (
     <div
-      className={`h-full flex flex-col transition-colors duration-200 relative`}
+      className={`h-full flex flex-col transition-colors duration-200 relative bg-panel rounded-sm overflow-hidden`}
       {...dragProps}
       onMouseEnter={() => setIsInTimeline(true)}
       onMouseLeave={() => setIsInTimeline(false)}
-      onWheel={handleWheel}
     >
       {/* Toolbar */}
       <div className="border-b flex items-center px-2 py-1 gap-1">
@@ -885,48 +815,49 @@ export function Timeline() {
             </TooltipTrigger>
             <TooltipContent>Delete element (Delete)</TooltipContent>
           </Tooltip>
-          <div className="w-px h-6 bg-border mx-1" />c{/* Speed Control */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Select
-                value={speed.toFixed(1)}
-                onValueChange={(value) => setSpeed(parseFloat(value))}
-              >
-                <SelectTrigger className="w-[90px] h-8">
-                  <SelectValue placeholder="1.0x" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="0.5">0.5x</SelectItem>
-                  <SelectItem value="1.0">1.0x</SelectItem>
-                  <SelectItem value="1.5">1.5x</SelectItem>
-                  <SelectItem value="2.0">2.0x</SelectItem>
-                </SelectContent>
-              </Select>
-            </TooltipTrigger>
-            <TooltipContent>Playback Speed</TooltipContent>
-          </Tooltip>
         </TooltipProvider>
       </div>
 
       {/* Timeline Container */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div
+        className="flex-1 flex flex-col overflow-hidden relative"
+        ref={timelineRef}
+      >
+        <TimelinePlayhead
+          currentTime={currentTime}
+          duration={duration}
+          zoomLevel={zoomLevel}
+          tracks={tracks}
+          seek={seek}
+          rulerRef={rulerRef}
+          rulerScrollRef={rulerScrollRef}
+          tracksScrollRef={tracksScrollRef}
+          trackLabelsRef={trackLabelsRef}
+          timelineRef={timelineRef}
+          playheadRef={playheadRef}
+        />
         {/* Timeline Header with Ruler */}
-        <div className="flex border-b bg-background sticky top-0 z-10">
+        <div className="flex bg-panel sticky top-0 z-10">
           {/* Track Labels Header */}
           <div className="w-48 flex-shrink-0 bg-muted/30 border-r flex items-center justify-between px-3 py-2">
-            <span className="text-sm font-medium text-muted-foreground">
-              Tracks
+            {/* Empty space */}
+            <span className="text-sm font-medium text-muted-foreground opacity-0">
+              .
             </span>
           </div>
 
           {/* Timeline Ruler */}
-          <div className="flex-1 relative overflow-hidden">
+          <div
+            className="flex-1 relative overflow-hidden h-4"
+            onWheel={handleWheel}
+            onMouseDown={handleSelectionMouseDown}
+            onClick={handleTimelineContentClick}
+            data-ruler-area
+          >
             <ScrollArea className="w-full" ref={rulerScrollRef}>
               <div
-                ref={timelineRef}
-                className={`relative h-12 bg-muted/30 select-none ${
-                  isDraggingRuler ? "cursor-grabbing" : "cursor-grab"
-                }`}
+                ref={rulerRef}
+                className="relative h-4 select-none cursor-default"
                 style={{
                   width: `${dynamicTimelineWidth}px`,
                 }}
@@ -970,7 +901,7 @@ export function Timeline() {
                         }}
                       >
                         <span
-                          className={`absolute top-1 left-1 text-xs ${
+                          className={`absolute top-1 left-1 text-[0.6rem] ${
                             isMainMarker
                               ? "text-muted-foreground font-medium"
                               : "text-muted-foreground/70"
@@ -999,17 +930,6 @@ export function Timeline() {
                     );
                   }).filter(Boolean);
                 })()}
-
-                {/* Playhead in ruler (scrubbable) */}
-                <div
-                  className="playhead absolute top-0 bottom-0 w-0.5 bg-red-500 pointer-events-auto z-50 cursor-col-resize"
-                  style={{
-                    left: `${playheadPosition * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel}px`,
-                  }}
-                  onMouseDown={handlePlayheadMouseDown}
-                >
-                  <div className="absolute top-1 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-red-500 rounded-full border-2 border-white shadow-sm" />
-                </div>
               </div>
             </ScrollArea>
           </div>
@@ -1019,35 +939,48 @@ export function Timeline() {
         <div className="flex-1 flex overflow-hidden">
           {/* Track Labels */}
           {tracks.length > 0 && (
-            <div className="w-48 flex-shrink-0 border-r bg-background overflow-y-auto">
-              <div className="flex flex-col">
-                {tracks.map((track) => (
-                  <div
-                    key={track.id}
-                    className="flex items-center px-3 border-b border-muted/30 bg-background group"
-                    style={{ height: `${getTrackHeight(track.type)}px` }}
-                  >
-                    <div className="flex items-center flex-1 min-w-0">
-                      <div
-                        className={`w-3 h-3 rounded-full flex-shrink-0 ${getTrackLabelColor(track.type)}`}
-                      />
-                      <span className="ml-2 text-sm font-medium truncate">
-                        {track.name}
-                      </span>
+            <div
+              ref={trackLabelsRef}
+              className="w-48 flex-shrink-0 border-r bg-panel-accent overflow-y-auto"
+              data-track-labels
+            >
+              <ScrollArea className="w-full h-full" ref={trackLabelsScrollRef}>
+                <div className="flex flex-col gap-1">
+                  {tracks.map((track) => (
+                    <div
+                      key={track.id}
+                      className="flex items-center px-3 border-b border-muted/30 group bg-foreground/5"
+                      style={{ height: `${getTrackHeight(track.type)}px` }}
+                    >
+                      <div className="flex items-center flex-1 min-w-0">
+                        <TrackIcon track={track} />
+                      </div>
+                      {track.muted && (
+                        <span className="ml-2 text-xs text-red-500 font-semibold flex-shrink-0">
+                          Muted
+                        </span>
+                      )}
                     </div>
-                    {track.muted && (
-                      <span className="ml-2 text-xs text-red-500 font-semibold flex-shrink-0">
-                        Muted
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              </ScrollArea>
             </div>
           )}
 
           {/* Timeline Tracks Content */}
-          <div className="flex-1 relative overflow-hidden">
+          <div
+            className="flex-1 relative overflow-hidden"
+            onWheel={handleWheel}
+            onMouseDown={handleSelectionMouseDown}
+            onClick={handleTimelineContentClick}
+            ref={tracksContainerRef}
+          >
+            <SelectionBox
+              startPos={selectionBox?.startPos || null}
+              currentPos={selectionBox?.currentPos || null}
+              containerRef={tracksContainerRef}
+              isActive={selectionBox?.isActive || false}
+            />
             <ScrollArea className="w-full h-full" ref={tracksScrollRef}>
               <div
                 className="relative flex-1"
@@ -1055,8 +988,6 @@ export function Timeline() {
                   height: `${Math.max(200, Math.min(800, getTotalTracksHeight(tracks)))}px`,
                   width: `${dynamicTimelineWidth}px`,
                 }}
-                onClick={handleTimelineClick}
-                onMouseDown={handleTimelineMouseDown}
               >
                 {tracks.length === 0 ? (
                   <div></div>
@@ -1066,7 +997,7 @@ export function Timeline() {
                       <ContextMenu key={track.id}>
                         <ContextMenuTrigger asChild>
                           <div
-                            className="absolute left-0 right-0 border-b border-muted/30"
+                            className="absolute left-0 right-0 border-b border-muted/30 py-[0.05rem]"
                             style={{
                               top: `${getCumulativeHeightBefore(tracks, index)}px`,
                               height: `${getTrackHeight(track.type)}px`,
@@ -1089,24 +1020,17 @@ export function Timeline() {
                           </div>
                         </ContextMenuTrigger>
                         <ContextMenuContent>
+                          <ContextMenuItem
+                            onClick={() => toggleTrackMute(track.id)}
+                          >
+                            {track.muted ? "Unmute Track" : "Mute Track"}
+                          </ContextMenuItem>
                           <ContextMenuItem>
                             Track settings (soon)
                           </ContextMenuItem>
                         </ContextMenuContent>
                       </ContextMenu>
                     ))}
-
-                    {/* Playhead for tracks area (scrubbable) */}
-                    {tracks.length > 0 && (
-                      <div
-                        className="absolute top-0 w-0.5 bg-red-500 pointer-events-auto z-50 cursor-col"
-                        style={{
-                          left: `${playheadPosition * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel}px`,
-                          height: `${getTotalTracksHeight(tracks)}px`,
-                        }}
-                        onMouseDown={handlePlayheadMouseDown}
-                      />
-                    )}
                   </>
                 )}
               </div>
@@ -1115,5 +1039,21 @@ export function Timeline() {
         </div>
       </div>
     </div>
+  );
+}
+
+function TrackIcon({ track }: { track: TimelineTrack }) {
+  return (
+    <>
+      {track.type === "media" && (
+        <Video className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+      )}
+      {track.type === "text" && (
+        <TypeIcon className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+      )}
+      {track.type === "audio" && (
+        <Music className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+      )}
+    </>
   );
 }

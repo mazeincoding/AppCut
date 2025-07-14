@@ -8,6 +8,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 import Image from "next/image";
+import { Handlebars } from "./handlebars";
 
 interface HeroProps {
   signupCount: number;
@@ -91,14 +92,7 @@ export function Hero({ signupCount }: HeroProps) {
           className="inline-block font-bold tracking-tighter text-4xl md:text-[4rem]"
         >
           <h1>The Open Source</h1>
-          <div className="flex justify-center gap-4 leading-[4rem] mt-0 md:mt-2">
-            <div className="relative -rotate-[2.76deg] max-w-[250px] md:max-w-[454px] mt-2">
-              <Image src="/frame.svg" height={79} width={459} alt="frame" />
-              <span className="absolute inset-0 flex items-center justify-center">
-                Video Editor
-              </span>
-            </div>
-          </div>
+          <Handlebars>Video Editor</Handlebars>
         </motion.div>
 
         <motion.p
@@ -121,15 +115,17 @@ export function Hero({ signupCount }: HeroProps) {
             onSubmit={handleSubmit}
             className="flex gap-3 w-full max-w-lg flex-col sm:flex-row"
           >
-            <Input
-              type="email"
-              placeholder="Enter your email"
-              className="h-11 text-base flex-1"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={isSubmitting}
-              required
-            />
+            <div className="relative w-full">
+              <Input
+                type="email"
+                placeholder="Enter your email"
+                className="h-11 text-base flex-1"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isSubmitting}
+                required
+              />
+            </div>
             <Button
               type="submit"
               size="lg"

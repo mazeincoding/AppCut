@@ -11,14 +11,7 @@ interface InputProps extends React.ComponentProps<"input"> {
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   (
-    {
-      className,
-      type,
-      showPassword,
-      onShowPasswordChange,
-      value,
-      ...props
-    },
+    { className, type, showPassword, onShowPasswordChange, value, ...props },
     ref
   ) => {
     const isPassword = type === "password";
@@ -26,7 +19,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const inputType = isPassword && showPassword ? "text" : type;
 
     return (
-      <div className="relative w-full">
+      <div className={showPassword ? "relative w-full" : ""}>
         <input
           type={inputType}
           className={cn(

@@ -60,6 +60,9 @@ class StorageService {
       thumbnail: project.thumbnail,
       createdAt: project.createdAt.toISOString(),
       updatedAt: project.updatedAt.toISOString(),
+      backgroundColor: project.backgroundColor,
+      backgroundType: project.backgroundType,
+      blurIntensity: project.blurIntensity,
     };
 
     await this.projectsAdapter.set(project.id, serializedProject);
@@ -77,6 +80,9 @@ class StorageService {
       thumbnail: serializedProject.thumbnail,
       createdAt: new Date(serializedProject.createdAt),
       updatedAt: new Date(serializedProject.updatedAt),
+      backgroundColor: serializedProject.backgroundColor,
+      backgroundType: serializedProject.backgroundType,
+      blurIntensity: serializedProject.blurIntensity,
     };
   }
 

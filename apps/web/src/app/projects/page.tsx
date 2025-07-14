@@ -74,9 +74,9 @@ export default function ProjectsPage() {
   };
 
   const handleBulkDelete = async () => {
-    for (const projectId of selectedProjects) {
-      await deleteProject(projectId);
-    }
+    await Promise.all(
+      Array.from(selectedProjects).map((projectId) => deleteProject(projectId))
+    );
     setSelectedProjects(new Set());
     setIsSelectionMode(false);
     setIsBulkDeleteDialogOpen(false);
