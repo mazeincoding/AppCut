@@ -129,10 +129,10 @@ Comprehensive testing strategy for the video export functionality. Each test tas
 - [x] Test timeline synchronization
 - [x] Test mixed audio output
 
-### 3.3 Test Canvas to Video Pipeline (3 min)
-- [ ] Test frame rendering to canvas
-- [ ] Test canvas stream capture
-- [ ] Test MediaRecorder integration
+### 3.3 Test Canvas to Video Pipeline (3 min) ✅
+- [x] Test frame rendering to canvas
+- [x] Test canvas stream capture
+- [x] Test MediaRecorder integration
 
 ### 3.4 Test Store-Component Integration (3 min)
 - [ ] Test dialog-store synchronization
