@@ -2,7 +2,7 @@ import { ThemeProvider } from "next-themes";
 import { Analytics } from "@vercel/analytics/react";
 import Script from "next/script";
 import "./globals.css";
-import { Toaster } from "../components/ui/sonner";
+import { Toaster } from "../components/ui/toaster";
 import { TooltipProvider } from "../components/ui/tooltip";
 import { DevelopmentDebug } from "../components/development-debug";
 import { StorageProvider } from "../components/storage-provider";
