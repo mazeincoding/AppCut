@@ -268,46 +268,88 @@ export function TimelineElement({
       );
     }
 
+    const TILE_ASPECT_RATIO = 16 / 9;
+
     if (mediaItem.type === "image") {
       // Calculate tile size based on 16:9 aspect ratio
       const trackHeight = getTrackHeight(track.type);
       const tileHeight = trackHeight - 8; // Account for padding
-      const tileWidth = tileHeight * (16 / 9);
+      const tileWidth = tileHeight * TILE_ASPECT_RATIO;
 
       return (
         <div className="w-full h-full flex items-center justify-start overflow-hidden">
-          <div
-            className="bg-[#004D52]/20 h-full w-full"
-            style={{
-              backgroundImage: `url(${mediaItem.url})`,
-              backgroundRepeat: "repeat-x",
-              backgroundSize: `${tileWidth}px ${tileHeight}px`,
-              backgroundPosition: "left center",
-            }}
-          />
+          <div className="bg-[#004D52]/20 h-full w-full relative">
+            {/* Background with tiled images */}
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: mediaItem.url
+                  ? `url(${mediaItem.url})`
+                  : "none",
+                backgroundRepeat: "repeat-x",
+                backgroundSize: `${tileWidth}px ${tileHeight}px`,
+                backgroundPosition: "left center",
+              }}
+            />
+            {/* Overlay with vertical borders */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                backgroundImage: `repeating-linear-gradient(
+                  to right,
+                  transparent 0px,
+                  transparent ${tileWidth - 1}px,
+                  rgba(255, 255, 255, 0.6) ${tileWidth - 1}px,
+                  rgba(255, 255, 255, 0.6) ${tileWidth}px
+                )`,
+                backgroundPosition: "left center",
+              }}
+            />
+          </div>
         </div>
       );
     }
 
+    const VIDEO_TILE_PADDING = 16;
+    const OVERLAY_SPACE_MULTIPLIER = 1.5;
+
     if (mediaItem.type === "video" && mediaItem.thumbnailUrl) {
-      // Calculate tile size based on 16:9 aspect ratio
       const trackHeight = getTrackHeight(track.type);
-      const tileHeight = trackHeight - 16; // Account for padding
-      const tileWidth = tileHeight * (16 / 9);
+      const tileHeight = trackHeight - VIDEO_TILE_PADDING;
+      const tileWidth = tileHeight * TILE_ASPECT_RATIO;
 
       return (
         <div className="w-full h-full flex items-center overflow-hidden relative">
-          <div
-            className="h-full w-full"
-            style={{
-              backgroundImage: `url(${mediaItem.thumbnailUrl})`,
-              backgroundRepeat: "repeat-x",
-              backgroundSize: `${tileWidth}px ${tileHeight}px`,
-              backgroundPosition: "left center",
-            }}
-          />
+          <div className="h-full w-full relative">
+            {/* Background with tiled thumbnails */}
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: mediaItem.thumbnailUrl
+                  ? `url(${mediaItem.thumbnailUrl})`
+                  : "none",
+                backgroundRepeat: "repeat-x",
+                backgroundSize: `${tileWidth}px ${tileHeight}px`,
+                backgroundPosition: "left center",
+              }}
+            />
+            {/* Overlay with vertical borders */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                backgroundImage: `repeating-linear-gradient(
+                  to right,
+                  transparent 0px,
+                  transparent ${tileWidth - 1}px,
+                  rgba(255, 255, 255, 0.6) ${tileWidth - 1}px,
+                  rgba(255, 255, 255, 0.6) ${tileWidth}px
+                )`,
+                backgroundPosition: "left center",
+              }}
+            />
+          </div>
           {/* Show name overlay on the right if there's sufficient space */}
-          {elementWidth > tileWidth * 1.5 && (
+          {elementWidth > tileWidth * OVERLAY_SPACE_MULTIPLIER && (
             <div className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/70 text-white text-xs px-2 py-1 rounded pointer-events-none max-w-[40%] truncate">
               {element.name}
             </div>
