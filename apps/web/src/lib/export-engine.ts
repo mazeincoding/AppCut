@@ -183,6 +183,13 @@ export class ExportEngine {
    * Render a single frame to the canvas
    */
   private renderSingleFrame(frameData: { frameNumber: number; timestamp: number; elements: TimelineElement[] }): void {
+    if (!frameData) {
+      throw new CanvasRenderError(
+        `Invalid frame data provided`,
+        { frameNumber: -1, timestamp: -1, error: new Error("frameData is undefined") }
+      );
+    }
+
     try {
       // Clear canvas
       this.renderer.clearFrame(this.getBackgroundColor());
