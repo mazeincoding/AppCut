@@ -204,7 +204,7 @@ export function Timeline() {
       let scrollLeft = 0;
 
       if (isRulerClick) {
-        // Calculate based on ruler position
+        // Calculate based on  ruler position
         const rulerContent = rulerScrollRef.current?.querySelector(
           "[data-radix-scroll-area-viewport]"
         ) as HTMLElement;
