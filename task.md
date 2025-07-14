@@ -114,40 +114,40 @@ Breaking down the video export feature into small, focused tasks. Each task shou
 
 ## Phase 4: Frame Rendering Pipeline (21 min total)
 
-### 4.1 Create Frame Capture Service (3 min)
-- [ ] Create `/apps/web/src/lib/frame-capture.ts`
-- [ ] Add FrameCaptureService class
-- [ ] Define capture method structure
+### 4.1 Create Frame Capture Service (3 min) ✅
+- [x] Create `/apps/web/src/lib/frame-capture.ts`
+- [x] Add FrameCaptureService class
+- [x] Define capture method structure
 
-### 4.2 Add Timeline Frame Iterator (3 min)
-- [ ] Create method to iterate through timeline frames
-- [ ] Calculate frame timestamps
-- [ ] Handle FPS conversion
+### 4.2 Add Timeline Frame Iterator (3 min) ✅
+- [x] Create method to iterate through timeline frames
+- [x] Calculate frame timestamps
+- [x] Handle FPS conversion
 
-### 4.3 Add Video Frame Extraction (3 min)
-- [ ] Create method to extract frame at timestamp
-- [ ] Use video.currentTime seek
-- [ ] Handle seek completion
+### 4.3 Add Video Frame Extraction (3 min) ✅
+- [x] Create method to extract frame at timestamp
+- [x] Use video.currentTime seek
+- [x] Handle seek completion
 
-### 4.4 Add Image Element Renderer (3 min)
-- [ ] Implement image drawing to canvas
-- [ ] Handle positioning from timeline
-- [ ] Apply transformations
+### 4.4 Add Image Element Renderer (3 min) ✅
+- [x] Implement image drawing to canvas
+- [x] Handle positioning from timeline
+- [x] Apply transformations
 
-### 4.5 Add Text Element Renderer (3 min)
-- [ ] Implement text drawing to canvas
-- [ ] Apply font styles
-- [ ] Handle text positioning
+### 4.5 Add Text Element Renderer (3 min) ✅
+- [x] Implement text drawing to canvas
+- [x] Apply font styles
+- [x] Handle text positioning
 
-### 4.6 Add Background Blur Effect (3 min)
-- [ ] Implement blur filter for background
-- [ ] Use CSS filters on canvas
-- [ ] Handle blur radius
+### 4.6 Add Background Blur Effect (3 min) ✅
+- [x] Implement blur filter for background
+- [x] Use CSS filters on canvas
+- [x] Handle blur radius
 
-### 4.7 Add Element Layer Sorting (3 min)
-- [ ] Sort elements by z-index/layer
-- [ ] Implement proper render order
-- [ ] Handle track layering
+### 4.7 Add Element Layer Sorting (3 min) ✅
+- [x] Sort elements by z-index/layer
+- [x] Implement proper render order
+- [x] Handle track layering
 
 ## Phase 5: Video Recording (18 min total)
 
