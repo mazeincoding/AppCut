@@ -123,8 +123,20 @@ export class ExportEngine {
    */
   cancelExport(): void {
     this.shouldCancel = true;
-    this.recorder.cleanup();
     this.isExporting = false;
+    
+    // Clean up resources
+    try {
+      this.recorder.cleanup();
+    } catch (error) {
+      console.warn("Failed to cleanup recorder:", error);
+    }
+    
+    try {
+      this.audioMixer.dispose();
+    } catch (error) {
+      console.warn("Failed to dispose audio mixer:", error);
+    }
   }
 
   /**
