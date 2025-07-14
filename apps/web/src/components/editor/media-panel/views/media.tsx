@@ -207,7 +207,7 @@ export function MediaView() {
         <DragOverlay isVisible={isDragOver} />
 
         <div className="p-3 pb-2">
-          {/* Search and filter controls (removed old Add button) */}
+          {/* Search and filter controls */}
           <div className="flex gap-2">
             <Select value={mediaFilter} onValueChange={setMediaFilter}>
               <SelectTrigger className="w-[80px] h-full text-xs">
@@ -258,7 +258,10 @@ export function MediaView() {
                 ) : (
                   <>
                     <Plus className="h-4 w-4" />
-                    <span className="hidden sm:inline ml-2" aria-label="Add file">
+                    <span
+                      className="hidden sm:inline ml-2"
+                      aria-label="Add file"
+                    >
                       Add
                     </span>
                   </>
