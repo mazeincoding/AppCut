@@ -37,21 +37,36 @@
 
 ### Prerequisites
 
-Before you begin, ensure you have the following installed on your system:
+Before you begin, ensure you have the following installed:
 
-- [Bun](https://bun.sh/docs/installation)
+- [Node.js 18+](https://nodejs.org/en/)
+- [Bun](https://bun.sh/docs/installation) (latest version)
 - [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/)
-- [Node.js](https://nodejs.org/en/) (for `npm` alternative)
 
-### Setup
+### Quick Setup
 
-## Getting Started
+1. **Fork and clone the repository**
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/OpenCut.git
+   cd OpenCut
+   ```
 
-1. Fork the repository
-2. Clone your fork locally
-3. Navigate to the web app directory: `cd apps/web`
-4. Install dependencies: `bun install`
-5. Start the development server: `bun run dev`
+2. **Navigate to the web app**
+   ```bash
+   cd apps/web
+   ```
+
+3. **Install dependencies**
+   ```bash
+   bun install
+   ```
+
+4. **Start development server**
+   ```bash
+   bun run dev
+   ```
+
+> **Note**: This basic setup runs without a database. For full functionality, follow the Development Setup below.
 
 ## Development Setup
 
