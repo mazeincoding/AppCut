@@ -130,7 +130,7 @@ export function AudioPlayer({
       className={className}
       preload="auto"
       controls={false}
-      style={{ width: '300px', height: '60px', background:'red' }} // Audio elements don't need visual representation
+      style={{ display: 'none' }} // Audio elements don't need visual representation
       onContextMenu={(e) => e.preventDefault()}
     />
   );
