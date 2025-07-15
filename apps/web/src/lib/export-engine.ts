@@ -389,9 +389,12 @@ export class ExportEngine {
           // Seek to the correct time and wait for it
           await this.seekVideoToTime(preloadedVideo, elementTime);
           
+          // Small delay to ensure frame is ready after seeking
+          await new Promise(resolve => setTimeout(resolve, 16)); // ~1 frame at 60fps
+          
           // Draw the video frame
           this.renderer.drawImage(preloadedVideo, bounds.x, bounds.y, bounds.width, bounds.height);
-          console.log("✅ Preloaded video drawn to canvas");
+          console.log(`✅ Preloaded video drawn to canvas at ${elementTime}s (actual: ${preloadedVideo.currentTime}s)`);
         } else {
           console.log("⏳ Video not preloaded or not ready", {
             hasPreloadedVideo: !!preloadedVideo,
@@ -510,7 +513,7 @@ export class ExportEngine {
       const onSeeked = () => {
         if (resolved) return;
         resolved = true;
-        console.log(`✅ Video seeked to ${time}s, currentTime: ${video.currentTime}`);
+        console.log(`✅ Video seeked to ${time}s, actualTime: ${video.currentTime}, diff: ${Math.abs(video.currentTime - time).toFixed(3)}s`);
         cleanup();
         resolve();
       };
@@ -526,9 +529,9 @@ export class ExportEngine {
       const onLoadedData = () => {
         if (resolved) return;
         // Sometimes seeked event doesn't fire, but loadeddata means we have the frame
-        if (Math.abs(video.currentTime - time) < 0.1) {
+        if (Math.abs(video.currentTime - time) < 0.05) {
           resolved = true;
-          console.log(`✅ Video loaded data at ${time}s (via loadeddata)`);
+          console.log(`✅ Video loaded data at ${time}s (via loadeddata), actualTime: ${video.currentTime}`);
           cleanup();
           resolve();
         }
@@ -560,13 +563,8 @@ export class ExportEngine {
       console.log(`🎯 Seeking video to ${time}s, readyState: ${video.readyState}`);
       video.currentTime = time;
       
-      // If already at the right time, resolve immediately
-      if (Math.abs(video.currentTime - time) < 0.001) {
-        resolved = true;
-        console.log(`✅ Video already at correct time ${time}s`);
-        cleanup();
-        resolve();
-      }
+      // Always force seeking for better frame accuracy, don't assume "already at correct time"
+      // This ensures we get the exact frame for the timestamp
     });
   }
 
