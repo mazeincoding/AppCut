@@ -15,6 +15,8 @@ import {
   Video,
   Music,
   TypeIcon,
+  ZoomIn,
+  ZoomOut,
 } from "lucide-react";
 import {
   Tooltip,
@@ -746,7 +748,52 @@ export function Timeline() {
               </Tooltip>
             </>
           )}
+
           <div className="w-px h-6 bg-border mx-1" />
+          
+          {/* Timeline Zoom Controls */}
+          <TooltipProvider delayDuration={500}>
+            <div className="flex items-center gap-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="text"
+                    size="icon"
+                    onClick={() => setZoomLevel(prev => Math.max(0.1, prev - 0.25))}
+                    className="h-8 w-8"
+                  >
+                    <ZoomOut className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Zoom Out</TooltipContent>
+              </Tooltip>
+              
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="px-2 py-1 text-xs text-muted-foreground bg-muted rounded min-w-[50px] text-center cursor-pointer"
+                       onClick={() => setZoomLevel(1)} // Reset to 100% on click
+                  >
+                    {Math.round(zoomLevel * 100)}%
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>Click to reset to 100%</TooltipContent>
+              </Tooltip>
+              
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="text"
+                    size="icon"
+                    onClick={() => setZoomLevel(prev => Math.min(10, prev + 0.25))}
+                    className="h-8 w-8"
+                  >
+                    <ZoomIn className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Zoom In</TooltipContent>
+              </Tooltip>
+            </div>
+          </TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="text" size="icon" onClick={handleSplitSelected}>
