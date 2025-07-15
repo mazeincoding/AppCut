@@ -2,74 +2,53 @@
 
 import { SnapPoint } from "@/hooks/use-timeline-snapping";
 import { TIMELINE_CONSTANTS } from "@/constants/timeline-constants";
+import type { TimelineTrack } from "@/types/timeline";
 
 interface SnapIndicatorProps {
   snapPoint: SnapPoint | null;
   zoomLevel: number;
-  timelineHeight: number;
   isVisible: boolean;
+  tracks: TimelineTrack[];
+  timelineRef: React.RefObject<HTMLDivElement>;
+  trackLabelsRef?: React.RefObject<HTMLDivElement>;
 }
 
 export function SnapIndicator({
   snapPoint,
   zoomLevel,
-  timelineHeight,
   isVisible,
+  tracks,
+  timelineRef,
+  trackLabelsRef,
 }: SnapIndicatorProps) {
   if (!isVisible || !snapPoint) {
     return null;
   }
 
+  const timelineContainerHeight = timelineRef.current?.offsetHeight || 400;
+  const totalHeight = timelineContainerHeight - 8; // 8px padding from edges
+
+  // Get dynamic track labels width, fallback to 0 if no tracks or no ref
+  const trackLabelsWidth =
+    tracks.length > 0 && trackLabelsRef?.current
+      ? trackLabelsRef.current.offsetWidth
+      : 0;
+
   const leftPosition =
+    trackLabelsWidth +
     snapPoint.time * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel;
-
-  const getIndicatorColor = () => {
-    switch (snapPoint.type) {
-      case "grid":
-        return "bg-blue-400";
-      case "element-start":
-      case "element-end":
-        return "bg-green-400";
-      case "playhead":
-        return "bg-red-400";
-      default:
-        return "bg-gray-400";
-    }
-  };
-
-  const getIndicatorLabel = () => {
-    switch (snapPoint.type) {
-      case "grid":
-        return "Grid";
-      case "element-start":
-        return "Start";
-      case "element-end":
-        return "End";
-      case "playhead":
-        return "Playhead";
-      default:
-        return "";
-    }
-  };
 
   return (
     <div
-      className="absolute top-0 pointer-events-none z-50"
+      className="absolute pointer-events-none z-[90]"
       style={{
         left: `${leftPosition}px`,
-        height: `${timelineHeight}px`,
+        top: 0,
+        height: `${totalHeight}px`,
+        width: "2px",
       }}
     >
-      {/* Snap line */}
-      <div className={`w-0.5 h-full ${getIndicatorColor()} opacity-80`} />
-
-      {/* Snap label */}
-      <div
-        className={`absolute top-0 left-1 px-1 py-0.5 text-xs text-white rounded ${getIndicatorColor()} opacity-90 whitespace-nowrap`}
-        style={{ transform: "translateY(-100%)" }}
-      >
-        {getIndicatorLabel()} ({snapPoint.time.toFixed(1)}s)
-      </div>
+      <div className={`w-0.5 h-full bg-primary/40 opacity-80`} />
     </div>
   );
 }

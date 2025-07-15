@@ -1,10 +1,10 @@
 import { useCallback } from "react";
-import { TimelineElement, TimelineTrack } from "@/types/timeline";
+import { TimelineTrack } from "@/types/timeline";
 import { TIMELINE_CONSTANTS } from "@/constants/timeline-constants";
 
 export interface SnapPoint {
   time: number;
-  type: "grid" | "element-start" | "element-end" | "playhead";
+  type: "element-start" | "element-end" | "playhead";
   elementId?: string;
   trackId?: string;
 }
@@ -17,16 +17,12 @@ export interface SnapResult {
 
 export interface UseTimelineSnappingOptions {
   snapThreshold?: number; // Distance in pixels to trigger snapping
-  gridInterval?: number; // Grid interval in seconds
-  enableGridSnapping?: boolean;
   enableElementSnapping?: boolean;
   enablePlayheadSnapping?: boolean;
 }
 
 export function useTimelineSnapping({
   snapThreshold = 10,
-  gridInterval = 1,
-  enableGridSnapping = true,
   enableElementSnapping = true,
   enablePlayheadSnapping = true,
 }: UseTimelineSnappingOptions = {}) {
@@ -39,23 +35,6 @@ export function useTimelineSnapping({
       excludeElementId?: string
     ): SnapPoint[] => {
       const snapPoints: SnapPoint[] = [];
-
-      // Add grid snap points
-      if (enableGridSnapping) {
-        const gridStart = Math.floor(currentTime / gridInterval) * gridInterval;
-        const gridEnd = Math.ceil(currentTime / gridInterval) * gridInterval;
-
-        // Add nearby grid points
-        for (let i = -2; i <= 2; i++) {
-          const gridTime = gridStart + i * gridInterval;
-          if (gridTime >= 0) {
-            snapPoints.push({
-              time: gridTime,
-              type: "grid",
-            });
-          }
-        }
-      }
 
       // Add element snap points
       if (enableElementSnapping) {
@@ -97,12 +76,7 @@ export function useTimelineSnapping({
 
       return snapPoints;
     },
-    [
-      enableGridSnapping,
-      enableElementSnapping,
-      enablePlayheadSnapping,
-      gridInterval,
-    ]
+    [enableElementSnapping, enablePlayheadSnapping]
   );
 
   const snapToNearestPoint = useCallback(

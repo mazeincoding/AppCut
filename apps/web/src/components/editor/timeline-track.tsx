@@ -49,22 +49,15 @@ export function TimelineTrackContent({
     clearSelectedElements,
     insertTrackAt,
     snappingEnabled,
-    gridSnappingEnabled,
-    elementSnappingEnabled,
-    playheadSnappingEnabled,
-    snapThreshold,
-    gridInterval,
   } = useTimelineStore();
 
   const { currentTime } = usePlaybackStore();
 
   // Initialize snapping hook
   const { snapElementPosition } = useTimelineSnapping({
-    snapThreshold,
-    gridInterval,
-    enableGridSnapping: snappingEnabled && gridSnappingEnabled,
-    enableElementSnapping: snappingEnabled && elementSnappingEnabled,
-    enablePlayheadSnapping: snappingEnabled && playheadSnappingEnabled,
+    snapThreshold: 10,
+    enableElementSnapping: snappingEnabled,
+    enablePlayheadSnapping: snappingEnabled,
   });
 
   const timelineRef = useRef<HTMLDivElement>(null);
