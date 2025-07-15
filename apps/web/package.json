@@ -45,6 +45,7 @@
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.54.0",
     "react-icons": "^5.4.0",
+    "react-markdown": "^10.1.0",
     "react-phone-number-input": "^3.4.11",
     "react-resizable-panels": "^2.1.7",
     "recharts": "^2.14.1",

@@ -5,7 +5,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { ArrowRight } from "lucide-react";
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 import Image from "next/image";
 import { Handlebars } from "./handlebars";
@@ -17,16 +17,13 @@ interface HeroProps {
 export function Hero({ signupCount }: HeroProps) {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!email.trim()) {
-      toast({
-        title: "Email required",
+      toast.error("Email required", {
         description: "Please enter your email address.",
-        variant: "destructive",
       });
       return;
     }
@@ -45,25 +42,20 @@ export function Hero({ signupCount }: HeroProps) {
       const data = (await response.json()) as { error: string };
 
       if (response.ok) {
-        toast({
-          title: "Welcome to the waitlist! 🎉",
+        toast.success("Welcome to the waitlist! 🎉", {
           description: "You'll be notified when we launch.",
         });
         setEmail("");
       } else {
-        toast({
-          title: "Oops!",
+        toast.error("Oops!", {
           description:
             (data as { error: string }).error ||
             "Something went wrong. Please try again.",
-          variant: "destructive",
         });
       }
     } catch (error) {
-      toast({
-        title: "Network error",
+      toast.error("Network error", {
         description: "Please check your connection and try again.",
-        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
