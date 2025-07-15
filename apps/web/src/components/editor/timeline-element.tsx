@@ -309,6 +309,9 @@ export function TimelineElement({
               audioUrl={mediaItem.url || ""}
               height={24}
               className="w-full"
+              fadeIn={element.fadeIn}
+              fadeOut={element.fadeOut}
+              duration={element.duration - element.trimStart - element.trimEnd}
             />
           </div>
         </div>

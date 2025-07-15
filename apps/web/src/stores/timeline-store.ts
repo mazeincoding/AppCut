@@ -160,6 +160,13 @@ interface TimelineStore {
       >
     >
   ) => void;
+  updateAudioElement: (
+    trackId: string,
+    elementId: string,
+    updates: Partial<
+      Pick<MediaElement, "volume" | "fadeIn" | "fadeOut" | "muted">
+    >
+  ) => void;
 }
 
 export const useTimelineStore = create<TimelineStore>((set, get) => {
@@ -535,6 +542,24 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
                 ...track,
                 elements: track.elements.map((element) =>
                   element.id === elementId && element.type === "text"
+                    ? { ...element, ...updates }
+                    : element
+                ),
+              }
+            : track
+        )
+      );
+    },
+
+    updateAudioElement: (trackId, elementId, updates) => {
+      get().pushHistory();
+      updateTracksAndSave(
+        get()._tracks.map((track) =>
+          track.id === trackId
+            ? {
+                ...track,
+                elements: track.elements.map((element) =>
+                  element.id === elementId && element.type === "media"
                     ? { ...element, ...updates }
                     : element
                 ),
