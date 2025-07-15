@@ -144,3 +144,15 @@ params:
  ✓ Compiled in 2.4s (2402 modules)
  ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
  GET /editor/0da53df5-90e8-4415-95a3-02e83d1d8f74 200 in 214ms
+ ✓ Compiled in 1546ms (2402 modules)
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ GET /editor/0da53df5-90e8-4415-95a3-02e83d1d8f74 200 in 206ms
+ ✓ Compiled in 1384ms (2402 modules)
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ GET /editor/0da53df5-90e8-4415-95a3-02e83d1d8f74 200 in 154ms
+ ✓ Compiled in 1166ms (2402 modules)
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ GET /editor/0da53df5-90e8-4415-95a3-02e83d1d8f74 200 in 101ms
+ ✓ Compiled in 856ms (2402 modules)
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ GET /editor/0da53df5-90e8-4415-95a3-02e83d1d8f74 200 in 105ms

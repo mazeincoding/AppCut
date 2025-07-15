@@ -399,8 +399,36 @@ export class ExportEngine {
             preloadedVideosCount: this.preloadedVideos.size,
             preloadedVideoIds: Array.from(this.preloadedVideos.keys())
           });
-          // For non-preloaded videos, draw a placeholder for now
-          // In a production system, you'd want to handle this better
+          
+          // Try to create a new video element as fallback
+          console.log("🔄 Attempting fallback video creation...");
+          try {
+            const fallbackVideo = document.createElement("video");
+            fallbackVideo.muted = true;
+            fallbackVideo.preload = "metadata";
+            
+            if (mediaItem.url) {
+              fallbackVideo.src = mediaItem.url;
+            } else if (mediaItem.file) {
+              fallbackVideo.src = URL.createObjectURL(mediaItem.file);
+            }
+            
+            // Set the time immediately
+            fallbackVideo.currentTime = elementTime;
+            
+            // Wait a bit for the video to load the frame
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            if (fallbackVideo.readyState >= 2) {
+              console.log("✅ Fallback video ready, drawing frame");
+              this.renderer.drawImage(fallbackVideo, bounds.x, bounds.y, bounds.width, bounds.height);
+              return;
+            }
+          } catch (error) {
+            console.warn("❌ Fallback video creation failed:", error);
+          }
+          
+          // Final fallback: draw placeholder
           this.renderer.fillRect(bounds.x, bounds.y, bounds.width, bounds.height, "#666");
           console.log("📦 Drew placeholder rectangle for video");
         }
@@ -798,7 +826,7 @@ export class ExportEngine {
         const video = document.createElement("video");
         video.muted = true;
         video.crossOrigin = "anonymous";
-        video.preload = "metadata";
+        video.preload = "auto";
         
         // Set source
         if (mediaItem.url) {
@@ -829,11 +857,16 @@ export class ExportEngine {
             if (!resolved) {
               resolved = true;
               console.log(`✅ Video ready (canplay): ${mediaItem.name}, readyState: ${video.readyState}`);
-              this.preloadedVideos.set(mediaItem.id, video);
+              // Only add if readyState is adequate
+              if (video.readyState >= 2) {
+                this.preloadedVideos.set(mediaItem.id, video);
+              } else {
+                console.warn(`⚠️ Video readyState too low: ${video.readyState}, not adding to preloaded videos`);
+              }
               cleanup();
               resolve();
             }
-          }, 500);
+          }, 1000); // Increased timeout to 1 second
         };
         
         const onLoadedMetadata = () => {
@@ -877,8 +910,14 @@ export class ExportEngine {
         // Set a timeout to avoid hanging indefinitely
         const timeoutId = setTimeout(onTimeout, 10000); // 10 second timeout
         
-        // Start loading
+        // Start loading and force initial frame loading
         video.load();
+        
+        // Try to load the first frame by seeking to 0
+        video.addEventListener('loadedmetadata', () => {
+          console.log(`📊 Metadata loaded, seeking to start: ${mediaItem.name}`);
+          video.currentTime = 0;
+        }, { once: true });
       });
     });
     
