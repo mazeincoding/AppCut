@@ -229,3 +229,63 @@ export const extractAudio = async (
   
   return blob;
 };
+
+export interface EncodeImagesOptions {
+  fps: number;
+  format?: 'mp4' | 'webm';
+  onProgress?: (progress: number) => void;
+}
+
+export interface ImageFrame {
+  /** Filename written to FFmpeg virtual FS */
+  name: string;
+  /** Raw PNG data */
+  data: Uint8Array;
+}
+
+/**
+ * Encode a sequence of PNG images into a video using FFmpeg.wasm.
+ * Images should be provided in display order with zero padded
+ * filenames such as frame-00001.png.
+ */
+export const encodeImagesToVideo = async (
+  frames: ImageFrame[],
+  options: EncodeImagesOptions
+): Promise<Blob> => {
+  const ffmpeg = await initFFmpeg();
+
+  const format = options.format ?? 'mp4';
+  const outputName = `output.${format}`;
+
+  if (options.onProgress) {
+    ffmpeg.on('progress', ({ progress }) => {
+      options.onProgress!(progress * 100);
+    });
+  }
+
+  // Write frames to the virtual file system
+  for (const frame of frames) {
+    await ffmpeg.writeFile(frame.name, frame.data);
+  }
+
+  const args = [
+    '-r', String(options.fps),
+    '-i', 'frame-%05d.png',
+    '-c:v', 'libx264',
+    '-pix_fmt', 'yuv420p',
+    outputName,
+  ];
+
+  await ffmpeg.exec(args);
+
+  const data = await ffmpeg.readFile(outputName);
+  const blob = new Blob([data], { type: `video/${format}` });
+
+  // Clean up
+  for (const frame of frames) {
+    await ffmpeg.deleteFile(frame.name);
+  }
+  await ffmpeg.deleteFile(outputName);
+
+  return blob;
+};
