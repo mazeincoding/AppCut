@@ -92,23 +92,33 @@ export class ExportEngine {
     }
 
     try {
-      console.log("📊 Export parameters:", {
-        timelineElementsCount: this.timelineElements.length,
-        mediaItemsCount: this.mediaItems.length,
-        duration: this.duration,
-        fps: this.fps,
-        canvasSize: `${this.settings.width}x${this.settings.height}`
+      // Calculate the actual video content duration (not timeline duration)
+      const actualVideoDuration = this.calculateActualVideoDuration();
+      
+      console.log("🎬 Export starting:", {
+        timelineElements: this.timelineElements.length,
+        calculatedDuration: this.duration,
+        actualVideoDuration,
+        fps: this.fps
       });
       
-      // Debug timeline elements
-      console.log("📋 Timeline elements:", this.timelineElements.map(el => ({
-        id: el.id,
-        type: el.type,
-        startTime: el.startTime,
-        endTime: el.endTime,
-        duration: el.duration,
-        mediaId: el.type === "media" ? el.mediaId : "N/A"
-      })));
+      // Use the shorter of timeline duration or actual video duration
+      const safeDuration = Math.min(this.duration, actualVideoDuration + 0.1); // Small buffer
+      
+      if (safeDuration !== this.duration) {
+        console.log(`🛠️ Adjusting export duration from ${this.duration}s to ${safeDuration}s`);
+        this.duration = safeDuration;
+        this.captureService = new FrameCaptureService(
+          {
+            fps: this.fps,
+            duration: safeDuration,
+            width: this.settings.width,
+            height: this.settings.height,
+          },
+          this.settings,
+          this.timelineElements
+        );
+      }
       
       // Pre-flight checks
       this.performPreflightChecks();
@@ -178,15 +188,24 @@ export class ExportEngine {
   }
 
   /**
-   * Render all frames using requestAnimationFrame loop
+   * Render all frames using precise timing control
    */
   private async renderFrames(): Promise<Blob> {
     return new Promise((resolve, reject) => {
       const totalFrames = this.captureService.getTotalFrames();
       let currentFrame = 0;
       let lastProgressUpdate = 0;
+      const frameInterval = 1000 / this.fps; // Time between frames in milliseconds
+      let lastFrameTime = 0;
 
-      const renderFrame = async () => {
+      console.log("🎬 Starting frame rendering with precise timing:", {
+        totalFrames,
+        fps: this.fps,
+        frameInterval: `${frameInterval}ms`,
+        expectedDuration: `${totalFrames / this.fps}s`
+      });
+
+      const renderFrame = async (currentTime: number) => {
         if (this.shouldCancel) {
           reject(new Error("Export cancelled"));
           return;
@@ -194,6 +213,7 @@ export class ExportEngine {
 
         if (currentFrame >= totalFrames) {
           // All frames rendered, stop recording
+          console.log("✅ All frames rendered, stopping recording");
           this.recorder.stopRecording()
             .then(resolve)
             .catch(reject);
@@ -201,23 +221,36 @@ export class ExportEngine {
         }
 
         try {
-          // Get frame data
-          const frameData = this.captureService.getFrameData(currentFrame);
+          // Calculate if it's time for the next frame
+          const timeSinceLastFrame = currentTime - lastFrameTime;
           
-          // Render frame to canvas
-          await this.renderSingleFrame(frameData);
-          
-          // Update progress
-          const progress = Math.floor((currentFrame / totalFrames) * 100);
-          if (progress > lastProgressUpdate) {
-            lastProgressUpdate = progress;
-            this.onProgress?.(progress, `Rendering frame ${currentFrame + 1} of ${totalFrames}`);
+          if (timeSinceLastFrame >= frameInterval) {
+            // Get frame data
+            const frameData = this.captureService.getFrameData(currentFrame);
+            
+            console.log("🎞️ Rendering frame:", {
+              frameNumber: currentFrame,
+              timestamp: frameData.timestamp,
+              timeSinceLastFrame: `${timeSinceLastFrame.toFixed(2)}ms`,
+              expectedInterval: `${frameInterval}ms`
+            });
+            
+            // Render frame to canvas
+            await this.renderSingleFrame(frameData);
+            
+            // Update progress
+            const progress = Math.floor((currentFrame / totalFrames) * 100);
+            if (progress > lastProgressUpdate) {
+              lastProgressUpdate = progress;
+              this.onProgress?.(progress, `Rendering frame ${currentFrame + 1} of ${totalFrames}`);
+            }
+            
+            currentFrame++;
+            lastFrameTime = currentTime;
           }
           
-          currentFrame++;
-          
-          // Continue with next frame
-          requestAnimationFrame(() => renderFrame());
+          // Continue with next frame using requestAnimationFrame for timing
+          requestAnimationFrame(renderFrame);
           
         } catch (error) {
           reject(error);
@@ -225,19 +258,38 @@ export class ExportEngine {
       };
 
       // Start rendering
-      requestAnimationFrame(() => renderFrame());
+      requestAnimationFrame(renderFrame);
     });
+  }
+
+  /**
+   * Calculate the actual duration of video content (not timeline gaps)
+   */
+  private calculateActualVideoDuration(): number {
+    let maxVideoDuration = 0;
+    
+    for (const element of this.timelineElements) {
+      if (element.type === 'media') {
+        const mediaItem = this.getMediaItem(element.mediaId!);
+        if (mediaItem?.type === 'video' && mediaItem.duration) {
+          // Calculate the effective end time of this video element
+          const trimStart = element.trimStart || 0;
+          const trimEnd = element.trimEnd || 0;
+          const effectiveDuration = mediaItem.duration - trimStart - trimEnd;
+          const elementEndTime = (element.startTime || 0) + effectiveDuration;
+          
+          maxVideoDuration = Math.max(maxVideoDuration, elementEndTime);
+        }
+      }
+    }
+    
+    return maxVideoDuration;
   }
 
   /**
    * Render a single frame to the canvas
    */
   private async renderSingleFrame(frameData: { frameNumber: number; timestamp: number; elements: TimelineElement[] }): Promise<void> {
-    console.log("🎞️ renderSingleFrame called:", {
-      frameNumber: frameData.frameNumber,
-      timestamp: frameData.timestamp,
-      elementCount: frameData.elements?.length || 0
-    });
 
     if (!frameData || !frameData.elements) {
       throw new CanvasRenderError(
@@ -249,25 +301,26 @@ export class ExportEngine {
     try {
       // Clear canvas
       this.renderer.clearFrame(this.getBackgroundColor());
-      console.log("🧹 Canvas cleared with background color");
       
       // Use elements from frame data (already filtered for visibility)
       const visibleElements = frameData.elements;
       
-      console.log("👁️ Visible elements:", visibleElements.length);
+      
+      // Check for white frames
+      if (visibleElements.length === 0 && frameData.timestamp > 0) {
+        console.warn("⚠️ White frame at", frameData.timestamp, "s");
+      }
       
       // Render each element
       for (const element of visibleElements) {
         try {
-          console.log("🎨 Rendering element:", element.id);
-          await this.renderElement(element, frameData.timestamp);
+            await this.renderElement(element, frameData.timestamp);
         } catch (error) {
           console.warn(`❌ Failed to render element ${element.id}:`, error);
           // Continue rendering other elements
         }
       }
       
-      console.log("✅ Frame rendering completed");
     } catch (error) {
       throw new CanvasRenderError(
         `Failed to render frame ${frameData.frameNumber}`,
@@ -280,12 +333,6 @@ export class ExportEngine {
    * Render a single timeline element
    */
   private async renderElement(element: TimelineElement, timestamp: number): Promise<void> {
-    console.log("🔍 renderElement called:", {
-      elementId: element.id,
-      elementType: element.type,
-      timestamp,
-      mediaId: element.type === "media" ? element.mediaId : "N/A"
-    });
 
     const bounds = this.captureService.calculateElementBounds(
       element,
@@ -293,7 +340,6 @@ export class ExportEngine {
       this.settings.height
     );
 
-    console.log("📐 Calculated bounds:", bounds);
 
     // Save canvas state
     this.renderer.save();
@@ -303,31 +349,21 @@ export class ExportEngine {
         case "media":
           // Get media type from media store
           const mediaItem = this.getMediaItem(element.mediaId);
-          console.log("📺 Media item found:", mediaItem ? {
-            id: mediaItem.id,
-            type: mediaItem.type,
-            name: mediaItem.name,
-            hasUrl: !!mediaItem.url,
-            hasFile: !!mediaItem.file
-          } : "NOT FOUND");
           
           if (mediaItem) {
             if (mediaItem.type === "video") {
-              console.log("🎬 Rendering video element");
               await this.renderVideoElement(element, bounds, timestamp);
             } else if (mediaItem.type === "image") {
-              console.log("🖼️ Rendering image element");
               this.renderImageElement(element, bounds);
             }
             // Audio media doesn't need visual rendering
           }
           break;
         case "text":
-          console.log("📝 Rendering text element");
           this.renderTextElement(element, bounds);
           break;
         default:
-          console.warn(`❌ Unknown element type: ${element.type}`);
+          console.warn(`Unknown element type: ${element.type}`);
       }
     } finally {
       // Restore canvas state
@@ -339,11 +375,6 @@ export class ExportEngine {
    * Render a video element
    */
   private async renderVideoElement(element: TimelineElement, bounds: any, timestamp: number): Promise<void> {
-    console.log("🎬 renderVideoElement called:", {
-      elementId: element.id,
-      timestamp,
-      bounds
-    });
 
     if (element.type !== "media") {
       console.warn("❌ Element is not media type:", element.type);
@@ -356,25 +387,12 @@ export class ExportEngine {
       return;
     }
     
-    console.log("📺 Video media item:", {
-      id: mediaItem.id,
-      name: mediaItem.name,
-      hasUrl: !!mediaItem.url,
-      hasFile: !!mediaItem.file
-    });
     
     // Calculate the time within the video based on element timing
     const elementTime = timestamp - element.startTime + element.trimStart;
-    console.log("⏰ Element time calculation:", {
-      timestamp,
-      startTime: element.startTime,
-      trimStart: element.trimStart,
-      elementTime
-    });
     
     // Only render if within the element's duration
     if (elementTime >= 0 && elementTime <= (element.duration - element.trimStart - element.trimEnd)) {
-      console.log("✅ Within element duration, rendering video");
       try {
         // Use preloaded video if available
         const preloadedVideo = this.preloadedVideos.get(mediaItem.id);
@@ -394,7 +412,6 @@ export class ExportEngine {
           
           // Draw the video frame
           this.renderer.drawImage(preloadedVideo, bounds.x, bounds.y, bounds.width, bounds.height);
-          console.log(`✅ Preloaded video drawn to canvas at ${elementTime}s (actual: ${preloadedVideo.currentTime}s)`);
         } else {
           console.log("⏳ Video not preloaded or not ready", {
             hasPreloadedVideo: !!preloadedVideo,
@@ -560,7 +577,6 @@ export class ExportEngine {
       const timeoutId = setTimeout(onTimeout, 1000); // 1 second timeout
       
       // Set the time - this triggers seeking
-      console.log(`🎯 Seeking video to ${time}s, readyState: ${video.readyState}`);
       video.currentTime = time;
       
       // Always force seeking for better frame accuracy, don't assume "already at correct time"
@@ -1027,20 +1043,6 @@ export class ExportEngine {
    * Get a media item by its ID
    */
   private getMediaItem(id: string): MediaItem | undefined {
-    console.log("🔍 getMediaItem called for ID:", id);
-    console.log("📚 Available media items:", this.mediaItems.map(item => ({
-      id: item.id,
-      name: item.name,
-      type: item.type
-    })));
-    
-    const mediaItem = this.mediaItems.find(item => item.id === id);
-    console.log("📺 Found media item:", mediaItem ? {
-      id: mediaItem.id,
-      name: mediaItem.name,
-      type: mediaItem.type
-    } : "NOT FOUND");
-    
-    return mediaItem;
+    return this.mediaItems.find(item => item.id === id);
   }
 }

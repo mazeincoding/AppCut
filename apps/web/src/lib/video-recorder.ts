@@ -31,12 +31,16 @@ export class VideoRecorder {
       throw new Error("Canvas not available for recording");
     }
 
+    console.log("📹 Setting up MediaRecorder with FPS:", this.fps);
+    
     // Get canvas stream
     const canvasStream = this.canvas.captureStream(this.fps);
     
     if (!canvasStream) {
       throw new Error("Could not capture canvas stream");
     }
+    
+    console.log("✅ Canvas stream captured with FPS:", this.fps);
 
     // Combine video and audio streams
     this.stream = new MediaStream();
@@ -147,6 +151,7 @@ export class VideoRecorder {
       throw new Error("MediaRecorder not initialized");
     }
 
+    console.log("🎬 Starting video recording with FPS:", this.fps);
     this.mediaRecorder.start(100); // Request data every 100ms
   }
 
@@ -182,9 +187,17 @@ export class VideoRecorder {
         const videoBlob = new Blob(this.recordedChunks, {
           type: this.getSupportedMimeType(),
         });
+        
+        console.log("✅ Video recording completed:", {
+          chunks: this.recordedChunks.length,
+          totalSize: `${(videoBlob.size / 1024 / 1024).toFixed(2)}MB`,
+          mimeType: this.getSupportedMimeType()
+        });
+        
         resolve(videoBlob);
       };
 
+      console.log("🛑 Stopping video recording");
       this.mediaRecorder.stop();
     });
   }

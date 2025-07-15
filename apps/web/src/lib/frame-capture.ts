@@ -142,18 +142,17 @@ export class FrameCaptureService {
    */
   isElementVisible(element: TimelineElement, timestamp: number): boolean {
     const startTime = element.startTime || 0;
-    const endTime = element.endTime || (element.startTime || 0) + (element.duration || 0);
     
-    const isVisible = timestamp >= startTime && timestamp <= endTime;
+    // Calculate effective duration considering trimming
+    const trimStart = element.trimStart || 0;
+    const trimEnd = element.trimEnd || 0;
+    const originalDuration = element.duration || 0;
+    const effectiveDuration = Math.max(0, originalDuration - trimStart - trimEnd);
     
-    // Debug visibility check
-    console.log("👁️ Visibility check:", {
-      elementId: element.id,
-      timestamp,
-      startTime,
-      endTime,
-      isVisible
-    });
+    const endTime = element.endTime || (startTime + effectiveDuration);
+    
+    const isVisible = timestamp >= startTime && timestamp < endTime;
+    
     
     return isVisible;
   }
@@ -183,16 +182,9 @@ export class FrameCaptureService {
    * Get visible elements for a specific timestamp, sorted by render order
    */
   getVisibleElements(elements: TimelineElement[], timestamp: number): TimelineElement[] {
-    console.log("🔍 getVisibleElements called:", {
-      totalElements: elements.length,
-      timestamp
-    });
-    
     const visibleElements = elements.filter(element => 
       this.isElementVisible(element, timestamp)
     );
-    
-    console.log("✅ Visible elements found:", visibleElements.length);
     
     return this.sortElementsByLayer(visibleElements);
   }
