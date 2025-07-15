@@ -197,11 +197,11 @@ Comprehensive testing strategy for the video export functionality. Each test tas
 - [x] Test complex timeline export
 - [x] Verify all elements rendered
 
-### 4.6 Test Quality Presets (3 min)
-- [ ] Test 1080p export
-- [ ] Test 720p export
-- [ ] Test 480p export
-- [ ] Compare file sizes
+### 4.6 Test Quality Presets (3 min) ✅
+- [x] Test 1080p export
+- [x] Test 720p export
+- [x] Test 480p export
+- [x] Compare file sizes
 
 ### 4.7 Test Format Compatibility (3 min)
 - [ ] Test MP4 export
