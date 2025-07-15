@@ -326,7 +326,7 @@ function ProjectCard({
               </div>
             </div>
 
-            <CardContent className="px-0 pt-5 flex flex-col gap-1">
+            <CardContent className="pr-4 pl-3 pt-5 flex flex-col gap-1">
               <div className="flex items-start justify-between">
                 <h3 className="font-medium text-sm leading-snug group-hover:text-foreground/90 transition-colors line-clamp-2">
                   {project.name}
@@ -433,7 +433,7 @@ function ProjectCard({
               </div>
             </div>
 
-            <CardContent className="px-0 pt-5 flex flex-col gap-1">
+            <CardContent className="pr-4 pl-3 pt-5 flex flex-col gap-1">
               <div className="flex items-start justify-between">
                 <h3 className="font-medium text-sm leading-snug group-hover:text-foreground/90 transition-colors line-clamp-2">
                   {project.name}
