@@ -141,7 +141,7 @@ export default function RoadmapPage() {
                 Roadmap
               </h1>
               <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
-                What's coming next for OpenCut (last updated: January 15, 2025)
+                What's coming next for OpenCut (last updated: July 14, 2025)
               </p>
             </div>
             <div className="space-y-6">
