@@ -203,10 +203,10 @@ Comprehensive testing strategy for the video export functionality. Each test tas
 - [x] Test 480p export
 - [x] Compare file sizes
 
-### 4.7 Test Format Compatibility (3 min)
-- [ ] Test MP4 export
-- [ ] Test WebM export
-- [ ] Test MOV export (fallback)
+### 4.7 Test Format Compatibility (3 min) ✅
+- [x] Test MP4 export
+- [x] Test WebM export
+- [x] Test MOV export (fallback)
 
 ### 4.8 Test Progress Tracking (3 min)
 - [ ] Monitor progress updates
