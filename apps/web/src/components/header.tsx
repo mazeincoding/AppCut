@@ -8,7 +8,6 @@ import { useSession } from "@opencut/auth/client";
 import { getStars } from "@/lib/fetch-github-stars";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { env } from "@/env";
 
 export function Header() {
   const { data: session } = useSession();
@@ -41,7 +40,7 @@ export function Header() {
           Contributors
         </Button>
       </Link>
-      {env.NODE_ENV === "development" ? (
+      {process.env.NODE_ENV === "development" ? (
         <Link href="/projects">
           <Button size="sm" className="text-sm ml-4">
             Projects
