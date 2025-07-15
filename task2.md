@@ -282,20 +282,6 @@ Comprehensive testing strategy for the video export functionality. Each test tas
 - [ ] Test Chrome mobile
 - [ ] Test codec support
 
-### 6.2 Test Firefox Support (3 min)
-- [ ] Test latest Firefox version
-- [ ] Test Firefox mobile
-- [ ] Test WebM support
-
-### 6.3 Test Safari Support (3 min)
-- [ ] Test Safari desktop
-- [ ] Test Safari mobile
-- [ ] Test MP4 support
-
-### 6.4 Test Edge Support (3 min)
-- [ ] Test Edge browser
-- [ ] Test codec compatibility
-- [ ] Test performance differences
 
 ### 6.5 Test Feature Detection (3 min)
 - [ ] Test MediaRecorder detection
