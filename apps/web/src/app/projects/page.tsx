@@ -237,7 +237,7 @@ export default function ProjectsPage() {
       <CreateProjectDialog
         isOpen={isOpenCreateProjectDialog}
         onOpenChange={setIsOpenCreateProjectDialog}
-        onConfirm={handleCreateProject}
+        onConfirm={onComfirmCreateProject}
       />
       
     </div>

@@ -43,6 +43,7 @@ export function CreateProjectDialog({
             }
           }}
           onChange={(e) => setProjectName(e.target.value)}
+          value={projectName}
         />
         <DialogFooter>
           <Button
@@ -55,7 +56,7 @@ export function CreateProjectDialog({
           >
             Cancel
           </Button>
-          <Button variant="destructive" onClick={() => onConfirm(projectName)}>
+          <Button onClick={() => onConfirm(projectName)}>
             Create
           </Button>
         </DialogFooter>
