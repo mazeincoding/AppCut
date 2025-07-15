@@ -379,7 +379,7 @@ export class ExportEngine {
         // Use preloaded video if available
         const preloadedVideo = this.preloadedVideos.get(mediaItem.id);
         
-        if (preloadedVideo && preloadedVideo.readyState >= 2) {
+        if (preloadedVideo && preloadedVideo.readyState >= 1) {
           console.log("🎬 Using preloaded video", {
             readyState: preloadedVideo.readyState,
             duration: preloadedVideo.duration,
@@ -405,7 +405,7 @@ export class ExportEngine {
           try {
             const fallbackVideo = document.createElement("video");
             fallbackVideo.muted = true;
-            fallbackVideo.preload = "metadata";
+            fallbackVideo.preload = "auto";
             
             if (mediaItem.url) {
               fallbackVideo.src = mediaItem.url;
@@ -413,16 +413,73 @@ export class ExportEngine {
               fallbackVideo.src = URL.createObjectURL(mediaItem.file);
             }
             
-            // Set the time immediately
+            // Wait for video to load enough data
+            await new Promise<void>((resolve, reject) => {
+              let resolved = false;
+              
+              const onCanPlay = () => {
+                if (resolved) return;
+                resolved = true;
+                cleanup();
+                console.log(`🎬 Fallback video can play, readyState: ${fallbackVideo.readyState}`);
+                resolve();
+              };
+              
+              const onError = () => {
+                if (resolved) return;
+                resolved = true;
+                cleanup();
+                console.warn("❌ Fallback video load error");
+                reject(new Error("Video load failed"));
+              };
+              
+              const onTimeout = () => {
+                if (resolved) return;
+                resolved = true;
+                cleanup();
+                console.warn("⏰ Fallback video load timeout");
+                reject(new Error("Video load timeout"));
+              };
+              
+              const cleanup = () => {
+                fallbackVideo.removeEventListener('canplay', onCanPlay);
+                fallbackVideo.removeEventListener('error', onError);
+                clearTimeout(timeoutId);
+              };
+              
+              fallbackVideo.addEventListener('canplay', onCanPlay);
+              fallbackVideo.addEventListener('error', onError);
+              
+              const timeoutId = setTimeout(onTimeout, 2000); // 2 second timeout
+              
+              // Start loading
+              fallbackVideo.load();
+            });
+            
+            // Now seek to the correct time
             fallbackVideo.currentTime = elementTime;
             
-            // Wait a bit for the video to load the frame
-            await new Promise(resolve => setTimeout(resolve, 100));
+            // Wait for seek to complete
+            await new Promise<void>((resolve) => {
+              const onSeeked = () => {
+                fallbackVideo.removeEventListener('seeked', onSeeked);
+                resolve();
+              };
+              fallbackVideo.addEventListener('seeked', onSeeked);
+              
+              // If already at correct time, resolve immediately
+              if (Math.abs(fallbackVideo.currentTime - elementTime) < 0.1) {
+                fallbackVideo.removeEventListener('seeked', onSeeked);
+                resolve();
+              }
+            });
             
             if (fallbackVideo.readyState >= 2) {
               console.log("✅ Fallback video ready, drawing frame");
               this.renderer.drawImage(fallbackVideo, bounds.x, bounds.y, bounds.width, bounds.height);
               return;
+            } else {
+              console.warn(`⚠️ Fallback video readyState still low: ${fallbackVideo.readyState}`);
             }
           } catch (error) {
             console.warn("❌ Fallback video creation failed:", error);
@@ -448,28 +505,66 @@ export class ExportEngine {
    */
   private async seekVideoToTime(video: HTMLVideoElement, time: number): Promise<void> {
     return new Promise((resolve, reject) => {
+      let resolved = false;
+      
       const onSeeked = () => {
-        video.removeEventListener('seeked', onSeeked);
-        video.removeEventListener('error', onError);
+        if (resolved) return;
+        resolved = true;
+        console.log(`✅ Video seeked to ${time}s, currentTime: ${video.currentTime}`);
+        cleanup();
         resolve();
       };
       
       const onError = (error: Event) => {
+        if (resolved) return;
+        resolved = true;
+        console.warn(`❌ Video seek error:`, error);
+        cleanup();
+        reject(error);
+      };
+      
+      const onLoadedData = () => {
+        if (resolved) return;
+        // Sometimes seeked event doesn't fire, but loadeddata means we have the frame
+        if (Math.abs(video.currentTime - time) < 0.1) {
+          resolved = true;
+          console.log(`✅ Video loaded data at ${time}s (via loadeddata)`);
+          cleanup();
+          resolve();
+        }
+      };
+      
+      const onTimeout = () => {
+        if (resolved) return;
+        resolved = true;
+        console.warn(`⏰ Video seek timeout for time ${time}s`);
+        cleanup();
+        // Don't reject, just resolve to continue
+        resolve();
+      };
+      
+      const cleanup = () => {
         video.removeEventListener('seeked', onSeeked);
         video.removeEventListener('error', onError);
-        reject(error);
+        video.removeEventListener('loadeddata', onLoadedData);
+        clearTimeout(timeoutId);
       };
       
       video.addEventListener('seeked', onSeeked);
       video.addEventListener('error', onError);
+      video.addEventListener('loadeddata', onLoadedData);
+      
+      const timeoutId = setTimeout(onTimeout, 1000); // 1 second timeout
       
       // Set the time - this triggers seeking
+      console.log(`🎯 Seeking video to ${time}s, readyState: ${video.readyState}`);
       video.currentTime = time;
       
       // If already at the right time, resolve immediately
       if (Math.abs(video.currentTime - time) < 0.001) {
-        video.removeEventListener('seeked', onSeeked);
-        video.removeEventListener('error', onError);
+        resolved = true;
+        console.log(`✅ Video already at correct time ${time}s`);
+        cleanup();
         resolve();
       }
     });
