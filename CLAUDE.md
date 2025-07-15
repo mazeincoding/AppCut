@@ -2,6 +2,18 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Quick Reference
+
+For detailed project overview and development guidelines, refer to the **Cursor Rules** at:
+- `/.cursor/rules/` - Comprehensive project documentation and guidelines
+  - `project-structure.mdc` - Project overview, structure, and key technologies
+  - `video-editor.mdc` - Video editor specific development guidelines
+  - `typescript-react.mdc` - TypeScript and React best practices
+  - `testing.mdc` - Testing strategies and patterns
+  - `database-auth.mdc` - Database and authentication guidelines
+  - `api-utilities.mdc` - API and utility development patterns
+  - `build-deployment.mdc` - Build and deployment instructions
+
 ## Overview
 
 OpenCut is a privacy-focused, open-source web-based video editor that runs entirely in the browser. It's designed as a free alternative to CapCut with the core principle that "your videos stay on your device."
@@ -208,8 +220,23 @@ Supports multiple aspect ratios and export formats:
 
 ## Testing
 
-Currently, OpenCut does not have a comprehensive test suite. When adding tests:
-- Use the testing framework appropriate for the component type
+Currently, OpenCut has comprehensive testing setup including:
+- **Unit Tests**: Jest with React Testing Library for components and utilities
+- **Integration Tests**: Complete test coverage for export engine and video processing
+- **E2E Tests**: Playwright for end-to-end user workflows
 - Test video processing utilities thoroughly
 - Mock FFmpeg.js for unit tests
 - Test storage operations with fake IndexedDB
+
+## Development Context
+
+**For Claude Code**: When you need comprehensive project context or specific development guidelines, always refer to the `/.cursor/rules/` directory first. These files contain detailed, up-to-date information about:
+
+- Project architecture and structure patterns
+- Video editor specific implementation details
+- Technology stack usage and best practices
+- Testing strategies and implementation patterns
+- Database schema and authentication flows
+- Build and deployment procedures
+
+The cursor rules provide more detailed context than this CLAUDE.md file and should be your primary reference for understanding project requirements and implementation patterns.
