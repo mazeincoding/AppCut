@@ -4,19 +4,39 @@ import { toBlobURL } from '@ffmpeg/util';
 let ffmpeg: FFmpeg | null = null;
 
 export const initFFmpeg = async (): Promise<FFmpeg> => {
-  if (ffmpeg) return ffmpeg;
+  if (ffmpeg) {
+    console.log("✅ FFmpeg already initialized, reusing instance");
+    return ffmpeg;
+  }
 
-  ffmpeg = new FFmpeg();
+  console.log("🚀 Initializing FFmpeg.wasm...");
   
-  // Use locally hosted files instead of CDN
-  const baseURL = '/ffmpeg';
-  
-  await ffmpeg.load({
-    coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-    wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-  });
-
-  return ffmpeg;
+  try {
+    ffmpeg = new FFmpeg();
+    
+    // Use locally hosted files instead of CDN
+    const baseURL = '/ffmpeg';
+    
+    console.log("📦 Loading FFmpeg core files from:", baseURL);
+    
+    const coreURL = await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript');
+    const wasmURL = await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm');
+    
+    console.log("🔗 Core URL loaded:", coreURL.substring(0, 50) + "...");
+    console.log("🔗 WASM URL loaded:", wasmURL.substring(0, 50) + "...");
+    
+    await ffmpeg.load({
+      coreURL,
+      wasmURL,
+    });
+    
+    console.log("✅ FFmpeg.wasm loaded successfully");
+    return ffmpeg;
+  } catch (error) {
+    console.error("❌ Failed to initialize FFmpeg:", error);
+    ffmpeg = null; // Reset on failure
+    throw new Error(`FFmpeg initialization failed: ${error}`);
+  }
 };
 
 export const generateThumbnail = async (

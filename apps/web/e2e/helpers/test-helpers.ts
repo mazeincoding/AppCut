@@ -89,8 +89,8 @@ export class TestHelpers {
   async mockBrowserAPIs() {
     await this.page.addInitScript(() => {
       // Mock MediaRecorder if not available
-      if (!window.MediaRecorder) {
-        window.MediaRecorder = class MockMediaRecorder {
+      if (!(window as any).MediaRecorder) {
+        (window as any).MediaRecorder = class MockMediaRecorder {
           static isTypeSupported() { return true }
           constructor() {}
           start() {}
@@ -111,8 +111,8 @@ export class TestHelpers {
       }
 
       // Mock File API extensions
-      if (!window.showOpenFilePicker) {
-        window.showOpenFilePicker = () => Promise.reject(new Error('Not supported in test'))
+      if (!(window as any).showOpenFilePicker) {
+        (window as any).showOpenFilePicker = () => Promise.reject(new Error('Not supported in test'))
       }
 
       // Mock OPFS (Origin Private File System)
@@ -186,13 +186,13 @@ export class TestHelpers {
         
         const boxString = `${currentBox.x},${currentBox.y},${currentBox.width},${currentBox.height}`
         
-        if (boxString !== window.lastBoxString) {
-          window.lastBoxString = boxString
-          window.stableStart = currentTime
+        if (boxString !== (window as any).lastBoxString) {
+          (window as any).lastBoxString = boxString
+          ;(window as any).stableStart = currentTime
           return false
         }
 
-        return (currentTime - window.stableStart) >= stableTime
+        return (currentTime - (window as any).stableStart) >= stableTime
       },
       { selector, stableTime },
       { timeout: 10000 }

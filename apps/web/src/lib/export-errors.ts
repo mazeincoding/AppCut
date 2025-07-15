@@ -117,7 +117,7 @@ export function checkBrowserCompatibility(): {
   }
   
   // Check Web Audio API support
-  if (!window.AudioContext && !window.webkitAudioContext) {
+  if (!window.AudioContext && !(window as any).webkitAudioContext) {
     issues.push("Web Audio API not supported");
   }
   

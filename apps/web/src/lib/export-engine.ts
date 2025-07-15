@@ -399,7 +399,7 @@ export class ExportEngine {
           this.renderTextElement(element, bounds);
           break;
         default:
-          console.warn(`Unknown element type: ${element.type}`);
+          console.warn(`Unknown element type: ${(element as any).type}`);
       }
     } finally {
       // Restore canvas state
@@ -672,11 +672,12 @@ export class ExportEngine {
    */
   private renderTextElement(element: TimelineElement, bounds: any): void {
     // TODO: Implement text element rendering
-    if (element.content) {
-      this.renderer.drawText(element.content, bounds.x, bounds.y, {
-        fontSize: element.fontSize || 24,
-        color: element.color || "#000000",
-        fontFamily: element.fontFamily || "Arial, sans-serif",
+    const textElement = element as any;
+    if (textElement.content) {
+      this.renderer.drawText(textElement.content, bounds.x, bounds.y, {
+        fontSize: textElement.fontSize || 24,
+        color: textElement.color || "#000000",
+        fontFamily: textElement.fontFamily || "Arial, sans-serif",
       });
     }
   }
@@ -739,30 +740,32 @@ export class ExportEngine {
    * Get all audio elements from timeline
    */
   private getAudioElements(): TimelineElement[] {
-    return this.timelineElements.filter(element => 
-      element.type === "audio" || (element.type === "video" && element.hasAudio)
-    );
+    return this.timelineElements.filter(element => {
+      const elementType = (element as any).type;
+      return elementType === "audio" || (elementType === "video" && (element as any).hasAudio);
+    });
   }
 
   /**
    * Create audio track info from timeline element
    */
   private async createAudioTrack(element: TimelineElement): Promise<AudioTrackInfo | null> {
-    if (!element.src) {
+    const audioElement = element as any;
+    if (!audioElement.src) {
       return null;
     }
 
     try {
       // Load audio buffer
-      const audioBuffer = await this.audioMixer.loadAudioBufferFromUrl(element.src);
+      const audioBuffer = await this.audioMixer.loadAudioBufferFromUrl(audioElement.src);
       
       // Calculate timing
-      const startTime = element.startTime || 0;
-      const endTime = element.endTime || (startTime + (element.duration || 0));
+      const startTime = audioElement.startTime || 0;
+      const endTime = audioElement.endTime || (startTime + (audioElement.duration || 0));
       
       // Get volume and pan settings
-      const volume = element.volume !== undefined ? element.volume : 1.0;
-      const pan = element.pan !== undefined ? element.pan : 0.0;
+      const volume = audioElement.volume !== undefined ? audioElement.volume : 1.0;
+      const pan = audioElement.pan !== undefined ? audioElement.pan : 0.0;
       
       return {
         element,
@@ -791,14 +794,17 @@ export class ExportEngine {
   }> {
     const audioElements = this.getAudioElements();
     
-    return audioElements.map(element => ({
-      elementId: element.id,
-      src: element.src || "",
-      startTime: element.startTime || 0,
-      endTime: element.endTime || (element.startTime || 0) + (element.duration || 0),
-      volume: element.volume !== undefined ? element.volume : 1.0,
-      pan: element.pan !== undefined ? element.pan : 0.0,
-    }));
+    return audioElements.map(element => {
+      const audioElement = element as any;
+      return {
+        elementId: element.id,
+        src: audioElement.src || "",
+        startTime: audioElement.startTime || 0,
+        endTime: audioElement.endTime || (audioElement.startTime || 0) + (audioElement.duration || 0),
+        volume: audioElement.volume !== undefined ? audioElement.volume : 1.0,
+        pan: audioElement.pan !== undefined ? audioElement.pan : 0.0,
+      };
+    });
   }
 
   /**
