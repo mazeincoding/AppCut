@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { env } from "./env";
 
 export async function middleware(request: NextRequest) {
   // Handle fuckcapcut.com domain redirect
@@ -9,7 +10,7 @@ export async function middleware(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
-  if (path === "/editor" && process.env.NODE_ENV === "production") {
+  if (path === "/editor" && env.NODE_ENV === "production") {
     const homeUrl = new URL("/", request.url);
     homeUrl.searchParams.set("redirect", request.url);
     return NextResponse.redirect(homeUrl);

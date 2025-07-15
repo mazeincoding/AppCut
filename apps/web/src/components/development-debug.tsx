@@ -7,9 +7,10 @@ import { usePlaybackStore } from "@/stores/playback-store";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import type { TimelineElement } from "@/types/timeline";
+import { env } from "@/env";
 
 // Only show in development
-const SHOW_DEBUG_INFO = process.env.NODE_ENV === "development";
+const SHOW_DEBUG_INFO = env.NODE_ENV === "development";
 
 interface ActiveElement {
   element: TimelineElement;
