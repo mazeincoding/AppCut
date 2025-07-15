@@ -309,12 +309,7 @@ Comprehensive testing strategy for the video export functionality. Each test tas
 - [ ] Test offline capabilities
 - [ ] Test file system access
 
-### 6.9 Test Old Browser Fallbacks (3 min)
-- [ ] Test graceful degradation
-- [ ] Test error messages
-- [ ] Test alternative flows
-
-### 6.10 Cross-Browser Consistency (3 min)
+### 6.9 Cross-Browser Consistency (3 min)
 - [ ] Compare export outputs
 - [ ] Test UI consistency
 - [ ] Test performance parity
