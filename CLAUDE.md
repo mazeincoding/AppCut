@@ -2,6 +2,17 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ⚠️ Important Workflow Reminder
+
+**ALWAYS UPDATE TASK2.MD AFTER SUCCESSFUL TASK COMPLETION:**
+When you complete any task from `/task2.md`, you must:
+1. Mark the completed task(s) as ✅ and change `[ ]` to `[x]`
+2. Run `git add task2.md`
+3. Commit with descriptive message about task progress
+4. Push the updates: `git push`
+
+This ensures accurate progress tracking and project status visibility.
+
 ## Quick Reference
 
 For detailed project overview and development guidelines, refer to the **Cursor Rules** at:
