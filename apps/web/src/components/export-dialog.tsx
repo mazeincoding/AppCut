@@ -10,6 +10,7 @@ import { ExportFormat, ExportQuality } from "@/types/export";
 import { useExportStore } from "@/stores/export-store";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { useProjectStore } from "@/stores/project-store";
+import { useMediaStore } from "@/stores/media-store";
 import { ExportCanvas, ExportCanvasRef } from "@/components/export-canvas";
 import { ExportEngine } from "@/lib/export-engine";
 import { useState, useEffect, useRef } from "react";
@@ -24,6 +25,7 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
   const { settings, progress, updateSettings, updateProgress, resetExport } = useExportStore();
   const { tracks, getTotalDuration } = useTimelineStore();
   const { activeProject } = useProjectStore();
+  const { mediaItems } = useMediaStore();
   const canvasRef = useRef<ExportCanvasRef>(null);
   
   // Initialize local state from store
@@ -94,6 +96,7 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
         canvas,
         settings,
         timelineElements,
+        mediaItems,
         duration: getTotalDuration(),
         fps: activeProject?.fps || 30,
         onProgress: (progress, status) => {

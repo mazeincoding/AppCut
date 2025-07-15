@@ -1,5 +1,6 @@
 import { ExportSettings } from "@/types/export";
 import { TimelineElement } from "@/types/timeline";
+import { MediaItem } from "@/stores/media-store";
 import { CanvasRenderer } from "@/lib/canvas-renderer";
 import { FrameCaptureService } from "@/lib/frame-capture";
 import { VideoRecorder } from "@/lib/video-recorder";
@@ -21,6 +22,7 @@ export interface ExportEngineOptions {
   canvas: HTMLCanvasElement;
   settings: ExportSettings;
   timelineElements: TimelineElement[];
+  mediaItems: MediaItem[]; // Add media items for element rendering
   duration: number; // in seconds
   fps: number;
   onProgress?: (progress: number, status: string) => void;
@@ -31,22 +33,25 @@ export class ExportEngine {
   private canvas: HTMLCanvasElement;
   private settings: ExportSettings;
   private timelineElements: TimelineElement[];
+    private mediaItems: MediaItem[];
   private duration: number;
   private fps: number;
   private onProgress?: (progress: number, status: string) => void;
   private onError?: (error: string) => void;
-  
+
   private renderer: CanvasRenderer;
   private captureService: FrameCaptureService;
   private recorder: VideoRecorder;
   private audioMixer: AudioMixer;
   private isExporting = false;
   private shouldCancel = false;
+  private preloadedVideos: Map<string, HTMLVideoElement> = new Map();
 
   constructor(options: ExportEngineOptions) {
     this.canvas = options.canvas;
     this.settings = options.settings;
     this.timelineElements = options.timelineElements;
+    this.mediaItems = options.mediaItems;
     this.duration = options.duration;
     this.fps = options.fps;
     this.onProgress = options.onProgress;
@@ -61,7 +66,8 @@ export class ExportEngine {
         width: this.settings.width,
         height: this.settings.height,
       },
-      this.settings
+      this.settings,
+      this.timelineElements
     );
     this.recorder = new VideoRecorder({
       canvas: this.canvas,
@@ -79,38 +85,69 @@ export class ExportEngine {
    * Start the export process
    */
   async startExport(): Promise<Blob> {
+    console.log("🚀 startExport called");
+    
     if (this.isExporting) {
       throw new ExportError("Export already in progress", "EXPORT_IN_PROGRESS");
     }
 
     try {
+      console.log("📊 Export parameters:", {
+        timelineElementsCount: this.timelineElements.length,
+        mediaItemsCount: this.mediaItems.length,
+        duration: this.duration,
+        fps: this.fps,
+        canvasSize: `${this.settings.width}x${this.settings.height}`
+      });
+      
+      // Debug timeline elements
+      console.log("📋 Timeline elements:", this.timelineElements.map(el => ({
+        id: el.id,
+        type: el.type,
+        startTime: el.startTime,
+        endTime: el.endTime,
+        duration: el.duration,
+        mediaId: el.type === "media" ? el.mediaId : "N/A"
+      })));
+      
       // Pre-flight checks
       this.performPreflightChecks();
+      console.log("✅ Preflight checks passed");
       
       this.isExporting = true;
       this.shouldCancel = false;
       
       this.onProgress?.(0, "Initializing export...");
       
+      // Preload all video elements
+      await this.preloadVideos();
+      console.log("📹 Videos preloaded");
+      
       // Collect and prepare audio tracks
       await this.prepareAudioTracks();
+      console.log("🎵 Audio tracks prepared");
       
       // Create audio stream from mixed audio
       const audioStream = await this.createAudioStream();
       if (audioStream) {
         this.recorder.setAudioStream(audioStream);
+        console.log("🎤 Audio stream created");
       }
       
       // Start recording
       await this.recorder.startRecording();
+      console.log("📹 Recording started");
       
       // Render frames using requestAnimationFrame loop
+      console.log("🎬 Starting frame rendering...");
       const videoBlob = await this.renderFrames();
       
+      console.log("✅ Export completed successfully!");
       this.onProgress?.(100, "Export complete!");
       return videoBlob;
       
     } catch (error) {
+      console.error("❌ Export failed:", error);
       this.handleExportError(error);
       throw error;
     } finally {
@@ -195,7 +232,13 @@ export class ExportEngine {
    * Render a single frame to the canvas
    */
   private renderSingleFrame(frameData: { frameNumber: number; timestamp: number; elements: TimelineElement[] }): void {
-    if (!frameData) {
+    console.log("🎞️ renderSingleFrame called:", {
+      frameNumber: frameData.frameNumber,
+      timestamp: frameData.timestamp,
+      elementCount: frameData.elements?.length || 0
+    });
+
+    if (!frameData || !frameData.elements) {
       throw new CanvasRenderError(
         `Invalid frame data provided`,
         { frameNumber: -1, timestamp: -1, error: new Error("frameData is undefined") }
@@ -205,22 +248,25 @@ export class ExportEngine {
     try {
       // Clear canvas
       this.renderer.clearFrame(this.getBackgroundColor());
+      console.log("🧹 Canvas cleared with background color");
       
-      // Get visible elements for this timestamp
-      const visibleElements = this.captureService.getVisibleElements(
-        this.timelineElements,
-        frameData.timestamp
-      );
+      // Use elements from frame data (already filtered for visibility)
+      const visibleElements = frameData.elements;
+      
+      console.log("👁️ Visible elements:", visibleElements.length);
       
       // Render each element
       for (const element of visibleElements) {
         try {
+          console.log("🎨 Rendering element:", element.id);
           this.renderElement(element, frameData.timestamp);
         } catch (error) {
-          console.warn(`Failed to render element ${element.id}:`, error);
+          console.warn(`❌ Failed to render element ${element.id}:`, error);
           // Continue rendering other elements
         }
       }
+      
+      console.log("✅ Frame rendering completed");
     } catch (error) {
       throw new CanvasRenderError(
         `Failed to render frame ${frameData.frameNumber}`,
@@ -233,31 +279,54 @@ export class ExportEngine {
    * Render a single timeline element
    */
   private renderElement(element: TimelineElement, timestamp: number): void {
+    console.log("🔍 renderElement called:", {
+      elementId: element.id,
+      elementType: element.type,
+      timestamp,
+      mediaId: element.type === "media" ? element.mediaId : "N/A"
+    });
+
     const bounds = this.captureService.calculateElementBounds(
       element,
       this.settings.width,
       this.settings.height
     );
 
+    console.log("📐 Calculated bounds:", bounds);
+
     // Save canvas state
     this.renderer.save();
 
     try {
       switch (element.type) {
-        case "video":
-          this.renderVideoElement(element, bounds, timestamp);
-          break;
-        case "image":
-          this.renderImageElement(element, bounds);
+        case "media":
+          // Get media type from media store
+          const mediaItem = this.getMediaItem(element.mediaId);
+          console.log("📺 Media item found:", mediaItem ? {
+            id: mediaItem.id,
+            type: mediaItem.type,
+            name: mediaItem.name,
+            hasUrl: !!mediaItem.url,
+            hasFile: !!mediaItem.file
+          } : "NOT FOUND");
+          
+          if (mediaItem) {
+            if (mediaItem.type === "video") {
+              console.log("🎬 Rendering video element");
+              this.renderVideoElement(element, bounds, timestamp);
+            } else if (mediaItem.type === "image") {
+              console.log("🖼️ Rendering image element");
+              this.renderImageElement(element, bounds);
+            }
+            // Audio media doesn't need visual rendering
+          }
           break;
         case "text":
+          console.log("📝 Rendering text element");
           this.renderTextElement(element, bounds);
           break;
-        case "audio":
-          // Audio elements don't need visual rendering
-          break;
         default:
-          console.warn(`Unknown element type: ${element.type}`);
+          console.warn(`❌ Unknown element type: ${element.type}`);
       }
     } finally {
       // Restore canvas state
@@ -269,17 +338,142 @@ export class ExportEngine {
    * Render a video element
    */
   private renderVideoElement(element: TimelineElement, bounds: any, timestamp: number): void {
-    // TODO: Implement video element rendering
-    // This would involve seeking to the correct time and drawing the video frame
-    console.log("Rendering video element:", element.id, "at", timestamp);
+    console.log("🎬 renderVideoElement called:", {
+      elementId: element.id,
+      timestamp,
+      bounds
+    });
+
+    if (element.type !== "media") {
+      console.warn("❌ Element is not media type:", element.type);
+      return;
+    }
+    
+    const mediaItem = this.getMediaItem(element.mediaId);
+    if (!mediaItem || mediaItem.type !== "video") {
+      console.warn("❌ Media item not found or not video:", mediaItem);
+      return;
+    }
+    
+    console.log("📺 Video media item:", {
+      id: mediaItem.id,
+      name: mediaItem.name,
+      hasUrl: !!mediaItem.url,
+      hasFile: !!mediaItem.file
+    });
+    
+    // Calculate the time within the video based on element timing
+    const elementTime = timestamp - element.startTime + element.trimStart;
+    console.log("⏰ Element time calculation:", {
+      timestamp,
+      startTime: element.startTime,
+      trimStart: element.trimStart,
+      elementTime
+    });
+    
+    // Only render if within the element's duration
+    if (elementTime >= 0 && elementTime <= (element.duration - element.trimStart - element.trimEnd)) {
+      console.log("✅ Within element duration, rendering video");
+      try {
+        // Use preloaded video if available
+        const preloadedVideo = this.preloadedVideos.get(mediaItem.id);
+        
+        if (preloadedVideo && preloadedVideo.readyState >= 2) {
+          console.log("🎬 Using preloaded video");
+          preloadedVideo.currentTime = elementTime;
+          
+          // Wait a frame for the time to update
+          setTimeout(() => {
+            try {
+              this.renderer.drawImage(preloadedVideo, bounds.x, bounds.y, bounds.width, bounds.height);
+              console.log("✅ Preloaded video drawn to canvas");
+            } catch (error) {
+              console.warn("❌ Failed to draw preloaded video:", error);
+              this.renderer.fillRect(bounds.x, bounds.y, bounds.width, bounds.height, "#f00");
+            }
+          }, 0);
+        } else {
+          console.log("⏳ Video not preloaded or not ready, creating new element");
+          // Create a video element as fallback
+          const videoElement = document.createElement("video");
+          videoElement.src = mediaItem.url || URL.createObjectURL(mediaItem.file);
+          videoElement.muted = true;
+          videoElement.currentTime = elementTime;
+          
+          console.log("🎥 Video element created:", {
+            src: videoElement.src,
+            currentTime: videoElement.currentTime,
+            readyState: videoElement.readyState
+          });
+          
+          // Wait for video to be ready before drawing
+          if (videoElement.readyState >= 2) { // HAVE_CURRENT_DATA
+            console.log("🎬 Video ready, drawing to canvas");
+            this.renderer.drawImage(videoElement, bounds.x, bounds.y, bounds.width, bounds.height);
+            console.log("✅ Video drawn to canvas");
+          } else {
+            console.log("⏳ Video not ready, drawing placeholder");
+            // Draw a placeholder rectangle
+            this.renderer.fillRect(bounds.x, bounds.y, bounds.width, bounds.height, "#666");
+            console.log("📦 Drew placeholder rectangle for video");
+          }
+        }
+      } catch (error) {
+        console.warn("❌ Failed to draw video frame:", error);
+        // Draw a placeholder on error
+        this.renderer.fillRect(bounds.x, bounds.y, bounds.width, bounds.height, "#f00");
+        console.log("🔴 Drew error placeholder rectangle");
+      }
+    } else {
+      console.log("⏭️ Skipping video render - outside element duration");
+    }
   }
 
   /**
    * Render an image element
    */
   private renderImageElement(element: TimelineElement, bounds: any): void {
-    // TODO: Implement image element rendering
-    console.log("Rendering image element:", element.id);
+    console.log("🖼️ renderImageElement called:", {
+      elementId: element.id,
+      bounds
+    });
+
+    if (element.type !== "media") {
+      console.warn("❌ Element is not media type:", element.type);
+      return;
+    }
+    
+    const mediaItem = this.getMediaItem(element.mediaId);
+    if (!mediaItem || mediaItem.type !== "image") {
+      console.warn("❌ Media item not found or not image:", mediaItem);
+      return;
+    }
+    
+    console.log("🖼️ Image media item:", {
+      id: mediaItem.id,
+      name: mediaItem.name,
+      hasUrl: !!mediaItem.url,
+      hasFile: !!mediaItem.file
+    });
+    
+    try {
+      // Create image element from media item
+      const imageElement = document.createElement("img");
+      imageElement.src = mediaItem.url || URL.createObjectURL(mediaItem.file);
+      
+      console.log("🖼️ Image element created:", {
+        src: imageElement.src,
+        naturalWidth: imageElement.naturalWidth,
+        naturalHeight: imageElement.naturalHeight
+      });
+      
+      // For now, draw the image element even if it's not fully loaded
+      // In a production implementation, images should be pre-loaded
+      this.renderer.drawImage(imageElement, bounds.x, bounds.y, bounds.width, bounds.height);
+      console.log("✅ Image drawn to canvas");
+    } catch (error) {
+      console.warn("❌ Failed to draw image:", error);
+    }
   }
 
   /**
@@ -531,6 +725,19 @@ export class ExportEngine {
     } catch (error) {
       console.warn("Failed to dispose audio mixer:", error);
     }
+    
+    // Clean up preloaded videos
+    try {
+      this.preloadedVideos.forEach((video, id) => {
+        console.log(`🧹 Cleaning up preloaded video: ${id}`);
+        video.pause();
+        video.src = "";
+        video.load();
+      });
+      this.preloadedVideos.clear();
+    } catch (error) {
+      console.warn("Failed to cleanup preloaded videos:", error);
+    }
   }
 
   /**
@@ -538,5 +745,88 @@ export class ExportEngine {
    */
   get isActive(): boolean {
     return this.isExporting;
+  }
+
+  /**
+   * Preload all video elements for export
+   */
+  private async preloadVideos(): Promise<void> {
+    console.log("📹 Starting video preload...");
+    
+    const videoElements = this.timelineElements.filter(element => 
+      element.type === "media" && this.getMediaItem(element.mediaId)?.type === "video"
+    );
+    
+    console.log(`📹 Found ${videoElements.length} video elements to preload`);
+    
+    const preloadPromises = videoElements.map(async (element) => {
+      const mediaItem = this.getMediaItem(element.mediaId);
+      if (!mediaItem || mediaItem.type !== "video") return;
+      
+      console.log(`📹 Preloading video: ${mediaItem.name}`);
+      
+      return new Promise<void>((resolve, reject) => {
+        const video = document.createElement("video");
+        video.muted = true;
+        video.crossOrigin = "anonymous";
+        
+        // Set source
+        if (mediaItem.url) {
+          video.src = mediaItem.url;
+        } else if (mediaItem.file) {
+          video.src = URL.createObjectURL(mediaItem.file);
+        } else {
+          reject(new Error(`No source available for video: ${mediaItem.name}`));
+          return;
+        }
+        
+        // Wait for video to be ready
+        const onLoadedData = () => {
+          console.log(`✅ Video preloaded: ${mediaItem.name}`);
+          this.preloadedVideos.set(mediaItem.id, video);
+          video.removeEventListener("loadeddata", onLoadedData);
+          video.removeEventListener("error", onError);
+          resolve();
+        };
+        
+        const onError = (error: Event) => {
+          console.warn(`❌ Failed to preload video: ${mediaItem.name}`, error);
+          video.removeEventListener("loadeddata", onLoadedData);
+          video.removeEventListener("error", onError);
+          // Don't reject, just log the error and continue
+          resolve();
+        };
+        
+        video.addEventListener("loadeddata", onLoadedData);
+        video.addEventListener("error", onError);
+        
+        // Start loading
+        video.load();
+      });
+    });
+    
+    await Promise.all(preloadPromises);
+    console.log(`✅ Preloaded ${this.preloadedVideos.size} videos`);
+  }
+
+  /**
+   * Get a media item by its ID
+   */
+  private getMediaItem(id: string): MediaItem | undefined {
+    console.log("🔍 getMediaItem called for ID:", id);
+    console.log("📚 Available media items:", this.mediaItems.map(item => ({
+      id: item.id,
+      name: item.name,
+      type: item.type
+    })));
+    
+    const mediaItem = this.mediaItems.find(item => item.id === id);
+    console.log("📺 Found media item:", mediaItem ? {
+      id: mediaItem.id,
+      name: mediaItem.name,
+      type: mediaItem.type
+    } : "NOT FOUND");
+    
+    return mediaItem;
   }
 }

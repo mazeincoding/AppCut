@@ -94,6 +94,30 @@ export class CanvasRenderer {
   }
 
   /**
+   * Fill a rectangle on the canvas
+   */
+  fillRect(x: number, y: number, width: number, height: number, color: string): void {
+    this.ctx.fillStyle = color;
+    this.ctx.fillRect(x, y, width, height);
+  }
+
+  /**
+   * Draw a rectangle with border on the canvas
+   */
+  drawRect(x: number, y: number, width: number, height: number, fillColor?: string, strokeColor?: string, lineWidth: number = 1): void {
+    if (fillColor) {
+      this.ctx.fillStyle = fillColor;
+      this.ctx.fillRect(x, y, width, height);
+    }
+    
+    if (strokeColor) {
+      this.ctx.strokeStyle = strokeColor;
+      this.ctx.lineWidth = lineWidth;
+      this.ctx.strokeRect(x, y, width, height);
+    }
+  }
+
+  /**
    * Apply blur effect to the canvas
    */
   applyBlur(radius: number): void {
@@ -122,10 +146,24 @@ export class CanvasRenderer {
   }
 
   /**
+   * Set canvas transformation matrix
+   */
+  setTransform(a: number, b: number, c: number, d: number, e: number, f: number): void {
+    this.ctx.setTransform(a, b, c, d, e, f);
+  }
+
+  /**
    * Get the canvas as a data URL
    */
   toDataURL(format: string = "image/png", quality?: number): string {
     return this.canvas.toDataURL(format, quality);
+  }
+
+  /**
+   * Get image data from the canvas
+   */
+  getImageData(x: number, y: number, width: number, height: number): ImageData {
+    return this.ctx.getImageData(x, y, width, height);
   }
 
   /**

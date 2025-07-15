@@ -17,10 +17,12 @@ export interface FrameData {
 export class FrameCaptureService {
   private options: FrameCaptureOptions;
   private settings: ExportSettings;
+  private timelineElements: TimelineElement[];
 
-  constructor(options: FrameCaptureOptions, settings: ExportSettings) {
+  constructor(options: FrameCaptureOptions, settings: ExportSettings, timelineElements: TimelineElement[] = []) {
     this.options = options;
     this.settings = settings;
+    this.timelineElements = timelineElements;
   }
 
   /**
@@ -36,8 +38,8 @@ export class FrameCaptureService {
   getFrameData(frameNumber: number): FrameData {
     const timestamp = frameNumber / this.options.fps;
     
-    // TODO: Get actual timeline elements for this timestamp
-    const elements: TimelineElement[] = [];
+    // Get visible elements for this timestamp
+    const elements = this.getVisibleElements(this.timelineElements, timestamp);
     
     return {
       frameNumber,
@@ -140,9 +142,20 @@ export class FrameCaptureService {
    */
   isElementVisible(element: TimelineElement, timestamp: number): boolean {
     const startTime = element.startTime || 0;
-    const endTime = element.endTime || element.duration || 0;
+    const endTime = element.endTime || (element.startTime || 0) + (element.duration || 0);
     
-    return timestamp >= startTime && timestamp <= endTime;
+    const isVisible = timestamp >= startTime && timestamp <= endTime;
+    
+    // Debug visibility check
+    console.log("👁️ Visibility check:", {
+      elementId: element.id,
+      timestamp,
+      startTime,
+      endTime,
+      isVisible
+    });
+    
+    return isVisible;
   }
 
   /**
@@ -170,9 +183,16 @@ export class FrameCaptureService {
    * Get visible elements for a specific timestamp, sorted by render order
    */
   getVisibleElements(elements: TimelineElement[], timestamp: number): TimelineElement[] {
+    console.log("🔍 getVisibleElements called:", {
+      totalElements: elements.length,
+      timestamp
+    });
+    
     const visibleElements = elements.filter(element => 
       this.isElementVisible(element, timestamp)
     );
+    
+    console.log("✅ Visible elements found:", visibleElements.length);
     
     return this.sortElementsByLayer(visibleElements);
   }
