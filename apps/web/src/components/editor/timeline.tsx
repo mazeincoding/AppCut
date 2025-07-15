@@ -17,6 +17,7 @@ import {
   TypeIcon,
   Magnet,
   Lock,
+  LockOpen,
 } from "lucide-react";
 import {
   Tooltip,
@@ -808,7 +809,11 @@ export function Timeline() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="text" size="icon" onClick={toggleSnapping}>
-                  <Lock className="h-4 w-4" />
+                  {snappingEnabled ? (
+                    <Lock className="h-4 w-4" />
+                  ) : (
+                    <LockOpen className="h-4 w-4 text-primary" />
+                  )}
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Auto snapping</TooltipContent>
