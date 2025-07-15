@@ -1,14 +1,15 @@
 "use client";
 
 import { motion } from "motion/react";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import Image from "next/image";
-import { Handlebars } from "./handlebars";
+import { Handlebars } from "@/components/landing/handlebars";
+import { isValidEmail } from "@/lib/utils";
 
 interface HeroProps {
   signupCount: number;
@@ -17,15 +18,17 @@ interface HeroProps {
 export function Hero({ signupCount }: HeroProps) {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [shake, setShake] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email.trim()) {
+    if (!isValidEmail(email.trim())) {
       toast.error("Email required", {
-        description: "Please enter your email address.",
+        description: "Please enter a valid email",
       });
-      return;
+      setShake(true); // fire the animation
+      return; // don’t go further
     }
 
     setIsSubmitting(true);
@@ -106,8 +109,18 @@ export function Hero({ signupCount }: HeroProps) {
           <form
             onSubmit={handleSubmit}
             className="flex gap-3 w-full max-w-lg flex-col sm:flex-row"
+            noValidate
           >
-            <div className="relative w-full">
+            <motion.div
+              animate={
+                shake
+                  ? { x: [0, -8, 8, -8, 8, 0] } // key‑frame wiggle
+                  : { x: 0 }
+              }
+              transition={{ duration: 0.45, ease: "easeInOut" }}
+              onAnimationComplete={() => setShake(false)} // stop shaking once a cycle is done
+              className="relative w-full"
+            >
               <Input
                 type="email"
                 placeholder="Enter your email"
@@ -117,7 +130,7 @@ export function Hero({ signupCount }: HeroProps) {
                 disabled={isSubmitting}
                 required
               />
-            </div>
+            </motion.div>
             <Button
               type="submit"
               size="lg"
