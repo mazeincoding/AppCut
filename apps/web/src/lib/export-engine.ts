@@ -120,8 +120,9 @@ export class ExportEngine {
       this.onProgress?.(0, "Initializing export...");
       
       // Preload all video elements
+      console.log("📹 Starting video preload process...");
       await this.preloadVideos();
-      console.log("📹 Videos preloaded");
+      console.log(`📹 Videos preloaded: ${this.preloadedVideos.size} videos ready`);
       
       // Collect and prepare audio tracks
       await this.prepareAudioTracks();
@@ -378,8 +379,12 @@ export class ExportEngine {
         // Use preloaded video if available
         const preloadedVideo = this.preloadedVideos.get(mediaItem.id);
         
-        if (preloadedVideo && preloadedVideo.readyState >= 3) {
-          console.log("🎬 Using preloaded video");
+        if (preloadedVideo && preloadedVideo.readyState >= 2) {
+          console.log("🎬 Using preloaded video", {
+            readyState: preloadedVideo.readyState,
+            duration: preloadedVideo.duration,
+            currentTime: preloadedVideo.currentTime
+          });
           
           // Seek to the correct time and wait for it
           await this.seekVideoToTime(preloadedVideo, elementTime);
@@ -388,7 +393,12 @@ export class ExportEngine {
           this.renderer.drawImage(preloadedVideo, bounds.x, bounds.y, bounds.width, bounds.height);
           console.log("✅ Preloaded video drawn to canvas");
         } else {
-          console.log("⏳ Video not preloaded or not ready, creating new element");
+          console.log("⏳ Video not preloaded or not ready", {
+            hasPreloadedVideo: !!preloadedVideo,
+            readyState: preloadedVideo?.readyState,
+            preloadedVideosCount: this.preloadedVideos.size,
+            preloadedVideoIds: Array.from(this.preloadedVideos.keys())
+          });
           // For non-preloaded videos, draw a placeholder for now
           // In a production system, you'd want to handle this better
           this.renderer.fillRect(bounds.x, bounds.y, bounds.width, bounds.height, "#666");
@@ -761,22 +771,34 @@ export class ExportEngine {
   private async preloadVideos(): Promise<void> {
     console.log("📹 Starting video preload...");
     
-    const videoElements = this.timelineElements.filter(element => 
-      element.type === "media" && this.getMediaItem(element.mediaId)?.type === "video"
-    );
+    // Get unique video media items (avoid duplicates)
+    const uniqueVideoIds = new Set<string>();
+    this.timelineElements.forEach(element => {
+      if (element.type === "media") {
+        const mediaItem = this.getMediaItem(element.mediaId);
+        if (mediaItem?.type === "video") {
+          uniqueVideoIds.add(mediaItem.id);
+        }
+      }
+    });
     
-    console.log(`📹 Found ${videoElements.length} video elements to preload`);
+    const videoIds = Array.from(uniqueVideoIds);
+    console.log(`📹 Found ${videoIds.length} unique video(s) to preload:`, videoIds);
     
-    const preloadPromises = videoElements.map(async (element) => {
-      const mediaItem = this.getMediaItem(element.mediaId);
-      if (!mediaItem || mediaItem.type !== "video") return;
+    const preloadPromises = videoIds.map(async (videoId) => {
+      const mediaItem = this.getMediaItem(videoId);
+      if (!mediaItem || mediaItem.type !== "video") {
+        console.warn(`❌ Video media item not found: ${videoId}`);
+        return;
+      }
       
-      console.log(`📹 Preloading video: ${mediaItem.name}`);
+      console.log(`📹 Preloading video: ${mediaItem.name} (ID: ${videoId})`);
       
-      return new Promise<void>((resolve, reject) => {
+      return new Promise<void>((resolve) => {
         const video = document.createElement("video");
         video.muted = true;
         video.crossOrigin = "anonymous";
+        video.preload = "metadata";
         
         // Set source
         if (mediaItem.url) {
@@ -784,40 +806,76 @@ export class ExportEngine {
         } else if (mediaItem.file) {
           video.src = URL.createObjectURL(mediaItem.file);
         } else {
-          reject(new Error(`No source available for video: ${mediaItem.name}`));
+          console.warn(`❌ No source available for video: ${mediaItem.name}`);
+          resolve();
           return;
         }
         
-        // Wait for video to be ready with metadata
-        const onCanPlay = () => {
-          console.log(`✅ Video preloaded and ready: ${mediaItem.name}, readyState: ${video.readyState}`);
+        let resolved = false;
+        
+        const onCanPlayThrough = () => {
+          if (resolved) return;
+          resolved = true;
+          console.log(`✅ Video fully preloaded: ${mediaItem.name}, readyState: ${video.readyState}, duration: ${video.duration}`);
           this.preloadedVideos.set(mediaItem.id, video);
-          video.removeEventListener("canplay", onCanPlay);
-          video.removeEventListener("loadedmetadata", onLoadedMetadata);
-          video.removeEventListener("error", onError);
+          cleanup();
           resolve();
+        };
+        
+        const onCanPlay = () => {
+          if (resolved) return;
+          // Wait a bit more for canplaythrough, but don't wait forever
+          setTimeout(() => {
+            if (!resolved) {
+              resolved = true;
+              console.log(`✅ Video ready (canplay): ${mediaItem.name}, readyState: ${video.readyState}`);
+              this.preloadedVideos.set(mediaItem.id, video);
+              cleanup();
+              resolve();
+            }
+          }, 500);
         };
         
         const onLoadedMetadata = () => {
           console.log(`📊 Video metadata loaded: ${mediaItem.name}, duration: ${video.duration}`);
-          // Continue waiting for canplay event
         };
         
         const onError = (error: Event) => {
+          if (resolved) return;
+          resolved = true;
           console.warn(`❌ Failed to preload video: ${mediaItem.name}`, error);
-          video.removeEventListener("canplay", onCanPlay);
-          video.removeEventListener("loadedmetadata", onLoadedMetadata);
-          video.removeEventListener("error", onError);
-          // Don't reject, just log the error and continue
+          cleanup();
           resolve();
         };
         
+        const onTimeout = () => {
+          if (resolved) return;
+          resolved = true;
+          console.warn(`⏰ Video preload timeout: ${mediaItem.name}, readyState: ${video.readyState}`);
+          // Still add it if we have some data
+          if (video.readyState >= 2) {
+            this.preloadedVideos.set(mediaItem.id, video);
+            console.log(`⚠️ Added partially loaded video: ${mediaItem.name}`);
+          }
+          cleanup();
+          resolve();
+        };
+        
+        const cleanup = () => {
+          video.removeEventListener("canplaythrough", onCanPlayThrough);
+          video.removeEventListener("canplay", onCanPlay);
+          video.removeEventListener("loadedmetadata", onLoadedMetadata);
+          video.removeEventListener("error", onError);
+          clearTimeout(timeoutId);
+        };
+        
+        video.addEventListener("canplaythrough", onCanPlayThrough);
         video.addEventListener("canplay", onCanPlay);
         video.addEventListener("loadedmetadata", onLoadedMetadata);
         video.addEventListener("error", onError);
         
-        // Set preload attribute to ensure video loads
-        video.preload = "auto";
+        // Set a timeout to avoid hanging indefinitely
+        const timeoutId = setTimeout(onTimeout, 10000); // 10 second timeout
         
         // Start loading
         video.load();
@@ -825,7 +883,12 @@ export class ExportEngine {
     });
     
     await Promise.all(preloadPromises);
-    console.log(`✅ Preloaded ${this.preloadedVideos.size} videos`);
+    console.log(`✅ Preload complete: ${this.preloadedVideos.size} videos ready`);
+    
+    // Debug: Log all preloaded videos
+    this.preloadedVideos.forEach((video, id) => {
+      console.log(`📹 Preloaded video ${id}: readyState=${video.readyState}, duration=${video.duration}`);
+    });
   }
 
   /**
