@@ -55,7 +55,7 @@ import {
 import { SelectionBox } from "./selection-box";
 import { useSelectionBox } from "@/hooks/use-selection-box";
 import { SnapIndicator } from "./snap-indicator";
-import { useTimelineSnapping } from "@/hooks/use-timeline-snapping";
+import { useTimelineSnapping, SnapPoint } from "@/hooks/use-timeline-snapping";
 import type { DragData, TimelineTrack } from "@/types/timeline";
 import {
   getTrackHeight,
@@ -172,9 +172,16 @@ export function Timeline() {
   });
 
   // Calculate snap indicator state
-  const [currentSnapPoint, setCurrentSnapPoint] = useState<any>(null);
+  const [currentSnapPoint, setCurrentSnapPoint] = useState<SnapPoint | null>(
+    null
+  );
   const showSnapIndicator =
-    dragState.isDragging && snappingEnabled && currentSnapPoint;
+    dragState.isDragging && snappingEnabled && currentSnapPoint !== null;
+
+  // Callback to handle snap point changes from TimelineTrackContent
+  const handleSnapPointChange = useCallback((snapPoint: SnapPoint | null) => {
+    setCurrentSnapPoint(snapPoint);
+  }, []);
 
   // Timeline content click to seek handler
   const handleTimelineContentClick = useCallback(
@@ -1113,6 +1120,7 @@ export function Timeline() {
                             <TimelineTrackContent
                               track={track}
                               zoomLevel={zoomLevel}
+                              onSnapPointChange={handleSnapPointChange}
                             />
                           </div>
                         </ContextMenuTrigger>
