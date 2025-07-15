@@ -106,6 +106,7 @@ export function AudioProperties({ element, trackId }: { element: MediaElement; t
             size="sm"
             onClick={toggleMute}
             className="p-1 h-7 w-7 flex-shrink-0"
+            aria-label={isMuted ? "Unmute audio" : "Mute audio"}
           >
             {isMuted ? (
               <VolumeX className="h-3 w-3" />
