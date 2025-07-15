@@ -87,7 +87,7 @@ export function AudioProperties({ element, trackId }: { element: MediaElement; t
             className="w-full p-1 border"
             fadeIn={localFadeIn}
             fadeOut={localFadeOut}
-            duration={element.duration - element.trimStart - element.trimEnd}
+            duration={Math.max(0, element.duration - element.trimStart - element.trimEnd)}
           />
         </div>
       </div>
