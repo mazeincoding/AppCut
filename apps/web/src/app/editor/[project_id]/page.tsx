@@ -1,16 +1,16 @@
 "use client";
 
 import { useEffect } from "react";
-import "./editor.css";
+import { useParams } from "next/navigation";
 import {
   ResizablePanelGroup,
   ResizablePanel,
   ResizableHandle,
-} from "../../components/ui/resizable";
-import { MediaPanel } from "../../components/editor/media-panel";
-// import { PropertiesPanel } from "../../components/editor/properties-panel";
-import { Timeline } from "../../components/editor/timeline";
-import { PreviewPanel } from "../../components/editor/preview-panel";
+} from "../../../components/ui/resizable";
+import { MediaPanel } from "../../../components/editor/media-panel";
+import { PropertiesPanel } from "../../../components/editor/properties-panel";
+import { Timeline } from "../../../components/editor/timeline";
+import { PreviewPanel } from "../../../components/editor/preview-panel";
 import { EditorHeader } from "@/components/editor-header";
 import { usePanelStore } from "@/stores/panel-store";
 import { useProjectStore } from "@/stores/project-store";
@@ -21,32 +21,47 @@ export default function Editor() {
   const {
     toolsPanel,
     previewPanel,
-    propertiesPanel,
     mainContent,
     timeline,
     setToolsPanel,
     setPreviewPanel,
-    setPropertiesPanel,
     setMainContent,
     setTimeline,
+    propertiesPanel,
+    setPropertiesPanel,
   } = usePanelStore();
 
-  const { activeProject, createNewProject } = useProjectStore();
+  const { activeProject, loadProject, createNewProject } = useProjectStore();
+  const params = useParams();
+  const projectId = params.project_id as string;
 
   usePlaybackControls();
 
   useEffect(() => {
-    if (!activeProject) {
-      createNewProject("Untitled Project");
-    }
-  }, [activeProject, createNewProject]);
+    const initializeProject = async () => {
+      if (projectId && (!activeProject || activeProject.id !== projectId)) {
+        try {
+          await loadProject(projectId);
+        } catch (error) {
+          console.error("Failed to load project:", error);
+          // If project doesn't exist, create a new one
+          await createNewProject("Untitled Project");
+        }
+      }
+    };
+
+    initializeProject();
+  }, [projectId, activeProject, loadProject, createNewProject]);
 
   return (
     <EditorProvider>
       <div className="h-screen w-screen flex flex-col bg-background overflow-hidden">
         <EditorHeader />
         <div className="flex-1 min-h-0 min-w-0">
-          <ResizablePanelGroup direction="vertical" className="h-full w-full">
+          <ResizablePanelGroup
+            direction="vertical"
+            className="h-full w-full gap-[0.18rem]"
+          >
             <ResizablePanel
               defaultSize={mainContent}
               minSize={30}
@@ -55,7 +70,10 @@ export default function Editor() {
               className="min-h-0"
             >
               {/* Main content area */}
-              <ResizablePanelGroup direction="horizontal" className="h-full w-full">
+              <ResizablePanelGroup
+                direction="horizontal"
+                className="h-full w-full gap-[0.19rem] px-2"
+              >
                 {/* Tools Panel */}
                 <ResizablePanel
                   defaultSize={toolsPanel}
@@ -81,8 +99,7 @@ export default function Editor() {
 
                 <ResizableHandle withHandle />
 
-                {/* Properties Panel - Hidden for now but ready */}
-                {/* <ResizablePanel
+                <ResizablePanel
                   defaultSize={propertiesPanel}
                   minSize={15}
                   maxSize={40}
@@ -90,7 +107,7 @@ export default function Editor() {
                   className="min-w-0"
                 >
                   <PropertiesPanel />
-                </ResizablePanel> */}
+                </ResizablePanel>
               </ResizablePanelGroup>
             </ResizablePanel>
 
@@ -102,7 +119,7 @@ export default function Editor() {
               minSize={15}
               maxSize={70}
               onResize={setTimeline}
-              className="min-h-0"
+              className="min-h-0 px-2 pb-2"
             >
               <Timeline />
             </ResizablePanel>

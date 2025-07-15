@@ -10,6 +10,11 @@ Thank you for your interest in contributing to OpenCut! This document provides g
 4. Install dependencies: `bun install`
 5. Start the development server: `bun run dev`
 
+> **Note:** If you see an error like `Unsupported URL Type "workspace:*"` when running `npm install`, you have two options:
+>
+> 1. Upgrade to a recent npm version (v9 or later), which has full workspace protocol support.
+> 2. Use an alternative package manager such as **bun** or **pnpm**.
+
 ## Development Setup
 
 ### Prerequisites
@@ -56,7 +61,7 @@ Thank you for your interest in contributing to OpenCut! This document provides g
 
    # Generate a secure secret for Better Auth
    BETTER_AUTH_SECRET="your-generated-secret-here"
-   BETTER_AUTH_URL="http://localhost:3000"
+   NEXT_PUBLIC_BETTER_AUTH_URL="http://localhost:3000"
 
    # Redis (matches docker-compose.yaml)
    UPSTASH_REDIS_REST_URL="http://localhost:8079"
@@ -79,14 +84,6 @@ Thank you for your interest in contributing to OpenCut! This document provides g
    node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 
    # Or use an online generator: https://generate-secret.vercel.app/32
-   ```
-
-   **Optional Variables (for Google OAuth):**
-
-   ```bash
-   # Only needed if you want to test Google login
-   GOOGLE_CLIENT_ID="your-google-client-id"
-   GOOGLE_CLIENT_SECRET="your-google-client-secret"
    ```
 
 5. Run database migrations: `bun run db:migrate`

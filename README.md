@@ -10,10 +10,6 @@
   </tr>
 </table>
 
-
-
-
-
 ## Why?
 
 - **Privacy**: Your videos stay on your device
@@ -49,81 +45,118 @@ Before you begin, ensure you have the following installed on your system:
 
 ### Setup
 
-1.  **Clone the repository**
-    ```bash
-    git clone <repo-url>
-    cd OpenCut
-    ```
+## Getting Started
 
-2.  **Start backend services**
-    From the project root, start the PostgreSQL and Redis services:
-    ```bash
-    docker-compose up -d
-    ```
+1. Fork the repository
+2. Clone your fork locally
+3. Navigate to the web app directory: `cd apps/web`
+4. Install dependencies: `bun install`
+5. Start the development server: `bun run dev`
 
-3.  **Set up environment variables**
-    Navigate into the web app's directory and create a `.env` file from the example:
-    ```bash
-    cd apps/web
+## Development Setup
 
-    
-    # Unix/Linux/Mac
-    cp .env.example .env.local
+### Prerequisites
 
-    # Windows Command Prompt
-    copy .env.example .env.local
-    
-    # Windows PowerShell
-    Copy-Item .env.example .env.local
-    ```
-    *The default values in the `.env` file should work for local development.*
+- Node.js 18+
+- Bun (latest version)
+- Docker (for local database)
 
-4.  **Install dependencies**
-    Install the project dependencies using `bun` (recommended) or `npm`.
-    ```bash
-    # With bun
-    bun install
+### Local Development
 
-    # Or with npm
-    npm install
-    ```
+1. Start the database and Redis services:
 
-5.  **Run database migrations**
-    Apply the database schema to your local database:
-    ```bash
-    # With bun
-    bun run db:push:local
+   ```bash
+   # From project root
+   docker-compose up -d
+   ```
 
-    # Or with npm
-    npm run db:push:local
-    ```
+2. Navigate to the web app directory:
 
-6.  **Start the development server**
-    ```bash
-    # With bun
-    bun run dev
+   ```bash
+   cd apps/web
+   ```
 
-    # Or with npm
-    npm run dev
-    ```
+3. Copy `.env.example` to `.env.local`:
+
+   ```bash
+   # Unix/Linux/Mac
+   cp .env.example .env.local
+
+   # Windows Command Prompt
+   copy .env.example .env.local
+
+   # Windows PowerShell
+   Copy-Item .env.example .env.local
+   ```
+
+4. Configure required environment variables in `.env.local`:
+
+   **Required Variables:**
+
+   ```bash
+   # Database (matches docker-compose.yaml)
+   DATABASE_URL="postgresql://opencut:opencutthegoat@localhost:5432/opencut"
+
+   # Generate a secure secret for Better Auth
+   BETTER_AUTH_SECRET="your-generated-secret-here"
+   BETTER_AUTH_URL="http://localhost:3000"
+
+   # Redis (matches docker-compose.yaml)
+   UPSTASH_REDIS_REST_URL="http://localhost:8079"
+   UPSTASH_REDIS_REST_TOKEN="example_token"
+
+   # Development
+   NODE_ENV="development"
+   ```
+
+   **Generate BETTER_AUTH_SECRET:**
+
+   ```bash
+   # Unix/Linux/Mac
+   openssl rand -base64 32
+
+   # Windows PowerShell (simple method)
+   [System.Web.Security.Membership]::GeneratePassword(32, 0)
+
+   # Cross-platform (using Node.js)
+   node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+
+   # Or use an online generator: https://generate-secret.vercel.app/32
+   ```
+
+5. Run database migrations: `bun run db:migrate` from (inside apps/web)
+6. Start the development server: `bun run dev` from (inside apps/web)
 
 The application will be available at [http://localhost:3000](http://localhost:3000).
 
----
-
-
 ## Contributing
 
-Visit [CONTRIBUTING.md](.github/CONTRIBUTING.md)
----
+**Note**: We're currently moving at an extremely fast pace with rapid development and breaking changes. While we appreciate the interest, it's recommended to wait until the project stabilizes before contributing to avoid conflicts and wasted effort.
+
+## Visit [CONTRIBUTING.md](.github/CONTRIBUTING.md)
+
 We welcome contributions! Please see our [Contributing Guide](.github/CONTRIBUTING.md) for detailed setup instructions and development guidelines.
 
-Quick start for contributors:
+**Quick start for contributors:**
 
 - Fork the repo and clone locally
 - Follow the setup instructions in CONTRIBUTING.md
 - Create a feature branch and submit a PR
 
+## Sponsors
+
+Thanks to [Vercel](https://vercel.com?utm_source=github-opencut&utm_campaign=oss) for their support of open-source software.
+
+<a href="https://vercel.com/oss">
+  <img alt="Vercel OSS Program" src="https://vercel.com/oss/program-badge.svg" />
+</a>
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FOpenCut-app%2FOpenCut&project-name=opencut&repository-name=opencut)
+
 ## License
 
 [MIT LICENSE](LICENSE)
+
+---
+
+![Star History Chart](https://api.star-history.com/svg?repos=opencut-app/opencut&type=Date)

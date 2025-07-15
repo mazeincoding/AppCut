@@ -1,19 +1,31 @@
 "use client";
 
-import {
-  useTimelineStore,
-  type TimelineClip,
-  type TimelineTrack,
-} from "@/stores/timeline-store";
+import { useTimelineStore } from "@/stores/timeline-store";
+import { TimelineElement, TimelineTrack } from "@/types/timeline";
 import { useMediaStore, type MediaItem } from "@/stores/media-store";
 import { usePlaybackStore } from "@/stores/playback-store";
+import { useEditorStore } from "@/stores/editor-store";
+import { useAspectRatio } from "@/hooks/use-aspect-ratio";
 import { VideoPlayer } from "@/components/ui/video-player";
+import { AudioPlayer } from "@/components/ui/audio-player";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, Volume2, VolumeX, Plus } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { Play, Pause, Expand } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { cn } from "@/lib/utils";
+import { formatTimeCode } from "@/lib/time";
+import { FONT_CLASS_MAP } from "@/lib/font-config";
+import { BackgroundSettings } from "../background-settings";
+import { useProjectStore } from "@/stores/project-store";
 
-interface ActiveClip {
-  clip: TimelineClip;
+interface ActiveElement {
+  element: TimelineElement;
   track: TimelineTrack;
   mediaItem: MediaItem | null;
 }
@@ -21,14 +33,15 @@ interface ActiveClip {
 export function PreviewPanel() {
   const { tracks } = useTimelineStore();
   const { mediaItems } = useMediaStore();
-  const { currentTime, muted, toggleMute, volume } = usePlaybackStore();
-  const [canvasSize, setCanvasSize] = useState({ width: 1920, height: 1080 });
+  const { currentTime } = usePlaybackStore();
+  const { canvasSize } = useEditorStore();
   const previewRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [previewDimensions, setPreviewDimensions] = useState({
     width: 0,
     height: 0,
   });
+  const { activeProject } = useProjectStore();
 
   // Calculate optimal preview size that fits in container while maintaining aspect ratio
   useEffect(() => {
@@ -90,73 +103,110 @@ export function PreviewPanel() {
     return () => resizeObserver.disconnect();
   }, [canvasSize.width, canvasSize.height]);
 
-  // Get active clips at current time
-  const getActiveClips = (): ActiveClip[] => {
-    const activeClips: ActiveClip[] = [];
+  // Get active elements at current time
+  const getActiveElements = (): ActiveElement[] => {
+    const activeElements: ActiveElement[] = [];
 
     tracks.forEach((track) => {
-      track.clips.forEach((clip) => {
-        const clipStart = clip.startTime;
-        const clipEnd =
-          clip.startTime + (clip.duration - clip.trimStart - clip.trimEnd);
+      track.elements.forEach((element) => {
+        const elementStart = element.startTime;
+        const elementEnd =
+          element.startTime +
+          (element.duration - element.trimStart - element.trimEnd);
 
-        if (currentTime >= clipStart && currentTime < clipEnd) {
-          const mediaItem =
-            clip.mediaId === "test"
-              ? null // Test clips don't have a real media item
-              : mediaItems.find((item) => item.id === clip.mediaId) || null;
+        if (currentTime >= elementStart && currentTime < elementEnd) {
+          let mediaItem = null;
 
-          activeClips.push({ clip, track, mediaItem });
+          // Only get media item for media elements
+          if (element.type === "media") {
+            mediaItem =
+              element.mediaId === "test"
+                ? null // Test elements don't have a real media item
+                : mediaItems.find((item) => item.id === element.mediaId) ||
+                  null;
+          }
+
+          activeElements.push({ element, track, mediaItem });
         }
       });
     });
 
-    return activeClips;
+    return activeElements;
   };
 
-  const activeClips = getActiveClips();
+  const activeElements = getActiveElements();
 
-  // Render a clip
-  const renderClip = (clipData: ActiveClip, index: number) => {
-    const { clip, mediaItem } = clipData;
+  // Check if there are any elements in the timeline at all
+  const hasAnyElements = tracks.some((track) => track.elements.length > 0);
 
-    // Test clips
-    if (!mediaItem || clip.mediaId === "test") {
-      return (
-        <div
-          key={clip.id}
-          className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center"
-        >
-          <div className="text-center">
-            <div className="text-2xl mb-2">🎬</div>
-            <p className="text-xs text-white">{clip.name}</p>
-          </div>
-        </div>
-      );
+  // Get media elements for blur background (video/image only)
+  const getBlurBackgroundElements = (): ActiveElement[] => {
+    return activeElements.filter(
+      ({ element, mediaItem }) =>
+        element.type === "media" &&
+        mediaItem &&
+        (mediaItem.type === "video" || mediaItem.type === "image") &&
+        element.mediaId !== "test" // Exclude test elements
+    );
+  };
+
+  const blurBackgroundElements = getBlurBackgroundElements();
+
+  // Render blur background layer
+  const renderBlurBackground = () => {
+    if (
+      !activeProject?.backgroundType ||
+      activeProject.backgroundType !== "blur" ||
+      blurBackgroundElements.length === 0
+    ) {
+      return null;
     }
 
-    // Video clips
+    // Use the first media element for background (could be enhanced to use primary/focused element)
+    const backgroundElement = blurBackgroundElements[0];
+    const { element, mediaItem } = backgroundElement;
+
+    if (!mediaItem) return null;
+
+    const blurIntensity = activeProject.blurIntensity || 8;
+
     if (mediaItem.type === "video") {
       return (
-        <div key={clip.id} className="absolute inset-0">
+        <div
+          key={`blur-${element.id}`}
+          className="absolute inset-0 overflow-hidden"
+          style={{
+            filter: `blur(${blurIntensity}px)`,
+            transform: "scale(1.1)", // Slightly zoom to avoid blur edge artifacts
+            transformOrigin: "center",
+          }}
+        >
           <VideoPlayer
-            src={mediaItem.url}
+            src={mediaItem.url!}
             poster={mediaItem.thumbnailUrl}
-            clipStartTime={clip.startTime}
-            trimStart={clip.trimStart}
-            trimEnd={clip.trimEnd}
-            clipDuration={clip.duration}
+            clipStartTime={element.startTime}
+            trimStart={element.trimStart}
+            trimEnd={element.trimEnd}
+            clipDuration={element.duration}
+            className="w-full h-full object-cover"
           />
         </div>
       );
     }
 
-    // Image clips
     if (mediaItem.type === "image") {
       return (
-        <div key={clip.id} className="absolute inset-0">
+        <div
+          key={`blur-${element.id}`}
+          className="absolute inset-0 overflow-hidden"
+          style={{
+            filter: `blur(${blurIntensity}px)`,
+            transform: "scale(1.1)", // Slightly zoom to avoid blur edge artifacts
+            transformOrigin: "center",
+          }}
+        >
           <img
-            src={mediaItem.url}
+            src={mediaItem.url!}
             alt={mediaItem.name}
             className="w-full h-full object-cover"
             draggable={false}
@@ -165,119 +215,283 @@ export function PreviewPanel() {
       );
     }
 
-    // Audio clips (visual representation)
-    if (mediaItem.type === "audio") {
+    return null;
+  };
+
+  // Render an element
+  const renderElement = (elementData: ActiveElement, index: number) => {
+    const { element, mediaItem } = elementData;
+
+    // Text elements
+    if (element.type === "text") {
+      const fontClassName =
+        FONT_CLASS_MAP[element.fontFamily as keyof typeof FONT_CLASS_MAP] || "";
+
+      const scaleRatio = previewDimensions.width / canvasSize.width;
+
       return (
         <div
-          key={clip.id}
-          className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center"
+          key={element.id}
+          className="absolute flex items-center justify-center"
+          style={{
+            left: `${50 + (element.x / canvasSize.width) * 100}%`,
+            top: `${50 + (element.y / canvasSize.height) * 100}%`,
+            transform: `translate(-50%, -50%) rotate(${element.rotation}deg) scale(${scaleRatio})`,
+            opacity: element.opacity,
+            zIndex: 100 + index, // Text elements on top
+          }}
         >
-          <div className="text-center">
-            <div className="text-2xl mb-2">🎵</div>
-            <p className="text-xs text-white">{mediaItem.name}</p>
+          <div
+            className={fontClassName}
+            style={{
+              fontSize: `${element.fontSize}px`,
+              color: element.color,
+              backgroundColor: element.backgroundColor,
+              textAlign: element.textAlign,
+              fontWeight: element.fontWeight,
+              fontStyle: element.fontStyle,
+              textDecoration: element.textDecoration,
+              padding: "4px 8px",
+              borderRadius: "2px",
+              whiteSpace: "nowrap",
+              // Fallback for system fonts that don't have classes
+              ...(fontClassName === "" && { fontFamily: element.fontFamily }),
+            }}
+          >
+            {element.content}
           </div>
         </div>
       );
     }
 
+    // Media elements
+    if (element.type === "media") {
+      // Test elements
+      if (!mediaItem || element.mediaId === "test") {
+        return (
+          <div
+            key={element.id}
+            className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center"
+          >
+            <div className="text-center">
+              <div className="text-2xl mb-2">🎬</div>
+              <p className="text-xs text-white">{element.name}</p>
+            </div>
+          </div>
+        );
+      }
+
+      // Video elements
+      if (mediaItem.type === "video") {
+        return (
+          <div
+            key={element.id}
+            className="absolute inset-0 flex items-center justify-center"
+          >
+            <VideoPlayer
+              src={mediaItem.url!}
+              poster={mediaItem.thumbnailUrl}
+              clipStartTime={element.startTime}
+              trimStart={element.trimStart}
+              trimEnd={element.trimEnd}
+              clipDuration={element.duration}
+            />
+          </div>
+        );
+      }
+
+      // Image elements
+      if (mediaItem.type === "image") {
+        return (
+          <div
+            key={element.id}
+            className="absolute inset-0 flex items-center justify-center"
+          >
+            <img
+              src={mediaItem.url!}
+              alt={mediaItem.name}
+              className="max-w-full max-h-full object-contain"
+              draggable={false}
+            />
+          </div>
+        );
+      }
+
+      // Audio elements (no visual representation)
+      if (mediaItem.type === "audio") {
+        return (
+          <div key={element.id} className="absolute inset-0">
+            <AudioPlayer
+              src={mediaItem.url!}
+              clipStartTime={element.startTime}
+              trimStart={element.trimStart}
+              trimEnd={element.trimEnd}
+              clipDuration={element.duration}
+              trackMuted={elementData.track.muted}
+            />
+          </div>
+        );
+      }
+    }
+
     return null;
   };
 
-  // Canvas presets
-  const canvasPresets = [
-    { name: "16:9 HD", width: 1920, height: 1080 },
-    { name: "16:9 4K", width: 3840, height: 2160 },
-    { name: "9:16 Mobile", width: 1080, height: 1920 },
-    { name: "1:1 Square", width: 1080, height: 1080 },
-    { name: "4:3 Standard", width: 1440, height: 1080 },
-  ];
-
   return (
-    <div className="h-full w-full flex flex-col min-h-0 min-w-0">
-      {/* Controls */}
-      <div className="border-b p-2 flex items-center gap-2 text-xs flex-shrink-0">
-        <span className="text-muted-foreground">Canvas:</span>
-        <select
-          value={`${canvasSize.width}x${canvasSize.height}`}
-          onChange={(e) => {
-            const preset = canvasPresets.find(
-              (p) => `${p.width}x${p.height}` === e.target.value
-            );
-            if (preset)
-              setCanvasSize({ width: preset.width, height: preset.height });
-          }}
-          className="bg-background border rounded px-2 py-1 text-xs"
-        >
-          {canvasPresets.map((preset) => (
-            <option
-              key={preset.name}
-              value={`${preset.width}x${preset.height}`}
-            >
-              {preset.name} ({preset.width}×{preset.height})
-            </option>
-          ))}
-        </select>
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={toggleMute}
-          className="ml-auto"
-        >
-          {muted || volume === 0 ? (
-            <VolumeX className="h-3 w-3 mr-1" />
-          ) : (
-            <Volume2 className="h-3 w-3 mr-1" />
-          )}
-          {muted || volume === 0 ? "Unmute" : "Mute"}
-        </Button>
-      </div>
-
-      {/* Preview Area */}
+    <div className="h-full w-full flex flex-col min-h-0 min-w-0 bg-panel rounded-sm">
       <div
         ref={containerRef}
-        className="flex-1 flex flex-col items-center justify-center p-3 min-h-0 min-w-0 gap-4"
+        className="flex-1 flex flex-col items-center justify-center p-3 min-h-0 min-w-0"
       >
-        <div
-          ref={previewRef}
-          className="relative overflow-hidden rounded-sm bg-black border"
-          style={{
-            width: previewDimensions.width,
-            height: previewDimensions.height,
-          }}
-        >
-          {activeClips.length === 0 ? (
-            <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-              {tracks.length === 0
-                ? "No media added to timeline"
-                : "No clips at current time"}
-            </div>
-          ) : (
-            activeClips.map((clipData, index) => renderClip(clipData, index))
-          )}
-        </div>
+        <div className="flex-1"></div>
+        {hasAnyElements ? (
+          <div
+            ref={previewRef}
+            className="relative overflow-hidden rounded-sm border"
+            style={{
+              width: previewDimensions.width,
+              height: previewDimensions.height,
+              backgroundColor:
+                activeProject?.backgroundType === "blur"
+                  ? "transparent"
+                  : activeProject?.backgroundColor || "#000000",
+            }}
+          >
+            {renderBlurBackground()}
+            {activeElements.length === 0 ? (
+              <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                No elements at current time
+              </div>
+            ) : (
+              activeElements.map((elementData, index) =>
+                renderElement(elementData, index)
+              )
+            )}
+            {/* Show message when blur is selected but no media available */}
+            {activeProject?.backgroundType === "blur" &&
+              blurBackgroundElements.length === 0 &&
+              activeElements.length > 0 && (
+                <div className="absolute bottom-2 left-2 right-2 bg-black/70 text-white text-xs p-2 rounded">
+                  Add a video or image to use blur background
+                </div>
+              )}
+          </div>
+        ) : null}
 
-        <PreviewToolbar />
+        <div className="flex-1"></div>
+
+        <PreviewToolbar hasAnyElements={hasAnyElements} />
       </div>
     </div>
   );
 }
 
-function PreviewToolbar() {
-  const { isPlaying, toggle } = usePlaybackStore();
+function PreviewToolbar({ hasAnyElements }: { hasAnyElements: boolean }) {
+  const { isPlaying, toggle, currentTime } = usePlaybackStore();
+  const { setCanvasSize, setCanvasSizeToOriginal } = useEditorStore();
+  const { getTotalDuration } = useTimelineStore();
+  const { activeProject } = useProjectStore();
+  const {
+    currentPreset,
+    isOriginal,
+    getOriginalAspectRatio,
+    getDisplayName,
+    canvasPresets,
+  } = useAspectRatio();
+
+  const handlePresetSelect = (preset: { width: number; height: number }) => {
+    setCanvasSize({ width: preset.width, height: preset.height });
+  };
+
+  const handleOriginalSelect = () => {
+    const aspectRatio = getOriginalAspectRatio();
+    setCanvasSizeToOriginal(aspectRatio);
+  };
 
   return (
     <div
       data-toolbar
-      className="flex items-center justify-center gap-2 px-4 pt-2 bg-background-500 w-full"
+      className="flex items-end justify-between gap-2 p-1 pt-2 w-full"
     >
-      <Button variant="text" size="icon" onClick={toggle}>
+      <div>
+        <p
+          className={cn(
+            "text-[0.75rem] text-muted-foreground flex items-center gap-1",
+            !hasAnyElements && "opacity-50"
+          )}
+        >
+          <span className="text-primary tabular-nums">
+            {formatTimeCode(
+              currentTime,
+              "HH:MM:SS:FF",
+              activeProject?.fps || 30
+            )}
+          </span>
+          <span className="opacity-50">/</span>
+          <span className="tabular-nums">
+            {formatTimeCode(
+              getTotalDuration(),
+              "HH:MM:SS:FF",
+              activeProject?.fps || 30
+            )}
+          </span>
+        </p>
+      </div>
+      <Button
+        variant="text"
+        size="icon"
+        onClick={toggle}
+        disabled={!hasAnyElements}
+        className="h-auto p-0"
+      >
         {isPlaying ? (
           <Pause className="h-3 w-3" />
         ) : (
           <Play className="h-3 w-3" />
         )}
       </Button>
+      <div className="flex items-center gap-3">
+        <BackgroundSettings />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              size="sm"
+              className="!bg-panel-accent text-foreground/85 text-[0.70rem] h-4 rounded-none border border-muted-foreground px-0.5 py-0 font-light"
+              disabled={!hasAnyElements}
+            >
+              {getDisplayName()}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onClick={handleOriginalSelect}
+              className={cn("text-xs", isOriginal && "font-semibold")}
+            >
+              Original
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            {canvasPresets.map((preset) => (
+              <DropdownMenuItem
+                key={preset.name}
+                onClick={() => handlePresetSelect(preset)}
+                className={cn(
+                  "text-xs",
+                  currentPreset?.name === preset.name && "font-semibold"
+                )}
+              >
+                {preset.name}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <Button
+          variant="text"
+          size="icon"
+          className="!size-4 text-muted-foreground"
+        >
+          <Expand className="!size-4" />
+        </Button>
+      </div>
     </div>
   );
 }

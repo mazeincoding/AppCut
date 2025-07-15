@@ -7,106 +7,105 @@ export const usePlaybackControls = () => {
   const { isPlaying, currentTime, play, pause, seek } = usePlaybackStore();
 
   const {
-    selectedClips,
+    selectedElements,
     tracks,
-    splitClip,
+    splitElement,
     splitAndKeepLeft,
     splitAndKeepRight,
     separateAudio,
   } = useTimelineStore();
 
-  const handleSplitSelectedClip = useCallback(() => {
-    if (selectedClips.length !== 1) {
-      toast.error("Select exactly one clip to split");
+  const handleSplitSelectedElement = useCallback(() => {
+    if (selectedElements.length !== 1) {
+      toast.error("Select exactly one element to split");
       return;
     }
 
-    const { trackId, clipId } = selectedClips[0];
+    const { trackId, elementId } = selectedElements[0];
     const track = tracks.find((t) => t.id === trackId);
-    const clip = track?.clips.find((c) => c.id === clipId);
+    const element = track?.elements.find((e) => e.id === elementId);
 
-    if (!clip) return;
+    if (!element) return;
 
-    const effectiveStart = clip.startTime;
+    const effectiveStart = element.startTime;
     const effectiveEnd =
-      clip.startTime + (clip.duration - clip.trimStart - clip.trimEnd);
+      element.startTime +
+      (element.duration - element.trimStart - element.trimEnd);
 
     if (currentTime <= effectiveStart || currentTime >= effectiveEnd) {
-      toast.error("Playhead must be within selected clip");
+      toast.error("Playhead must be within selected element");
       return;
     }
 
-    splitClip(trackId, clipId, currentTime);
-    toast.success("Clip split at playhead");
-  }, [selectedClips, tracks, currentTime, splitClip]);
+    splitElement(trackId, elementId, currentTime);
+  }, [selectedElements, tracks, currentTime, splitElement]);
 
   const handleSplitAndKeepLeftCallback = useCallback(() => {
-    if (selectedClips.length !== 1) {
-      toast.error("Select exactly one clip");
+    if (selectedElements.length !== 1) {
+      toast.error("Select exactly one element");
       return;
     }
 
-    const { trackId, clipId } = selectedClips[0];
+    const { trackId, elementId } = selectedElements[0];
     const track = tracks.find((t) => t.id === trackId);
-    const clip = track?.clips.find((c) => c.id === clipId);
+    const element = track?.elements.find((e) => e.id === elementId);
 
-    if (!clip) return;
+    if (!element) return;
 
-    const effectiveStart = clip.startTime;
+    const effectiveStart = element.startTime;
     const effectiveEnd =
-      clip.startTime + (clip.duration - clip.trimStart - clip.trimEnd);
+      element.startTime +
+      (element.duration - element.trimStart - element.trimEnd);
 
     if (currentTime <= effectiveStart || currentTime >= effectiveEnd) {
-      toast.error("Playhead must be within selected clip");
+      toast.error("Playhead must be within selected element");
       return;
     }
 
-    splitAndKeepLeft(trackId, clipId, currentTime);
-    toast.success("Split and kept left portion");
-  }, [selectedClips, tracks, currentTime, splitAndKeepLeft]);
+    splitAndKeepLeft(trackId, elementId, currentTime);
+  }, [selectedElements, tracks, currentTime, splitAndKeepLeft]);
 
   const handleSplitAndKeepRightCallback = useCallback(() => {
-    if (selectedClips.length !== 1) {
-      toast.error("Select exactly one clip");
+    if (selectedElements.length !== 1) {
+      toast.error("Select exactly one element");
       return;
     }
 
-    const { trackId, clipId } = selectedClips[0];
+    const { trackId, elementId } = selectedElements[0];
     const track = tracks.find((t) => t.id === trackId);
-    const clip = track?.clips.find((c) => c.id === clipId);
+    const element = track?.elements.find((e) => e.id === elementId);
 
-    if (!clip) return;
+    if (!element) return;
 
-    const effectiveStart = clip.startTime;
+    const effectiveStart = element.startTime;
     const effectiveEnd =
-      clip.startTime + (clip.duration - clip.trimStart - clip.trimEnd);
+      element.startTime +
+      (element.duration - element.trimStart - element.trimEnd);
 
     if (currentTime <= effectiveStart || currentTime >= effectiveEnd) {
-      toast.error("Playhead must be within selected clip");
+      toast.error("Playhead must be within selected element");
       return;
     }
 
-    splitAndKeepRight(trackId, clipId, currentTime);
-    toast.success("Split and kept right portion");
-  }, [selectedClips, tracks, currentTime, splitAndKeepRight]);
+    splitAndKeepRight(trackId, elementId, currentTime);
+  }, [selectedElements, tracks, currentTime, splitAndKeepRight]);
 
   const handleSeparateAudioCallback = useCallback(() => {
-    if (selectedClips.length !== 1) {
-      toast.error("Select exactly one video clip to separate audio");
+    if (selectedElements.length !== 1) {
+      toast.error("Select exactly one media element to separate audio");
       return;
     }
 
-    const { trackId, clipId } = selectedClips[0];
+    const { trackId, elementId } = selectedElements[0];
     const track = tracks.find((t) => t.id === trackId);
 
-    if (!track || track.type !== "video") {
-      toast.error("Select a video clip to separate audio");
+    if (!track || track.type !== "media") {
+      toast.error("Select a media element to separate audio");
       return;
     }
 
-    separateAudio(trackId, clipId);
-    toast.success("Audio separated to audio track");
-  }, [selectedClips, tracks, separateAudio]);
+    separateAudio(trackId, elementId);
+  }, [selectedElements, tracks, separateAudio]);
 
   const handleKeyPress = useCallback(
     (e: KeyboardEvent) => {
@@ -130,7 +129,7 @@ export const usePlaybackControls = () => {
         case "s":
           if (e.ctrlKey || e.metaKey) {
             e.preventDefault();
-            handleSplitSelectedClip();
+            handleSplitSelectedElement();
           }
           break;
 
@@ -160,7 +159,7 @@ export const usePlaybackControls = () => {
       isPlaying,
       play,
       pause,
-      handleSplitSelectedClip,
+      handleSplitSelectedElement,
       handleSplitAndKeepLeftCallback,
       handleSplitAndKeepRightCallback,
       handleSeparateAudioCallback,

@@ -7,13 +7,16 @@
   "exports": {
     ".": "./src/index.ts",
     "./client": "./src/client.ts",
-    "./server": "./src/server.ts"
+    "./server": "./src/server.ts",
+    "./keys": "./src/keys.ts"
   },
   "dependencies": {
+    "@opencut/db": "workspace:*",
+    "@t3-oss/env-nextjs": "^0.13.8",
     "better-auth": "^1.1.1",
-    "@opencut/db": "workspace:*"
+    "zod": "^4.0.5"
   },
   "devDependencies": {
     "@types/node": "^22.10.2"
   }
-} 
+}

@@ -1,15 +1,14 @@
 import type { Config } from "drizzle-kit";
 import * as dotenv from "dotenv";
+import { keys } from "./src/keys";
+
+const { NODE_ENV, DATABASE_URL } = keys();
 
 // Load the right env file based on environment
-if (process.env.NODE_ENV === "production") {
+if (NODE_ENV === "production") {
   dotenv.config({ path: ".env.production" });
 } else {
   dotenv.config({ path: ".env.local" });
-}
-
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL is not set");
 }
 
 export default {
@@ -19,8 +18,8 @@ export default {
     table: "drizzle_migrations",
   },
   dbCredentials: {
-    url: process.env.DATABASE_URL,
+    url: DATABASE_URL,
   },
   out: "./migrations",
-  strict: process.env.NODE_ENV === "production",
-} satisfies Config; 
+  strict: NODE_ENV === "production",
+} satisfies Config;

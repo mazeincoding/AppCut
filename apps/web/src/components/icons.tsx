@@ -37,3 +37,64 @@ export function GithubIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+
+export function BackgroundIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="353"
+      height="353"
+      viewBox="0 0 353 353"
+      fill="none"
+      className={className}
+    >
+      <g clipPath="url(#clip0_1_3)">
+        <rect
+          x="-241.816"
+          y="233.387"
+          width="592.187"
+          height="17.765"
+          transform="rotate(-37 -241.816 233.387)"
+          fill="white"
+        />
+        <rect
+          x="-189.907"
+          y="306.804"
+          width="592.187"
+          height="17.765"
+          transform="rotate(-37 -189.907 306.804)"
+          fill="white"
+        />
+        <rect
+          x="-146.928"
+          y="389.501"
+          width="592.187"
+          height="17.765"
+          transform="rotate(-37 -146.928 389.501)"
+          fill="white"
+        />
+        <rect
+          x="-103.144"
+          y="477.904"
+          width="592.187"
+          height="17.765"
+          transform="rotate(-37 -103.144 477.904)"
+          fill="white"
+        />
+        <rect
+          x="-57.169"
+          y="570.714"
+          width="592.187"
+          height="17.765"
+          transform="rotate(-37 -57.169 570.714)"
+          fill="white"
+        />
+      </g>
+      <defs>
+        <clipPath id="clip0_1_3">
+          <rect width="353" height="353" fill="white" />
+        </clipPath>
+      </defs>
+    </svg>
+  );
+}

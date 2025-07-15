@@ -52,7 +52,7 @@ services:
       dockerfile: ./apps/web/Dockerfile
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3100:3000" # app is running on 3000 so we run this at 3100
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://opencut:opencutthegoat@db:5432/opencut
@@ -60,8 +60,6 @@ services:
       - BETTER_AUTH_SECRET=your-production-secret-key-here
       - UPSTASH_REDIS_REST_URL=http://serverless-redis-http:80
       - UPSTASH_REDIS_REST_TOKEN=example_token
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
     depends_on:
       db:
         condition: service_healthy

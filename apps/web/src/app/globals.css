@@ -39,13 +39,13 @@
     --sidebar-ring: 0 0% 3.9%;
   }
   .dark {
-    --background: 0 0% 8%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
+    --background: 0 0% 4%;
+    --foreground: 0 0% 89%;
+    --card: 0 0% 14.9%;
     --card-foreground: 0 0% 98%;
     --popover: 0 0% 14.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
+    --primary: 180 95% 40%;
     --primary-foreground: 0 0% 9%;
     --secondary: 0 0% 14.9%;
     --secondary-foreground: 0 0% 98%;
@@ -71,6 +71,8 @@
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 0 0% 14.9%;
     --sidebar-ring: 0 0% 83.1%;
+    --panel-background: 0 0% 11%;
+    --panel-accent: 0 0% 15%;
   }
 }
 
@@ -80,5 +82,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Prevent back/forward swipe */
+    overscroll-behavior-x: contain;
   }
 }
