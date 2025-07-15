@@ -30,6 +30,15 @@ export const initFFmpeg = async (): Promise<FFmpeg> => {
       wasmURL,
     });
     
+    // Set up logging (if supported)
+    try {
+      ffmpeg.on('log', ({ message }) => {
+        console.log('FFmpeg:', message);
+      });
+    } catch (e) {
+      console.log('FFmpeg logging not supported');
+    }
+    
     console.log("✅ FFmpeg.wasm loaded successfully");
     return ffmpeg;
   } catch (error) {

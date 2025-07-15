@@ -40,21 +40,12 @@ export function Header() {
           Contributors
         </Button>
       </Link>
-      {process.env.NODE_ENV === "development" ? (
-        <Link href="/projects">
-          <Button size="sm" className="text-sm ml-4">
-            Projects
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </Link>
-      ) : (
-        <Link href="https://github.com/OpenCut-app/OpenCut" target="_blank">
-          <Button size="sm" className="text-sm ml-4">
-            GitHub {star}+
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </Link>
-      )}
+      <Link href="/projects">
+        <Button size="sm" className="text-sm ml-4">
+          Projects
+          <ArrowRight className="h-4 w-4" />
+        </Button>
+      </Link>
     </nav>
   );
 

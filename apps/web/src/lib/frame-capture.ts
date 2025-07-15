@@ -149,7 +149,7 @@ export class FrameCaptureService {
     const originalDuration = element.duration || 0;
     const effectiveDuration = Math.max(0, originalDuration - trimStart - trimEnd);
     
-    const endTime = element.endTime || (startTime + effectiveDuration);
+    const endTime = startTime + effectiveDuration;
     
     const isVisible = timestamp >= startTime && timestamp < endTime;
     
@@ -161,21 +161,9 @@ export class FrameCaptureService {
    * Sort elements by layer/z-index for proper rendering order
    */
   sortElementsByLayer(elements: TimelineElement[]): TimelineElement[] {
-    return elements.sort((a, b) => {
-      // Sort by track order first, then by layer/z-index
-      const trackOrderA = a.trackId || 0;
-      const trackOrderB = b.trackId || 0;
-      
-      if (trackOrderA !== trackOrderB) {
-        return trackOrderA - trackOrderB;
-      }
-      
-      // If same track, sort by z-index or creation order
-      const layerA = a.layer || a.id || 0;
-      const layerB = b.layer || b.id || 0;
-      
-      return layerA - layerB;
-    });
+    // For now, just return elements in their original order
+    // TODO: Implement proper layer sorting when track information is available
+    return elements;
   }
 
   /**

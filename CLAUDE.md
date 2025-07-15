@@ -32,7 +32,7 @@ This is a **Turborepo monorepo** with the following structure:
 - **State Management**: Zustand with multiple specialized stores
 - **Database**: PostgreSQL with Drizzle ORM
 - **Authentication**: Better Auth with Google OAuth support
-- **Video Processing**: FFmpeg.js for client-side video processing
+- **Video Processing**: FFmpeg.js v0.12.15 for client-side video processing
 - **Storage**: Hybrid approach using OPFS + IndexedDB for privacy
 - **Build Tool**: Turborepo with Bun package manager
 
@@ -117,6 +117,9 @@ UPSTASH_REDIS_REST_TOKEN="example_token"
 
 # Development
 NODE_ENV="development"
+
+# Optional: Enable FFmpeg offline video export (frame-by-frame rendering)
+NEXT_PUBLIC_OFFLINE_EXPORT="true"
 ```
 
 ### Generate BETTER_AUTH_SECRET
@@ -137,18 +140,20 @@ The timeline supports **multi-track editing** with the following structure:
 - **Persistence**: Auto-save to IndexedDB with undo/redo support
 
 ### Video Processing Pipeline
-All video processing happens **client-side** using FFmpeg.js:
+All video processing happens **client-side** using FFmpeg.js v0.12.15:
 - **Thumbnail generation**: Create preview images for timeline
-- **Video trimming**: Extract segments without re-encoding
+- **Video trimming**: Extract segments without re-encoding  
 - **Format conversion**: Convert between video formats
 - **Metadata extraction**: Get duration, resolution, frame rate
 - **Audio separation**: Extract audio tracks from video
+- **Offline export**: Frame-by-frame rendering with FFmpegVideoRecorder (enabled via `NEXT_PUBLIC_OFFLINE_EXPORT=true`)
 
 ### Canvas System
 Supports multiple aspect ratios and export formats:
 - **Presets**: 16:9, 9:16, 1:1, 4:3 with customizable dimensions
 - **Real-time preview**: HTML-based rendering for performance
 - **Export rendering**: Canvas-based frame capture for video export
+- **Dual export modes**: MediaRecorder (default) and FFmpeg offline rendering
 
 ## Database Schema
 
@@ -173,7 +178,9 @@ Supports multiple aspect ratios and export formats:
 - `biome.json` - Biome linter/formatter configuration
 
 ### Core Libraries
-- `apps/web/src/lib/ffmpeg-utils.ts` - Video processing utilities
+- `apps/web/src/lib/ffmpeg-utils.ts` - Video processing utilities (FFmpeg.js v0.12.15)
+- `apps/web/src/lib/ffmpeg-video-recorder.ts` - Offline video export using FFmpeg
+- `apps/web/src/lib/export-engine.ts` - Main export engine with dual recording modes
 - `apps/web/src/lib/storage/` - Client-side storage system
 - `apps/web/src/lib/time.ts` - Time formatting utilities
 
@@ -209,9 +216,12 @@ Supports multiple aspect ratios and export formats:
 - Run migrations: `bun run db:migrate`
 
 ### Video Processing Issues
-- FFmpeg.js loads from local files in `/public/ffmpeg/`
+- FFmpeg.js v0.12.15 loads from local files in `/public/ffmpeg/` (ffmpeg-core.js and ffmpeg-core.wasm)
+- **Version compatibility**: Ensure core files match @ffmpeg/ffmpeg package version
+- **API changes**: v0.12.15 uses `ffmpeg.on('log', callback)` instead of `ffmpeg.setLogger()`
 - Large video files may require OPFS feature detection
 - Browser compatibility varies for video codecs
+- **Export modes**: MediaRecorder (default) vs FFmpeg offline rendering (`NEXT_PUBLIC_OFFLINE_EXPORT=true`)
 
 ### Build Issues
 - Use **Bun** as package manager (not npm/yarn)
@@ -220,13 +230,13 @@ Supports multiple aspect ratios and export formats:
 
 ## Testing
 
-Currently, OpenCut has comprehensive testing setup including:
+OpenCut has comprehensive testing setup including:
 - **Unit Tests**: Jest with React Testing Library for components and utilities
 - **Integration Tests**: Complete test coverage for export engine and video processing
 - **E2E Tests**: Playwright for end-to-end user workflows
-- Test video processing utilities thoroughly
-- Mock FFmpeg.js for unit tests
-- Test storage operations with fake IndexedDB
+- **FFmpeg Tests**: Test video processing utilities (note: FFmpeg.js v0.12.15 doesn't support Node.js)
+- **Storage Tests**: Test operations with fake IndexedDB
+- Run tests: `bun run test` (from apps/web/)
 
 ## Development Context
 
@@ -240,3 +250,10 @@ Currently, OpenCut has comprehensive testing setup including:
 - Build and deployment procedures
 
 The cursor rules provide more detailed context than this CLAUDE.md file and should be your primary reference for understanding project requirements and implementation patterns.
+
+## Recent Updates
+
+- **FFmpeg.js v0.12.15**: Updated to latest version with new event-based API
+- **Dual export modes**: MediaRecorder (default) and FFmpeg offline rendering
+- **Core files updated**: Synchronized `/public/ffmpeg/` files with package version
+- **Export engine enhanced**: Better frame timing and video duration handling

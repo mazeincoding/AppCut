@@ -1,0 +1,54 @@
+# Page snapshot
+
+```yaml
+- banner:
+  - link "OpenCut LogoOpenCut":
+    - /url: /
+    - img "OpenCut Logo"
+    - text: OpenCut
+  - navigation:
+    - link "Contributors":
+      - /url: /contributors
+      - button "Contributors"
+    - link "GitHub +":
+      - /url: https://github.com/OpenCut-app/OpenCut
+      - button "GitHub +":
+        - text: GitHub +
+        - img
+- img "landing-page.bg"
+- heading "The Open Source" [level=1]
+- text: Video Editor Video Editor
+- paragraph: A simple but powerful video editor that gets the job done. Works on any platform.
+- textbox "Enter your email"
+- button "Join waitlist":
+  - text: Join waitlist
+  - img
+- contentinfo:
+  - img "OpenCut"
+  - text: OpenCut
+  - paragraph: The open source video editor that gets the job done. Simple, powerful, and works on any platform.
+  - link:
+    - /url: https://github.com/OpenCut-app/OpenCut
+    - img
+  - link:
+    - /url: https://x.com/OpenCutApp
+    - img
+  - heading "Resources" [level=3]
+  - list:
+    - listitem:
+      - link "Privacy policy":
+        - /url: /privacy
+    - listitem:
+      - link "Terms of use":
+        - /url: /terms
+  - heading "Company" [level=3]
+  - list:
+    - listitem:
+      - link "Contributors":
+        - /url: /contributors
+    - listitem:
+      - link "About":
+        - /url: https://github.com/OpenCut-app/OpenCut/blob/main/README.md
+  - text: © 2025 OpenCut, All Rights Reserved
+- region "Notifications alt+T"
+```

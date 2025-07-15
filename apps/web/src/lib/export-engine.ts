@@ -70,7 +70,10 @@ export class ExportEngine {
       this.settings,
       this.timelineElements
     );
-    if (isFFmpegExportEnabled()) {
+    const ffmpegEnabled = isFFmpegExportEnabled();
+    console.log("🎥 FFmpeg export enabled:", ffmpegEnabled, "env value:", process.env.NEXT_PUBLIC_OFFLINE_EXPORT);
+    
+    if (ffmpegEnabled) {
       this.recorder = new FFmpegVideoRecorder({
         settings: this.settings,
         fps: this.fps,
@@ -233,44 +236,39 @@ export class ExportEngine {
         }
 
         try {
-          // Calculate if it's time for the next frame
-          const timeSinceLastFrame = currentTime - lastFrameTime;
+          // Get frame data
+          const frameData = this.captureService.getFrameData(currentFrame);
           
-          if (timeSinceLastFrame >= frameInterval) {
-            // Get frame data
-            const frameData = this.captureService.getFrameData(currentFrame);
-            
-            console.log("🎞️ Rendering frame:", {
-              frameNumber: currentFrame,
-              timestamp: frameData.timestamp,
-              timeSinceLastFrame: `${timeSinceLastFrame.toFixed(2)}ms`,
-              expectedInterval: `${frameInterval}ms`
-            });
-            
-            // Render frame to canvas
-            await this.renderSingleFrame(frameData);
-            
-            // Update progress
-            const progress = Math.floor((currentFrame / totalFrames) * 100);
-            if (progress > lastProgressUpdate) {
-              lastProgressUpdate = progress;
-              this.onProgress?.(progress, `Rendering frame ${currentFrame + 1} of ${totalFrames}`);
-            }
-            
-            currentFrame++;
-            lastFrameTime = currentTime;
+          console.log("🎞️ Rendering frame:", {
+            frameNumber: currentFrame,
+            timestamp: frameData.timestamp,
+            targetInterval: `${frameInterval}ms`
+          });
+          
+          // Render frame to canvas
+          await this.renderSingleFrame(frameData);
+          
+          // Update progress
+          const progress = Math.floor((currentFrame / totalFrames) * 100);
+          if (progress > lastProgressUpdate) {
+            lastProgressUpdate = progress;
+            this.onProgress?.(progress, `Rendering frame ${currentFrame + 1} of ${totalFrames}`);
           }
           
-          // Continue with next frame using requestAnimationFrame for timing
-          requestAnimationFrame(renderFrame);
+          currentFrame++;
+          
+          // Schedule next frame at exact interval for consistent timing
+          setTimeout(() => {
+            renderFrame(performance.now());
+          }, frameInterval);
           
         } catch (error) {
           reject(error);
         }
       };
 
-      // Start rendering
-      requestAnimationFrame(renderFrame);
+      // Start rendering with initial timestamp
+      renderFrame(performance.now());
     });
   }
 

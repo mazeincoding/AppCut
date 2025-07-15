@@ -108,6 +108,72 @@ The **VideoRecorder** is probably capturing canvas frames at a much lower FPS th
 - [ ] Check frame count vs duration calculation
 - [ ] Ensure no regression in other export features
 
+## 🔧 **Phase 2 Implementation Update (Actually Fixed Now):**
+
+**What was missing:**
+- The code was still using `requestAnimationFrame` despite the analysis
+- This caused frames to be generated at browser refresh rate (~60fps)
+
+**What was fixed:**
+- ✅ Replaced `requestAnimationFrame` with `setTimeout` based timing
+- ✅ Calculates proper delay: `Math.max(1, frameInterval - timeSinceLastFrame)`
+- ✅ Now maintains exact 30fps timing (33.33ms between frames)
+- ✅ Uses `performance.now()` for accurate timestamps
+
+**Expected behavior now:**
+- 10-second video should export as exactly 10 seconds
+- Frame timing will be consistent at 30fps
+- No more 1+ minute exports for short videos
+
+## 🔍 **Phase 2 Results - Issue Still Exists:**
+
+**What we found:**
+- ✅ Frame generation timing is now correct (33.33ms intervals)
+- ✅ Export logs show proper frame sequence
+- ❌ **Final video is still 64.263 seconds instead of 10 seconds**
+
+**Root Cause Discovery:**
+The issue is NOT in frame generation - it's in **MediaRecorder behavior**:
+- `canvas.captureStream(fps)` doesn't actually control recording FPS
+- MediaRecorder records in **real-time** as frames are drawn
+- Any delays in rendering process stretch the final video duration
+- setTimeout delays accumulate, causing the video to be 6x longer
+
+**Real Solution Needed:**
+- MediaRecorder approach is fundamentally flawed for precise timing
+- Need to use **FFmpeg offline rendering** for frame-perfect exports
+- Or implement frame buffering to eliminate timing delays
+
+### Phase 3: FFmpeg Solution Attempt - BLOCKED
+
+**What we tried:**
+- ✅ Enabled FFmpeg offline export via `NEXT_PUBLIC_OFFLINE_EXPORT=true`
+- ❌ FFmpeg initialization fails with `setLogger` error
+- ❌ Version compatibility issues with `@ffmpeg/ffmpeg` v0.12.15
+
+**FFmpeg Error Details:**
+```
+❌ Failed to initialize FFmpeg: TypeError: Cannot read properties of undefined (reading 'setLogger')
+```
+
+**Root Cause:**
+- The FFmpeg.js library API has changed between versions
+- `setLogger` method doesn't exist in current version
+- Code may be using deprecated API patterns
+
+**Current Status:**
+- FFmpeg export is **DISABLED** (back to MediaRecorder)
+- Video export still produces 64.263 seconds instead of 10 seconds
+- **The core MediaRecorder timing issue remains unsolved**
+
+**Next Steps for Fix:**
+1. **Investigate FFmpeg API**: Research correct initialization for v0.12.15
+2. **Alternative approaches**: 
+   - Use Web Workers for background processing
+   - Implement frame buffering before MediaRecorder
+   - Pre-render all frames synchronously before recording
+3. **Consider downgrading FFmpeg**: Use older version with working API
+
 ## 🎯 **Success Criteria:**
 - 10-second video exports as exactly ~10 seconds
 - Frame count matches expected duration at target FPS
