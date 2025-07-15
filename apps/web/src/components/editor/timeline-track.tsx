@@ -22,14 +22,16 @@ import {
   TIMELINE_CONSTANTS,
 } from "@/constants/timeline-constants";
 import { useProjectStore } from "@/stores/project-store";
-import { useTimelineSnapping } from "@/hooks/use-timeline-snapping";
+import { useTimelineSnapping, SnapPoint } from "@/hooks/use-timeline-snapping";
 
 export function TimelineTrackContent({
   track,
   zoomLevel,
+  onSnapPointChange,
 }: {
   track: TimelineTrack;
   zoomLevel: number;
+  onSnapPointChange?: (snapPoint: SnapPoint | null) => void;
 }) {
   const { mediaItems } = useMediaStore();
   const {
@@ -106,6 +108,7 @@ export function TimelineTrackContent({
 
       // Apply snapping if enabled
       let finalTime = adjustedTime;
+      let snapPoint = null;
       if (snappingEnabled) {
         const snapResult = snapElementPosition(
           adjustedTime,
@@ -115,11 +118,18 @@ export function TimelineTrackContent({
           dragState.elementId || undefined
         );
         finalTime = snapResult.snappedTime;
+        snapPoint = snapResult.snapPoint;
+
+        // Notify parent component about snap point change
+        onSnapPointChange?.(snapPoint);
       } else {
         // Use frame snapping if project has FPS, otherwise use decimal snapping
         const projectStore = useProjectStore.getState();
         const projectFps = projectStore.activeProject?.fps || 30;
         finalTime = snapTimeToFrame(adjustedTime, projectFps);
+
+        // Clear snap point when not snapping
+        onSnapPointChange?.(null);
       }
 
       updateDragTime(finalTime);
@@ -140,6 +150,8 @@ export function TimelineTrackContent({
             dragState.currentTime
           );
           endDragAction();
+          // Clear snap point when drag ends
+          onSnapPointChange?.(null);
         }
         return;
       }
@@ -236,6 +248,8 @@ export function TimelineTrackContent({
 
       if (isTrackThatStartedDrag) {
         endDragAction();
+        // Clear snap point when drag ends
+        onSnapPointChange?.(null);
       }
     };
 
@@ -261,6 +275,7 @@ export function TimelineTrackContent({
     endDragAction,
     selectedElements,
     selectElement,
+    onSnapPointChange,
   ]);
 
   const handleElementMouseDown = (
