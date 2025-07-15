@@ -32,3 +32,9 @@ Add optional audio muxing (once video path is solid).
 B. Verify browser support – FFmpeg-wasm works but needs >150 MB memory; Safari requires "crossOriginIsolated" headers.
 C. If FFmpeg-wasm proves too heavy, fall back to a server-side encode or a streaming “pipe” using MediaStreamTrackGenerator (but that re-introduces timing issues).
 Let me know which step you’d like tackled first (e.g. “make a minimal FFmpeg encoder that turns 3 canvas snapshots into an MP4”), and I’ll implement it incrementally and test it rather than pasting a full-file replacement.
+
+Implemented solution:
+- Created `FFmpegVideoRecorder` to collect PNG frames and encode them using FFmpeg.
+- Added feature flag `NEXT_PUBLIC_OFFLINE_EXPORT` so the new recorder only runs when enabled.
+- ExportEngine renders frames sequentially with `renderFramesOffline` and feeds them to the recorder.
+- Added unit test for the new recorder to ensure frames are encoded to a video blob.
