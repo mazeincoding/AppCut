@@ -126,7 +126,9 @@ export function useTimelineSnapping({
       });
 
       return {
-        snappedTime: closestSnapPoint ? closestSnapPoint.time : targetTime,
+        snappedTime: closestSnapPoint
+          ? (closestSnapPoint as SnapPoint).time
+          : targetTime,
         snapPoint: closestSnapPoint,
         snapDistance: closestDistance,
       };
