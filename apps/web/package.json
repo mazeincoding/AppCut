@@ -62,7 +62,7 @@
     "@types/react-dom": "^18.2.18",
     "cross-env": "^7.0.3",
     "drizzle-kit": "^0.31.4",
-    "eslint": "^9",
+    "eslint": "^8.58.0",
     "eslint-config-next": "^15.3.4",
     "postcss": "^8",
     "prettier": "^3.4.2",
