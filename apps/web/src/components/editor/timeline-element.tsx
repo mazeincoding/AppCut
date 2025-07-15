@@ -277,11 +277,11 @@ export function TimelineElement({
       const tileWidth = tileHeight * TILE_ASPECT_RATIO;
 
       return (
-        <div className="w-full h-full flex items-center justify-start overflow-hidden">
-          <div className="bg-[#004D52]/20 h-full w-full relative">
+        <div className="w-full h-full flex items-center justify-center">
+          <div className="bg-[#004D52] py-3 w-full h-full relative">
             {/* Background with tiled images */}
             <div
-              className="absolute inset-0"
+              className="absolute top-3 bottom-3 left-0 right-0"
               style={{
                 backgroundImage: mediaItem.url
                   ? `url(${mediaItem.url})`
@@ -289,11 +289,13 @@ export function TimelineElement({
                 backgroundRepeat: "repeat-x",
                 backgroundSize: `${tileWidth}px ${tileHeight}px`,
                 backgroundPosition: "left center",
+                pointerEvents: "none",
               }}
+              aria-label={`Tiled background of ${mediaItem.name}`}
             />
             {/* Overlay with vertical borders */}
             <div
-              className="absolute inset-0 pointer-events-none"
+              className="absolute top-3 bottom-3 left-0 right-0 pointer-events-none"
               style={{
                 backgroundImage: `repeating-linear-gradient(
                   to right,
@@ -319,8 +321,8 @@ export function TimelineElement({
       const tileWidth = tileHeight * TILE_ASPECT_RATIO;
 
       return (
-        <div className="w-full h-full flex items-center overflow-hidden relative">
-          <div className="h-full w-full relative">
+        <div className="w-full h-full flex items-center gap-2">
+          <div className="flex-1 h-full relative overflow-hidden">
             {/* Background with tiled thumbnails */}
             <div
               className="absolute inset-0"
@@ -331,7 +333,9 @@ export function TimelineElement({
                 backgroundRepeat: "repeat-x",
                 backgroundSize: `${tileWidth}px ${tileHeight}px`,
                 backgroundPosition: "left center",
+                pointerEvents: "none",
               }}
+              aria-label={`Tiled thumbnail of ${mediaItem.name}`}
             />
             {/* Overlay with vertical borders */}
             <div
@@ -348,11 +352,14 @@ export function TimelineElement({
               }}
             />
           </div>
-          {/* Show name overlay on the right if there's sufficient space */}
-          {elementWidth > tileWidth * OVERLAY_SPACE_MULTIPLIER && (
+          {elementWidth > tileWidth * OVERLAY_SPACE_MULTIPLIER ? (
             <div className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/70 text-white text-xs px-2 py-1 rounded pointer-events-none max-w-[40%] truncate">
               {element.name}
             </div>
+          ) : (
+            <span className="text-xs text-foreground/80 truncate flex-shrink-0 max-w-[120px]">
+              {element.name}
+            </span>
           )}
         </div>
       );
