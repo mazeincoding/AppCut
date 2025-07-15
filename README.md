@@ -124,14 +124,6 @@ Before you begin, ensure you have the following installed on your system:
    # Or use an online generator: https://generate-secret.vercel.app/32
    ```
 
-   **Optional Variables (for Google OAuth):**
-
-   ```bash
-   # Only needed if you want to test Google login
-   GOOGLE_CLIENT_ID="your-google-client-id"
-   GOOGLE_CLIENT_SECRET="your-google-client-secret"
-   ```
-
 5. Run database migrations: `bun run db:migrate` from (inside apps/web)
 6. Start the development server: `bun run dev` from (inside apps/web)
 

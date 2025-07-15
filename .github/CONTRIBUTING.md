@@ -86,14 +86,6 @@ Thank you for your interest in contributing to OpenCut! This document provides g
    # Or use an online generator: https://generate-secret.vercel.app/32
    ```
 
-   **Optional Variables (for Google OAuth):**
-
-   ```bash
-   # Only needed if you want to test Google login
-   GOOGLE_CLIENT_ID="your-google-client-id"
-   GOOGLE_CLIENT_SECRET="your-google-client-secret"
-   ```
-
 5. Run database migrations: `bun run db:migrate`
 6. Start the development server: `bun run dev`
 
