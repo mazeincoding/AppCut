@@ -164,17 +164,17 @@ Comprehensive testing strategy for the video export functionality. Each test tas
 - [x] Test visibility filtering
 - [x] Test layer ordering
 
-### 3.10 Test Download Mechanism (3 min)
-- [ ] Test blob creation
-- [ ] Test download trigger
-- [ ] Test filename handling
+### 3.10 Test Download Mechanism (3 min) ✅
+- [x] Test blob creation
+- [x] Test download trigger
+- [x] Test filename handling
 
 ## Phase 4: End-to-End Testing (30 min total)
 
-### 4.1 Setup E2E Test Environment (3 min)
-- [ ] Install Playwright or Cypress
-- [ ] Configure E2E test setup
-- [ ] Create test data fixtures
+### 4.1 Setup E2E Test Environment (3 min) ✅
+- [x] Install Playwright or Cypress
+- [x] Configure E2E test setup
+- [x] Create test data fixtures
 
 ### 4.2 Test Basic Export Flow (3 min)
 - [ ] Create `/apps/web/e2e/basic-export.spec.ts`
