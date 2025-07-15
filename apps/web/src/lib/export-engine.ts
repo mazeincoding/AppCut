@@ -4,6 +4,7 @@ import { MediaItem } from "@/stores/media-store";
 import { CanvasRenderer } from "@/lib/canvas-renderer";
 import { FrameCaptureService } from "@/lib/frame-capture";
 import { VideoRecorder } from "@/lib/video-recorder";
+import { FFmpegVideoRecorder, isFFmpegExportEnabled } from "@/lib/ffmpeg-video-recorder";
 import { AudioMixer, AudioTrackInfo } from "@/lib/audio-mixer";
 import { 
   ExportError, 
@@ -41,7 +42,7 @@ export class ExportEngine {
 
   private renderer: CanvasRenderer;
   private captureService: FrameCaptureService;
-  private recorder: VideoRecorder;
+  private recorder: VideoRecorder | FFmpegVideoRecorder;
   private audioMixer: AudioMixer;
   private isExporting = false;
   private shouldCancel = false;
@@ -69,11 +70,18 @@ export class ExportEngine {
       this.settings,
       this.timelineElements
     );
-    this.recorder = new VideoRecorder({
-      canvas: this.canvas,
-      settings: this.settings,
-      fps: this.fps,
-    });
+    if (isFFmpegExportEnabled()) {
+      this.recorder = new FFmpegVideoRecorder({
+        settings: this.settings,
+        fps: this.fps,
+      });
+    } else {
+      this.recorder = new VideoRecorder({
+        canvas: this.canvas,
+        settings: this.settings,
+        fps: this.fps,
+      });
+    }
     this.audioMixer = new AudioMixer({
       sampleRate: 44100,
       channels: 2,
@@ -148,10 +156,14 @@ export class ExportEngine {
       // Start recording
       await this.recorder.startRecording();
       console.log("📹 Recording started");
-      
-      // Render frames using requestAnimationFrame loop
+
       console.log("🎬 Starting frame rendering...");
-      const videoBlob = await this.renderFrames();
+      let videoBlob: Blob;
+      if (this.recorder instanceof FFmpegVideoRecorder) {
+        videoBlob = await this.renderFramesOffline();
+      } else {
+        videoBlob = await this.renderFrames();
+      }
       
       console.log("✅ Export completed successfully!");
       this.onProgress?.(100, "Export complete!");
@@ -260,6 +272,30 @@ export class ExportEngine {
       // Start rendering
       requestAnimationFrame(renderFrame);
     });
+  }
+
+  /**
+   * Render frames sequentially and pass each PNG frame to FFmpegVideoRecorder
+   */
+  private async renderFramesOffline(): Promise<Blob> {
+    const totalFrames = this.captureService.getTotalFrames();
+    for (let i = 0; i < totalFrames; i++) {
+      if (this.shouldCancel) {
+        throw new Error("Export cancelled");
+      }
+
+      const frameData = this.captureService.getFrameData(i);
+      await this.renderSingleFrame(frameData);
+
+      const dataUrl = this.canvas.toDataURL("image/png");
+      await (this.recorder as FFmpegVideoRecorder).addFrame(dataUrl, i);
+
+      const progress = Math.floor((i / totalFrames) * 100);
+      this.onProgress?.(progress, `Rendering frame ${i + 1} of ${totalFrames}`);
+    }
+
+    this.onProgress?.(50, "Encoding video...");
+    return this.recorder.stopRecording();
   }
 
   /**
