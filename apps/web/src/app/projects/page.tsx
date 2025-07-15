@@ -28,6 +28,7 @@ import { useProjectStore } from "@/stores/project-store";
 import { useRouter } from "next/navigation";
 import { DeleteProjectDialog } from "@/components/delete-project-dialog";
 import { RenameProjectDialog } from "@/components/rename-project-dialog";
+import { CreateProjectDialog } from "@/components/create-project-dialog";
 
 export default function ProjectsPage() {
   const {
@@ -43,9 +44,11 @@ export default function ProjectsPage() {
     new Set()
   );
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+  const [isOpenCreateProjectDialog, setIsOpenCreateProjectDialog] =
+    useState(false);
 
-  const handleCreateProject = async () => {
-    const projectId = await createNewProject("New Project");
+  const handleCreateProject = async (projectName: string) => {
+    const projectId = await createNewProject(projectName);
     console.log("projectId", projectId);
     router.push(`/editor/${projectId}`);
   };
@@ -81,6 +84,11 @@ export default function ProjectsPage() {
     setIsSelectionMode(false);
     setIsBulkDeleteDialogOpen(false);
   };
+
+  const onComfirmCreateProject = async (projectName: string) => {
+    setIsOpenCreateProjectDialog(false);
+    await handleCreateProject(projectName);
+  }
 
   const allSelected =
     savedProjects.length > 0 && selectedProjects.size === savedProjects.length;
@@ -120,7 +128,7 @@ export default function ProjectsPage() {
               )}
             </div>
           ) : (
-            <CreateButton onClick={handleCreateProject} />
+            <CreateButton onClick={() => setIsOpenCreateProjectDialog(true)} />
           )}
         </div>
       </div>
@@ -166,7 +174,7 @@ export default function ProjectsPage() {
                 >
                   Select Projects
                 </Button>
-                <CreateButton onClick={handleCreateProject} />
+                <CreateButton onClick={() => setIsOpenCreateProjectDialog(true)} />
               </div>
             )}
           </div>
@@ -204,7 +212,7 @@ export default function ProjectsPage() {
             <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
           </div>
         ) : savedProjects.length === 0 ? (
-          <NoProjects onCreateProject={handleCreateProject} />
+          <NoProjects onCreateProject={() => setIsOpenCreateProjectDialog(true)} />
         ) : (
           <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
             {savedProjects.map((project) => (
@@ -225,6 +233,13 @@ export default function ProjectsPage() {
         onOpenChange={setIsBulkDeleteDialogOpen}
         onConfirm={handleBulkDelete}
       />
+
+      <CreateProjectDialog
+        isOpen={isOpenCreateProjectDialog}
+        onOpenChange={setIsOpenCreateProjectDialog}
+        onConfirm={handleCreateProject}
+      />
+      
     </div>
   );
 }
