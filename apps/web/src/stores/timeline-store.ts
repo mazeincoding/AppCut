@@ -996,11 +996,11 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
     },
 
     setSnapThreshold: (threshold) => {
-      set({ snapThreshold: threshold });
+      set({ snapThreshold: Math.max(0, threshold) }); // Ensure non-negative threshold
     },
 
     setGridInterval: (interval) => {
-      set({ gridInterval: interval });
+      set({ gridInterval: Math.max(0.1, interval) }); // Ensure minimum interval
     },
   };
 });
