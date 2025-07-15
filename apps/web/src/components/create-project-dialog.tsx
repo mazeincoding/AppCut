@@ -20,26 +20,23 @@ export function CreateProjectDialog({
   onConfirm: (projectName: string) => void;
 }) {
   const [projectName, setProjectName] = useState("New project");
+  const isValidProjectName = projectName.trim().length > 0;
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent
-        onOpenAutoFocus={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-        }}
-      >
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Create Project</DialogTitle>
           <DialogDescription>
             Enter a name for your new project.
           </DialogDescription>
         </DialogHeader>
-        <Input 
+        <Input
           autoFocus
           placeholder="Project name"
           onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              onConfirm(e.currentTarget.value);
+            if (e.key === "Enter" && isValidProjectName) {
+              e.preventDefault();
+              onConfirm(projectName);
             }
           }}
           onChange={(e) => setProjectName(e.target.value)}
@@ -56,7 +53,14 @@ export function CreateProjectDialog({
           >
             Cancel
           </Button>
-          <Button onClick={() => onConfirm(projectName)}>
+          <Button
+            disabled={!isValidProjectName}
+            onClick={() => {
+              if (isValidProjectName) {
+                onConfirm(projectName);
+              }
+            }}
+          >
             Create
           </Button>
         </DialogFooter>

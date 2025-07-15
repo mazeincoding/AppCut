@@ -85,10 +85,14 @@ export default function ProjectsPage() {
     setIsBulkDeleteDialogOpen(false);
   };
 
-  const onComfirmCreateProject = async (projectName: string) => {
-    setIsOpenCreateProjectDialog(false);
-    await handleCreateProject(projectName);
-  }
+  const onConfirmCreateProject = async (projectName: string) => {
+    try {
+      setIsOpenCreateProjectDialog(false);
+      await handleCreateProject(projectName);
+    } catch (error) {
+      console.error("Failed to create project:", error);
+    }
+  };
 
   const allSelected =
     savedProjects.length > 0 && selectedProjects.size === savedProjects.length;
@@ -174,7 +178,9 @@ export default function ProjectsPage() {
                 >
                   Select Projects
                 </Button>
-                <CreateButton onClick={() => setIsOpenCreateProjectDialog(true)} />
+                <CreateButton
+                  onClick={() => setIsOpenCreateProjectDialog(true)}
+                />
               </div>
             )}
           </div>
@@ -212,7 +218,9 @@ export default function ProjectsPage() {
             <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
           </div>
         ) : savedProjects.length === 0 ? (
-          <NoProjects onCreateProject={() => setIsOpenCreateProjectDialog(true)} />
+          <NoProjects
+            onCreateProject={() => setIsOpenCreateProjectDialog(true)}
+          />
         ) : (
           <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
             {savedProjects.map((project) => (
@@ -237,9 +245,8 @@ export default function ProjectsPage() {
       <CreateProjectDialog
         isOpen={isOpenCreateProjectDialog}
         onOpenChange={setIsOpenCreateProjectDialog}
-        onConfirm={onComfirmCreateProject}
+        onConfirm={onConfirmCreateProject}
       />
-      
     </div>
   );
 }
