@@ -1,6 +1,6 @@
 import { DraggableMediaItem } from "@/components/ui/draggable-item";
 import { TIMELINE_CONSTANTS } from "@/constants/timeline-constants";
-import { addTextToTimeline } from "@/lib/timeline-utils";
+import { useTimelineStore } from "@/stores/timeline-store";
 import { type TextElement } from "@/types/timeline";
 
 let textData: TextElement = {
@@ -43,7 +43,9 @@ export function TextView() {
           content: textData.content,
         }}
         aspectRatio={1}
-        onAddToTimeline={(currentTime) => addTextToTimeline(textData, currentTime)}
+        onAddToTimeline={(currentTime) =>
+          useTimelineStore.getState().addTextAtTime(textData, currentTime)
+        }
         showLabel={false}
       />
     </div>

@@ -48,7 +48,6 @@ import { useSelectionBox } from "@/hooks/use-selection-box";
 import { SnapIndicator } from "./snap-indicator";
 import { SnapPoint } from "@/hooks/use-timeline-snapping";
 import type { DragData, TimelineTrack } from "@/types/timeline";
-import { addTextToNewTrack, addMediaToNewTrack } from "@/lib/timeline-utils";
 import {
   getTrackHeight,
   getCumulativeHeightBefore,
@@ -229,7 +228,7 @@ export function Timeline() {
         Math.min(
           duration,
           (mouseX + scrollLeft) /
-          (TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel)
+            (TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel)
         )
       );
 
@@ -377,7 +376,7 @@ export function Timeline() {
 
         if (dragData.type === "text") {
           // Always create new text track to avoid overlaps
-          addTextToNewTrack(dragData);
+          useTimelineStore.getState().addTextToNewTrack(dragData);
         } else {
           // Handle media items
           const mediaItem = mediaItems.find((item) => item.id === dragData.id);
@@ -386,7 +385,7 @@ export function Timeline() {
             return;
           }
 
-          addMediaToNewTrack(mediaItem);
+          useTimelineStore.getState().addMediaToNewTrack(mediaItem);
         }
       } catch (error) {
         console.error("Error parsing dropped item data:", error);
@@ -414,7 +413,7 @@ export function Timeline() {
               item.name === processedItem.name && item.url === processedItem.url
           );
           if (addedItem) {
-            addMediaToNewTrack(addedItem);
+            useTimelineStore.getState().addMediaToNewTrack(addedItem);
           }
         }
       } catch (error) {
@@ -902,19 +901,21 @@ export function Timeline() {
                     return (
                       <div
                         key={i}
-                        className={`absolute top-0 bottom-0 ${isMainMarker
+                        className={`absolute top-0 bottom-0 ${
+                          isMainMarker
                             ? "border-l border-muted-foreground/40"
                             : "border-l border-muted-foreground/20"
-                          }`}
+                        }`}
                         style={{
                           left: `${time * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel}px`,
                         }}
                       >
                         <span
-                          className={`absolute top-1 left-1 text-[0.6rem] ${isMainMarker
+                          className={`absolute top-1 left-1 text-[0.6rem] ${
+                            isMainMarker
                               ? "text-muted-foreground font-medium"
                               : "text-muted-foreground/70"
-                            }`}
+                          }`}
                         >
                           {(() => {
                             const formatTime = (seconds: number) => {
