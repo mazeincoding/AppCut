@@ -10,11 +10,7 @@ import { toast } from "sonner";
 import Image from "next/image";
 import { Handlebars } from "./handlebars";
 
-interface HeroProps {
-  signupCount: number;
-}
-
-export function Hero({ signupCount }: HeroProps) {
+export function Hero() {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -131,18 +127,6 @@ export function Hero({ signupCount }: HeroProps) {
             </Button>
           </form>
         </motion.div>
-
-        {signupCount > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8, duration: 0.6 }}
-            className="mt-8 inline-flex items-center gap-2 text-sm text-muted-foreground justify-center"
-          >
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span>{signupCount.toLocaleString()} people already joined</span>
-          </motion.div>
-        )}
       </motion.div>
     </div>
   );
