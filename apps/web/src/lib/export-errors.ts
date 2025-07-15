@@ -66,6 +66,10 @@ export function getUserFriendlyErrorMessage(error: Error): string {
         return "Your browser doesn't support video export. Please try using a modern Chrome or Firefox browser.";
       case "MEMORY_ERROR":
         return "Insufficient memory to complete export. Please try exporting at a lower quality or shorter duration.";
+      case "NO_CONTENT":
+        return "Cannot export empty project. Please add some media files to your timeline before exporting.";
+      case "EXPORT_IN_PROGRESS":
+        return "Export is already in progress. Please wait for the current export to complete.";
       default:
         return error.message;
     }
@@ -75,13 +79,19 @@ export function getUserFriendlyErrorMessage(error: Error): string {
 }
 
 export function logExportError(error: Error, context: string): void {
+  // Handle edge cases with malformed error objects
+  const errorMessage = error?.message || "Unknown error";
+  const errorStack = error?.stack || "No stack trace available";
+  
   const errorInfo = {
-    error: error.message,
-    stack: error.stack,
+    error: errorMessage,
+    stack: errorStack,
     context,
     timestamp: new Date().toISOString(),
     userAgent: navigator.userAgent,
     url: window.location.href,
+    // Add the original error object for debugging
+    originalError: error,
   };
   
   console.error("Export Error:", errorInfo);

@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { ExportFormat, ExportQuality } from "@/types/export";
 import { useExportStore } from "@/stores/export-store";
+import { useTimelineStore } from "@/stores/timeline-store";
+import { useProjectStore } from "@/stores/project-store";
 import { ExportCanvas, ExportCanvasRef } from "@/components/export-canvas";
 import { ExportEngine } from "@/lib/export-engine";
 import { useState, useEffect, useRef } from "react";
@@ -20,6 +22,8 @@ interface ExportDialogProps {
 
 export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
   const { settings, progress, updateSettings, updateProgress, resetExport } = useExportStore();
+  const { tracks, getTotalDuration } = useTimelineStore();
+  const { activeProject } = useProjectStore();
   const canvasRef = useRef<ExportCanvasRef>(null);
   
   // Initialize local state from store
@@ -82,13 +86,16 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
     updateProgress({ isExporting: true, progress: 0, status: "Initializing export..." });
     
     try {
+      // Get all timeline elements from all tracks
+      const timelineElements = tracks.flatMap(track => track.elements);
+      
       // Create export engine
       const exportEngine = new ExportEngine({
         canvas,
         settings,
-        timelineElements: [], // TODO: Get from timeline store
-        duration: 10, // TODO: Get from timeline store
-        fps: 30, // TODO: Get from project settings
+        timelineElements,
+        duration: getTotalDuration(),
+        fps: activeProject?.fps || 30,
         onProgress: (progress, status) => {
           updateProgress({ progress, status });
         },

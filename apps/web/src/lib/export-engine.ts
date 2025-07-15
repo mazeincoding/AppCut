@@ -488,7 +488,23 @@ export class ExportEngine {
    * Handle export errors with proper logging and user-friendly messages
    */
   private handleExportError(error: unknown): void {
-    const exportError = error instanceof Error ? error : new Error("Unknown error");
+    // Create a proper error object with more debugging info
+    let exportError: Error;
+    
+    if (error instanceof Error) {
+      exportError = error;
+    } else if (typeof error === 'string') {
+      exportError = new Error(error);
+    } else if (error && typeof error === 'object') {
+      // Handle objects that might have a message property
+      const errorObj = error as any;
+      const message = errorObj.message || errorObj.toString() || "Unknown error object";
+      exportError = new Error(message);
+      // Preserve additional properties
+      Object.assign(exportError, errorObj);
+    } else {
+      exportError = new Error(`Unknown error type: ${typeof error}, value: ${JSON.stringify(error)}`);
+    }
     
     // Log error for debugging
     logExportError(exportError, "ExportEngine.startExport");
