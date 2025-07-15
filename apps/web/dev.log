@@ -1,0 +1,130 @@
+$ next dev
+   ▲ Next.js 15.3.4
+   - Local:        http://localhost:3000
+   - Network:      http://172.26.67.88:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 1629ms
+ ✓ Compiled /middleware in 267ms (153 modules)
+ ○ Compiling / ...
+ ✓ Compiled / in 9.8s (2099 modules)
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+Failed to fetch waitlist count: Error: Failed query: select count(*) from "waitlist"
+params: 
+    at async getWaitlistCount (src/lib/waitlist.ts:6:19)
+    at async Home (src/app/page.tsx:10:22)
+  4 | export async function getWaitlistCount() {
+  5 |   try {
+> 6 |     const result = await db
+    |                   ^
+  7 |       .select({ count: sql<number>`count(*)` })
+  8 |       .from(waitlist);
+  9 |     return result[0]?.count || 0; {
+  query: 'select count(*) from "waitlist"',
+  params: [],
+  [cause]: Error: connect ECONNREFUSED 127.0.0.1:5432
+      at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:5432) {
+    errno: -111,
+    code: 'ECONNREFUSED',
+    syscall: 'connect',
+    address: '127.0.0.1',
+    port: 5432
+  }
+}
+ GET / 200 in 11040ms
+ ✓ Compiled in 1393ms (922 modules)
+ ○ Compiling /projects ...
+ ✓ Compiled /projects in 2.8s (2140 modules)
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ GET /projects 200 in 3250ms
+ ○ Compiling /editor/[project_id] ...
+ ✓ Compiled /editor/[project_id] in 2.6s (2387 modules)
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ GET /editor/0da53df5-90e8-4415-95a3-02e83d1d8f74 200 in 3498ms
+Failed to fetch waitlist count: Error: Failed query: select count(*) from "waitlist"
+params: 
+    at async getWaitlistCount (src/lib/waitlist.ts:6:19)
+    at async Home (src/app/page.tsx:10:22)
+  4 | export async function getWaitlistCount() {
+  5 |   try {
+> 6 |     const result = await db
+    |                   ^
+  7 |       .select({ count: sql<number>`count(*)` })
+  8 |       .from(waitlist);
+  9 |     return result[0]?.count || 0; {
+  query: 'select count(*) from "waitlist"',
+  params: [],
+  [cause]: Error: connect ECONNREFUSED 127.0.0.1:5432
+      at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:5432) {
+    errno: -111,
+    code: 'ECONNREFUSED',
+    syscall: 'connect',
+    address: '127.0.0.1',
+    port: 5432
+  }
+}
+ HEAD / 200 in 387ms
+Failed to fetch waitlist count: Error: Failed query: select count(*) from "waitlist"
+params: 
+    at async getWaitlistCount (src/lib/waitlist.ts:6:19)
+    at async Home (src/app/page.tsx:10:22)
+  4 | export async function getWaitlistCount() {
+  5 |   try {
+> 6 |     const result = await db
+    |                   ^
+  7 |       .select({ count: sql<number>`count(*)` })
+  8 |       .from(waitlist);
+  9 |     return result[0]?.count || 0; {
+  query: 'select count(*) from "waitlist"',
+  params: [],
+  [cause]: Error: connect ECONNREFUSED 127.0.0.1:5432
+      at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:5432) {
+    errno: -111,
+    code: 'ECONNREFUSED',
+    syscall: 'connect',
+    address: '127.0.0.1',
+    port: 5432
+  }
+}
+ GET / 200 in 145ms
+ ○ Compiling /api/auth/[...all] ...
+ ✓ Compiled /api/auth/[...all] in 2s (2829 modules)
+[2m2025-07-15T04:12:28.879Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider google is missing clientId or clientSecret
+[2m2025-07-15T04:12:29.907Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider google is missing clientId or clientSecret
+ GET /api/auth/get-session 200 in 3772ms
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ GET /projects 200 in 126ms
+ GET /editor/0da53df5-90e8-4415-95a3-02e83d1d8f74 200 in 72ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 1648ms (2833 modules)
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 2137ms
+ ✓ Compiled in 3.7s (2402 modules)
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ GET /editor/0da53df5-90e8-4415-95a3-02e83d1d8f74 200 in 286ms
+ GET /editor/0da53df5-90e8-4415-95a3-02e83d1d8f74 200 in 57ms
+ ✓ Compiled in 3.1s (2402 modules)
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ GET /editor/0da53df5-90e8-4415-95a3-02e83d1d8f74 200 in 426ms
+ GET /editor/0da53df5-90e8-4415-95a3-02e83d1d8f74 200 in 64ms
+ ✓ Compiled in 1709ms (2402 modules)
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ GET /editor/0da53df5-90e8-4415-95a3-02e83d1d8f74 200 in 233ms
+ GET /editor/0da53df5-90e8-4415-95a3-02e83d1d8f74 200 in 44ms
+ ✓ Compiled in 1536ms (2402 modules)
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ GET /editor/0da53df5-90e8-4415-95a3-02e83d1d8f74 200 in 311ms
+ GET /editor/0da53df5-90e8-4415-95a3-02e83d1d8f74 200 in 47ms
+ ✓ Compiled in 1497ms (2402 modules)
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ GET /editor/0da53df5-90e8-4415-95a3-02e83d1d8f74 200 in 181ms
+ GET /editor/0da53df5-90e8-4415-95a3-02e83d1d8f74 200 in 38ms
+ ✓ Compiled in 1080ms (2402 modules)
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ GET /editor/0da53df5-90e8-4415-95a3-02e83d1d8f74 200 in 169ms
+ GET /editor/0da53df5-90e8-4415-95a3-02e83d1d8f74 200 in 50ms
+ ✓ Compiled in 1209ms (2402 modules)
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ GET /editor/0da53df5-90e8-4415-95a3-02e83d1d8f74 200 in 168ms
+ GET /editor/0da53df5-90e8-4415-95a3-02e83d1d8f74 200 in 72ms

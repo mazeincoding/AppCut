@@ -185,7 +185,7 @@ export class ExportEngine {
       let currentFrame = 0;
       let lastProgressUpdate = 0;
 
-      const renderFrame = () => {
+      const renderFrame = async () => {
         if (this.shouldCancel) {
           reject(new Error("Export cancelled"));
           return;
@@ -204,7 +204,7 @@ export class ExportEngine {
           const frameData = this.captureService.getFrameData(currentFrame);
           
           // Render frame to canvas
-          this.renderSingleFrame(frameData);
+          await this.renderSingleFrame(frameData);
           
           // Update progress
           const progress = Math.floor((currentFrame / totalFrames) * 100);
@@ -216,7 +216,7 @@ export class ExportEngine {
           currentFrame++;
           
           // Continue with next frame
-          requestAnimationFrame(renderFrame);
+          requestAnimationFrame(() => renderFrame());
           
         } catch (error) {
           reject(error);
@@ -224,14 +224,14 @@ export class ExportEngine {
       };
 
       // Start rendering
-      requestAnimationFrame(renderFrame);
+      requestAnimationFrame(() => renderFrame());
     });
   }
 
   /**
    * Render a single frame to the canvas
    */
-  private renderSingleFrame(frameData: { frameNumber: number; timestamp: number; elements: TimelineElement[] }): void {
+  private async renderSingleFrame(frameData: { frameNumber: number; timestamp: number; elements: TimelineElement[] }): Promise<void> {
     console.log("🎞️ renderSingleFrame called:", {
       frameNumber: frameData.frameNumber,
       timestamp: frameData.timestamp,
@@ -259,7 +259,7 @@ export class ExportEngine {
       for (const element of visibleElements) {
         try {
           console.log("🎨 Rendering element:", element.id);
-          this.renderElement(element, frameData.timestamp);
+          await this.renderElement(element, frameData.timestamp);
         } catch (error) {
           console.warn(`❌ Failed to render element ${element.id}:`, error);
           // Continue rendering other elements
@@ -278,7 +278,7 @@ export class ExportEngine {
   /**
    * Render a single timeline element
    */
-  private renderElement(element: TimelineElement, timestamp: number): void {
+  private async renderElement(element: TimelineElement, timestamp: number): Promise<void> {
     console.log("🔍 renderElement called:", {
       elementId: element.id,
       elementType: element.type,
@@ -313,7 +313,7 @@ export class ExportEngine {
           if (mediaItem) {
             if (mediaItem.type === "video") {
               console.log("🎬 Rendering video element");
-              this.renderVideoElement(element, bounds, timestamp);
+              await this.renderVideoElement(element, bounds, timestamp);
             } else if (mediaItem.type === "image") {
               console.log("🖼️ Rendering image element");
               this.renderImageElement(element, bounds);
@@ -337,7 +337,7 @@ export class ExportEngine {
   /**
    * Render a video element
    */
-  private renderVideoElement(element: TimelineElement, bounds: any, timestamp: number): void {
+  private async renderVideoElement(element: TimelineElement, bounds: any, timestamp: number): Promise<void> {
     console.log("🎬 renderVideoElement called:", {
       elementId: element.id,
       timestamp,
@@ -378,45 +378,21 @@ export class ExportEngine {
         // Use preloaded video if available
         const preloadedVideo = this.preloadedVideos.get(mediaItem.id);
         
-        if (preloadedVideo && preloadedVideo.readyState >= 2) {
+        if (preloadedVideo && preloadedVideo.readyState >= 3) {
           console.log("🎬 Using preloaded video");
-          preloadedVideo.currentTime = elementTime;
           
-          // Wait a frame for the time to update
-          setTimeout(() => {
-            try {
-              this.renderer.drawImage(preloadedVideo, bounds.x, bounds.y, bounds.width, bounds.height);
-              console.log("✅ Preloaded video drawn to canvas");
-            } catch (error) {
-              console.warn("❌ Failed to draw preloaded video:", error);
-              this.renderer.fillRect(bounds.x, bounds.y, bounds.width, bounds.height, "#f00");
-            }
-          }, 0);
+          // Seek to the correct time and wait for it
+          await this.seekVideoToTime(preloadedVideo, elementTime);
+          
+          // Draw the video frame
+          this.renderer.drawImage(preloadedVideo, bounds.x, bounds.y, bounds.width, bounds.height);
+          console.log("✅ Preloaded video drawn to canvas");
         } else {
           console.log("⏳ Video not preloaded or not ready, creating new element");
-          // Create a video element as fallback
-          const videoElement = document.createElement("video");
-          videoElement.src = mediaItem.url || URL.createObjectURL(mediaItem.file);
-          videoElement.muted = true;
-          videoElement.currentTime = elementTime;
-          
-          console.log("🎥 Video element created:", {
-            src: videoElement.src,
-            currentTime: videoElement.currentTime,
-            readyState: videoElement.readyState
-          });
-          
-          // Wait for video to be ready before drawing
-          if (videoElement.readyState >= 2) { // HAVE_CURRENT_DATA
-            console.log("🎬 Video ready, drawing to canvas");
-            this.renderer.drawImage(videoElement, bounds.x, bounds.y, bounds.width, bounds.height);
-            console.log("✅ Video drawn to canvas");
-          } else {
-            console.log("⏳ Video not ready, drawing placeholder");
-            // Draw a placeholder rectangle
-            this.renderer.fillRect(bounds.x, bounds.y, bounds.width, bounds.height, "#666");
-            console.log("📦 Drew placeholder rectangle for video");
-          }
+          // For non-preloaded videos, draw a placeholder for now
+          // In a production system, you'd want to handle this better
+          this.renderer.fillRect(bounds.x, bounds.y, bounds.width, bounds.height, "#666");
+          console.log("📦 Drew placeholder rectangle for video");
         }
       } catch (error) {
         console.warn("❌ Failed to draw video frame:", error);
@@ -427,6 +403,38 @@ export class ExportEngine {
     } else {
       console.log("⏭️ Skipping video render - outside element duration");
     }
+  }
+
+  /**
+   * Seek video to specific time and wait for completion
+   */
+  private async seekVideoToTime(video: HTMLVideoElement, time: number): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const onSeeked = () => {
+        video.removeEventListener('seeked', onSeeked);
+        video.removeEventListener('error', onError);
+        resolve();
+      };
+      
+      const onError = (error: Event) => {
+        video.removeEventListener('seeked', onSeeked);
+        video.removeEventListener('error', onError);
+        reject(error);
+      };
+      
+      video.addEventListener('seeked', onSeeked);
+      video.addEventListener('error', onError);
+      
+      // Set the time - this triggers seeking
+      video.currentTime = time;
+      
+      // If already at the right time, resolve immediately
+      if (Math.abs(video.currentTime - time) < 0.001) {
+        video.removeEventListener('seeked', onSeeked);
+        video.removeEventListener('error', onError);
+        resolve();
+      }
+    });
   }
 
   /**
@@ -780,25 +788,36 @@ export class ExportEngine {
           return;
         }
         
-        // Wait for video to be ready
-        const onLoadedData = () => {
-          console.log(`✅ Video preloaded: ${mediaItem.name}`);
+        // Wait for video to be ready with metadata
+        const onCanPlay = () => {
+          console.log(`✅ Video preloaded and ready: ${mediaItem.name}, readyState: ${video.readyState}`);
           this.preloadedVideos.set(mediaItem.id, video);
-          video.removeEventListener("loadeddata", onLoadedData);
+          video.removeEventListener("canplay", onCanPlay);
+          video.removeEventListener("loadedmetadata", onLoadedMetadata);
           video.removeEventListener("error", onError);
           resolve();
         };
         
+        const onLoadedMetadata = () => {
+          console.log(`📊 Video metadata loaded: ${mediaItem.name}, duration: ${video.duration}`);
+          // Continue waiting for canplay event
+        };
+        
         const onError = (error: Event) => {
           console.warn(`❌ Failed to preload video: ${mediaItem.name}`, error);
-          video.removeEventListener("loadeddata", onLoadedData);
+          video.removeEventListener("canplay", onCanPlay);
+          video.removeEventListener("loadedmetadata", onLoadedMetadata);
           video.removeEventListener("error", onError);
           // Don't reject, just log the error and continue
           resolve();
         };
         
-        video.addEventListener("loadeddata", onLoadedData);
+        video.addEventListener("canplay", onCanPlay);
+        video.addEventListener("loadedmetadata", onLoadedMetadata);
         video.addEventListener("error", onError);
+        
+        // Set preload attribute to ensure video loads
+        video.preload = "auto";
         
         // Start loading
         video.load();
