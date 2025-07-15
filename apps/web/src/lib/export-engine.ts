@@ -18,6 +18,7 @@ import {
   checkBrowserCompatibility,
   estimateMemoryUsage 
 } from "@/lib/export-errors";
+import { memoryMonitor, estimateVideoMemoryUsage } from "@/lib/memory-monitor";
 
 export interface ExportEngineOptions {
   canvas: HTMLCanvasElement;
@@ -47,6 +48,7 @@ export class ExportEngine {
   private isExporting = false;
   private shouldCancel = false;
   private preloadedVideos: Map<string, HTMLVideoElement> = new Map();
+  private memoryMonitoringStarted = false;
 
   constructor(options: ExportEngineOptions) {
     this.canvas = options.canvas;
@@ -131,9 +133,12 @@ export class ExportEngine {
         );
       }
       
-      // Pre-flight checks
+      // Pre-flight checks including memory monitoring
       this.performPreflightChecks();
       console.log("✅ Preflight checks passed");
+      
+      // Start memory monitoring
+      this.startMemoryMonitoring();
       
       this.isExporting = true;
       this.shouldCancel = false;
@@ -188,6 +193,9 @@ export class ExportEngine {
     this.shouldCancel = true;
     this.isExporting = false;
     
+    // Stop memory monitoring
+    this.stopMemoryMonitoring();
+    
     // Clean up resources
     try {
       this.recorder.cleanup();
@@ -226,6 +234,16 @@ export class ExportEngine {
           return;
         }
 
+        // Check memory status periodically
+        if (currentFrame % 30 === 0) { // Check every 30 frames
+          try {
+            this.checkMemoryStatus();
+          } catch (error) {
+            reject(error);
+            return;
+          }
+        }
+
         if (currentFrame >= totalFrames) {
           // All frames rendered, stop recording
           console.log("✅ All frames rendered, stopping recording");
@@ -252,7 +270,8 @@ export class ExportEngine {
           const progress = Math.floor((currentFrame / totalFrames) * 100);
           if (progress > lastProgressUpdate) {
             lastProgressUpdate = progress;
-            this.onProgress?.(progress, `Rendering frame ${currentFrame + 1} of ${totalFrames}`);
+            const memSummary = memoryMonitor.getMemorySummary();
+            this.onProgress?.(progress, `Rendering frame ${currentFrame + 1} of ${totalFrames} (${memSummary})`);
           }
           
           currentFrame++;
@@ -282,6 +301,15 @@ export class ExportEngine {
         throw new Error("Export cancelled");
       }
 
+      // Check memory status periodically
+      if (i % 30 === 0) { // Check every 30 frames
+        try {
+          this.checkMemoryStatus();
+        } catch (error) {
+          throw error;
+        }
+      }
+
       const frameData = this.captureService.getFrameData(i);
       await this.renderSingleFrame(frameData);
 
@@ -289,7 +317,8 @@ export class ExportEngine {
       await (this.recorder as FFmpegVideoRecorder).addFrame(dataUrl, i);
 
       const progress = Math.floor((i / totalFrames) * 100);
-      this.onProgress?.(progress, `Rendering frame ${i + 1} of ${totalFrames}`);
+      const memSummary = memoryMonitor.getMemorySummary();
+      this.onProgress?.(progress, `Rendering frame ${i + 1} of ${totalFrames} (${memSummary})`);
     }
 
     this.onProgress?.(50, "Encoding video...");
@@ -835,6 +864,107 @@ export class ExportEngine {
   }
 
   /**
+   * Start memory monitoring for export
+   */
+  private startMemoryMonitoring(): void {
+    if (this.memoryMonitoringStarted) {
+      return;
+    }
+    
+    this.memoryMonitoringStarted = true;
+    
+    // Clear previous warnings
+    memoryMonitor.clearWarnings();
+    
+    // Check file safety first
+    const totalFileSize = this.estimateProcessingSize();
+    const fileSafetyWarning = memoryMonitor.checkFileSafety(totalFileSize);
+    
+    if (fileSafetyWarning) {
+      console.warn(`💾 File safety warning: ${fileSafetyWarning.message}`);
+      
+      if (!fileSafetyWarning.canContinue) {
+        throw new MemoryError(
+          fileSafetyWarning.message,
+          { estimatedMB: totalFileSize / 1024 / 1024 }
+        );
+      }
+      
+      // Show warning to user via progress callback
+      this.onProgress?.(0, `⚠️ ${fileSafetyWarning.message}`);
+    }
+    
+    // Start continuous monitoring
+    memoryMonitor.startMonitoring(2000); // Check every 2 seconds
+    
+    console.log(`🔍 Memory monitoring started - ${memoryMonitor.getMemorySummary()}`);
+  }
+
+  /**
+   * Stop memory monitoring
+   */
+  private stopMemoryMonitoring(): void {
+    if (!this.memoryMonitoringStarted) {
+      return;
+    }
+    
+    this.memoryMonitoringStarted = false;
+    memoryMonitor.stopMonitoring();
+    
+    console.log(`🔍 Memory monitoring stopped - ${memoryMonitor.getMemorySummary()}`);
+  }
+
+  /**
+   * Estimate total processing size for memory calculations
+   */
+  private estimateProcessingSize(): number {
+    const videoMemory = estimateVideoMemoryUsage(
+      this.settings.width,
+      this.settings.height,
+      this.duration,
+      this.fps
+    );
+    
+    // Add estimated audio memory (rough calculation)
+    const audioMemory = this.duration * 44100 * 2 * 2; // 16-bit stereo
+    
+    return videoMemory + audioMemory;
+  }
+
+  /**
+   * Check memory status and warn if needed
+   */
+  private checkMemoryStatus(): void {
+    const memInfo = memoryMonitor.getMemoryInfo();
+    if (!memInfo) {
+      return;
+    }
+    
+    const recentWarnings = memoryMonitor.getRecentWarnings(1);
+    if (recentWarnings.length > 0) {
+      const warning = recentWarnings[0];
+      
+      if (warning.level === 'error' && !warning.canContinue) {
+        throw new MemoryError(
+          warning.message,
+          { 
+            usedPercent: memInfo.usedPercent,
+            recommendation: warning.recommendation
+          }
+        );
+      }
+      
+      if (warning.level === 'critical' || warning.level === 'warning') {
+        // Show warning via progress callback
+        this.onProgress?.(
+          -1, // Special value to indicate warning
+          `💾 ${warning.message} - ${warning.recommendation}`
+        );
+      }
+    }
+  }
+
+  /**
    * Perform pre-flight checks before starting export
    */
   private performPreflightChecks(): void {
@@ -847,7 +977,7 @@ export class ExportEngine {
       );
     }
 
-    // Check memory usage
+    // Check memory usage with new monitor
     const memoryEstimate = estimateMemoryUsage(
       this.settings.width,
       this.settings.height,
@@ -855,7 +985,8 @@ export class ExportEngine {
       this.fps
     );
     
-    if (memoryEstimate.estimatedMB > 3000) {
+    // Use memory monitor for more accurate checking
+    if (!memoryMonitor.canPerformOperation(memoryEstimate.estimatedMB)) {
       throw new MemoryError(
         `Export may exceed available memory (${memoryEstimate.estimatedMB}MB estimated)`,
         memoryEstimate
@@ -908,6 +1039,9 @@ export class ExportEngine {
    */
   private cleanupResources(): void {
     this.isExporting = false;
+    
+    // Stop memory monitoring
+    this.stopMemoryMonitoring();
     
     try {
       this.recorder.cleanup();

@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ExportFormat, ExportQuality } from "@/types/export";
 import { useExportStore } from "@/stores/export-store";
 import { useTimelineStore } from "@/stores/timeline-store";
@@ -13,8 +14,9 @@ import { useProjectStore } from "@/stores/project-store";
 import { useMediaStore } from "@/stores/media-store";
 import { ExportCanvas, ExportCanvasRef } from "@/components/export-canvas";
 import { ExportEngine } from "@/lib/export-engine";
+import { memoryMonitor, getMemoryRecommendation, estimateVideoMemoryUsage } from "@/lib/memory-monitor";
 import { useState, useEffect, useRef } from "react";
-import { Download, X } from "lucide-react";
+import { Download, X, AlertTriangle, Info } from "lucide-react";
 
 interface ExportDialogProps {
   open: boolean;
@@ -32,6 +34,8 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
   const [format, setFormat] = useState<ExportFormat>(settings.format);
   const [quality, setQuality] = useState<ExportQuality>(settings.quality);
   const [filename, setFilename] = useState(settings.filename);
+  const [memoryWarning, setMemoryWarning] = useState<string | null>(null);
+  const [memoryLevel, setMemoryLevel] = useState<'info' | 'warning' | 'critical' | 'error'>('info');
   
   // Use store state for export progress
   const isExporting = progress.isExporting;
@@ -48,6 +52,43 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
       height: getResolution(quality).height,
     });
   }, [format, quality, filename, updateSettings]);
+
+  // Check memory usage when quality changes
+  useEffect(() => {
+    const checkMemoryUsage = () => {
+      const resolution = getResolution(quality);
+      const duration = getTotalDuration();
+      const fps = activeProject?.fps || 30;
+      
+      // Estimate memory usage for this export
+      const estimatedMemoryBytes = estimateVideoMemoryUsage(
+        resolution.width,
+        resolution.height,
+        duration,
+        fps
+      );
+      
+      // Check file safety
+      const fileSafetyWarning = memoryMonitor.checkFileSafety(estimatedMemoryBytes);
+      
+      if (fileSafetyWarning) {
+        setMemoryWarning(fileSafetyWarning.message);
+        setMemoryLevel(fileSafetyWarning.level);
+      } else {
+        // Get general recommendation
+        const recommendation = getMemoryRecommendation(estimatedMemoryBytes);
+        if (recommendation !== 'File size is optimal for browser processing') {
+          setMemoryWarning(recommendation);
+          setMemoryLevel('info');
+        } else {
+          setMemoryWarning(null);
+          setMemoryLevel('info');
+        }
+      }
+    };
+    
+    checkMemoryUsage();
+  }, [quality, getTotalDuration, activeProject?.fps]);
 
   const getResolution = (quality: ExportQuality) => {
     switch (quality) {
@@ -101,6 +142,12 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
         fps: activeProject?.fps || 30,
         onProgress: (progress, status) => {
           updateProgress({ progress, status });
+          
+          // Check for memory warnings in status
+          if (status.includes('💾') || status.includes('⚠️')) {
+            setMemoryWarning(status);
+            setMemoryLevel('warning');
+          }
         },
         onError: (error) => {
           updateProgress({ isExporting: false, status: `Error: ${error}` });
@@ -199,8 +246,32 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
                 <span className="text-sm font-medium">Est. size:</span>
                 <span className="text-sm text-muted-foreground">{estimatedSize}</span>
               </div>
+              <div className="flex justify-between items-center mt-1">
+                <span className="text-sm font-medium">Memory:</span>
+                <span className="text-sm text-muted-foreground">{memoryMonitor.getMemorySummary()}</span>
+              </div>
             </div>
           </div>
+          
+          {memoryWarning && (
+            <Alert className={`${
+              memoryLevel === 'error' ? 'border-red-500 bg-red-50' :
+              memoryLevel === 'critical' ? 'border-orange-500 bg-orange-50' :
+              memoryLevel === 'warning' ? 'border-yellow-500 bg-yellow-50' :
+              'border-blue-500 bg-blue-50'
+            }`}>
+              <div className="flex items-center space-x-2">
+                {memoryLevel === 'error' || memoryLevel === 'critical' ? (
+                  <AlertTriangle className="h-4 w-4 text-red-500" />
+                ) : (
+                  <Info className="h-4 w-4 text-blue-500" />
+                )}
+                <AlertDescription className="text-sm">
+                  {memoryWarning}
+                </AlertDescription>
+              </div>
+            </Alert>
+          )}
           
           <div className="space-y-2">
             <Label htmlFor="filename">Filename</Label>
@@ -252,7 +323,7 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
           </Button>
           <Button
             onClick={handleExport}
-            disabled={isExporting || !isValidFilename(filename)}
+            disabled={isExporting || !isValidFilename(filename) || memoryLevel === 'error'}
             className="bg-blue-600 hover:bg-blue-700"
           >
             <Download className="h-4 w-4 mr-2" />
