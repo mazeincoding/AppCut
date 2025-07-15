@@ -299,17 +299,12 @@ Comprehensive testing strategy for the video export functionality. Each test tas
 - [ ] Test VP9 support
 - [ ] Test VP8 fallback
 
-### 6.7 Test Mobile Browser Support (3 min)
-- [ ] Test mobile Chrome
-- [ ] Test mobile Safari
-- [ ] Test mobile Firefox
-
-### 6.8 Test PWA Compatibility (3 min)
+### 6.7 Test PWA Compatibility (3 min)
 - [ ] Test in PWA mode
 - [ ] Test offline capabilities
 - [ ] Test file system access
 
-### 6.9 Cross-Browser Consistency (3 min)
+### 6.8 Cross-Browser Consistency (3 min)
 - [ ] Compare export outputs
 - [ ] Test UI consistency
 - [ ] Test performance parity
