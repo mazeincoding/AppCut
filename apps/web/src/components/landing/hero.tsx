@@ -3,20 +3,40 @@
 import { motion } from "motion/react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { SponsorButton } from "../ui/sponsor-button";
+import { VercelIcon } from "../icons";
 import { ArrowRight } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 import Image from "next/image";
 import { Handlebars } from "./handlebars";
 
-interface HeroProps {
-  signupCount: number;
-}
-
-export function Hero({ signupCount }: HeroProps) {
+export function Hero() {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [csrfToken, setCsrfToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch("/api/waitlist/token", {
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (isMounted && data.token) {
+          setCsrfToken(data.token);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to fetch CSRF token:", err);
+        if (isMounted) {
+          toast.error("Security initialization failed", {
+            description: "Please refresh the page to continue.",
+          });
+        }
+      });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,6 +48,13 @@ export function Hero({ signupCount }: HeroProps) {
       return;
     }
 
+    if (!csrfToken) {
+      toast.error("Security error", {
+        description: "Please refresh the page and try again.",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -35,7 +62,9 @@ export function Hero({ signupCount }: HeroProps) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken,
         },
+        credentials: "include",
         body: JSON.stringify({ email: email.trim() }),
       });
 
@@ -46,6 +75,15 @@ export function Hero({ signupCount }: HeroProps) {
           description: "You'll be notified when we launch.",
         });
         setEmail("");
+
+        fetch("/api/waitlist/token", { credentials: "include" })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.token) setCsrfToken(data.token);
+          })
+          .catch((err) => {
+            console.error("Failed to refresh CSRF token:", err);
+          });
       } else {
         toast.error("Oops!", {
           description:
@@ -77,6 +115,18 @@ export function Hero({ signupCount }: HeroProps) {
         transition={{ duration: 1 }}
         className="max-w-3xl mx-auto w-full flex-1 flex flex-col justify-center"
       >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6, duration: 0.8 }}
+          className="mb-8 flex justify-center"
+        >
+          <SponsorButton 
+            href="https://vercel.com/?utm_source=opencut"
+            logo={VercelIcon}
+            companyName="Vercel"
+          />
+        </motion.div>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -114,7 +164,7 @@ export function Hero({ signupCount }: HeroProps) {
                 className="h-11 text-base flex-1"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={isSubmitting}
+                disabled={isSubmitting || !csrfToken}
                 required
               />
             </div>
@@ -122,7 +172,7 @@ export function Hero({ signupCount }: HeroProps) {
               type="submit"
               size="lg"
               className="px-6 h-11 text-base !bg-foreground"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !csrfToken}
             >
               <span className="relative z-10">
                 {isSubmitting ? "Joining..." : "Join waitlist"}
@@ -131,8 +181,6 @@ export function Hero({ signupCount }: HeroProps) {
             </Button>
           </form>
         </motion.div>
-
-        {signupCount > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -140,9 +188,8 @@ export function Hero({ signupCount }: HeroProps) {
             className="mt-8 inline-flex items-center gap-2 text-sm text-muted-foreground justify-center"
           >
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span>{signupCount.toLocaleString()} people already joined</span>
+            <span>50k+ people already joined</span>
           </motion.div>
-        )}
       </motion.div>
     </div>
   );

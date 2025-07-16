@@ -3,11 +3,11 @@
 import { useDragDrop } from "@/hooks/use-drag-drop";
 import { processMediaFiles } from "@/lib/media-processing";
 import { useMediaStore, type MediaItem } from "@/stores/media-store";
-import { Image, Music, Plus, Upload, Video } from "lucide-react";
+import { Image, Loader2, Music, Plus, Video } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { DragOverlay } from "@/components/ui/drag-overlay";
+import { MediaDragOverlay } from "@/components/editor/media-panel/drag-overlay";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { DraggableMediaItem } from "@/components/ui/draggable-item";
 import { useProjectStore } from "@/stores/project-store";
+import { useTimelineStore } from "@/stores/timeline-store";
 
 export function MediaView() {
   const { mediaItems, addMediaItem, removeMediaItem } = useMediaStore();
@@ -203,9 +204,6 @@ export function MediaView() {
         className={`h-full flex flex-col gap-1 transition-colors relative ${isDragOver ? "bg-accent/30" : ""}`}
         {...dragProps}
       >
-        {/* Show overlay when dragging files over the panel */}
-        <DragOverlay isVisible={isDragOver} />
-
         <div className="p-3 pb-2">
           {/* Search and filter controls */}
           <div className="flex gap-2">
@@ -227,47 +225,31 @@ export function MediaView() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={handleFileSelect}
+              disabled={isProcessing}
+              className="flex-none bg-transparent min-w-[30px] whitespace-nowrap overflow-hidden px-2 justify-center items-center"
+            >
+              {isProcessing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="h-4 w-4" />
+              )}
+            </Button>
           </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-3 pt-0">
-          {/* Show message if no media, otherwise show media grid */}
-          {filteredMediaItems.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 text-center h-full">
-              <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mb-4">
-                <Image className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <p className="text-sm text-muted-foreground">
-                No media in project
-              </p>
-              <p className="text-xs text-muted-foreground/70 mt-1">
-                Drag files here or use the button below
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleFileSelect}
-                disabled={isProcessing}
-                className="flex-none bg-transparent min-w-[30px] whitespace-nowrap overflow-hidden px-2 justify-center items-center mt-2"
-              >
-                {isProcessing ? (
-                  <>
-                    <Upload className="h-4 w-4 animate-spin" />
-                    <span className="hidden md:inline ml-2">{progress}%</span>
-                  </>
-                ) : (
-                  <>
-                    <Plus className="h-4 w-4" />
-                    <span
-                      className="hidden sm:inline ml-2"
-                      aria-label="Add file"
-                    >
-                      Add
-                    </span>
-                  </>
-                )}
-              </Button>
-            </div>
+          {isDragOver || filteredMediaItems.length === 0 ? (
+            <MediaDragOverlay
+              isVisible={true}
+              isProcessing={isProcessing}
+              progress={progress}
+              onClick={handleFileSelect}
+              isEmptyState={filteredMediaItems.length === 0 && !isDragOver}
+            />
           ) : (
             <div
               className="grid gap-2"
@@ -288,6 +270,11 @@ export function MediaView() {
                         name: item.name,
                       }}
                       showPlusOnDrag={false}
+                      onAddToTimeline={(currentTime) =>
+                        useTimelineStore
+                          .getState()
+                          .addMediaAtTime(item, currentTime)
+                      }
                       rounded={false}
                     />
                   </ContextMenuTrigger>

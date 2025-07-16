@@ -10,7 +10,7 @@ export async function middleware(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
-  if (path === "/editor" && env.NODE_ENV === "production") {
+  if (path.startsWith("/editor") && env.NODE_ENV === "production") {
     const homeUrl = new URL("/", request.url);
     homeUrl.searchParams.set("redirect", request.url);
     return NextResponse.redirect(homeUrl);

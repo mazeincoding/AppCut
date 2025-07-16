@@ -157,6 +157,6 @@ const SignUpPage = () => {
       </Card>
     </div>
   );
-}
+};
 
 export default memo(SignUpPage);
