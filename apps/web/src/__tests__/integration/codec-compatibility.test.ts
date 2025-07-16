@@ -3,20 +3,10 @@
  * Tests codec support and compatibility across different browsers
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-
-// Mock codec support for different browsers
-const mockCodecSupport = () => {
-  // Mock MediaRecorder.isTypeSupported
-  Object.defineProperty(MediaRecorder, 'isTypeSupported', {
-    writable: true,
-    value: jest.fn(),
-  });
-};
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 
 describe('Codec Compatibility Tests', () => {
   beforeEach(() => {
-    mockCodecSupport();
   });
 
   afterEach(() => {

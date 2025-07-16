@@ -3,55 +3,9 @@
  * Tests browser feature detection for video export functionality
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-
-// Mock browser APIs for feature detection
-const mockBrowserAPIs = () => {
-  // Mock MediaRecorder
-  Object.defineProperty(window, 'MediaRecorder', {
-    writable: true,
-    value: jest.fn(),
-  });
-
-  // Mock MediaRecorder.isTypeSupported
-  Object.defineProperty(MediaRecorder, 'isTypeSupported', {
-    writable: true,
-    value: jest.fn(),
-  });
-
-  // Mock Canvas API
-  Object.defineProperty(HTMLCanvasElement.prototype, 'captureStream', {
-    writable: true,
-    value: jest.fn(),
-  });
-
-  // Mock AudioContext
-  Object.defineProperty(window, 'AudioContext', {
-    writable: true,
-    value: jest.fn(),
-  });
-
-  // Mock webkitAudioContext
-  Object.defineProperty(window, 'webkitAudioContext', {
-    writable: true,
-    value: jest.fn(),
-  });
-
-  // Mock OfflineAudioContext
-  Object.defineProperty(window, 'OfflineAudioContext', {
-    writable: true,
-    value: jest.fn(),
-  });
-};
+import { describe, it, expect } from '@jest/globals';
 
 describe('Feature Detection Tests', () => {
-  beforeEach(() => {
-    mockBrowserAPIs();
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
 
   describe('MediaRecorder Detection', () => {
     it('should detect MediaRecorder support', () => {
