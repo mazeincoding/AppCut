@@ -1,12 +1,12 @@
 "use client";
 
-import { BotIcon, Loader2 } from "lucide-react";
+import { BotIcon, Loader2, Play, Download } from "lucide-react";
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { generateVideo, handleApiError } from "@/lib/ai-video-client";
+import { generateVideo, handleApiError, getGenerationStatus } from "@/lib/ai-video-client";
 
 interface AIModel {
   id: string;
@@ -24,12 +24,23 @@ const AI_MODELS: AIModel[] = [
   { id: "kling", name: "Kling", description: "Fast generation, cost-effective", price: "$0.10", resolution: "720p" },
 ];
 
+interface GeneratedVideo {
+  jobId: string;
+  videoUrl: string;
+  videoPath?: string;
+  fileSize?: number;
+  duration?: number;
+  prompt: string;
+  model: string;
+}
+
 export function AiView() {
   const [prompt, setPrompt] = useState("");
   const [selectedModel, setSelectedModel] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
+  const [generatedVideo, setGeneratedVideo] = useState<GeneratedVideo | null>(null);
 
   const maxChars = 500;
   const remainingChars = maxChars - prompt.length;
@@ -54,8 +65,31 @@ export function AiView() {
       console.log("Video generation started:", response);
       setJobId(response.job_id);
       
-      // In a real implementation, you'd poll the status endpoint
-      // For now, we'll just show the job ID
+      // Check if generation completed immediately (success or failure)
+      if (response.status === "completed") {
+        // Poll for status to get video URL
+        setTimeout(async () => {
+          try {
+            const statusResponse = await getGenerationStatus(response.job_id);
+            console.log("Status response:", statusResponse);
+            
+            if (statusResponse.status === "completed" && statusResponse.video_url) {
+              setGeneratedVideo({
+                jobId: response.job_id,
+                videoUrl: statusResponse.video_url,
+                videoPath: statusResponse.video_path,
+                fileSize: statusResponse.file_size,
+                duration: statusResponse.duration,
+                prompt: prompt.trim(),
+                model: selectedModel
+              });
+            }
+          } catch (statusError) {
+            console.error("Failed to get status:", statusError);
+          }
+        }, 1000);
+      }
+      
       console.log("Job ID:", response.job_id);
       console.log("Status:", response.status);
       console.log("Message:", response.message);
@@ -171,14 +205,14 @@ export function AiView() {
           )}
           
           {/* Job ID Display */}
-          {jobId && (
+          {jobId && !generatedVideo && (
             <div className="mt-2 p-2 bg-green-500/10 border border-green-500/20 rounded text-sm text-green-700">
               ✅ Generation started! Job ID: {jobId.substring(0, 8)}...
             </div>
           )}
           
           {/* Cost Display */}
-          {selectedModel && (
+          {selectedModel && !generatedVideo && (
             <div className="mt-2 text-center">
               <span className="text-xs text-muted-foreground">
                 Cost: {selectedModelInfo?.price} • {selectedModelInfo?.resolution}
@@ -187,7 +221,7 @@ export function AiView() {
           )}
           
           {/* Validation Message */}
-          {!canGenerate && !isGenerating && (
+          {!canGenerate && !isGenerating && !generatedVideo && (
             <div className="mt-2 text-center">
               <span className="text-xs text-muted-foreground">
                 {!prompt.trim() ? "Enter a video description" : "Select an AI model"}
@@ -195,6 +229,95 @@ export function AiView() {
             </div>
           )}
         </div>
+        
+        {/* Video Preview Component */}
+        {generatedVideo && (
+          <div className="mt-4 p-4 bg-panel-accent rounded-lg border">
+            <div className="flex items-center gap-2 mb-3">
+              <Play className="size-4 text-primary" />
+              <span className="text-sm font-medium">Generated Video</span>
+            </div>
+            
+            {/* Video Player */}
+            <div className="mb-3">
+              <video
+                src={generatedVideo.videoUrl}
+                controls
+                className="w-full rounded-lg bg-black"
+                style={{ maxHeight: "200px" }}
+              >
+                Your browser does not support the video tag.
+              </video>
+            </div>
+            
+            {/* Video Metadata */}
+            <div className="space-y-2 text-xs text-muted-foreground">
+              <div className="flex justify-between">
+                <span>Prompt:</span>
+                <span className="text-right max-w-[200px] truncate">{generatedVideo.prompt}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Model:</span>
+                <span>{AI_MODELS.find(m => m.id === generatedVideo.model)?.name}</span>
+              </div>
+              {generatedVideo.fileSize && (
+                <div className="flex justify-between">
+                  <span>File Size:</span>
+                  <span>{(generatedVideo.fileSize / 1024).toFixed(1)} KB</span>
+                </div>
+              )}
+              {generatedVideo.duration && (
+                <div className="flex justify-between">
+                  <span>Duration:</span>
+                  <span>{generatedVideo.duration}s</span>
+                </div>
+              )}
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="flex gap-2 mt-3">
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  // TODO: Add to timeline functionality
+                  console.log("Add to timeline:", generatedVideo);
+                }}
+              >
+                <Play className="mr-1 size-3" />
+                Add to Timeline
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  // Download video
+                  const link = document.createElement('a');
+                  link.href = generatedVideo.videoUrl;
+                  link.download = `generated-video-${generatedVideo.jobId.substring(0, 8)}.mp4`;
+                  link.click();
+                }}
+              >
+                <Download className="size-3" />
+              </Button>
+            </div>
+            
+            {/* Generate Another Button */}
+            <Button
+              size="sm"
+              variant="ghost"
+              className="w-full mt-2"
+              onClick={() => {
+                setGeneratedVideo(null);
+                setJobId(null);
+                setError(null);
+              }}
+            >
+              Generate Another Video
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
