@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ExportFormat, ExportQuality } from "@/types/export";
+import { TimelineElement } from "@/types/timeline";
 import { useExportStore } from "@/stores/export-store";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { useProjectStore } from "@/stores/project-store";
@@ -124,7 +125,7 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
   const timelineElements = tracks.flatMap(track => track.elements);
   
   const getDurationAnalysis = () => {
-    const videoElements = timelineElements.filter(el => el.type === 'media' && el.mediaId);
+    const videoElements = timelineElements.filter(el => el.type === 'media' && 'mediaId' in el) as Array<TimelineElement & { mediaId: string }>;
     const sourceDurations = videoElements.map(el => {
       const mediaItem = mediaItems.find(item => item.id === el.mediaId);
       return {

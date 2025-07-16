@@ -404,8 +404,7 @@ export function Timeline() {
             mediaItemName: mediaItem.name,
             mediaItemDuration: mediaItem.duration,
             fallbackDuration: 5,
-            finalDuration: mediaItem.duration || 5,
-            mediaItemMetadata: mediaItem.metadata
+            finalDuration: mediaItem.duration || 5
           });
           
           addElementToTrack(newTrackId, {
@@ -453,8 +452,7 @@ export function Timeline() {
               addedItemDuration: addedItem.duration,
               processedItemDuration: processedItem.duration,
               fallbackDuration: 5,
-              finalDuration: addedItem.duration || 5,
-              addedItemMetadata: addedItem.metadata
+              finalDuration: addedItem.duration || 5
             });
             
             addElementToTrack(newTrackId, {
