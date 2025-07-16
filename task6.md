@@ -62,7 +62,7 @@ Remaining testing tasks for the video export functionality. Each test task shoul
 ### 9.4 Test File Size Accuracy (3 min) ✅
 - [x] Compare estimated vs actual size
 - [x] Test size calculation accuracy
-- [ ] Test compression ratios
+- [x] Test compression ratios
 
 ### 9.5 Test Quality Settings (3 min) ✅
 - [x] Compare quality levels
