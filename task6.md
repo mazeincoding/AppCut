@@ -71,8 +71,8 @@ Remaining testing tasks for the video export functionality. Each test task shoul
 
 ### 9.6 Test Metadata Preservation (3 min)
 - [ ] Test video metadata
-- [ ] Test audio metadata
-- [ ] Test duration accuracy
+- [x] Test audio metadata
+- [x] Test duration accuracy
 
 ### 9.7 Test Player Compatibility (3 min)
 - [ ] Test in video players
