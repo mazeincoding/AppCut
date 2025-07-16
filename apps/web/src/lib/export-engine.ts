@@ -348,11 +348,8 @@ export class ExportEngine {
       if (element.type === 'media') {
         const mediaItem = this.getMediaItem(element.mediaId!);
         if (mediaItem?.type === 'video' && mediaItem.duration) {
-          // Calculate the effective end time of this video element
-          const trimStart = element.trimStart || 0;
-          const trimEnd = element.trimEnd || 0;
-          const effectiveDuration = mediaItem.duration - trimStart - trimEnd;
-          const elementEndTime = (element.startTime || 0) + effectiveDuration;
+          // Timeline element duration already accounts for trims
+          const elementEndTime = (element.startTime || 0) + element.duration;
           
           maxVideoDuration = Math.max(maxVideoDuration, elementEndTime);
         }

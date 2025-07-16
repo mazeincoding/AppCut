@@ -2,6 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Important: MCP Tool Usage
+**Only use MCP tools (mcp__*) when the user explicitly asks for browser automation, web navigation, or similar tasks. For regular development work, use standard file operations, bash commands, and code analysis tools.**
+
 ## Quick Reference
 
 For detailed project overview and development guidelines, refer to the **Cursor Rules** at:
