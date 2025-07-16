@@ -7,6 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { generateVideo, handleApiError, getGenerationStatus } from "@/lib/ai-video-client";
+import { useTimelineStore } from "@/stores/timeline-store";
+import { useMediaStore } from "@/stores/media-store";
+import { useProjectStore } from "@/stores/project-store";
 
 interface AIModel {
   id: string;
@@ -41,6 +44,11 @@ export function AiView() {
   const [error, setError] = useState<string | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
   const [generatedVideo, setGeneratedVideo] = useState<GeneratedVideo | null>(null);
+  
+  // Store hooks
+  const { addElementToTrack, addTrack } = useTimelineStore();
+  const { addMediaItem } = useMediaStore();
+  const { activeProject } = useProjectStore();
 
   const maxChars = 500;
   const remainingChars = maxChars - prompt.length;
@@ -105,6 +113,58 @@ export function AiView() {
 
   const canGenerate = prompt.trim().length > 0 && selectedModel && !isGenerating;
   const selectedModelInfo = AI_MODELS.find(m => m.id === selectedModel);
+
+  const handleAddToTimeline = async () => {
+    if (!generatedVideo || !activeProject) return;
+    
+    try {
+      console.log("Adding generated video to timeline:", generatedVideo);
+      
+      // Create a File object from the video URL
+      const response = await fetch(generatedVideo.videoUrl);
+      const blob = await response.blob();
+      const file = new File([blob], `generated-video-${generatedVideo.jobId.substring(0, 8)}.mp4`, {
+        type: 'video/mp4',
+      });
+      
+      // Add to media store
+      await addMediaItem(activeProject.id, {
+        name: `AI: ${generatedVideo.prompt.substring(0, 30)}...`,
+        type: "video",
+        file: file,
+        url: generatedVideo.videoUrl,
+        duration: generatedVideo.duration || 5,
+        width: 1920, // Default video dimensions
+        height: 1080,
+      });
+      
+      // Get the media items to find the newly added one
+      const mediaStore = useMediaStore.getState();
+      const addedMediaItem = mediaStore.mediaItems[mediaStore.mediaItems.length - 1];
+      
+      // Find or create a media track
+      const timelineStore = useTimelineStore.getState();
+      const mediaTrack = timelineStore.tracks.find(track => track.type === "media");
+      const trackId = mediaTrack ? mediaTrack.id : addTrack("media");
+      
+      // Add element to timeline
+      addElementToTrack(trackId, {
+        type: "media",
+        mediaId: addedMediaItem.id,
+        name: addedMediaItem.name,
+        duration: addedMediaItem.duration || 5,
+        startTime: 0,
+        trimStart: 0,
+        trimEnd: 0,
+      });
+      
+      console.log("✅ Successfully added video to timeline!");
+      
+    } catch (error) {
+      console.error("Failed to add video to timeline:", error);
+      setError("Failed to add video to timeline. Please try again.");
+    }
+  };
 
   return (
     <div className="p-4 h-full flex flex-col">
@@ -280,10 +340,7 @@ export function AiView() {
                 size="sm"
                 variant="outline"
                 className="flex-1"
-                onClick={() => {
-                  // TODO: Add to timeline functionality
-                  console.log("Add to timeline:", generatedVideo);
-                }}
+                onClick={handleAddToTimeline}
               >
                 <Play className="mr-1 size-3" />
                 Add to Timeline

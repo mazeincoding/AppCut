@@ -17,8 +17,8 @@ Add AI video generation capabilities to OpenCut using veo3-fal-video-ai package.
 - "Generate AI Videos" interface working in OpenCut editor
 - User confirmed AI button functionality ✅
 
-**Current Status**: 21/40 tasks completed (52.5%)
-**Next Steps**: Phase 5 - Video Integration
+**Current Status**: 22/40 tasks completed (55%)
+**Next Steps**: Phase 5 - Video Integration (continued)
 
 ## Phase 1: UI Foundation (15 minutes total)
 
@@ -136,10 +136,10 @@ Add AI video generation capabilities to OpenCut using veo3-fal-video-ai package.
 - [x] Add video element with controls
 - [x] Show video thumbnail and metadata
 
-### 5.2 Add "Add to Timeline" Button (3 min)
-- [ ] Create button below video preview
-- [ ] Add click handler to add video to timeline
-- [ ] Use existing timeline store methods
+### 5.2 Add "Add to Timeline" Button (3 min) ✅
+- [x] Create button below video preview
+- [x] Add click handler to add video to timeline
+- [x] Use existing timeline store methods
 
 ### 5.3 Integrate with Media Store (3 min)
 - [ ] Add generated video to media store
