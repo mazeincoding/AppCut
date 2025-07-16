@@ -43,3 +43,8 @@ __pycache__/
 .Python
 *.so
 .pytest_cache/
+
+# AI Video Generator
+services/ai-video-generator/input/
+services/ai-video-generator/output/
+services/ai-video-generator/temp/
