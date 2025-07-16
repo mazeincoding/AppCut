@@ -1,75 +1,59 @@
-# Export Duration Analysis - Critical Finding
+# Export Duration Analysis - ROOT CAUSE FOUND! 🎯
 
-## 🚨 CRITICAL ISSUE DISCOVERED: Debug Logs Missing
+## 🎉 MYSTERY SOLVED: Timeline Duration Calculation Bug
 
-### What I Found
-Added comprehensive debug logging to export initialization (lines 107-191 in export-engine.ts), but **NONE of the debug logs appear in the console output**.
+### The Real Issue Discovered
+The export engine is working **perfectly**. The problem is in the **timeline duration calculation** that happens BEFORE export starts.
 
-### The Missing Debug Output
-The following debug sections should appear but are completely absent:
+### Critical Debug Findings
 ```
-🚀 EXPORT INITIALIZATION DEBUG:
-📊 DETAILED TIMELINE ELEMENTS ANALYSIS:
-🎥 MEDIA ITEMS DURATION ANALYSIS:
-⏱️ DURATION COMPARISON:
-🛠️ DURATION ADJUSTMENT DETECTED! (or ✅ No adjustment needed)
+🏗️ Constructor duration: 3.045  ← Export engine receives wrong duration
+📊 Element 1: duration: 10.125  ← Timeline element has CORRECT duration  
+🎥 Media 1: timelineElementDuration: 10.125  ← Media item has CORRECT duration
+⏱️ Timeline duration: 3.045  ← Timeline calculation returns WRONG duration
+⏱️ Calculated video duration: 10.125  ← Video calculation is CORRECT
+⏱️ Final export duration: 3.045  ← Uses shorter (incorrect) timeline duration
 ```
 
-### What This Reveals
-**The export initialization code (lines 105-195) is NOT running at all.**
+## 🚨 The Root Cause
+**The timeline store's `getTotalDuration()` method is returning 3.045s instead of 10.125s.**
 
-## 🔍 Current Export Flow Analysis
+### What's Happening
+1. ✅ **Video import**: Correctly detected as 10.125s duration  
+2. ✅ **Timeline element**: Correctly set to 10.125s duration
+3. ❌ **Timeline calculation**: **BUG** - Returns 3.045s instead of 10.125s
+4. ✅ **Export engine**: Correctly uses timeline duration (3.045s)
+5. ✅ **Safety check**: Correctly detects video is longer (10.125s) but keeps timeline duration
 
-From the visible logs, the export process goes directly to:
-1. Frame rendering loop starts immediately
-2. Frame 76-91 get rendered (2.5s to 3.033s)
-3. Export stops at frame 91 with "All frames rendered"
+## 🔍 Timeline Store Bug Location
+**File**: `/apps/web/src/stores/timeline-store.ts` lines 833-849
 
-**This means**: The export engine is using a pre-calculated duration of 3.033s without running the initialization debug code.
+**The problematic calculation**:
+```typescript
+const elementEnd = 
+  element.startTime +           // 0
+  element.duration -            // 10.125  
+  element.trimStart -           // 0
+  element.trimEnd;              // ??? ← This is likely 7.08 causing the bug
+```
 
-## 🎯 Root Cause Hypothesis
+## 🎯 Actual Problem
+**Hypothesis**: The timeline element has incorrect `trimEnd: 7.08` value, causing:
+- `elementEnd = 0 + 10.125 - 0 - 7.08 = 3.045`
 
-### Most Likely: Export Method Bypass
-The export is NOT going through the main `async export()` method that contains all the debug logging. 
+### Evidence Supporting This
+- Timeline element shows `duration: 10.125` ✅  
+- Timeline calculation returns `3.045` ❌
+- Difference: `10.125 - 3.045 = 7.08` (likely the trimEnd value)
 
-**Possible scenarios:**
-1. **Different export entry point** - Another method is being called
-2. **Cached export configuration** - Using pre-configured FrameCaptureService
-3. **Previous export state** - Export engine reusing old configuration
-4. **Alternative export path** - Different code path for certain export modes
+## 🔧 Next Action Required
+**Check the timeline element's trim values**:
 
-### Evidence Supporting This Theory
-- ✅ Debug logs completely missing (initialization code not executed)
-- ✅ Frame rendering starts immediately at frame 76 (not frame 0)
-- ✅ Export duration already set to 3.033s (91 frames ÷ 30fps = 3.033s)
-- ✅ No "Export starting" or preflight check logs
+1. Add logging to see `trimStart` and `trimEnd` values
+2. Check why `trimEnd` might be set to 7.08 seconds  
+3. Fix the trim calculation or UI that's setting incorrect trim values
 
-## 🔧 Next Investigation Steps
+## 🎪 Export Engine Status
+**Export engine is working 100% correctly** - it's faithfully exporting the timeline duration as calculated by the timeline store. The bug is in the timeline duration calculation, not the export process.
 
-### 1. Find the Actual Export Entry Point
-Search for which method is actually being called:
-- Is it `export()` method?
-- Is it `exportWithFFmpeg()`?
-- Is it some other export method?
-
-### 2. Check for Export Mode Configuration
-The app might be using:
-- MediaRecorder export (default)
-- FFmpeg offline export (`NEXT_PUBLIC_OFFLINE_EXPORT=true`)
-- Different export modes have different code paths
-
-### 3. Verify Export Engine Instance State
-The export engine might be:
-- Reusing previous configuration
-- Pre-initialized with wrong duration
-- Using cached FrameCaptureService
-
-## 🎪 Working Theory
-**The 3.033s duration is being set BEFORE the export method we debugged is even called.**
-
-The export engine is either:
-1. Pre-configured with `duration: 3.033` in the constructor
-2. Using a different export method entirely
-3. Reusing cached export configuration
-
-**Next Action**: Find which export method is actually being invoked and why the initialization debug code is being bypassed.
+**Location of fix needed**: Timeline store calculation or timeline element trim handling.

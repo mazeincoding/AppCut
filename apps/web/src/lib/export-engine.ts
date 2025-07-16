@@ -49,6 +49,15 @@ export class ExportEngine {
   private preloadedVideos: Map<string, HTMLVideoElement> = new Map();
 
   constructor(options: ExportEngineOptions) {
+    console.log("🏗️ EXPORT ENGINE CONSTRUCTOR CALLED");
+    console.log("🏗️ Constructor duration:", options.duration);
+    console.log("🏗️ Timeline elements count:", options.timelineElements.length);
+    console.log("🏗️ Constructor options:", { 
+      duration: options.duration, 
+      fps: options.fps,
+      timelineElementsCount: options.timelineElements.length 
+    });
+    
     this.canvas = options.canvas;
     this.settings = options.settings;
     this.timelineElements = options.timelineElements;
@@ -96,9 +105,12 @@ export class ExportEngine {
    * Start the export process
    */
   async startExport(): Promise<Blob> {
-    console.log("🚀 startExport called");
+    console.log("🔥🔥🔥 START_EXPORT METHOD CALLED - ENTRY POINT CONFIRMED 🔥🔥🔥");
+    console.log("🔥 Timestamp:", new Date().toISOString());
+    console.log("🔥 Export engine state:", { isExporting: this.isExporting, duration: this.duration });
     
     if (this.isExporting) {
+      console.log("🔥 Export already in progress - throwing error");
       throw new ExportError("Export already in progress", "EXPORT_IN_PROGRESS");
     }
 
