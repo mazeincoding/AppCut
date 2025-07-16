@@ -1,10 +1,11 @@
 "use client";
 
-import { BotIcon } from "lucide-react";
+import { BotIcon, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 interface AIModel {
   id: string;
@@ -25,9 +26,29 @@ const AI_MODELS: AIModel[] = [
 export function AiView() {
   const [prompt, setPrompt] = useState("");
   const [selectedModel, setSelectedModel] = useState<string>("");
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const maxChars = 500;
   const remainingChars = maxChars - prompt.length;
+
+  const handleGenerate = async () => {
+    if (!prompt.trim() || !selectedModel) return;
+    
+    setIsGenerating(true);
+    try {
+      // Simulate API call for now
+      console.log("Generating video with:", { prompt, selectedModel });
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log("Video generation complete!");
+    } catch (error) {
+      console.error("Generation failed:", error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const canGenerate = prompt.trim().length > 0 && selectedModel && !isGenerating;
+  const selectedModelInfo = AI_MODELS.find(m => m.id === selectedModel);
 
   return (
     <div className="p-4 h-full flex flex-col">
@@ -90,14 +111,54 @@ export function AiView() {
             <div className="flex items-center gap-2 mb-1">
               <BotIcon className="size-4 text-primary" />
               <span className="text-sm font-medium">
-                {AI_MODELS.find(m => m.id === selectedModel)?.name}
+                {selectedModelInfo?.name}
               </span>
             </div>
             <p className="text-xs text-muted-foreground">
-              {AI_MODELS.find(m => m.id === selectedModel)?.description}
+              {selectedModelInfo?.description}
             </p>
           </div>
         )}
+
+        {/* Generate Button */}
+        <div className="mt-auto pt-4">
+          <Button 
+            onClick={handleGenerate}
+            disabled={!canGenerate}
+            className="w-full"
+            size="lg"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="mr-2 size-4 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <BotIcon className="mr-2 size-4" />
+                Generate Video
+              </>
+            )}
+          </Button>
+          
+          {/* Cost Display */}
+          {selectedModel && (
+            <div className="mt-2 text-center">
+              <span className="text-xs text-muted-foreground">
+                Cost: {selectedModelInfo?.price} • {selectedModelInfo?.resolution}
+              </span>
+            </div>
+          )}
+          
+          {/* Validation Message */}
+          {!canGenerate && !isGenerating && (
+            <div className="mt-2 text-center">
+              <span className="text-xs text-muted-foreground">
+                {!prompt.trim() ? "Enter a video description" : "Select an AI model"}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
