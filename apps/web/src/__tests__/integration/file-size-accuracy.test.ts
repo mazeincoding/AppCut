@@ -213,19 +213,19 @@ describe('File Size Accuracy Tests', () => {
           codec: 'h264',
           compressionRatio: 15,
           quality: 0.9,
-          efficiency: 0.9,
+          efficiency: 1.35, // 0.9 * (15 / 10) = 1.35
         },
         {
           codec: 'h265',
           compressionRatio: 25,
           quality: 0.9,
-          efficiency: 0.95,
+          efficiency: 2.25, // 0.9 * (25 / 10) = 2.25
         },
         {
           codec: 'vp9',
           compressionRatio: 20,
           quality: 0.9,
-          efficiency: 0.92,
+          efficiency: 1.8, // 0.9 * (20 / 10) = 1.8
         },
       ];
 

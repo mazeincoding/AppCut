@@ -746,7 +746,7 @@ describe('WebM Output Tests', () => {
       expect(profile2Validation.features).toContain('HDR support');
 
       // Test VP9 level validation
-      const levelValidation = vp9Validator.validateVP9Level(31, { width: 1920, height: 1080 }, 30);
+      const levelValidation = vp9Validator.validateVP9Level(40, { width: 1920, height: 1080 }, 30);
       expect(levelValidation.valid).toBe(true);
       expect(levelValidation.lumaPictureSize).toBe(2073600); // 1920 * 1080
       expect(levelValidation.violations).toHaveLength(0);
@@ -901,7 +901,7 @@ describe('WebM Output Tests', () => {
             algorithmicLatency,
             frequencyResponse: sampleRate >= 44100 ? 'full_audio' : 'speech_optimized',
             dynamicRange: application === 'audio' ? 'high' : 'medium',
-            compressionRatio: this.calculateCompressionRatio(bitrate, sampleRate, channels),
+            compressionRatio: opusValidator.calculateCompressionRatio(bitrate, sampleRate, channels),
           };
 
           return analysis;

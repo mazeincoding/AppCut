@@ -692,7 +692,7 @@ describe('MP4 Output Tests', () => {
       };
 
       // Test codec string parsing
-      const codecParsing = h264Validator.parseCodecString('avc1.42E01E');
+      const codecParsing = h264Validator.parseCodecString('avc1.42E01F');
       expect(codecParsing.valid).toBe(true);
       expect(codecParsing.profile).toBe('Baseline');
       expect(codecParsing.level).toBe('3.1');
@@ -714,9 +714,9 @@ describe('MP4 Output Tests', () => {
       expect(highValidation.recommendations).toContain('Consider Main or Baseline profile for mobile');
 
       // Test level validation
-      const levelValidation = h264Validator.validateLevel('3.1', { width: 1920, height: 1080 }, 30);
+      const levelValidation = h264Validator.validateLevel('4.0', { width: 1920, height: 1080 }, 30);
       expect(levelValidation.valid).toBe(true);
-      expect(levelValidation.frameSize).toBe(8160); // 120 * 68 macroblocks
+      expect(levelValidation.frameSize).toBe(8160); // 120 * 68 = 8160 macroblocks
       expect(levelValidation.violations).toHaveLength(0);
 
       // Test level violation
