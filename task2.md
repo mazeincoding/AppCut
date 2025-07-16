@@ -275,26 +275,24 @@ Comprehensive testing strategy for the video export functionality. Each test tas
 
 ### 6.1 Test Chrome Support (3 min)
 - [ ] Test latest Chrome version
-- [ ] Test Chrome mobile
 - [ ] Test codec support
 
-
-### 6.5 Test Feature Detection (3 min)
+### 6.2 Test Feature Detection (3 min)
 - [ ] Test MediaRecorder detection
 - [ ] Test canvas.captureStream detection
 - [ ] Test AudioContext detection
 
-### 6.6 Test Codec Compatibility (3 min)
+### 6.3 Test Codec Compatibility (3 min)
 - [ ] Test H.264 support
 - [ ] Test VP9 support
 - [ ] Test VP8 fallback
 
-### 6.7 Test PWA Compatibility (3 min)
+### 6.4 Test PWA Compatibility (3 min)
 - [ ] Test in PWA mode
 - [ ] Test offline capabilities
 - [ ] Test file system access
 
-### 6.8 Cross-Browser Consistency (3 min)
+### 6.5 Cross-Browser Consistency (3 min)
 - [ ] Compare export outputs
 - [ ] Test UI consistency
 - [ ] Test performance parity
