@@ -134,17 +134,30 @@ export class ExportEngine {
       // Log detailed timeline element information
       console.log("📊 DETAILED TIMELINE ELEMENTS ANALYSIS:");
       this.timelineElements.forEach((el, index) => {
+        const trimStart = el.trimStart || 0;
+        const trimEnd = el.trimEnd || 0;
+        const effectiveDuration = el.duration - trimStart - trimEnd;
+        const elementEndTime = (el.startTime || 0) + el.duration - trimStart - trimEnd;
+        
         console.log(`  Element ${index + 1}:`, {
           id: el.id,
           type: el.type,
           startTime: el.startTime,
           duration: el.duration,
-          trimStart: el.trimStart || 0,
-          trimEnd: el.trimEnd || 0,
-          effectiveDuration: el.duration - (el.trimStart || 0) - (el.trimEnd || 0),
-          elementEndTime: (el.startTime || 0) + el.duration - (el.trimStart || 0) - (el.trimEnd || 0),
+          trimStart: trimStart,
+          trimEnd: trimEnd,
+          effectiveDuration: effectiveDuration,
+          elementEndTime: elementEndTime,
           mediaId: el.mediaId
         });
+        
+        // CRITICAL: Check if trim values are causing the issue
+        if (trimEnd > 0) {
+          console.log(`  🚨 TRIM END DETECTED: ${trimEnd}s - This may be causing duration reduction!`);
+        }
+        if (effectiveDuration !== el.duration) {
+          console.log(`  🚨 EFFECTIVE DURATION DIFFERS: ${effectiveDuration}s vs original ${el.duration}s`);
+        }
       });
 
       // Log media items duration comparison
