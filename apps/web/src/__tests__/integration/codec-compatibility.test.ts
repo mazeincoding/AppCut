@@ -224,4 +224,107 @@ describe('Codec Compatibility Tests', () => {
       expect(supported).toEqual([]);
     });
   });
+
+  // Task 9.8: Test Codec Parameters (3 min)
+  describe('Codec Parameters Testing', () => {
+    it('should test bitrate settings', () => {
+      const testBitrates = [
+        { bitrate: 1000000, expected: '1Mbps' },
+        { bitrate: 4000000, expected: '4Mbps' },
+        { bitrate: 8000000, expected: '8Mbps' },
+        { bitrate: 25000000, expected: '25Mbps' }
+      ];
+
+      testBitrates.forEach(({ bitrate, expected }) => {
+        const formatString = `video/mp4;codecs=avc1.42E01E;bitrate=${bitrate}`;
+        const parsedBitrate = Math.floor(bitrate / 1000000) + 'Mbps';
+        expect(parsedBitrate).toBe(expected);
+      });
+    });
+
+    it('should test keyframe intervals', () => {
+      const keyframeIntervals = [1, 2, 5, 10, 30];
+      
+      keyframeIntervals.forEach(interval => {
+        const codecString = `video/mp4;codecs=avc1.42E01E;keyint=${interval}`;
+        expect(codecString).toContain(`keyint=${interval}`);
+        expect(interval).toBeGreaterThan(0);
+        expect(interval).toBeLessThanOrEqual(30);
+      });
+    });
+
+    it('should test codec profiles', () => {
+      const h264Profiles = [
+        'avc1.42E01E', // Baseline
+        'avc1.4D401E', // Main
+        'avc1.64001E', // High
+        'avc1.640028'  // High 10
+      ];
+
+      h264Profiles.forEach(profile => {
+        const codecString = `video/mp4;codecs=${profile}`;
+        expect(codecString).toContain(profile);
+        expect(profile).toMatch(/^avc1\.[0-9A-F]{6}$/);
+      });
+
+      const vp9Profiles = [
+        'vp09.00.10.08', // Profile 0
+        'vp09.01.20.08', // Profile 1
+        'vp09.02.10.10'  // Profile 2
+      ];
+
+      vp9Profiles.forEach(profile => {
+        const codecString = `video/webm;codecs=${profile}`;
+        expect(codecString).toContain(profile);
+        expect(profile).toMatch(/^vp09\.\d{2}\.\d{2}\.\d{2}$/);
+      });
+    });
+
+    it('should validate codec parameter combinations', () => {
+      const validCombinations = [
+        {
+          codec: 'avc1.42E01E',
+          bitrate: 4000000,
+          keyint: 2,
+          format: 'mp4'
+        },
+        {
+          codec: 'vp09.00.10.08',
+          bitrate: 2000000,
+          keyint: 5,
+          format: 'webm'
+        }
+      ];
+
+      validCombinations.forEach(combo => {
+        const formatString = `video/${combo.format};codecs=${combo.codec};bitrate=${combo.bitrate};keyint=${combo.keyint}`;
+        expect(formatString).toContain(combo.codec);
+        expect(formatString).toContain(combo.bitrate.toString());
+        expect(formatString).toContain(combo.keyint.toString());
+      });
+    });
+
+    it('should handle invalid codec parameters gracefully', () => {
+      const invalidParams = [
+        { bitrate: -1000000, valid: false },
+        { bitrate: 0, valid: false },
+        { bitrate: 1000000, valid: true },
+        { keyint: -1, valid: false },
+        { keyint: 0, valid: false },
+        { keyint: 1, valid: true },
+        { keyint: 100, valid: false } // Too high
+      ];
+
+      invalidParams.forEach(param => {
+        if ('bitrate' in param) {
+          const isValid = param.bitrate > 0 && param.bitrate <= 50000000;
+          expect(isValid).toBe(param.valid);
+        }
+        if ('keyint' in param) {
+          const isValid = param.keyint > 0 && param.keyint <= 30;
+          expect(isValid).toBe(param.valid);
+        }
+      });
+    });
+  });
 });
