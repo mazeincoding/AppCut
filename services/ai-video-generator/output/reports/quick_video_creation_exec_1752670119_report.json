@@ -1,0 +1,83 @@
+{
+  "execution_summary": {
+    "chain_name": "quick_video_creation",
+    "execution_id": "exec_1752670119",
+    "timestamp": "2025-07-16T22:48:39.599109",
+    "status": "failed",
+    "input_data": "A beautiful sunset over mountains",
+    "input_type": "text",
+    "total_steps": 2,
+    "completed_steps": 0,
+    "total_cost_usd": 0.0,
+    "total_processing_time_seconds": 0.0,
+    "error": "Step 1 failed: Unified generation failed: Provider fal not initialized"
+  },
+  "step_execution_details": [
+    {
+      "step_number": 1,
+      "step_name": "step_1_text_to_image",
+      "step_type": "text_to_image",
+      "model": "flux_dev",
+      "status": "failed",
+      "processing_time": 1.6689300537109375e-05,
+      "cost": 0.0,
+      "output_files": {},
+      "download_links": {},
+      "metadata": null,
+      "error": "Unified generation failed: Provider fal not initialized",
+      "input_prompt": "A beautiful sunset over mountains",
+      "generation_params": {}
+    }
+  ],
+  "final_outputs": {
+    "local_files": {},
+    "download_links": {}
+  },
+  "cost_breakdown": {
+    "by_step": [
+      {
+        "step": "1_text_to_image",
+        "model": "flux_dev",
+        "cost_usd": 0.0
+      }
+    ],
+    "total_cost_usd": 0.0
+  },
+  "performance_metrics": {
+    "by_step": [
+      {
+        "step": "1_text_to_image",
+        "processing_time_seconds": 1.6689300537109375e-05,
+        "status": "failed"
+      }
+    ],
+    "total_time_seconds": 0.0,
+    "average_time_per_step": 0.0
+  },
+  "metadata": {
+    "chain_config": {
+      "name": "quick_video_creation",
+      "steps": [
+        {
+          "type": "text_to_image",
+          "model": "flux_dev",
+          "params": {},
+          "enabled": true,
+          "retry_count": 0
+        },
+        {
+          "type": "image_to_video",
+          "model": "veo3",
+          "params": {},
+          "enabled": true,
+          "retry_count": 0
+        }
+      ]
+    },
+    "pipeline_version": "1.0.0",
+    "models_used": [
+      "flux_dev",
+      "veo3"
+    ]
+  }
+}
