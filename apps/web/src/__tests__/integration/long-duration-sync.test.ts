@@ -656,7 +656,7 @@ describe('Long Duration Sync Tests', () => {
             predictedDriftMs: predictedDrift * 1000,
             driftRateMs: driftRate * 1000,
             projectionHours,
-            confidence: this.calculatePredictionConfidence(recentMeasurements),
+            confidence: cumulativeDriftManager.calculatePredictionConfidence(recentMeasurements),
           };
         },
 
@@ -813,7 +813,7 @@ describe('Long Duration Sync Tests', () => {
                 avgCorrection: corrections.reduce((sum, c) => sum + c, 0) / corrections.length,
                 avgError: errors.reduce((sum, e) => sum + e, 0) / errors.length,
                 maxError: Math.max(...errors.map(Math.abs)),
-                stabilityPeriods: this.identifyStabilityPeriods(correctionHistory),
+                stabilityPeriods: corrector.identifyStabilityPeriods(correctionHistory),
                 effectivenessRating: Math.abs(errors[errors.length - 1]) < Math.abs(errors[0]) ? 'improving' : 'stable',
               };
             },
@@ -981,7 +981,7 @@ describe('Long Duration Sync Tests', () => {
       corrector.measureCurrentOffset(1.025, 1.000); // 25ms drift
       
       const correction1 = corrector.calculateCorrection();
-      expect(correction1.errorMs).toBe(-25); // 25ms error
+      expect(correction1.errorMs).toBeCloseTo(-25, 1); // 25ms error
       expect(Math.abs(correction1.correctionMs)).toBeLessThanOrEqual(5); // Max 5ms correction
       expect(correction1.stability).toBe('correcting');
       
