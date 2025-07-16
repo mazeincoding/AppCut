@@ -121,7 +121,7 @@ UPSTASH_REDIS_REST_TOKEN="example_token"
 # Development
 NODE_ENV="development"
 
-# Optional: Enable FFmpeg offline video export (frame-by-frame rendering)
+# RECOMMENDED: Enable FFmpeg offline video export for precise duration control
 NEXT_PUBLIC_OFFLINE_EXPORT="true"
 ```
 
@@ -156,7 +156,7 @@ Supports multiple aspect ratios and export formats:
 - **Presets**: 16:9, 9:16, 1:1, 4:3 with customizable dimensions
 - **Real-time preview**: HTML-based rendering for performance
 - **Export rendering**: Canvas-based frame capture for video export
-- **Dual export modes**: MediaRecorder (default) and FFmpeg offline rendering
+- **Dual export modes**: MediaRecorder and FFmpeg offline rendering (FFmpeg recommended for precision)
 
 ## Database Schema
 
@@ -224,7 +224,8 @@ Supports multiple aspect ratios and export formats:
 - **API changes**: v0.12.15 uses `ffmpeg.on('log', callback)` instead of `ffmpeg.setLogger()`
 - Large video files may require OPFS feature detection
 - Browser compatibility varies for video codecs
-- **Export modes**: MediaRecorder (default) vs FFmpeg offline rendering (`NEXT_PUBLIC_OFFLINE_EXPORT=true`)
+- **Export modes**: MediaRecorder vs FFmpeg offline rendering (recommended: `NEXT_PUBLIC_OFFLINE_EXPORT=true`)
+- **Export duration fix**: Export engine now uses timeline duration directly for accurate video length
 
 ### Build Issues
 - Use **Bun** as package manager (not npm/yarn)
@@ -256,7 +257,16 @@ The cursor rules provide more detailed context than this CLAUDE.md file and shou
 
 ## Recent Updates
 
+- **Export Duration Fix (2024)**: Resolved export duration mismatch - videos now match timeline duration exactly
+  - Fixed `calculateActualVideoDuration()` to use timeline duration directly instead of recalculating
+  - FFmpeg offline export provides frame-perfect duration control
+  - Simplified timeline store logging for better debugging experience
 - **FFmpeg.js v0.12.15**: Updated to latest version with new event-based API
-- **Dual export modes**: MediaRecorder (default) and FFmpeg offline rendering
+- **Dual export modes**: MediaRecorder and FFmpeg offline rendering (FFmpeg recommended)
 - **Core files updated**: Synchronized `/public/ffmpeg/` files with package version
 - **Export engine enhanced**: Better frame timing and video duration handling
+
+### Known Issues Fixed
+- **Export Duration Mismatch**: Videos exported with wrong duration (15s instead of 3s) - RESOLVED
+- **Timeline calculations**: Trim values causing incorrect duration calculations - RESOLVED
+- **MediaRecorder precision**: Real-time recording causing duration variance - RESOLVED via FFmpeg mode
