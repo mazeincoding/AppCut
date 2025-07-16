@@ -69,15 +69,15 @@ Remaining testing tasks for the video export functionality. Each test task shoul
 - [x] Test bitrate accuracy
 - [x] Test resolution accuracy
 
-### 9.6 Test Metadata Preservation (3 min)
-- [ ] Test video metadata
+### 9.6 Test Metadata Preservation (3 min) ✅
+- [x] Test video metadata
 - [x] Test audio metadata
 - [x] Test duration accuracy
 
 ### 9.7 Test Player Compatibility (3 min)
-- [ ] Test in video players
-- [ ] Test in browsers
-- [ ] Test on mobile devices
+- [x] Test in video players
+- [x] Test in browsers
+- [x] Test on mobile devices
 
 ### 9.8 Test Codec Parameters (3 min)
 - [ ] Test bitrate settings
