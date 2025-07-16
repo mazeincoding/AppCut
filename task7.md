@@ -17,7 +17,7 @@ Add AI video generation capabilities to OpenCut using veo3-fal-video-ai package.
 - "Generate AI Videos" interface working in OpenCut editor
 - User confirmed AI button functionality ✅
 
-**Current Status**: 8/40 tasks completed (20%)
+**Current Status**: 9/40 tasks completed (22.5%)
 **Next Steps**: Phase 2 - Python Backend Setup
 
 ## Phase 1: UI Foundation (15 minutes total)
@@ -64,10 +64,10 @@ Add AI video generation capabilities to OpenCut using veo3-fal-video-ai package.
 - [x] Accept prompt and model parameters
 - [x] Return mock response for now
 
-### 2.4 Add Environment Configuration (3 min)
-- [ ] Create `.env` file for API keys
-- [ ] Add FAL_API_KEY variable
-- [ ] Load config in main.py
+### 2.4 Add Environment Configuration (3 min) ✅
+- [x] Create `.env` file for API keys
+- [x] Add FAL_API_KEY variable
+- [x] Load config in main.py
 
 ### 2.5 Test Basic API Server (3 min)
 - [ ] Run FastAPI server with `uvicorn main:app --reload`

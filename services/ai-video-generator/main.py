@@ -13,6 +13,24 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# Get API keys from environment
+FAL_API_KEY = os.getenv("FAL_API_KEY")
+REPLICATE_API_TOKEN = os.getenv("REPLICATE_API_TOKEN")
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+
+# Server configuration
+API_HOST = os.getenv("API_HOST", "0.0.0.0")
+API_PORT = int(os.getenv("API_PORT", 8000))
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
+
+# Validate required API keys
+if not FAL_API_KEY:
+    print("⚠️  WARNING: FAL_API_KEY not set - AI generation will fail")
+if not REPLICATE_API_TOKEN:
+    print("⚠️  WARNING: REPLICATE_API_TOKEN not set - some models may not work")
+if not ANTHROPIC_API_KEY:
+    print("⚠️  WARNING: ANTHROPIC_API_KEY not set - some features may not work")
+
 # Initialize FastAPI app
 app = FastAPI(
     title="AI Video Generator",
@@ -23,7 +41,7 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # OpenCut frontend
+    allow_origins=CORS_ORIGINS,  # OpenCut frontend
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -173,4 +191,4 @@ async def estimate_cost(request: VideoGenerationRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host=API_HOST, port=API_PORT)
