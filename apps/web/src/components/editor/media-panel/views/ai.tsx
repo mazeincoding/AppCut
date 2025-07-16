@@ -1,7 +1,7 @@
 "use client";
 
-import { BotIcon, Loader2, Play, Download } from "lucide-react";
-import { useState } from "react";
+import { BotIcon, Loader2, Play, Download, History, Trash2 } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -44,6 +44,7 @@ export function AiView() {
   const [error, setError] = useState<string | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
   const [generatedVideo, setGeneratedVideo] = useState<GeneratedVideo | null>(null);
+  const [generationHistory, setGenerationHistory] = useState<GeneratedVideo[]>([]);
   
   // Store hooks
   const { addElementToTrack, addTrack } = useTimelineStore();
@@ -52,6 +53,42 @@ export function AiView() {
 
   const maxChars = 500;
   const remainingChars = maxChars - prompt.length;
+
+  // Load generation history from localStorage on component mount
+  useEffect(() => {
+    const savedHistory = localStorage.getItem('ai-generation-history');
+    if (savedHistory) {
+      try {
+        const parsedHistory = JSON.parse(savedHistory);
+        setGenerationHistory(parsedHistory);
+      } catch (error) {
+        console.error('Failed to parse generation history:', error);
+      }
+    }
+  }, []);
+
+  // Save generation history to localStorage
+  const saveGenerationHistory = (history: GeneratedVideo[]) => {
+    try {
+      localStorage.setItem('ai-generation-history', JSON.stringify(history));
+    } catch (error) {
+      console.error('Failed to save generation history:', error);
+    }
+  };
+
+  // Add video to history
+  const addToHistory = (video: GeneratedVideo) => {
+    const newHistory = [video, ...generationHistory.slice(0, 9)]; // Keep only last 10
+    setGenerationHistory(newHistory);
+    saveGenerationHistory(newHistory);
+  };
+
+  // Remove video from history
+  const removeFromHistory = (jobId: string) => {
+    const newHistory = generationHistory.filter(video => video.jobId !== jobId);
+    setGenerationHistory(newHistory);
+    saveGenerationHistory(newHistory);
+  };
 
   const handleGenerate = async () => {
     if (!prompt.trim() || !selectedModel) return;
@@ -82,7 +119,7 @@ export function AiView() {
             console.log("Status response:", statusResponse);
             
             if (statusResponse.status === "completed" && statusResponse.video_url) {
-              setGeneratedVideo({
+              const newVideo = {
                 jobId: response.job_id,
                 videoUrl: statusResponse.video_url,
                 videoPath: statusResponse.video_path,
@@ -90,7 +127,9 @@ export function AiView() {
                 duration: statusResponse.duration,
                 prompt: prompt.trim(),
                 model: selectedModel
-              });
+              };
+              setGeneratedVideo(newVideo);
+              addToHistory(newVideo);
             }
           } catch (statusError) {
             console.error("Failed to get status:", statusError);
@@ -373,6 +412,50 @@ export function AiView() {
             >
               Generate Another Video
             </Button>
+          </div>
+        )}
+        
+        {/* Generation History */}
+        {generationHistory.length > 0 && (
+          <div className="mt-4 p-4 bg-panel-accent rounded-lg border">
+            <div className="flex items-center gap-2 mb-3">
+              <History className="size-4 text-primary" />
+              <span className="text-sm font-medium">Recent Generations</span>
+            </div>
+            
+            <div className="space-y-2 max-h-40 overflow-y-auto">
+              {generationHistory.map((video) => (
+                <div key={video.jobId} className="flex items-center gap-2 p-2 bg-background rounded border">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-medium truncate">
+                      {video.prompt.length > 25 ? `${video.prompt.substring(0, 25)}...` : video.prompt}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {AI_MODELS.find(m => m.id === video.model)?.name} • {video.duration}s
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setGeneratedVideo(video)}
+                      className="h-6 w-6 p-0"
+                    >
+                      <Play className="size-3" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => removeFromHistory(video.jobId)}
+                      className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="size-3" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
