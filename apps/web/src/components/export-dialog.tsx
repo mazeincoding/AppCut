@@ -78,6 +78,40 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
   const resolution = getResolution(quality);
   const estimatedSize = getEstimatedSize(quality);
 
+  // Duration analysis for warnings
+  const timelineDuration = getTotalDuration();
+  const timelineElements = tracks.flatMap(track => track.elements);
+  
+  const getDurationAnalysis = () => {
+    const videoElements = timelineElements.filter(el => el.type === 'media' && el.mediaId);
+    const sourceDurations = videoElements.map(el => {
+      const mediaItem = mediaItems.find(item => item.id === el.mediaId);
+      return {
+        elementDuration: el.duration,
+        sourceDuration: mediaItem?.duration || 0,
+        trimStart: el.trimStart || 0,
+        trimEnd: el.trimEnd || 0,
+        elementId: el.id
+      };
+    });
+    
+    const maxSourceDuration = Math.max(...sourceDurations.map(s => s.sourceDuration), 0);
+    const hasSignificantTrimming = sourceDurations.some(s => 
+      (s.trimStart + s.trimEnd) > 0.5 || 
+      Math.abs(s.elementDuration - s.sourceDuration) > 0.5
+    );
+    
+    return {
+      timelineDuration,
+      maxSourceDuration,
+      hasSignificantTrimming,
+      durationDifference: maxSourceDuration - timelineDuration,
+      sourceDurations
+    };
+  };
+
+  const durationAnalysis = getDurationAnalysis();
+
   const handleExport = async () => {
     const canvas = canvasRef.current?.getCanvas();
     if (!canvas) {
@@ -201,6 +235,62 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
               </div>
             </div>
           </div>
+
+          {/* Duration Analysis Section */}
+          <div className="space-y-2">
+            <Label>Export Duration</Label>
+            <div className="p-3 bg-muted rounded-lg">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium">Timeline duration:</span>
+                <span className="text-sm">{timelineDuration.toFixed(2)}s</span>
+              </div>
+              {durationAnalysis.maxSourceDuration > 0 && (
+                <div className="flex justify-between items-center mt-1">
+                  <span className="text-sm font-medium">Source video duration:</span>
+                  <span className="text-sm text-muted-foreground">{durationAnalysis.maxSourceDuration.toFixed(2)}s</span>
+                </div>
+              )}
+              
+              {/* Warning for significant duration mismatch */}
+              {durationAnalysis.durationDifference > 1 && (
+                <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm">
+                  <div className="flex items-start space-x-2">
+                    <span className="text-yellow-600">⚠️</span>
+                    <div className="text-yellow-800">
+                      <div className="font-medium">Duration Notice</div>
+                      <div>Your timeline ({timelineDuration.toFixed(1)}s) is shorter than your source video ({durationAnalysis.maxSourceDuration.toFixed(1)}s). Only the timeline content will be exported.</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Warning for trimming */}
+              {durationAnalysis.hasSignificantTrimming && (
+                <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
+                  <div className="flex items-start space-x-2">
+                    <span className="text-blue-600">ℹ️</span>
+                    <div className="text-blue-800">
+                      <div className="font-medium">Trimming Applied</div>
+                      <div>Some video clips have been trimmed or shortened on the timeline.</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* No content warning */}
+              {timelineDuration === 0 && (
+                <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-sm">
+                  <div className="flex items-start space-x-2">
+                    <span className="text-red-600">❌</span>
+                    <div className="text-red-800">
+                      <div className="font-medium">No Content</div>
+                      <div>Your timeline is empty. Add some media files to export a video.</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
           
           <div className="space-y-2">
             <Label htmlFor="filename">Filename</Label>
@@ -252,7 +342,7 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
           </Button>
           <Button
             onClick={handleExport}
-            disabled={isExporting || !isValidFilename(filename)}
+            disabled={isExporting || !isValidFilename(filename) || timelineDuration === 0}
             className="bg-blue-600 hover:bg-blue-700"
           >
             <Download className="h-4 w-4 mr-2" />

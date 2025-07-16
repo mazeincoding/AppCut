@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ContextMenu as ContextMenuPrimitive } from "radix-ui";
+import * as ContextMenuPrimitive from "@radix-ui/react-context-menu";
 import { Check, ChevronRight, Circle } from "lucide-react";
 import { cva, type VariantProps } from "class-variance-authority";
 

@@ -399,6 +399,15 @@ export function Timeline() {
           let targetTrack = tracks.find((t) => t.type === trackType);
           const newTrackId = targetTrack ? targetTrack.id : addTrack(trackType);
 
+          console.log("🎬 Adding media element to timeline:", {
+            mediaItemId: mediaItem.id,
+            mediaItemName: mediaItem.name,
+            mediaItemDuration: mediaItem.duration,
+            fallbackDuration: 5,
+            finalDuration: mediaItem.duration || 5,
+            mediaItemMetadata: mediaItem.metadata
+          });
+          
           addElementToTrack(newTrackId, {
             type: "media",
             mediaId: mediaItem.id,
@@ -438,6 +447,16 @@ export function Timeline() {
             const trackType =
               processedItem.type === "audio" ? "audio" : "media";
             const newTrackId = addTrack(trackType);
+            console.log("📁 Adding uploaded file to timeline:", {
+              addedItemId: addedItem.id,
+              addedItemName: addedItem.name,
+              addedItemDuration: addedItem.duration,
+              processedItemDuration: processedItem.duration,
+              fallbackDuration: 5,
+              finalDuration: addedItem.duration || 5,
+              addedItemMetadata: addedItem.metadata
+            });
+            
             addElementToTrack(newTrackId, {
               type: "media",
               mediaId: addedItem.id,

@@ -112,6 +112,48 @@ export class ExportEngine {
         actualVideoDuration,
         fps: this.fps
       });
+
+      // Log detailed timeline element information
+      console.log("📊 Timeline elements analysis:", {
+        elements: this.timelineElements.map(el => ({
+          id: el.id,
+          type: el.type,
+          startTime: el.startTime,
+          duration: el.duration,
+          trimStart: el.trimStart || 0,
+          trimEnd: el.trimEnd || 0,
+          effectiveDuration: el.duration - (el.trimStart || 0) - (el.trimEnd || 0),
+          elementEndTime: (el.startTime || 0) + el.duration - (el.trimStart || 0) - (el.trimEnd || 0),
+          mediaId: el.mediaId
+        }))
+      });
+
+      // Log media items duration comparison
+      const mediaAnalysis = this.timelineElements
+        .filter(el => el.type === 'media' && el.mediaId)
+        .map(el => {
+          const mediaItem = this.getMediaItem(el.mediaId!);
+          return {
+            elementId: el.id,
+            mediaId: el.mediaId,
+            mediaType: mediaItem?.type,
+            sourceDuration: mediaItem?.duration,
+            timelineElementDuration: el.duration,
+            durationMismatch: mediaItem?.duration && Math.abs(mediaItem.duration - el.duration) > 0.1
+          };
+        });
+      
+      console.log("🎥 Media duration analysis:", mediaAnalysis);
+      
+      // Calculate duration comparison
+      const durationComparison = {
+        timelineDuration: this.duration,
+        actualVideoDuration,
+        finalExportDuration: Math.min(this.duration, actualVideoDuration + 0.1),
+        hasSignificantMismatch: Math.abs(this.duration - actualVideoDuration) > 0.5
+      };
+      
+      console.log("⏱️ Duration comparison:", durationComparison);
       
       // Use the shorter of timeline duration or actual video duration
       const safeDuration = Math.min(this.duration, actualVideoDuration + 0.1); // Small buffer
