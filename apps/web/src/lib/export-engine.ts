@@ -384,21 +384,10 @@ export class ExportEngine {
    * Calculate the actual duration of video content (not timeline gaps)
    */
   private calculateActualVideoDuration(): number {
-    let maxVideoDuration = 0;
-    
-    for (const element of this.timelineElements) {
-      if (element.type === 'media') {
-        const mediaItem = this.getMediaItem(element.mediaId!);
-        if (mediaItem?.type === 'video' && mediaItem.duration) {
-          // Timeline element duration already accounts for trims
-          const elementEndTime = (element.startTime || 0) + element.duration;
-          
-          maxVideoDuration = Math.max(maxVideoDuration, elementEndTime);
-        }
-      }
-    }
-    
-    return maxVideoDuration;
+    // Use the timeline duration that was passed from the timeline store
+    // This already accounts for all trims, splits, and element positioning
+    console.log("🎯 Using timeline duration instead of recalculating:", this.duration);
+    return this.duration;
   }
 
   /**

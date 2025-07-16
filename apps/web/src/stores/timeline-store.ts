@@ -913,38 +913,20 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       const { _tracks } = get();
       if (_tracks.length === 0) return 0;
 
-      console.log("🔍 TIMELINE STORE: getTotalDuration() called");
-      console.log("🔍 Number of tracks:", _tracks.length);
-
-      const trackEndTimes = _tracks.map((track, trackIndex) => {
-        console.log(`🔍 Track ${trackIndex + 1}: ${track.elements.length} elements`);
-        
-        return track.elements.reduce((maxEnd, element, elementIndex) => {
+      const trackEndTimes = _tracks.map((track) => {
+        return track.elements.reduce((maxEnd, element) => {
           const elementEnd =
             element.startTime +
             element.duration -
             element.trimStart -
             element.trimEnd;
           
-          console.log(`  🔍 Element ${elementIndex + 1}:`, {
-            startTime: element.startTime,
-            duration: element.duration,
-            trimStart: element.trimStart,
-            trimEnd: element.trimEnd,
-            calculatedEnd: elementEnd,
-            formula: `${element.startTime} + ${element.duration} - ${element.trimStart} - ${element.trimEnd} = ${elementEnd}`
-          });
-          
-          if (element.trimEnd > 0) {
-            console.log(`  🚨 TIMELINE STORE: trimEnd detected: ${element.trimEnd}s`);
-          }
-          
           return Math.max(maxEnd, elementEnd);
         }, 0);
       });
 
       const totalDuration = Math.max(...trackEndTimes, 0);
-      console.log("🔍 TIMELINE STORE: Final calculated duration:", totalDuration);
+      console.log("Timeline duration:", totalDuration);
       return totalDuration;
     },
 
