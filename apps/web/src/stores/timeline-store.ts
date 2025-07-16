@@ -369,6 +369,17 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
         trimStart: 0,
         trimEnd: 0,
       } as TimelineElement; // Type assertion since we trust the caller passes valid data
+      
+      console.log("➕ NEW ELEMENT CREATED:", {
+        operation: "addElementToTrack",
+        elementId: newElement.id,
+        trackId,
+        duration: newElement.duration,
+        trimStart: newElement.trimStart,
+        trimEnd: newElement.trimEnd,
+        type: newElement.type,
+        timestamp: new Date().toISOString()
+      });
 
       // If this is the first element and it's a media element, automatically set the project canvas size
       // to match the media's aspect ratio and FPS (for videos)
@@ -468,6 +479,19 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
     },
 
     updateElementTrim: (trackId, elementId, trimStart, trimEnd) => {
+      console.log("🔧 TRIM UPDATE DETECTED:", {
+        trackId,
+        elementId,
+        trimStart,
+        trimEnd,
+        timestamp: new Date().toISOString(),
+        stackTrace: new Error().stack
+      });
+      
+      if (trimEnd > 0) {
+        console.log("🚨 NON-ZERO TRIM END BEING SET:", trimEnd);
+      }
+      
       get().pushHistory();
       updateTracksAndSave(
         get()._tracks.map((track) =>
@@ -577,7 +601,20 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
                     ? [
                         {
                           ...c,
-                          trimEnd: c.trimEnd + secondDuration,
+                          trimEnd: (() => {
+                            const newTrimEnd = c.trimEnd + secondDuration;
+                            console.log("🔪 SPLIT OPERATION - Setting trimEnd:", {
+                              operation: "split",
+                              elementId: c.id,
+                              originalTrimEnd: c.trimEnd,
+                              secondDuration,
+                              newTrimEnd,
+                              elementDuration: c.duration,
+                              splitTime,
+                              timestamp: new Date().toISOString()
+                            });
+                            return newTrimEnd;
+                          })(),
                           name: getElementNameWithSuffix(c.name, "left"),
                         },
                         {
@@ -628,7 +665,21 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
                   c.id === elementId
                     ? {
                         ...c,
-                        trimEnd: c.trimEnd + durationToRemove,
+                        trimEnd: (() => {
+                          const newTrimEnd = c.trimEnd + durationToRemove;
+                          console.log("✂️ SPLIT AT TIME OPERATION - Setting trimEnd:", {
+                            operation: "splitAtTime", 
+                            elementId: c.id,
+                            originalTrimEnd: c.trimEnd,
+                            durationToRemove,
+                            newTrimEnd,
+                            elementDuration: c.duration,
+                            splitTime,
+                            relativeTime,
+                            timestamp: new Date().toISOString()
+                          });
+                          return newTrimEnd;
+                        })(),
                         name: getElementNameWithSuffix(c.name, "left"),
                       }
                     : c
@@ -940,6 +991,30 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       try {
         const tracks = await storageService.loadTimeline(projectId);
         if (tracks) {
+          console.log("📂 LOADING TIMELINE FROM STORAGE:", {
+            projectId,
+            tracksCount: tracks.length,
+            elementsData: tracks.flatMap(track => 
+              track.elements.map(el => ({
+                id: el.id,
+                type: el.type,
+                duration: el.duration,
+                trimStart: el.trimStart,
+                trimEnd: el.trimEnd,
+                hasNonZeroTrimEnd: el.trimEnd > 0
+              }))
+            ),
+            timestamp: new Date().toISOString()
+          });
+          
+          // Check for any elements with non-zero trimEnd
+          const problematicElements = tracks.flatMap(track => 
+            track.elements.filter(el => el.trimEnd > 0)
+          );
+          if (problematicElements.length > 0) {
+            console.log("🚨 LOADED ELEMENTS WITH NON-ZERO TRIM END:", problematicElements);
+          }
+          
           updateTracks(tracks);
         } else {
           // No timeline saved yet, initialize with default
