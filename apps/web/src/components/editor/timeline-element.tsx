@@ -84,6 +84,31 @@ export function TimelineElement({
 
   const effectiveDuration =
     element.duration - element.trimStart - element.trimEnd;
+  
+  // Check for duration mismatch
+  const getDurationMismatch = () => {
+    if (element.type === 'media' && element.mediaId) {
+      const mediaItem = mediaItems.find(item => item.id === element.mediaId);
+      if (mediaItem && mediaItem.duration) {
+        const sourceDuration = mediaItem.duration;
+        const elementDuration = element.duration;
+        const hasTrimming = (element.trimStart + element.trimEnd) > 0.5;
+        const hasSignificantMismatch = Math.abs(sourceDuration - elementDuration) > 0.5;
+        
+        return {
+          hasAnyMismatch: hasTrimming || hasSignificantMismatch,
+          hasTrimming,
+          hasSignificantMismatch,
+          sourceDuration,
+          elementDuration,
+          missingDuration: sourceDuration - elementDuration
+        };
+      }
+    }
+    return null;
+  };
+  
+  const durationMismatch = getDurationMismatch();
   const elementWidth = Math.max(
     TIMELINE_CONSTANTS.ELEMENT_MIN_WIDTH,
     effectiveDuration * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel
@@ -360,6 +385,18 @@ export function TimelineElement({
             <div className="absolute inset-0 flex items-center h-full">
               {renderElementContent()}
             </div>
+
+            {/* Duration Mismatch Indicator */}
+            {durationMismatch?.hasAnyMismatch && (
+              <div 
+                className="absolute top-0 right-0 w-0 h-0 border-l-[8px] border-l-transparent border-b-[8px] border-b-yellow-500"
+                title={
+                  durationMismatch.hasTrimming 
+                    ? `Trimmed: ${(element.trimStart + element.trimEnd).toFixed(1)}s removed`
+                    : `Duration mismatch: ${durationMismatch.missingDuration.toFixed(1)}s shorter than source`
+                }
+              />
+            )}
 
             {isSelected && (
               <>

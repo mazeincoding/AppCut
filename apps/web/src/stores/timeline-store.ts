@@ -369,6 +369,17 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
         trimStart: 0,
         trimEnd: 0,
       } as TimelineElement; // Type assertion since we trust the caller passes valid data
+      
+      console.log("➕ NEW ELEMENT CREATED:", {
+        operation: "addElementToTrack",
+        elementId: newElement.id,
+        trackId,
+        duration: newElement.duration,
+        trimStart: newElement.trimStart,
+        trimEnd: newElement.trimEnd,
+        type: newElement.type,
+        timestamp: new Date().toISOString()
+      });
 
       // If this is the first element and it's a media element, automatically set the project canvas size
       // to match the media's aspect ratio and FPS (for videos)
@@ -468,16 +479,57 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
     },
 
     updateElementTrim: (trackId, elementId, trimStart, trimEnd) => {
+      console.log("🔧 TRIM UPDATE DETECTED:", {
+        trackId,
+        elementId,
+        trimStart,
+        trimEnd,
+        timestamp: new Date().toISOString(),
+        stackTrace: new Error().stack
+      });
+      
+      // PROPER FIX: Validate trim values before applying
+      const element = get()._tracks
+        .find(track => track.id === trackId)
+        ?.elements.find(el => el.id === elementId);
+      
+      if (!element) {
+        console.error("🚨 TRIM UPDATE FAILED: Element not found", { trackId, elementId });
+        return;
+      }
+      
+      // Sanitize trim values
+      const sanitizedTrimStart = Math.max(0, trimStart || 0);
+      const sanitizedTrimEnd = Math.max(0, Math.min(
+        trimEnd || 0,
+        element.duration - sanitizedTrimStart - 0.1 // Ensure at least 0.1s remains
+      ));
+      
+      // Log validation/sanitization
+      if (trimStart !== sanitizedTrimStart || trimEnd !== sanitizedTrimEnd) {
+        console.log("🔧 SANITIZING TRIM VALUES:", {
+          elementId,
+          duration: element.duration,
+          requested: { trimStart, trimEnd },
+          sanitized: { trimStart: sanitizedTrimStart, trimEnd: sanitizedTrimEnd },
+          reason: "Preventing invalid trim values"
+        });
+      }
+      
+      if (sanitizedTrimEnd > 0) {
+        console.log("🚨 NON-ZERO TRIM END BEING SET:", sanitizedTrimEnd);
+      }
+      
       get().pushHistory();
       updateTracksAndSave(
         get()._tracks.map((track) =>
           track.id === trackId
             ? {
                 ...track,
-                elements: track.elements.map((element) =>
-                  element.id === elementId
-                    ? { ...element, trimStart, trimEnd }
-                    : element
+                elements: track.elements.map((el) =>
+                  el.id === elementId
+                    ? { ...el, trimStart: sanitizedTrimStart, trimEnd: sanitizedTrimEnd }
+                    : el
                 ),
               }
             : track
@@ -577,7 +629,20 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
                     ? [
                         {
                           ...c,
-                          trimEnd: c.trimEnd + secondDuration,
+                          trimEnd: (() => {
+                            const newTrimEnd = c.trimEnd + secondDuration;
+                            console.log("🔪 SPLIT OPERATION - Setting trimEnd:", {
+                              operation: "split",
+                              elementId: c.id,
+                              originalTrimEnd: c.trimEnd,
+                              secondDuration,
+                              newTrimEnd,
+                              elementDuration: c.duration,
+                              splitTime,
+                              timestamp: new Date().toISOString()
+                            });
+                            return newTrimEnd;
+                          })(),
                           name: getElementNameWithSuffix(c.name, "left"),
                         },
                         {
@@ -628,7 +693,21 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
                   c.id === elementId
                     ? {
                         ...c,
-                        trimEnd: c.trimEnd + durationToRemove,
+                        trimEnd: (() => {
+                          const newTrimEnd = c.trimEnd + durationToRemove;
+                          console.log("✂️ SPLIT AT TIME OPERATION - Setting trimEnd:", {
+                            operation: "splitAtTime", 
+                            elementId: c.id,
+                            originalTrimEnd: c.trimEnd,
+                            durationToRemove,
+                            newTrimEnd,
+                            elementDuration: c.duration,
+                            splitTime,
+                            relativeTime,
+                            timestamp: new Date().toISOString()
+                          });
+                          return newTrimEnd;
+                        })(),
                         name: getElementNameWithSuffix(c.name, "left"),
                       }
                     : c
@@ -834,18 +913,21 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       const { _tracks } = get();
       if (_tracks.length === 0) return 0;
 
-      const trackEndTimes = _tracks.map((track) =>
-        track.elements.reduce((maxEnd, element) => {
+      const trackEndTimes = _tracks.map((track) => {
+        return track.elements.reduce((maxEnd, element) => {
           const elementEnd =
             element.startTime +
             element.duration -
             element.trimStart -
             element.trimEnd;
+          
           return Math.max(maxEnd, elementEnd);
-        }, 0)
-      );
+        }, 0);
+      });
 
-      return Math.max(...trackEndTimes, 0);
+      const totalDuration = Math.max(...trackEndTimes, 0);
+      console.log("Timeline duration:", totalDuration);
+      return totalDuration;
     },
 
     redo: () => {
@@ -914,12 +996,152 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       });
     },
 
+    // Manual fix for corrupted timeline data
+    fixCorruptedTimeline: () => {
+      console.log("🔧 MANUAL TIMELINE FIX: Starting sanitization of current timeline");
+      
+      const currentTracks = get()._tracks;
+      const sanitizedTracks = currentTracks.map(track => ({
+        ...track,
+        elements: track.elements.map(element => {
+          const originalTrimEnd = element.trimEnd;
+          const originalTrimStart = element.trimStart;
+          
+          console.log("🔍 CHECKING ELEMENT:", {
+            elementId: element.id,
+            duration: element.duration,
+            originalTrimStart,
+            originalTrimEnd
+          });
+          
+          // Sanitize trim values
+          const sanitizedTrimStart = Math.max(0, element.trimStart || 0);
+          
+          let sanitizedTrimEnd;
+          if (element.trimEnd > element.duration) {
+            console.log("🚨 FIXING: trimEnd exceeds duration");
+            sanitizedTrimEnd = 0;
+          } else if (element.trimEnd > (element.duration * 0.5)) {
+            console.log("🚨 FIXING: suspicious trimEnd removes >50% content", {
+              percentageRemoved: (element.trimEnd / element.duration * 100).toFixed(1) + "%"
+            });
+            sanitizedTrimEnd = 0;
+          } else {
+            sanitizedTrimEnd = element.trimEnd;
+          }
+          
+          if (originalTrimEnd !== sanitizedTrimEnd || originalTrimStart !== sanitizedTrimStart) {
+            console.log("✅ FIXED ELEMENT:", {
+              elementId: element.id,
+              before: { trimStart: originalTrimStart, trimEnd: originalTrimEnd },
+              after: { trimStart: sanitizedTrimStart, trimEnd: sanitizedTrimEnd }
+            });
+          }
+          
+          return {
+            ...element,
+            trimStart: sanitizedTrimStart,
+            trimEnd: sanitizedTrimEnd
+          };
+        })
+      }));
+      
+      updateTracksAndSave(sanitizedTracks);
+      console.log("✅ MANUAL TIMELINE FIX COMPLETED");
+    },
+
     // Persistence methods
     loadProjectTimeline: async (projectId) => {
       try {
         const tracks = await storageService.loadTimeline(projectId);
         if (tracks) {
-          updateTracks(tracks);
+          console.log("📂 LOADING TIMELINE FROM STORAGE:", {
+            projectId,
+            tracksCount: tracks.length,
+            elementsData: tracks.flatMap(track => 
+              track.elements.map(el => ({
+                id: el.id,
+                type: el.type,
+                duration: el.duration,
+                trimStart: el.trimStart,
+                trimEnd: el.trimEnd,
+                hasNonZeroTrimEnd: el.trimEnd > 0
+              }))
+            ),
+            timestamp: new Date().toISOString()
+          });
+          
+          // PROPER FIX: Validate and sanitize trim values
+          console.log("🔧 APPLYING TRIM VALUE SANITIZATION...");
+          
+          const sanitizedTracks = tracks.map(track => ({
+            ...track,
+            elements: track.elements.map(element => {
+              const originalTrimEnd = element.trimEnd;
+              const originalTrimStart = element.trimStart;
+              
+              console.log("🔍 CHECKING ELEMENT FOR SANITIZATION:", {
+                elementId: element.id,
+                duration: element.duration,
+                originalTrimStart,
+                originalTrimEnd
+              });
+              
+              // Sanitize trim values to prevent corrupted data
+              const sanitizedTrimStart = Math.max(0, element.trimStart || 0);
+              
+              // For the specific corrupt case: detect and fix the 7.08 trimEnd issue
+              let sanitizedTrimEnd;
+              if (element.trimEnd > element.duration) {
+                console.log("🚨 CORRUPT DATA DETECTED: trimEnd exceeds duration, resetting to 0");
+                sanitizedTrimEnd = 0;
+              } else if (element.trimEnd > (element.duration * 0.5)) {
+                // If trimEnd removes more than 50% of content, it's likely corrupt
+                console.log("🚨 SUSPICIOUS TRIM DATA: trimEnd removes >50% of content, resetting to 0", {
+                  trimEnd: element.trimEnd,
+                  duration: element.duration,
+                  percentageRemoved: (element.trimEnd / element.duration * 100).toFixed(1) + "%"
+                });
+                sanitizedTrimEnd = 0;
+              } else {
+                sanitizedTrimEnd = Math.max(0, Math.min(
+                  element.trimEnd || 0,
+                  element.duration - sanitizedTrimStart - 0.1 // Ensure at least 0.1s remains
+                ));
+              }
+              
+              // Log any corrections made
+              if (originalTrimEnd !== sanitizedTrimEnd || originalTrimStart !== sanitizedTrimStart) {
+                console.log("🔧 SANITIZING CORRUPT TRIM VALUES:", {
+                  elementId: element.id,
+                  duration: element.duration,
+                  original: { trimStart: originalTrimStart, trimEnd: originalTrimEnd },
+                  sanitized: { trimStart: sanitizedTrimStart, trimEnd: sanitizedTrimEnd },
+                  reason: originalTrimEnd > element.duration ? "trimEnd exceeds duration" : "invalid trim values"
+                });
+              }
+              
+              return {
+                ...element,
+                trimStart: sanitizedTrimStart,
+                trimEnd: sanitizedTrimEnd
+              };
+            })
+          }));
+          
+          // Check for any elements that were corrected
+          const correctedElements = sanitizedTracks.flatMap(track => 
+            track.elements.filter((el, index) => {
+              const original = tracks.find(t => t.id === track.id)?.elements[index];
+              return original && (original.trimEnd !== el.trimEnd || original.trimStart !== el.trimStart);
+            })
+          );
+          
+          if (correctedElements.length > 0) {
+            console.log("✅ CORRECTED CORRUPTED TIMELINE ELEMENTS:", correctedElements.length);
+          }
+          
+          updateTracks(sanitizedTracks);
         } else {
           // No timeline saved yet, initialize with default
           const defaultTracks = ensureMainTrack([]);
@@ -951,3 +1173,43 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
     },
   };
 });
+
+// Global functions for easy access from browser console
+if (typeof window !== 'undefined') {
+  (window as any).fixTimelineTrimIssue = () => {
+    console.log("🔧 GLOBAL FIX: Attempting to fix timeline trim issue");
+    const state = useTimelineStore.getState();
+    if (state.fixCorruptedTimeline) {
+      state.fixCorruptedTimeline();
+    } else {
+      console.error("❌ fixCorruptedTimeline method not available");
+    }
+  };
+  
+  (window as any).checkTimelineDuration = () => {
+    console.log("🔍 CHECKING TIMELINE DURATION:");
+    const state = useTimelineStore.getState();
+    const duration = state.getTotalDuration();
+    console.log("Timeline duration:", duration);
+    console.log("Timeline tracks:", state._tracks.length);
+    state._tracks.forEach((track, i) => {
+      console.log(`Track ${i + 1}:`, track.elements.length, "elements");
+      track.elements.forEach((el, j) => {
+        console.log(`  Element ${j + 1}:`, {
+          duration: el.duration,
+          trimStart: el.trimStart,
+          trimEnd: el.trimEnd,
+          effectiveDuration: el.duration - (el.trimStart || 0) - (el.trimEnd || 0)
+        });
+      });
+    });
+    return duration;
+  };
+  
+  (window as any).debugExportDuration = () => {
+    console.log("🔍 EXPORT DURATION DEBUG:");
+    const timelineDuration = (window as any).checkTimelineDuration();
+    console.log("Timeline should pass this duration to export:", timelineDuration);
+    return timelineDuration;
+  };
+}

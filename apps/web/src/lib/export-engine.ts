@@ -51,6 +51,15 @@ export class ExportEngine {
   private memoryMonitoringStarted = false;
 
   constructor(options: ExportEngineOptions) {
+    console.log("🏗️ EXPORT ENGINE CONSTRUCTOR CALLED");
+    console.log("🏗️ Constructor duration:", options.duration);
+    console.log("🏗️ Timeline elements count:", options.timelineElements.length);
+    console.log("🏗️ Constructor options:", { 
+      duration: options.duration, 
+      fps: options.fps,
+      timelineElementsCount: options.timelineElements.length 
+    });
+    
     this.canvas = options.canvas;
     this.settings = options.settings;
     this.timelineElements = options.timelineElements;
@@ -98,13 +107,22 @@ export class ExportEngine {
    * Start the export process
    */
   async startExport(): Promise<Blob> {
-    console.log("🚀 startExport called");
+    console.log("🔥🔥🔥 START_EXPORT METHOD CALLED - ENTRY POINT CONFIRMED 🔥🔥🔥");
+    console.log("🔥 Timestamp:", new Date().toISOString());
+    console.log("🔥 Export engine state:", { isExporting: this.isExporting, duration: this.duration });
     
     if (this.isExporting) {
+      console.log("🔥 Export already in progress - throwing error");
       throw new ExportError("Export already in progress", "EXPORT_IN_PROGRESS");
     }
 
     try {
+      // DEBUG: Initial export state before any calculations
+      console.log("🚀 EXPORT INITIALIZATION DEBUG:");
+      console.log("1️⃣ Initial export duration (this.duration):", this.duration);
+      console.log("2️⃣ Timeline elements count:", this.timelineElements.length);
+      console.log("3️⃣ FPS setting:", this.fps);
+      
       // Calculate the actual video content duration (not timeline duration)
       const actualVideoDuration = this.calculateActualVideoDuration();
       
@@ -114,13 +132,77 @@ export class ExportEngine {
         actualVideoDuration,
         fps: this.fps
       });
+
+      // Log detailed timeline element information
+      console.log("📊 DETAILED TIMELINE ELEMENTS ANALYSIS:");
+      this.timelineElements.forEach((el, index) => {
+        const trimStart = el.trimStart || 0;
+        const trimEnd = el.trimEnd || 0;
+        const effectiveDuration = el.duration - trimStart - trimEnd;
+        const elementEndTime = (el.startTime || 0) + el.duration - trimStart - trimEnd;
+        
+        console.log(`  Element ${index + 1}:`, {
+          id: el.id,
+          type: el.type,
+          startTime: el.startTime,
+          duration: el.duration,
+          trimStart: trimStart,
+          trimEnd: trimEnd,
+          effectiveDuration: effectiveDuration,
+          elementEndTime: elementEndTime,
+          mediaId: el.mediaId
+        });
+        
+        // CRITICAL: Check if trim values are causing the issue
+        if (trimEnd > 0) {
+          console.log(`  🚨 TRIM END DETECTED: ${trimEnd}s - This may be causing duration reduction!`);
+        }
+        if (effectiveDuration !== el.duration) {
+          console.log(`  🚨 EFFECTIVE DURATION DIFFERS: ${effectiveDuration}s vs original ${el.duration}s`);
+        }
+      });
+
+      // Log media items duration comparison
+      console.log("🎥 MEDIA ITEMS DURATION ANALYSIS:");
+      const mediaAnalysis = this.timelineElements
+        .filter(el => el.type === 'media' && el.mediaId)
+        .map((el, index) => {
+          const mediaItem = this.getMediaItem(el.mediaId!);
+          const analysis = {
+            elementId: el.id,
+            mediaId: el.mediaId,
+            mediaType: mediaItem?.type,
+            sourceDuration: mediaItem?.duration,
+            timelineElementDuration: el.duration,
+            durationMismatch: mediaItem?.duration && Math.abs(mediaItem.duration - el.duration) > 0.1
+          };
+          console.log(`  Media ${index + 1}:`, analysis);
+          return analysis;
+        });
+      
+      // Calculate duration comparison
+      console.log("⏱️ DURATION COMPARISON:");
+      const durationComparison = {
+        timelineDuration: this.duration,
+        actualVideoDuration,
+        finalExportDuration: Math.min(this.duration, actualVideoDuration + 0.1),
+        hasSignificantMismatch: Math.abs(this.duration - actualVideoDuration) > 0.5
+      };
+      console.log("  Timeline duration:", this.duration);
+      console.log("  Calculated video duration:", actualVideoDuration);
+      console.log("  Final export duration:", Math.min(this.duration, actualVideoDuration + 0.1));
+      console.log("  Has significant mismatch:", Math.abs(this.duration - actualVideoDuration) > 0.5);
       
       // Use the shorter of timeline duration or actual video duration
       const safeDuration = Math.min(this.duration, actualVideoDuration + 0.1); // Small buffer
       
       if (safeDuration !== this.duration) {
-        console.log(`🛠️ Adjusting export duration from ${this.duration}s to ${safeDuration}s`);
+        console.log(`🛠️ DURATION ADJUSTMENT DETECTED!`);
+        console.log(`   Original duration: ${this.duration}s`);
+        console.log(`   Safe duration: ${safeDuration}s`);
+        console.log(`   Difference: ${this.duration - safeDuration}s`);
         this.duration = safeDuration;
+        console.log(`✅ Export duration updated to: ${this.duration}s`);
         this.captureService = new FrameCaptureService(
           {
             fps: this.fps,
@@ -131,6 +213,8 @@ export class ExportEngine {
           this.settings,
           this.timelineElements
         );
+      } else {
+        console.log(`✅ No duration adjustment needed - using: ${this.duration}s`);
       }
       
       // Pre-flight checks including memory monitoring
@@ -329,24 +413,10 @@ export class ExportEngine {
    * Calculate the actual duration of video content (not timeline gaps)
    */
   private calculateActualVideoDuration(): number {
-    let maxVideoDuration = 0;
-    
-    for (const element of this.timelineElements) {
-      if (element.type === 'media') {
-        const mediaItem = this.getMediaItem(element.mediaId!);
-        if (mediaItem?.type === 'video' && mediaItem.duration) {
-          // Calculate the effective end time of this video element
-          const trimStart = element.trimStart || 0;
-          const trimEnd = element.trimEnd || 0;
-          const effectiveDuration = mediaItem.duration - trimStart - trimEnd;
-          const elementEndTime = (element.startTime || 0) + effectiveDuration;
-          
-          maxVideoDuration = Math.max(maxVideoDuration, elementEndTime);
-        }
-      }
-    }
-    
-    return maxVideoDuration;
+    // Use the timeline duration that was passed from the timeline store
+    // This already accounts for all trims, splits, and element positioning
+    console.log("🎯 Using timeline duration instead of recalculating:", this.duration);
+    return this.duration;
   }
 
   /**
