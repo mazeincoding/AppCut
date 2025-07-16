@@ -17,7 +17,7 @@ Add AI video generation capabilities to OpenCut using veo3-fal-video-ai package.
 - "Generate AI Videos" interface working in OpenCut editor
 - User confirmed AI button functionality ✅
 
-**Current Status**: 16/40 tasks completed (40%)
+**Current Status**: 18/40 tasks completed (45%)
 **Next Steps**: Phase 4 - AI Integration
 
 ## Phase 1: UI Foundation (15 minutes total)
@@ -109,15 +109,15 @@ Add AI video generation capabilities to OpenCut using veo3-fal-video-ai package.
 - [x] Replace mock response with real API call
 - [x] Handle basic text-to-video generation
 
-### 4.2 Add Model Selection Logic (3 min)
-- [ ] Pass model parameter to veo3-fal-video-ai
-- [ ] Map UI model names to API model names
-- [ ] Handle model-specific parameters
+### 4.2 Add Model Selection Logic (3 min) ✅
+- [x] Pass model parameter to veo3-fal-video-ai
+- [x] Map UI model names to API model names
+- [x] Handle model-specific parameters
 
-### 4.3 Add Video File Handling (3 min)
-- [ ] Save generated video to temporary folder
-- [ ] Return file path or URL in response
-- [ ] Add basic file cleanup logic
+### 4.3 Add Video File Handling (3 min) ✅
+- [x] Save generated video to temporary folder
+- [x] Return file path or URL in response
+- [x] Add basic file cleanup logic
 
 ### 4.4 Test Real Video Generation (3 min)
 - [ ] Generate simple test video
