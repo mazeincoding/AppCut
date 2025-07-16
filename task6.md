@@ -64,10 +64,10 @@ Remaining testing tasks for the video export functionality. Each test task shoul
 - [x] Test size calculation accuracy
 - [ ] Test compression ratios
 
-### 9.5 Test Quality Settings (3 min)
-- [ ] Compare quality levels
-- [ ] Test bitrate accuracy
-- [ ] Test resolution accuracy
+### 9.5 Test Quality Settings (3 min) ✅
+- [x] Compare quality levels
+- [x] Test bitrate accuracy
+- [x] Test resolution accuracy
 
 ### 9.6 Test Metadata Preservation (3 min)
 - [ ] Test video metadata
