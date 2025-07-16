@@ -103,6 +103,12 @@ export class ExportEngine {
     }
 
     try {
+      // DEBUG: Initial export state before any calculations
+      console.log("🚀 EXPORT INITIALIZATION DEBUG:");
+      console.log("1️⃣ Initial export duration (this.duration):", this.duration);
+      console.log("2️⃣ Timeline elements count:", this.timelineElements.length);
+      console.log("3️⃣ FPS setting:", this.fps);
+      
       // Calculate the actual video content duration (not timeline duration)
       const actualVideoDuration = this.calculateActualVideoDuration();
       
@@ -114,8 +120,9 @@ export class ExportEngine {
       });
 
       // Log detailed timeline element information
-      console.log("📊 Timeline elements analysis:", {
-        elements: this.timelineElements.map(el => ({
+      console.log("📊 DETAILED TIMELINE ELEMENTS ANALYSIS:");
+      this.timelineElements.forEach((el, index) => {
+        console.log(`  Element ${index + 1}:`, {
           id: el.id,
           type: el.type,
           startTime: el.startTime,
@@ -125,15 +132,16 @@ export class ExportEngine {
           effectiveDuration: el.duration - (el.trimStart || 0) - (el.trimEnd || 0),
           elementEndTime: (el.startTime || 0) + el.duration - (el.trimStart || 0) - (el.trimEnd || 0),
           mediaId: el.mediaId
-        }))
+        });
       });
 
       // Log media items duration comparison
+      console.log("🎥 MEDIA ITEMS DURATION ANALYSIS:");
       const mediaAnalysis = this.timelineElements
         .filter(el => el.type === 'media' && el.mediaId)
-        .map(el => {
+        .map((el, index) => {
           const mediaItem = this.getMediaItem(el.mediaId!);
-          return {
+          const analysis = {
             elementId: el.id,
             mediaId: el.mediaId,
             mediaType: mediaItem?.type,
@@ -141,26 +149,33 @@ export class ExportEngine {
             timelineElementDuration: el.duration,
             durationMismatch: mediaItem?.duration && Math.abs(mediaItem.duration - el.duration) > 0.1
           };
+          console.log(`  Media ${index + 1}:`, analysis);
+          return analysis;
         });
       
-      console.log("🎥 Media duration analysis:", mediaAnalysis);
-      
       // Calculate duration comparison
+      console.log("⏱️ DURATION COMPARISON:");
       const durationComparison = {
         timelineDuration: this.duration,
         actualVideoDuration,
         finalExportDuration: Math.min(this.duration, actualVideoDuration + 0.1),
         hasSignificantMismatch: Math.abs(this.duration - actualVideoDuration) > 0.5
       };
-      
-      console.log("⏱️ Duration comparison:", durationComparison);
+      console.log("  Timeline duration:", this.duration);
+      console.log("  Calculated video duration:", actualVideoDuration);
+      console.log("  Final export duration:", Math.min(this.duration, actualVideoDuration + 0.1));
+      console.log("  Has significant mismatch:", Math.abs(this.duration - actualVideoDuration) > 0.5);
       
       // Use the shorter of timeline duration or actual video duration
       const safeDuration = Math.min(this.duration, actualVideoDuration + 0.1); // Small buffer
       
       if (safeDuration !== this.duration) {
-        console.log(`🛠️ Adjusting export duration from ${this.duration}s to ${safeDuration}s`);
+        console.log(`🛠️ DURATION ADJUSTMENT DETECTED!`);
+        console.log(`   Original duration: ${this.duration}s`);
+        console.log(`   Safe duration: ${safeDuration}s`);
+        console.log(`   Difference: ${this.duration - safeDuration}s`);
         this.duration = safeDuration;
+        console.log(`✅ Export duration updated to: ${this.duration}s`);
         this.captureService = new FrameCaptureService(
           {
             fps: this.fps,
@@ -171,6 +186,8 @@ export class ExportEngine {
           this.settings,
           this.timelineElements
         );
+      } else {
+        console.log(`✅ No duration adjustment needed - using: ${this.duration}s`);
       }
       
       // Pre-flight checks
