@@ -1,8 +1,34 @@
 "use client";
 
 import { BotIcon } from "lucide-react";
+import { useState } from "react";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+
+interface AIModel {
+  id: string;
+  name: string;
+  description: string;
+  price: string;
+  resolution: string;
+}
+
+const AI_MODELS: AIModel[] = [
+  { id: "veo3", name: "Veo3", description: "Highest quality, slower generation", price: "$3.00", resolution: "1080p" },
+  { id: "veo3_fast", name: "Veo3 Fast", description: "High quality, faster generation", price: "$2.00", resolution: "1080p" },
+  { id: "veo2", name: "Veo2", description: "Good quality, balanced speed", price: "$2.50", resolution: "1080p" },
+  { id: "hailuo", name: "Hailuo", description: "Fast generation, good quality", price: "$0.08", resolution: "720p" },
+  { id: "kling", name: "Kling", description: "Fast generation, cost-effective", price: "$0.10", resolution: "720p" },
+];
 
 export function AiView() {
+  const [prompt, setPrompt] = useState("");
+  const [selectedModel, setSelectedModel] = useState<string>("");
+
+  const maxChars = 500;
+  const remainingChars = maxChars - prompt.length;
+
   return (
     <div className="p-4 h-full flex flex-col">
       <div className="flex items-center gap-2 mb-4">
@@ -10,14 +36,68 @@ export function AiView() {
         <h3 className="text-sm font-medium">AI Video Generation</h3>
       </div>
       
-      <div className="flex-1 flex flex-col items-center justify-center text-center">
-        <div className="bg-panel-accent rounded-lg p-6 max-w-xs">
-          <BotIcon className="size-12 text-primary mx-auto mb-3" />
-          <h4 className="text-sm font-medium mb-2">Generate AI Videos</h4>
-          <p className="text-xs text-muted-foreground">
-            Create videos from text prompts using AI models
-          </p>
+      <div className="flex-1 flex flex-col gap-4">
+        {/* Text Prompt Input */}
+        <div className="space-y-2">
+          <Label htmlFor="prompt">Describe your video</Label>
+          <Textarea
+            id="prompt"
+            placeholder="Describe your video..."
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value.slice(0, maxChars))}
+            className="min-h-[80px] resize-none"
+          />
+          <div className="flex justify-between items-center">
+            <p className="text-xs text-muted-foreground">
+              Be specific about scenes, actions, and style
+            </p>
+            <span className={`text-xs ${remainingChars < 50 ? 'text-destructive' : 'text-muted-foreground'}`}>
+              {remainingChars}/{maxChars}
+            </span>
+          </div>
         </div>
+
+        {/* Model Selection */}
+        <div className="space-y-2">
+          <Label htmlFor="model">AI Model</Label>
+          <Select value={selectedModel} onValueChange={setSelectedModel}>
+            <SelectTrigger id="model">
+              <SelectValue placeholder="Select AI model" />
+            </SelectTrigger>
+            <SelectContent>
+              {AI_MODELS.map((model) => (
+                <SelectItem key={model.id} value={model.id}>
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{model.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {model.price} • {model.resolution}
+                      </span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {model.description}
+                    </span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Selected Model Info */}
+        {selectedModel && (
+          <div className="bg-panel-accent rounded-lg p-3">
+            <div className="flex items-center gap-2 mb-1">
+              <BotIcon className="size-4 text-primary" />
+              <span className="text-sm font-medium">
+                {AI_MODELS.find(m => m.id === selectedModel)?.name}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {AI_MODELS.find(m => m.id === selectedModel)?.description}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
