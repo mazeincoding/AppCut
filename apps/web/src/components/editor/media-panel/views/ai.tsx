@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { generateVideo, handleApiError } from "@/lib/ai-video-client";
 
 interface AIModel {
   id: string;
@@ -27,6 +28,8 @@ export function AiView() {
   const [prompt, setPrompt] = useState("");
   const [selectedModel, setSelectedModel] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [jobId, setJobId] = useState<string | null>(null);
 
   const maxChars = 500;
   const remainingChars = maxChars - prompt.length;
@@ -35,13 +38,32 @@ export function AiView() {
     if (!prompt.trim() || !selectedModel) return;
     
     setIsGenerating(true);
+    setError(null);
+    setJobId(null);
+    
     try {
-      // Simulate API call for now
       console.log("Generating video with:", { prompt, selectedModel });
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      console.log("Video generation complete!");
+      
+      const response = await generateVideo({
+        prompt: prompt.trim(),
+        model: selectedModel,
+        resolution: "1080p",
+        duration: 5
+      });
+      
+      console.log("Video generation started:", response);
+      setJobId(response.job_id);
+      
+      // In a real implementation, you'd poll the status endpoint
+      // For now, we'll just show the job ID
+      console.log("Job ID:", response.job_id);
+      console.log("Status:", response.status);
+      console.log("Message:", response.message);
+      console.log("Estimated time:", response.estimated_time, "seconds");
+      
     } catch (error) {
       console.error("Generation failed:", error);
+      setError(handleApiError(error));
     } finally {
       setIsGenerating(false);
     }
@@ -140,6 +162,20 @@ export function AiView() {
               </>
             )}
           </Button>
+          
+          {/* Error Display */}
+          {error && (
+            <div className="mt-2 p-2 bg-destructive/10 border border-destructive/20 rounded text-sm text-destructive">
+              {error}
+            </div>
+          )}
+          
+          {/* Job ID Display */}
+          {jobId && (
+            <div className="mt-2 p-2 bg-green-500/10 border border-green-500/20 rounded text-sm text-green-700">
+              ✅ Generation started! Job ID: {jobId.substring(0, 8)}...
+            </div>
+          )}
           
           {/* Cost Display */}
           {selectedModel && (
