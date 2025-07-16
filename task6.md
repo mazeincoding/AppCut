@@ -33,14 +33,14 @@ Remaining testing tasks for the video export functionality. Each test task shoul
 - [x] Compare input vs output
 
 ### 8.9 Test Silent Audio Handling (3 min)
-- [ ] Test silent audio tracks
-- [ ] Test audio-only export
-- [ ] Test muted tracks
+- [x] Test silent audio tracks
+- [x] Test audio-only export
+- [x] Test muted tracks
 
 ### 8.10 Test Audio/Video Metadata (3 min)
-- [ ] Test duration metadata
-- [ ] Test frame rate metadata
-- [ ] Test audio sample rate
+- [x] Test duration metadata
+- [x] Test frame rate metadata
+- [x] Test audio sample rate
 
 ## Phase 9: Format Validation Testing (30 min total)
 
