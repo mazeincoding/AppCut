@@ -38,7 +38,7 @@ export function useTimelineElementResize({
     };
 
     const handleDocumentMouseUp = () => {
-      handleResizeEnd();
+      setResizing(null);
     };
 
     // Add document-level listeners for proper drag behavior
@@ -145,20 +145,9 @@ export function useTimelineElementResize({
     }
   };
 
-  const handleResizeMove = (e: React.MouseEvent) => {
-    updateTrimFromMouseMove(e);
-  };
-
-  const handleResizeEnd = () => {
-    setResizing(null);
-  };
-
   return {
     resizing,
     isResizing: resizing !== null,
     handleResizeStart,
-    // Return empty handlers since we use document listeners now
-    handleResizeMove: () => {}, // Not used anymore
-    handleResizeEnd: () => {}, // Not used anymore
   };
 }
