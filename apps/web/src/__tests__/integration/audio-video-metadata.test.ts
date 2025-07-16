@@ -29,15 +29,18 @@ describe('Audio/Video Metadata Tests', () => {
         streams: [
           {
             codec_type: 'video',
+            codec_name: 'h264',
             r_frame_rate: '30/1',
             duration: '30.000000',
             nb_frames: '900',
           },
           {
             codec_type: 'audio',
+            codec_name: 'aac',
             sample_rate: '48000',
             duration: '30.000000',
             bit_rate: '128000',
+            channels: 2,
           },
         ],
       }),
@@ -101,8 +104,14 @@ describe('Audio/Video Metadata Tests', () => {
       const metadata = mockMediaInfo.parse.mock.results[0]?.value || mockMediaInfo.parse();
       const videoStream = metadata.streams.find((s: any) => s.codec_type === 'video');
       
-      const rFrameRate = parseFloat(videoStream.r_frame_rate);
-      const avgFrameRate = parseFloat(videoStream.avg_frame_rate);
+      // Parse frame rate from fraction format (e.g., "30/1")
+      const parseFrameRate = (rateString: string) => {
+        const [num, den] = rateString.split('/').map(Number);
+        return num / (den || 1);
+      };
+      
+      const rFrameRate = parseFrameRate(videoStream.r_frame_rate);
+      const avgFrameRate = videoStream.avg_frame_rate ? parseFrameRate(videoStream.avg_frame_rate) : rFrameRate;
       
       expect(Math.abs(rFrameRate - avgFrameRate)).toBeLessThan(0.01);
     });
@@ -111,7 +120,13 @@ describe('Audio/Video Metadata Tests', () => {
       const metadata = mockMediaInfo.parse.mock.results[0]?.value || mockMediaInfo.parse();
       const videoStream = metadata.streams.find((s: any) => s.codec_type === 'video');
       
-      const frameRate = parseFloat(videoStream.r_frame_rate);
+      // Parse frame rate from fraction format
+      const parseFrameRate = (rateString: string) => {
+        const [num, den] = rateString.split('/').map(Number);
+        return num / (den || 1);
+      };
+      
+      const frameRate = parseFrameRate(videoStream.r_frame_rate);
       const standardRates = [23.976, 24, 25, 29.97, 30, 50, 59.94, 60];
       
       const closestStandard = standardRates.reduce((prev, curr) => 

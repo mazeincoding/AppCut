@@ -121,17 +121,23 @@ export function checkBrowserCompatibility(): {
     issues.push("Web Audio API not supported");
   }
   
-  // Check for necessary video codecs
-  const testRecorder = new MediaRecorder(new MediaStream());
-  const supportedTypes = [
-    'video/webm;codecs=vp9',
-    'video/webm;codecs=vp8',
-    'video/mp4;codecs=h264',
-  ];
-  
-  const hasVideoCodec = supportedTypes.some(type => MediaRecorder.isTypeSupported(type));
-  if (!hasVideoCodec) {
-    issues.push("No supported video codecs available");
+  // Check for necessary video codecs (only if MediaRecorder is available)
+  if (window.MediaRecorder) {
+    try {
+      const testRecorder = new MediaRecorder(new MediaStream());
+      const supportedTypes = [
+        'video/webm;codecs=vp9',
+        'video/webm;codecs=vp8',
+        'video/mp4;codecs=h264',
+      ];
+      
+      const hasVideoCodec = supportedTypes.some(type => MediaRecorder.isTypeSupported(type));
+      if (!hasVideoCodec) {
+        issues.push("No supported video codecs available");
+      }
+    } catch (error) {
+      issues.push("MediaRecorder codec check failed");
+    }
   }
   
   return {
@@ -157,10 +163,10 @@ export function estimateMemoryUsage(
   
   let warning = null;
   
-  if (estimatedMB > 1000) {
-    warning = "High memory usage expected. Consider reducing quality or duration.";
-  } else if (estimatedMB > 2000) {
+  if (estimatedMB > 2000) {
     warning = "Very high memory usage. Export may fail on low-memory devices.";
+  } else if (estimatedMB > 1000) {
+    warning = "High memory usage expected. Consider reducing quality or duration.";
   }
   
   return {

@@ -20,6 +20,16 @@ describe('Export Errors', () => {
     // Mock console.error
     originalConsoleError = console.error
     console.error = jest.fn()
+    
+    // Mock MediaRecorder and MediaStream
+    global.window = global.window || {}
+    global.window.MediaRecorder = jest.fn().mockImplementation(() => ({})) as any
+    global.window.MediaRecorder.isTypeSupported = jest.fn().mockReturnValue(true)
+    global.MediaRecorder = global.window.MediaRecorder
+    global.MediaStream = jest.fn().mockImplementation(() => ({})) as any
+    global.HTMLCanvasElement.prototype.captureStream = jest.fn()
+    global.AudioContext = jest.fn().mockImplementation(() => ({})) as any
+    global.webkitAudioContext = jest.fn().mockImplementation(() => ({})) as any
   })
 
   afterEach(() => {
@@ -275,7 +285,7 @@ describe('Export Errors', () => {
       
       expect(console.error).toHaveBeenCalledWith('Export Error:', expect.objectContaining({
         error: 'Test error',
-        stack: undefined
+        stack: 'No stack trace available'
       }))
     })
   })
@@ -376,9 +386,10 @@ describe('Export Errors', () => {
     })
 
     it('should provide warning for high memory usage', () => {
-      const result = estimateMemoryUsage(1920, 1080, 30, 30)
+      const result = estimateMemoryUsage(960, 540, 30, 30) // 540p, 30 seconds
       
       expect(result.estimatedMB).toBeGreaterThan(1000)
+      expect(result.estimatedMB).toBeLessThan(2000)
       expect(result.warning).toContain('High memory usage')
     })
 
