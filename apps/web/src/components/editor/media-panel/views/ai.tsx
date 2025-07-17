@@ -171,9 +171,9 @@ export function AiView() {
           const newVideo = {
             jobId: jobId,
             videoUrl: status.video_url,
-            videoPath: status.video_path,
-            fileSize: status.file_size,
-            duration: status.duration,
+            videoPath: undefined, // Not available in GenerationStatus
+            fileSize: undefined, // Not available in GenerationStatus
+            duration: undefined, // Not available in GenerationStatus
             prompt: prompt.trim(),
             model: selectedModel
           };

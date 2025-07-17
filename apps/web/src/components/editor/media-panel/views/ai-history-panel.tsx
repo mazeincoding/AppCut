@@ -55,7 +55,7 @@ export function AIHistoryPanel({
           </div>
           <Button
             size="sm"
-            variant="ghost"
+            variant="text"
             onClick={onClose}
             className="h-8 w-8 p-0"
           >

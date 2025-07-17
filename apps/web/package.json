@@ -5,10 +5,15 @@
   "author": "OpenCut Team",
   "main": "electron/main-simple.js",
   "scripts": {
-    "electron:build": "echo 'Using static HTML file'",
-    "electron:pack": "electron-builder --dir",
-    "electron:dist": "electron-builder --publish=never",
-    "electron:dist:win": "electron-builder --win"
+    "dev": "next dev",
+    "build": "next build",
+    "build:electron": "NEXT_PUBLIC_ELECTRON=true next build",
+    "export:electron": "NEXT_PUBLIC_ELECTRON=true next build",
+    "electron:dev": "node scripts/dev-electron.js",
+    "electron:build": "npm run export:electron",
+    "electron:pack": "npm run electron:build && electron-builder --dir",
+    "electron:dist": "npm run electron:build && electron-builder --publish=never",
+    "electron:dist:win": "npm run electron:build && electron-builder --win"
   },
   "devDependencies": {
     "electron": "37.2.3",
