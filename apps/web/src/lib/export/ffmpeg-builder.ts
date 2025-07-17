@@ -128,7 +128,7 @@ export class FFmpegCommandBuilder {
 
   private addOutputMapping(args: string[], videoLayerCount: number, hasAudio: boolean, settings: any): void {
     // Map video output
-    const finalVideoLayer = videoLayerCount > 0 ? `[overlay_${videoLayerCount - 1}]` : '[0:v]';
+    const finalVideoLayer = videoLayerCount > 0 ? `[overlay_${videoLayerCount - 1}]` : '0:v';
     args.push('-map', finalVideoLayer);
 
     // Map audio output if present
