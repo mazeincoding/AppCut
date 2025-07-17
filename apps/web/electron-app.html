@@ -4,6 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OpenCut - Desktop Video Editor</title>
+    <script>
+        // Try to redirect to Next.js app if running in development
+        if (window.location.protocol === 'file:' && window.electronAPI) {
+            // Check if we should redirect to development server
+            fetch('http://localhost:3000').then(() => {
+                console.log('🔄 Development server detected, redirecting...');
+                window.location.href = 'http://localhost:3000';
+            }).catch(() => {
+                console.log('📄 Using static HTML - development server not available');
+            });
+        }
+    </script>
     <style>
         body {
             margin: 0;

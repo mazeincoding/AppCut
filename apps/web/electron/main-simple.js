@@ -1,5 +1,44 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const fs = require('fs');
+
+// Window state management
+let windowState = {
+  width: 1400,
+  height: 1000,
+  x: undefined,
+  y: undefined,
+  isMaximized: false
+};
+
+function saveWindowState() {
+  if (!mainWindow) return;
+  
+  const bounds = mainWindow.getBounds();
+  windowState = {
+    ...bounds,
+    isMaximized: mainWindow.isMaximized()
+  };
+  
+  try {
+    const configPath = path.join(app.getPath('userData'), 'window-state.json');
+    fs.writeFileSync(configPath, JSON.stringify(windowState, null, 2));
+  } catch (error) {
+    console.log('Failed to save window state:', error);
+  }
+}
+
+function loadWindowState() {
+  try {
+    const configPath = path.join(app.getPath('userData'), 'window-state.json');
+    if (fs.existsSync(configPath)) {
+      const savedState = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      windowState = { ...windowState, ...savedState };
+    }
+  } catch (error) {
+    console.log('Failed to load window state:', error);
+  }
+}
 
 // Handle GPU issues in headless environments
 app.commandLine.appendSwitch('--disable-gpu');
@@ -9,30 +48,99 @@ app.commandLine.appendSwitch('--no-sandbox');
 let mainWindow;
 
 function createMainWindow() {
+  // Load saved window state
+  loadWindowState();
+  
   mainWindow = new BrowserWindow({
-    width: 1400,
-    height: 1000,
+    width: windowState.width,
+    height: windowState.height,
+    x: windowState.x,
+    y: windowState.y,
     show: false,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
       enableRemoteModule: false,
+      allowRunningInsecureContent: true,
+      webSecurity: false, // Allow local file access
       preload: path.join(__dirname, 'preload.js')
     }
   });
 
-  // Load a static HTML page that will redirect to editor
-  const startUrl = `file://${path.join(__dirname, '../electron-app.html')}`;
+  // Try to load built Next.js app first, fallback to static HTML
+  const outPath = path.join(__dirname, '../out/index.html');
+  const staticPath = path.join(__dirname, '../electron-app.html');
+  
+  let startUrl;
+  if (fs.existsSync(outPath)) {
+    startUrl = `file://${outPath}`;
+    console.log('📦 Loading built Next.js app from out/');
+  } else {
+    startUrl = `file://${staticPath}`;
+    console.log('📄 Loading static HTML fallback');
+  }
   
   mainWindow.loadURL(startUrl);
 
+  // Configure CSP and security headers for local file access
+  mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': ['default-src \'self\' \'unsafe-inline\' \'unsafe-eval\' data: file: blob:; img-src \'self\' data: file: blob: https:; media-src \'self\' data: file: blob:; style-src \'self\' \'unsafe-inline\' data: file:;']
+      }
+    });
+  });
+
   mainWindow.once('ready-to-show', () => {
     console.log('✅ Electron window ready - OpenCut loaded successfully');
+    
+    // Restore window state
+    if (windowState.isMaximized) {
+      mainWindow.maximize();
+    }
+    
     mainWindow.show();
+  });
+
+  // Save window state on close
+  mainWindow.on('close', () => {
+    saveWindowState();
   });
 
   mainWindow.on('closed', () => {
     mainWindow = null;
+  });
+
+  // Save window state on resize/move
+  mainWindow.on('resize', () => {
+    if (!mainWindow.isMaximized()) {
+      saveWindowState();
+    }
+  });
+
+  mainWindow.on('move', () => {
+    if (!mainWindow.isMaximized()) {
+      saveWindowState();
+    }
+  });
+
+  // Handle navigation for Next.js router support
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    // Allow navigation to local files and same origin
+    if (url.startsWith('file://') || url.startsWith(startUrl)) {
+      console.log('🔗 Allowing navigation to:', url);
+    } else {
+      console.log('🚫 Blocking external navigation to:', url);
+      event.preventDefault();
+    }
+  });
+
+  // Handle new window requests (open in default browser)
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    console.log('🌐 Opening external URL in browser:', url);
+    require('electron').shell.openExternal(url);
+    return { action: 'deny' };
   });
 
   // Test IPC
