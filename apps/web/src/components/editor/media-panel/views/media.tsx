@@ -22,12 +22,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { DraggableMediaItem } from "@/components/ui/draggable-item";
 import { useProjectStore } from "@/stores/project-store";
 import { useTimelineStore } from "@/stores/timeline-store";
 
 export function MediaView() {
-  const { mediaItems, addMediaItem, removeMediaItem } = useMediaStore();
+  const { mediaItems, addMediaItem, removeMediaItem, isLoading } = useMediaStore();
   const { activeProject } = useProjectStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -187,6 +188,39 @@ export function MediaView() {
       </div>
     );
   };
+
+  // render skeletons while loading media item thumbnails
+  if (isLoading) {
+    return (
+      <div className="h-full flex flex-col gap-1 transition-colors relative">
+        {/* Search and filter controls skeleton */}
+        <div className="p-3 pb-2">
+          <div className="flex gap-2">
+            <Skeleton className="w-[80px] h-8" /> {/* Filter dropdown */}
+            <Skeleton className="flex-1 h-8" /> {/* Search input */}
+          </div>
+        </div>
+
+        {/* Media grid skeleton */}
+        <div className="flex-1 overflow-y-auto p-3 pt-0">
+          <div
+            className="grid gap-2"
+            style={{
+              gridTemplateColumns: "repeat(auto-fill, 160px)",
+            }}
+          >
+            {/* 8 thumbnail skeletons */}
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="flex flex-col gap-2 w-28 h-28">
+                <Skeleton className="w-full aspect-video" />
+                <Skeleton className="w-full h-4" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
