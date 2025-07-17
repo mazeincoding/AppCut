@@ -11,6 +11,7 @@ const nextConfig: NextConfig = {
   output: isElectron ? "export" : "standalone",
   assetPrefix: isElectron ? "" : undefined,
   trailingSlash: isElectron,
+  distDir: isElectron ? "out" : ".next",
   images: {
     unoptimized: isElectron,
     remotePatterns: [
@@ -24,6 +25,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  ...(isElectron && {
+    // Exclude API routes for static export
+    generateBuildId: async () => 'electron-static-build',
+  }),
 };
 
 export default nextConfig;

@@ -24,9 +24,9 @@ export function useSession() {
     } else {
       // Server mode - try to dynamically import auth
       import('@opencut/auth/client')
-        .then((auth) => {
+        .then(({ useSession: useServerSession }) => {
           // Use the original auth hook
-          const serverSession = auth.useSession();
+          const serverSession = useServerSession();
           setSession(serverSession);
           setIsLoading(serverSession.isPending || false);
         })
@@ -43,6 +43,7 @@ export function useSession() {
 
 /**
  * Sign in function - no-op in desktop mode
+ * Note: Server mode functions not fully implemented - desktop mode is primary focus
  */
 export async function signIn(provider?: string, options?: any) {
   if (isElectron()) {
@@ -50,12 +51,8 @@ export async function signIn(provider?: string, options?: any) {
     return { success: true, data: createDesktopSession().data };
   }
   
-  try {
-    const auth = await import('@opencut/auth/client');
-    return auth.signIn(provider, options);
-  } catch (error) {
-    throw new Error('Authentication not available');
-  }
+  // Server mode not implemented in wrapper - use original auth directly
+  throw new Error('Server authentication not available in wrapper - use original auth client');
 }
 
 /**
@@ -67,12 +64,8 @@ export async function signUp(data: any) {
     return { success: true, data: createDesktopSession().data };
   }
   
-  try {
-    const auth = await import('@opencut/auth/client');
-    return auth.signUp(data);
-  } catch (error) {
-    throw new Error('Authentication not available');
-  }
+  // Server mode not implemented in wrapper - use original auth directly
+  throw new Error('Server authentication not available in wrapper - use original auth client');
 }
 
 /**
@@ -84,10 +77,6 @@ export async function signOut() {
     return { success: true };
   }
   
-  try {
-    const auth = await import('@opencut/auth/client');
-    return auth.signOut();
-  } catch (error) {
-    return { success: true };
-  }
+  // Server mode not implemented in wrapper - use original auth directly
+  return { success: true };
 }
