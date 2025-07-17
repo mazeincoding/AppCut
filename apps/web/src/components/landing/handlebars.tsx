@@ -184,7 +184,7 @@ export function Handlebars({
 
           {/* Playhead */}
           <motion.div
-            className="absolute top-0 w-0.5 h-full bg-yellow-400 pointer-events-none z-20"
+            className="absolute top-0 w-0.5 h-full bg-primary pointer-events-none z-20"
             style={{
               left: playheadX,
             }}
