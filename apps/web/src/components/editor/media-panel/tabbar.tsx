@@ -16,6 +16,7 @@ export function TabBar() {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTo({
         left: scrollContainerRef.current.scrollWidth,
+        behavior: "smooth",
       });
       setIsAtEnd(true);
       setIsAtStart(false);
@@ -26,6 +27,7 @@ export function TabBar() {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTo({
         left: 0,
+        behavior: "smooth",
       });
       setIsAtStart(true);
       setIsAtEnd(false);
@@ -61,7 +63,7 @@ export function TabBar() {
   }, []);
 
   return (
-    <div className="flex">
+    <div className="flex relative">
       <ScrollButton
         direction="left"
         onClick={scrollToStart}
@@ -69,7 +71,7 @@ export function TabBar() {
       />
       <div
         ref={scrollContainerRef}
-        className="h-12 bg-panel-accent px-3 flex justify-start items-center gap-5 overflow-x-auto scrollbar-x-hidden relative"
+        className="h-12 w-full bg-panel-accent px-3 flex justify-start items-center gap-5 overflow-x-auto scrollbar-x-hidden relative"
       >
         {(Object.keys(tabs) as Tab[]).map((tabKey) => {
           const tab = tabs[tabKey];
@@ -111,7 +113,12 @@ function ScrollButton({
   const Icon = direction === "left" ? ChevronLeft : ChevronRight;
 
   return (
-    <div className="bg-panel-accent w-12 h-full flex items-center justify-center">
+    <div
+      className={cn(
+        "absolute bg-panel-accent w-8 h-full flex items-center justify-center z-10",
+        direction === "left" ? "left-0" : "right-0"
+      )}
+    >
       <Button
         size="icon"
         className="rounded-[0.4rem] w-4 h-7 !bg-foreground/10"
