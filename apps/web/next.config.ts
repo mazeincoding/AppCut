@@ -26,8 +26,10 @@ const nextConfig: NextConfig = {
     ],
   },
   ...(isElectron && {
-    // Exclude API routes for static export
+    // For Electron static export, skip build optimization and pre-rendering
     generateBuildId: async () => 'electron-static-build',
+    skipTrailingSlashRedirect: true,
+    skipMiddlewareUrlNormalize: true,
   }),
 };
 
