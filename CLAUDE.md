@@ -74,9 +74,7 @@ bun run db:migrate
 # 6. Start development server
 bun run dev
 
-# 7. Start AI video generator service (optional)
-cd services/ai-video-generator
-source venv/bin/activate && source .env && python main.py
+# Note: AI video generation now uses direct FAL AI integration - no separate backend needed!
 ```
 
 ### Common Development Tasks

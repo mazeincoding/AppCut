@@ -26,6 +26,10 @@ export type Tab =
   | "ai";
 
 export const tabs: { [key in Tab]: { icon: LucideIcon; label: string } } = {
+  ai: {
+    icon: BotIcon,
+    label: "AI",
+  },
   media: {
     icon: VideoIcon,
     label: "Media",
@@ -61,10 +65,6 @@ export const tabs: { [key in Tab]: { icon: LucideIcon; label: string } } = {
   adjustment: {
     icon: SlidersHorizontalIcon,
     label: "Adjustment",
-  },
-  ai: {
-    icon: BotIcon,
-    label: "AI",
   },
 };
 
