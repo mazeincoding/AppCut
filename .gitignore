@@ -47,4 +47,6 @@ __pycache__/
 # AI Video Generator
 services/ai-video-generator/input/
 services/ai-video-generator/output/
+services/ai-video-generator/temp/electron-build/
+electron-build/
 services/ai-video-generator/temp/

@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "electron": "37.2.3",
-    "electron-builder": "26.0.12"
+    "electron-builder": "^26.0.12"
   },
   "build": {
     "appId": "com.opencut.desktop",
@@ -29,9 +29,7 @@
       {
         "from": "public/ffmpeg",
         "to": "ffmpeg",
-        "filter": [
-          "**/*"
-        ]
+        "filter": ["**/*"]
       }
     ],
     "win": {
@@ -47,7 +45,5 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true
     }
-  },
-  "keywords": [],
-  "license": "ISC"
+  }
 }

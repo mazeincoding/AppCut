@@ -75,7 +75,8 @@ export async function generateVideo(request: VideoGenerationRequest): Promise<Vi
       'veo3_fast': 'fal-ai/google/veo3/fast',
       'veo2': 'fal-ai/google/veo2', 
       'hailuo': 'fal-ai/minimax/hailuo-ai/video',
-      'kling': 'fal-ai/bytedance/kling-video/v1.5/pro'
+      'kling': 'fal-ai/bytedance/kling-video/v1.5/pro',
+      'kling_v2': 'fal-ai/kling-video/v2.1/master'
     };
 
     const endpoint = modelEndpoints[request.model] || 'fal-ai/minimax/hailuo-ai/video';
@@ -157,11 +158,33 @@ export async function generateVideoFromImage(request: ImageToVideoRequest): Prom
     const imageUrl = await imageToDataURL(request.image);
     console.log('✅ Image converted to data URL');
 
-    // 2. Generate video using Seedance model (proven to work)
-    const endpoint = 'fal-ai/bytedance/seedance/v1/pro/image-to-video';
+    // 2. Generate video - choose endpoint based on model
+    let endpoint: string;
+    let payload: any;
+    
+    if (request.model === 'kling_v2') {
+      // Use dedicated Kling v2.1 image-to-video endpoint
+      endpoint = 'fal-ai/kling-video/v2.1/master/image-to-video';
+      payload = {
+        prompt: request.prompt || 'Create a cinematic video from this image',
+        image_url: imageUrl,
+        duration: request.duration || 5,
+        cfg_scale: 0.5 // Default for good prompt adherence
+      };
+    } else {
+      // Use Seedance model for other cases (proven to work)
+      endpoint = 'fal-ai/bytedance/seedance/v1/pro/image-to-video';
+      payload = {
+        prompt: request.prompt || 'Create a cinematic video from this image',
+        image_url: imageUrl,
+        resolution: request.resolution || '1080p',
+        duration: request.duration?.toString() || '5'
+      };
+    }
+    
     const jobId = generateJobId();
-
     console.log(`🎬 Generating video with: ${endpoint}`);
+    console.log(`📝 Payload:`, payload);
 
     const response = await fetch(`${FAL_API_BASE}/${endpoint}`, {
       method: 'POST',
@@ -169,12 +192,7 @@ export async function generateVideoFromImage(request: ImageToVideoRequest): Prom
         'Authorization': `Key ${FAL_API_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        prompt: request.prompt || 'Create a cinematic video from this image',
-        image_url: imageUrl,
-        resolution: request.resolution || '1080p',
-        duration: request.duration?.toString() || '5'
-      }),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
@@ -256,11 +274,19 @@ export async function getAvailableModels(): Promise<ModelsResponse> {
       },
       {
         id: "kling",
-        name: "Kling",
+        name: "Kling v1.5",
         description: "Fast generation, cost-effective",
         price: "$0.10",
         resolution: "720p",
         max_duration: 15
+      },
+      {
+        id: "kling_v2",
+        name: "Kling v2.1",
+        description: "Premium model with unparalleled motion fluidity",
+        price: "$0.15",
+        resolution: "1080p",
+        max_duration: 10
       }
     ]
   };
@@ -275,7 +301,8 @@ export async function estimateCost(request: VideoGenerationRequest): Promise<Cos
     "veo3_fast": { base_cost: 2.00, max_duration: 30 },
     "veo2": { base_cost: 2.50, max_duration: 30 },
     "hailuo": { base_cost: 0.08, max_duration: 15 },
-    "kling": { base_cost: 0.10, max_duration: 15 }
+    "kling": { base_cost: 0.10, max_duration: 15 },
+    "kling_v2": { base_cost: 0.15, max_duration: 10 }
   };
 
   const modelInfo = modelCosts[request.model] || { base_cost: 1.00, max_duration: 30 };

@@ -11,6 +11,7 @@ import { generateVideo, generateVideoFromImage, handleApiError, getGenerationSta
 import { useTimelineStore } from "@/stores/timeline-store";
 import { useMediaStore } from "@/stores/media-store";
 import { useProjectStore } from "@/stores/project-store";
+import { AIHistoryPanel } from "./ai-history-panel";
 
 interface AIModel {
   id: string;
@@ -25,7 +26,8 @@ const AI_MODELS: AIModel[] = [
   { id: "veo3_fast", name: "Veo3 Fast", description: "High quality, faster generation", price: "$2.00", resolution: "1080p" },
   { id: "veo2", name: "Veo2", description: "Good quality, balanced speed", price: "$2.50", resolution: "1080p" },
   { id: "hailuo", name: "Hailuo", description: "Fast generation, good quality", price: "$0.08", resolution: "720p" },
-  { id: "kling", name: "Kling", description: "Fast generation, cost-effective", price: "$0.10", resolution: "720p" },
+  { id: "kling", name: "Kling v1.5", description: "Fast generation, cost-effective", price: "$0.10", resolution: "720p" },
+  { id: "kling_v2", name: "Kling v2.1", description: "Premium model with unparalleled motion fluidity", price: "$0.15", resolution: "1080p" },
 ];
 
 interface GeneratedVideo {
@@ -57,6 +59,9 @@ export function AiView() {
   const [generationProgress, setGenerationProgress] = useState<number>(0);
   const [statusMessage, setStatusMessage] = useState<string>("");
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
+  
+  // History panel state
+  const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState<boolean>(false);
   
   // Store hooks
   const { addMediaItem } = useMediaStore();
@@ -367,9 +372,22 @@ export function AiView() {
 
   return (
     <div className="p-4 h-full flex flex-col">
-      <div className="flex items-center gap-2 mb-4">
-        <BotIcon className="size-5 text-primary" />
-        <h3 className="text-sm font-medium">AI Video Generation</h3>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <BotIcon className="size-5 text-primary" />
+          <h3 className="text-sm font-medium">AI Video Generation</h3>
+        </div>
+        {generationHistory.length > 0 && (
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setIsHistoryPanelOpen(true)}
+            className="h-8 px-2"
+          >
+            <History className="size-4 mr-1" />
+            History ({generationHistory.length})
+          </Button>
+        )}
       </div>
       
       <div className="flex-1 flex flex-col gap-4">
@@ -666,49 +684,18 @@ export function AiView() {
           </div>
         )}
         
-        {/* Generation History */}
-        {generationHistory.length > 0 && (
-          <div className="mt-4 p-4 bg-panel-accent rounded-lg border">
-            <div className="flex items-center gap-2 mb-3">
-              <History className="size-4 text-primary" />
-              <span className="text-sm font-medium">Recent Generations</span>
-            </div>
-            
-            <div className="space-y-2 max-h-40 overflow-y-auto">
-              {generationHistory.map((video) => (
-                <div key={video.jobId} className="flex items-center gap-2 p-2 bg-background rounded border">
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs font-medium truncate">
-                      {video.prompt.length > 25 ? `${video.prompt.substring(0, 25)}...` : video.prompt}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {AI_MODELS.find(m => m.id === video.model)?.name} • {video.duration}s
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-1">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setGeneratedVideo(video)}
-                      className="h-6 w-6 p-0"
-                    >
-                      <Play className="size-3" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => removeFromHistory(video.jobId)}
-                      className="h-6 w-6 p-0 text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="size-3" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* History Panel */}
+        <AIHistoryPanel
+          isOpen={isHistoryPanelOpen}
+          onClose={() => setIsHistoryPanelOpen(false)}
+          generationHistory={generationHistory}
+          onSelectVideo={(video) => {
+            setGeneratedVideo(video);
+            setIsHistoryPanelOpen(false);
+          }}
+          onRemoveFromHistory={removeFromHistory}
+          aiModels={AI_MODELS}
+        />
       </div>
     </div>
   );

@@ -223,6 +223,17 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
     return name.trim().length > 0 && !/[<>:"/\\|?*]/.test(name);
   };
 
+  // Debug logging
+  console.log('Export button debug:', {
+    timelineDuration,
+    timelineElements: timelineElements.length,
+    tracks: tracks.length,
+    isValidFilename: isValidFilename(filename),
+    memoryLevel,
+    isExporting,
+    filename
+  });
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>

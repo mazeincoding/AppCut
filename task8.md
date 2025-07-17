@@ -3,7 +3,18 @@
 ## Overview
 Complete the AI video generation workflow by implementing automatic media region integration and enhancing the user experience. Focus on seamless video-to-media flow and advanced features.
 
-## Priority: Auto-Media Integration ✅ RESOLVED
+## Priority: UI Layout Fix - Sliding History Panel (URGENT)
+**Current Issue**: AI panel is cramped, Recent Generations section is blocked/cut off
+**Solution**: Implement separate sliding panel for generation history (Option 1)
+
+### UI Layout Fix (8 minutes total) ✅ COMPLETED
+- [x] Create sliding history panel component
+- [x] Add history toggle button to main AI panel  
+- [x] Move generation history to sliding panel
+- [x] Add thumbnails and better layout for history items
+- [x] Test responsive behavior and scrolling
+
+## Priority: Auto-Media Integration ✅ RESOLVED  
 **Previous Issue**: Generated videos don't automatically appear in the media panel - user has to manually click "Add to Timeline"
 **Status**: FIXED - Videos now automatically appear in media panel upon generation completion
 
