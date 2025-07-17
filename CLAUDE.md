@@ -73,6 +73,10 @@ bun run db:migrate
 
 # 6. Start development server
 bun run dev
+
+# 7. Start AI video generator service (optional)
+cd services/ai-video-generator
+source venv/bin/activate && source .env && python main.py
 ```
 
 ### Common Development Tasks
