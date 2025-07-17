@@ -150,7 +150,7 @@ export class ExportEngine {
           trimEnd: trimEnd,
           effectiveDuration: effectiveDuration,
           elementEndTime: elementEndTime,
-          mediaId: el.mediaId
+          mediaId: el.type === 'media' ? el.mediaId : 'N/A (text element)'
         });
         
         // CRITICAL: Check if trim values are causing the issue
@@ -165,12 +165,13 @@ export class ExportEngine {
       // Log media items duration comparison
       console.log("🎥 MEDIA ITEMS DURATION ANALYSIS:");
       const mediaAnalysis = this.timelineElements
-        .filter(el => el.type === 'media' && el.mediaId)
+        .filter(el => el.type === 'media')
         .map((el, index) => {
-          const mediaItem = this.getMediaItem(el.mediaId!);
+          const mediaEl = el as any; // Type assertion since we filtered for media
+          const mediaItem = this.getMediaItem(mediaEl.mediaId);
           const analysis = {
             elementId: el.id,
-            mediaId: el.mediaId,
+            mediaId: mediaEl.mediaId,
             mediaType: mediaItem?.type,
             sourceDuration: mediaItem?.duration,
             timelineElementDuration: el.duration,

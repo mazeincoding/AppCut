@@ -380,7 +380,7 @@ export function AiView() {
         {generationHistory.length > 0 && (
           <Button
             size="sm"
-            variant="ghost"
+            variant="text"
             onClick={() => setIsHistoryPanelOpen(true)}
             className="h-8 px-2"
           >
@@ -674,7 +674,7 @@ export function AiView() {
               </Button>
               <Button
                 size="sm"
-                variant="ghost"
+                variant="text"
                 className="flex-1"
                 onClick={resetGenerationState}
               >
