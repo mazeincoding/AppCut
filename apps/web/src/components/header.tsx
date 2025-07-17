@@ -13,7 +13,7 @@ import { motion, useScroll, useMotionValueEvent } from "motion/react";
 export function Header() {
   const { data: session } = useSession();
   const [star, setStar] = useState<string>("");
-  const [visible, setVisible] = useState(true); // Start visible on page load
+  const [visible, setVisible] = useState(true);
   const [mounted, setMounted] = useState(false);
   const { scrollYProgress } = useScroll();
 
@@ -23,15 +23,17 @@ export function Header() {
 
   useMotionValueEvent(scrollYProgress, "change", (current) => {
     if (typeof current === "number") {
-      const direction = current - scrollYProgress.getPrevious()!;
+      const previous = scrollYProgress.getPrevious();
+      if (previous === undefined) return;
+      const direction = current - previous;
 
       if (scrollYProgress.get() < 0.05) {
-        setVisible(true); // Always visible at top
+        setVisible(true); 
       } else {
         if (direction < 0) {
-          setVisible(true); // Show when scrolling up
+          setVisible(true);
         } else {
-          setVisible(false); // Hide when scrolling down
+          setVisible(false);
         }
       }
     }
