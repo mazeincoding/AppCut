@@ -29,7 +29,57 @@ Convert OpenCut from a web application to an Electron desktop application to ach
 **Expected**: ✅ Packaged app configuration ready (workspace deps prevent full build, but config valid)
 **Result**: electron-builder configured, build scripts ready, platform targets defined
 
-### Step 3: Install Native FFmpeg (2-3 minutes)
+### Step 3: Create Development Build Script (2-3 minutes)
+**Goal**: Set up Next.js build for Electron compatibility
+**Actions**:
+- Create build script that uses static export
+- Configure Next.js for file:// protocol support
+- Setup environment variables for Electron mode
+- Create dev server wrapper for hot reload
+**Test**: Build static files and verify index.html exists
+**Expected**: Static build in `out/` directory ready for Electron
+
+### Step 4: Integrate OpenCut UI into Electron (2-3 minutes)
+**Goal**: Load the actual OpenCut editor interface
+**Actions**:
+- Update main.js to load built Next.js app
+- Configure CSP headers for local file access
+- Add navigation handler for router support
+- Setup window state persistence
+**Test**: Launch Electron and see OpenCut editor interface
+**Expected**: Full OpenCut UI running in desktop window
+
+### Step 5: Fix Authentication for Desktop (2-3 minutes)
+**Goal**: Bypass authentication for desktop version
+**Actions**:
+- Create desktop auth provider that auto-creates local user
+- Modify auth checks to detect Electron environment
+- Setup local project storage without server
+- Add desktop-specific user preferences
+**Test**: Open editor without login prompt
+**Expected**: Direct access to editor with local user
+
+### Step 6: Enable Local File Access (2-3 minutes)
+**Goal**: Native file dialogs for media import
+**Actions**:
+- Implement IPC handlers for file selection
+- Add drag-and-drop from desktop support
+- Create file protocol handler for local media
+- Update media store to handle file:// URLs
+**Test**: Import video file using native dialog
+**Expected**: Local videos load directly without upload
+
+### Step 7: Implement Local Storage System (2-3 minutes)
+**Goal**: Replace OPFS with native file system
+**Actions**:
+- Create electron storage service using app.getPath()
+- Implement project save/load to local files
+- Add recent projects list
+- Setup auto-save to local directory
+**Test**: Create and save project locally
+**Expected**: Projects persist between app restarts
+
+### Step 8: Install Native FFmpeg (2-3 minutes)
 **Goal**: Add native FFmpeg binary to Electron app
 **Actions**:
 - Add `ffmpeg-static` package for bundled FFmpeg binary
@@ -38,83 +88,113 @@ Convert OpenCut from a web application to an Electron desktop application to ach
 **Test**: Verify FFmpeg binary exists and is executable
 **Expected**: Console shows FFmpeg version info
 
-### Step 4: Create IPC Communication Bridge (2-3 minutes)
-**Goal**: Setup secure communication between renderer and main process
+### Step 9: Create IPC Handlers for FFmpeg (2-3 minutes)
+**Goal**: Setup IPC communication for native FFmpeg
 **Actions**:
-- Define IPC channels for video export operations
-- Create `electron/ipc-handlers.js` for main process handlers
-- Expose safe IPC methods in preload script
-**Test**: Send test message from renderer to main process
-**Expected**: Console shows IPC communication working
+- Define IPC channels for export operations
+- Create ffmpeg-handlers.js with progress events
+- Add file path sanitization
+- Implement cancel operation support
+**Test**: Call FFmpeg IPC from renderer
+**Expected**: IPC bridge ready for FFmpeg commands
 
-### Step 5: Implement Native FFmpeg Service (2-3 minutes)
-**Goal**: Create video export service using native FFmpeg
+### Step 10: Implement Native FFmpeg Export (2-3 minutes)
+**Goal**: Replace WebAssembly with native FFmpeg
 **Actions**:
-- Create `electron/ffmpeg-service.js` 
-- Implement image-to-video conversion using child_process
-- Add progress reporting via IPC events
-**Test**: Export a simple 2-frame test video
-**Expected**: MP4 file created in Downloads folder
+- Create ElectronExportEngine class
+- Use child_process.spawn for FFmpeg
+- Stream progress updates via IPC
+- Handle temp file cleanup
+**Test**: Export 5-second video
+**Expected**: Export completes in <10 seconds (vs 80s in browser)
 
-### Step 6: Replace WebAssembly Export Engine (2-3 minutes)
-**Goal**: Switch from browser FFmpeg to Electron FFmpeg service
+### Step 11: Add Export Progress UI (2-3 minutes)
+**Goal**: Show native export progress
 **Actions**:
-- Create `ElectronExportEngine` class
-- Modify export dialog to use native export when in Electron
-- Add fallback to WebAssembly when in browser
-**Test**: Export 5-second timeline from Electron app
-**Expected**: Video exports 5-10x faster than browser version
+- Update export dialog for Electron mode
+- Display real-time FFmpeg progress
+- Add cancel button functionality
+- Show estimated time remaining
+**Test**: Export video and watch progress
+**Expected**: Smooth progress updates with cancel option
 
-### Step 7: Add File System Access (2-3 minutes)
-**Goal**: Enable native file operations for better performance
+### Step 12: Fix Media Playback for Local Files (2-3 minutes)
+**Goal**: Enable video preview for file:// URLs
 **Actions**:
-- Implement native file save dialog
-- Add direct file system access for media imports
-- Create secure file path handling
-**Test**: Import video file and save exported video via native dialogs
-**Expected**: Native file dialogs work correctly
+- Register custom protocol for media files
+- Update video player to handle local paths
+- Fix CORS issues for local files
+- Add thumbnail generation for local media
+**Test**: Import and preview local video
+**Expected**: Videos play directly from disk
 
-### Step 8: Optimize Performance Settings (2-3 minutes)
-**Goal**: Configure Electron for maximum video processing performance
+### Step 13: Implement Project Packaging (2-3 minutes)
+**Goal**: Bundle projects with media for portability
 **Actions**:
-- Enable hardware acceleration in Electron
-- Configure V8 memory limits for large videos
-- Setup FFmpeg hardware encoding flags
-**Test**: Export 1080p 10-second video
-**Expected**: Export completes in under 10 seconds
+- Create project export with all media
+- Implement project import from archive
+- Add project migration utilities
+- Setup project templates
+**Test**: Export and import complete project
+**Expected**: Projects portable between machines
 
-### Step 9: Package and Distribution (2-3 minutes)
-**Goal**: Create distributable Electron application
+### Step 14: Add Menu Bar and Shortcuts (2-3 minutes)
+**Goal**: Native desktop experience
 **Actions**:
-- Configure auto-updater setup
-- Create build scripts for Windows/macOS/Linux
-- Setup code signing (development certificates)
-**Test**: Build installer and install app
-**Expected**: Installed app runs independently of development environment
+- Create application menu (File, Edit, etc.)
+- Implement keyboard shortcuts
+- Add context menus
+- Setup about dialog
+**Test**: Use Ctrl+S to save, Ctrl+O to open
+**Expected**: Standard desktop app behavior
 
-### Step 10: Fallback and Compatibility (2-3 minutes)
-**Goal**: Ensure app works in both Electron and browser environments
+### Step 15: Polish and Performance (2-3 minutes)
+**Goal**: Final optimization and polish
 **Actions**:
-- Add environment detection utility
-- Implement graceful fallback to WebAssembly
-- Add feature detection for native capabilities
-**Test**: Run same codebase in browser and Electron
-**Expected**: Both environments work with appropriate export methods
+- Add splash screen during load
+- Implement crash reporting
+- Setup error boundaries
+- Add performance monitoring
+**Test**: Launch app and perform various operations
+**Expected**: Smooth, professional desktop experience
+
+## Updated Implementation Roadmap
+
+### Phase 1: Core Integration (Steps 3-7)
+- **Goal**: Get OpenCut UI running in Electron with local file support
+- **Time**: ~15 minutes
+- **Result**: Full editor interface with native file dialogs
+
+### Phase 2: Native FFmpeg (Steps 8-11)
+- **Goal**: Replace WebAssembly FFmpeg with native binary
+- **Time**: ~12 minutes
+- **Result**: 5-10x faster video exports
+
+### Phase 3: Desktop Features (Steps 12-15)
+- **Goal**: Polish for professional desktop experience
+- **Time**: ~12 minutes
+- **Result**: Complete desktop video editor
 
 ## Success Criteria
-- ✅ Electron app launches and displays OpenCut interface
+- ✅ Full OpenCut editor running in Electron (no demo page)
 - ✅ Native FFmpeg exports videos 5-10x faster than WebAssembly
-- ✅ All existing features work in Electron environment
-- ✅ Graceful fallback to browser version when needed
-- ✅ Distributable packages created for major platforms
+- ✅ Local file system integration (no cloud/server dependency)
+- ✅ Desktop-native features (menus, shortcuts, drag-drop)
+- ✅ Professional Windows executable ready for distribution
 
 ## Performance Expectations
 - **Current WebAssembly**: 11-second video = ~80 seconds export time
 - **Target Electron**: 11-second video = ~8-15 seconds export time
-- **Hardware acceleration**: Potential 2-3x additional speedup
+- **With GPU acceleration**: 11-second video = ~3-5 seconds export time
 
-## Technical Notes
-- Use `contextIsolation: true` and `nodeIntegration: false` for security
-- Bundle FFmpeg binary with app to avoid external dependencies
-- Implement proper error handling and user feedback
-- Maintain compatibility with existing project structure
+## Key Technical Decisions
+- **Static Export**: Use Next.js static export for file:// protocol
+- **Auth Bypass**: Desktop mode skips authentication entirely
+- **Local Storage**: Projects saved to Documents/OpenCut folder
+- **FFmpeg Path**: Bundle ffmpeg.exe with app for zero dependencies
+- **IPC Security**: All file operations go through sanitized IPC handlers
+
+## Current Status
+✅ **Completed**: Steps 1-2 (Electron shell working)
+🎯 **You tested**: Windows executable launches successfully
+📋 **Next**: Step 3 - Create development build script for full UI integration
