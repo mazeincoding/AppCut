@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 
 interface UseSelectionBoxProps {
-  containerRef: React.RefObject<HTMLElement>;
-  playheadRef?: React.RefObject<HTMLElement>;
+  containerRef: React.RefObject<HTMLElement | null>;
+  playheadRef?: React.RefObject<HTMLElement | null>;
   onSelectionComplete: (
     elements: { trackId: string; elementId: string }[]
   ) => void;

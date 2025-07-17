@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, protocol } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -67,18 +67,14 @@ function createMainWindow() {
     }
   });
 
-  // Try to load built Next.js app - use file:// protocol
+  // Try to load built Next.js app - use custom app:// protocol
   const unpackedPath = path.join(__dirname, '../out/index.html');
-  const projectsPath = path.join(__dirname, '../out/projects/index.html');
   const staticPath = path.join(__dirname, '../electron-app.html');
   
   let startUrl;
-  if (fs.existsSync(projectsPath)) {
-    startUrl = `file://${projectsPath}`;
-    console.log('📦 Loading projects page from:', projectsPath);
-  } else if (fs.existsSync(unpackedPath)) {
-    startUrl = `file://${unpackedPath}`;
-    console.log('📦 Loading built Next.js app from:', unpackedPath);
+  if (fs.existsSync(unpackedPath)) {
+    startUrl = 'app://index.html';
+    console.log('📦 Loading built Next.js app via app:// protocol');
   } else {
     startUrl = `file://${staticPath}`;
     console.log('📄 Loading static HTML fallback');
@@ -222,6 +218,23 @@ function createMainWindow() {
 }
 
 app.whenReady().then(() => {
+  // Register custom protocol to serve static files
+  protocol.registerFileProtocol('app', (request, callback) => {
+    const url = request.url.substr(6); // Remove 'app://' prefix
+    const filePath = path.join(__dirname, '../out', url);
+    
+    // Security check - ensure the path is within the out directory
+    const normalizedPath = path.normalize(filePath);
+    const outDir = path.normalize(path.join(__dirname, '../out'));
+    
+    if (!normalizedPath.startsWith(outDir)) {
+      callback({ error: -6 }); // FILE_NOT_FOUND
+      return;
+    }
+    
+    callback({ path: normalizedPath });
+  });
+  
   createMainWindow();
 });
 

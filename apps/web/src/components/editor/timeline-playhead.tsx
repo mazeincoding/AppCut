@@ -14,12 +14,12 @@ interface TimelinePlayheadProps {
   zoomLevel: number;
   tracks: TimelineTrack[];
   seek: (time: number) => void;
-  rulerRef: React.RefObject<HTMLDivElement>;
-  rulerScrollRef: React.RefObject<HTMLDivElement>;
-  tracksScrollRef: React.RefObject<HTMLDivElement>;
-  trackLabelsRef?: React.RefObject<HTMLDivElement>;
-  timelineRef: React.RefObject<HTMLDivElement>;
-  playheadRef?: React.RefObject<HTMLDivElement>;
+  rulerRef: React.RefObject<HTMLDivElement | null>;
+  rulerScrollRef: React.RefObject<HTMLDivElement | null>;
+  tracksScrollRef: React.RefObject<HTMLDivElement | null>;
+  trackLabelsRef?: React.RefObject<HTMLDivElement | null>;
+  timelineRef: React.RefObject<HTMLDivElement | null>;
+  playheadRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 export function TimelinePlayhead({

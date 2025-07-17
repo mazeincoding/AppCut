@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git reset:*)",
+      "Bash(git pull:*)"
+    ],
+    "deny": []
+  }
+}
