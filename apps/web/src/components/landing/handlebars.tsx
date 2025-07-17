@@ -19,6 +19,8 @@ export function Handlebars({
   const [leftHandle, setLeftHandle] = useState(0);
   const [rightHandle, setRightHandle] = useState(maxWidth);
   const [contentWidth, setContentWidth] = useState(maxWidth);
+  const [playheadX, setPlayheadX] = useState(0);
+  const [showPlayhead, setShowPlayhead] = useState(false);
 
   const leftHandleX = useMotionValue(0);
   const rightHandleX = useMotionValue(maxWidth);
@@ -78,6 +80,26 @@ export function Handlebars({
       Math.min(contentWidth, rightHandle + info.offset.x)
     );
     setRightHandle(newRight);
+  };
+
+  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!containerRef.current) return;
+
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const relativeX = x - leftHandle;
+
+    // Only show playhead if cursor is within the visible area
+    if (relativeX >= 0 && relativeX <= rightHandle - leftHandle) {
+      setPlayheadX(relativeX);
+      setShowPlayhead(true);
+    } else {
+      setShowPlayhead(false);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setShowPlayhead(false);
   };
 
   return (
@@ -146,6 +168,8 @@ export function Handlebars({
             x: leftHandleX,
             height: "100%",
           }}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
         >
           <motion.div
             className="w-full h-full flex items-center justify-center px-4"
@@ -157,8 +181,25 @@ export function Handlebars({
           >
             {children}
           </motion.div>
+
+          {/* Playhead */}
+          <motion.div
+            className="absolute top-0 w-0.5 h-full bg-yellow-400 pointer-events-none z-20"
+            style={{
+              left: playheadX,
+            }}
+            initial={{ opacity: 0, scaleY: 0 }}
+            animate={{
+              opacity: showPlayhead ? 1 : 0,
+              scaleY: showPlayhead ? 1 : 0,
+            }}
+            transition={{
+              duration: 0.1,
+              ease: "easeOut",
+            }}
+          />
         </motion.div>
       </div>
     </div>
   );
-};
+}
