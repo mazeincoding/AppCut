@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { storageService } from "@/lib/storage/storage-service";
-import { useTimelineStore } from "./timeline-store";
 import { generateUUID } from "@/lib/utils";
 
 export type MediaType = "image" | "video" | "audio";
@@ -16,6 +15,7 @@ export interface MediaItem {
   width?: number; // For video/image width
   height?: number; // For video/image height
   fps?: number; // For video frame rate
+  hasAudio?: boolean; // Whether the media has audio stream
   // Text-specific properties
   content?: string; // Text content
   fontSize?: number; // Font size
@@ -38,6 +38,9 @@ interface MediaStore {
   loadProjectMedia: (projectId: string) => Promise<void>;
   clearProjectMedia: (projectId: string) => Promise<void>;
   clearAllMedia: () => void; // Clear local state only
+  
+  // Helper methods
+  getMediaItem: (id: string) => MediaItem | undefined;
 }
 
 // Helper function to determine file type
@@ -263,5 +266,11 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
 
     // Clear local state
     set({ mediaItems: [] });
+  },
+
+  // Helper methods
+  getMediaItem: (id: string) => {
+    const state = get();
+    return state.mediaItems.find(item => item.id === id);
   },
 }));

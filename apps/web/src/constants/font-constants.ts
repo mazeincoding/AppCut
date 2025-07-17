@@ -63,7 +63,7 @@ export const FONT_OPTIONS: FontOption[] = [
   },
 ] as const;
 
-export const DEFAULT_FONT = "Arial";
+export const DEFAULT_FONT = "Inter"; // Default font for text layers
 
 // Type-safe font family union
 export type FontFamily = (typeof FONT_OPTIONS)[number]["value"];

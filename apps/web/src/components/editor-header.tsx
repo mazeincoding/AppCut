@@ -7,15 +7,11 @@ import { useTimelineStore } from "@/stores/timeline-store";
 import { HeaderBase } from "./header-base";
 import { formatTimeCode } from "@/lib/time";
 import { useProjectStore } from "@/stores/project-store";
+import { ExportDialog } from "./editor/export-dialog";
 
 export function EditorHeader() {
   const { getTotalDuration } = useTimelineStore();
   const { activeProject } = useProjectStore();
-
-  const handleExport = () => {
-    // TODO: Implement export functionality
-    console.log("Export project");
-  };
 
   const leftContent = (
     <div className="flex items-center gap-2">
@@ -43,15 +39,16 @@ export function EditorHeader() {
 
   const rightContent = (
     <nav className="flex items-center gap-2">
-      <Button
-        size="sm"
-        variant="primary"
-        className="h-7 text-xs"
-        onClick={handleExport}
-      >
-        <Download className="h-4 w-4" />
-        <span className="text-sm">Export</span>
-      </Button>
+      <ExportDialog>
+        <Button
+          size="sm"
+          variant="primary"
+          className="h-7 text-xs"
+        >
+          <Download className="h-4 w-4" />
+          <span className="text-sm">Export</span>
+        </Button>
+      </ExportDialog>
     </nav>
   );
 

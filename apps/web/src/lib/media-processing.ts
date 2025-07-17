@@ -34,6 +34,7 @@ export async function processMediaFiles(
     let width: number | undefined;
     let height: number | undefined;
     let fps: number | undefined;
+    let hasAudio: boolean | undefined;
 
     try {
       if (fileType === "image") {
@@ -49,6 +50,7 @@ export async function processMediaFiles(
           width = videoInfo.width;
           height = videoInfo.height;
           fps = videoInfo.fps;
+          hasAudio = videoInfo.hasAudio;
 
           // Generate thumbnail using FFmpeg
           thumbnailUrl = await generateThumbnail(file, 1);
@@ -63,11 +65,13 @@ export async function processMediaFiles(
           width = videoResult.width;
           height = videoResult.height;
           duration = await getMediaDuration(file);
+          hasAudio = false; // Assume no audio for fallback
           // FPS will remain undefined for fallback
         }
       } else if (fileType === "audio") {
         // For audio, we don't set width/height/fps (they'll be undefined)
         duration = await getMediaDuration(file);
+        hasAudio = true; // Audio files definitely have audio
       }
 
       processedItems.push({
@@ -80,6 +84,7 @@ export async function processMediaFiles(
         width,
         height,
         fps,
+        hasAudio,
       });
 
       // Yield back to the event loop to keep the UI responsive

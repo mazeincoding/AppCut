@@ -5,7 +5,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FONT_OPTIONS, FontFamily } from "@/constants/font-constants";
+import { FONT_OPTIONS, FontFamily, getGoogleFonts } from "@/constants/font-constants";
 
 interface FontPickerProps {
   defaultValue?: FontFamily;
@@ -24,7 +24,7 @@ export function FontPicker({
         <SelectValue placeholder="Select a font" />
       </SelectTrigger>
       <SelectContent>
-        {FONT_OPTIONS.map((font) => (
+        {getGoogleFonts().map((font) => (
           <SelectItem
             key={font.value}
             value={font.value}

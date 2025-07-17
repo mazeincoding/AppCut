@@ -1,4 +1,5 @@
 import { DraggableMediaItem } from "@/components/ui/draggable-item";
+import { DEFAULT_FONT } from "@/constants/font-constants";
 import { TIMELINE_CONSTANTS } from "@/constants/timeline-constants";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { type TextElement } from "@/types/timeline";
@@ -9,7 +10,7 @@ let textData: TextElement = {
   name: "Default text",
   content: "Default text",
   fontSize: 48,
-  fontFamily: "Arial",
+  fontFamily: DEFAULT_FONT,
   color: "#ffffff",
   backgroundColor: "transparent",
   textAlign: "center" as const,

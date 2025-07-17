@@ -100,6 +100,7 @@ export const getVideoInfo = async (videoFile: File): Promise<{
   width: number;
   height: number;
   fps: number;
+  hasAudio: boolean;
 }> => {
   const ffmpeg = await initFFmpeg();
 
@@ -151,11 +152,16 @@ export const getVideoInfo = async (videoFile: File): Promise<{
     fps = parseFloat(videoStreamMatch[3]);
   }
 
+  // Check for audio stream
+  // Example: Stream #0:1: Audio: aac (LC), 44100 Hz, stereo, fltp, 128 kb/s
+  const hasAudio = /Stream #\d+:\d+: Audio:/.test(ffmpegOutput);
+
   return {
     duration,
     width,
     height,
-    fps
+    fps,
+    hasAudio
   };
 };
 

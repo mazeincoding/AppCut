@@ -23,6 +23,7 @@ import {
 } from "@/constants/timeline-constants";
 import { useProjectStore } from "@/stores/project-store";
 import { useTimelineSnapping, SnapPoint } from "@/hooks/use-timeline-snapping";
+import { DEFAULT_FONT } from "@/constants/font-constants";
 
 export function TimelineTrackContent({
   track,
@@ -741,7 +742,7 @@ export function TimelineTrackContent({
             trimStart: 0,
             trimEnd: 0,
             fontSize: 48,
-            fontFamily: "Arial",
+            fontFamily: DEFAULT_FONT,
             color: "#ffffff",
             backgroundColor: "transparent",
             textAlign: "center",
