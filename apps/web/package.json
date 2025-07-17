@@ -8,7 +8,7 @@
     "dev": "next dev",
     "build": "next build",
     "build:electron": "NEXT_PUBLIC_ELECTRON=true next build",
-    "export:electron": "NEXT_PUBLIC_ELECTRON=true next build",
+    "export:electron": "NEXT_PUBLIC_ELECTRON=true next build && node scripts/fix-electron-paths.js",
     "electron:dev": "node scripts/dev-electron.js",
     "electron:build": "npm run export:electron",
     "electron:pack": "npm run electron:build && electron-builder --dir",
@@ -22,13 +22,16 @@
   "build": {
     "appId": "com.opencut.desktop",
     "productName": "OpenCut Desktop",
+    "npmRebuild": false,
+    "buildDependenciesFromSource": false,
+    "asar": false,
     "directories": {
       "output": "dist"
     },
     "files": [
+      "out/**/*",
       "electron/**/*",
-      "electron-app.html",
-      "!node_modules"
+      "electron-app.html"
     ],
     "extraFiles": [
       {
@@ -40,7 +43,8 @@
       }
     ],
     "win": {
-      "target": "portable"
+      "target": "nsis",
+      "signAndEditExecutable": false
     },
     "linux": {
       "target": "AppImage"

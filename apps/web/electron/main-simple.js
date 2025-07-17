@@ -67,14 +67,14 @@ function createMainWindow() {
     }
   });
 
-  // Try to load built Next.js app first, fallback to static HTML
-  const outPath = path.join(__dirname, '../out/index.html');
+  // Try to load built Next.js app - use file:// protocol
+  const unpackedPath = path.join(__dirname, '../out/index.html');
   const staticPath = path.join(__dirname, '../electron-app.html');
   
   let startUrl;
-  if (fs.existsSync(outPath)) {
-    startUrl = `file://${outPath}`;
-    console.log('📦 Loading built Next.js app from out/');
+  if (fs.existsSync(unpackedPath)) {
+    startUrl = `file://${unpackedPath}`;
+    console.log('📦 Loading built Next.js app from:', unpackedPath);
   } else {
     startUrl = `file://${staticPath}`;
     console.log('📄 Loading static HTML fallback');
@@ -87,7 +87,7 @@ function createMainWindow() {
     callback({
       responseHeaders: {
         ...details.responseHeaders,
-        'Content-Security-Policy': ['default-src \'self\' \'unsafe-inline\' \'unsafe-eval\' data: file: blob:; img-src \'self\' data: file: blob: https:; media-src \'self\' data: file: blob:; style-src \'self\' \'unsafe-inline\' data: file:;']
+        'Content-Security-Policy': ['default-src \'self\' \'unsafe-inline\' \'unsafe-eval\' data: file: blob:; img-src \'self\' data: file: blob: https:; media-src \'self\' data: file: blob:; style-src \'self\' \'unsafe-inline\' data: file:; script-src \'self\' \'unsafe-inline\' \'unsafe-eval\';']
       }
     });
   });

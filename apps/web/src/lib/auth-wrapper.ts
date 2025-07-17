@@ -23,7 +23,7 @@ export function useSession() {
       setIsLoading(false);
     } else {
       // Server mode - try to dynamically import auth
-      import('@opencut/auth/client')
+      import('@/lib/workspace-packages/auth/client')
         .then(({ useSession: useServerSession }) => {
           // Use the original auth hook
           const serverSession = useServerSession();
