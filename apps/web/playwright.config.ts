@@ -31,6 +31,11 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
 
+    {
+      name: 'electron',
+      testMatch: /electron-navigation\.spec\.ts/,
+    },
+
     // Disabled for CI/environments without full browser deps
     // {
     //   name: 'firefox',

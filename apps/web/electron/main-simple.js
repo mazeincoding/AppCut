@@ -69,10 +69,14 @@ function createMainWindow() {
 
   // Try to load built Next.js app - use file:// protocol
   const unpackedPath = path.join(__dirname, '../out/index.html');
+  const projectsPath = path.join(__dirname, '../out/projects/index.html');
   const staticPath = path.join(__dirname, '../electron-app.html');
   
   let startUrl;
-  if (fs.existsSync(unpackedPath)) {
+  if (fs.existsSync(projectsPath)) {
+    startUrl = `file://${projectsPath}`;
+    console.log('📦 Loading projects page from:', projectsPath);
+  } else if (fs.existsSync(unpackedPath)) {
     startUrl = `file://${unpackedPath}`;
     console.log('📦 Loading built Next.js app from:', unpackedPath);
   } else {
@@ -87,7 +91,7 @@ function createMainWindow() {
     callback({
       responseHeaders: {
         ...details.responseHeaders,
-        'Content-Security-Policy': ['default-src \'self\' \'unsafe-inline\' \'unsafe-eval\' data: file: blob:; img-src \'self\' data: file: blob: https:; media-src \'self\' data: file: blob:; style-src \'self\' \'unsafe-inline\' data: file:; script-src \'self\' \'unsafe-inline\' \'unsafe-eval\';']
+        'Content-Security-Policy': ['default-src \'self\' \'unsafe-inline\' \'unsafe-eval\' data: file: blob: https:; img-src \'self\' data: file: blob: https:; media-src \'self\' data: file: blob:; style-src \'self\' \'unsafe-inline\' data: file: https:; script-src \'self\' \'unsafe-inline\' \'unsafe-eval\' https:; connect-src \'self\' https: ws: wss: http: data: blob:; font-src \'self\' data: file: https:;']
       }
     });
   });
@@ -135,6 +139,9 @@ function createMainWindow() {
       event.preventDefault();
     }
   });
+  
+  // Note: Removed all request interception to allow proper file loading
+  // RSC .txt requests will show 404 errors but won't affect functionality
 
   // Handle new window requests (open in default browser)
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -143,10 +150,47 @@ function createMainWindow() {
     return { action: 'deny' };
   });
 
-  // Test IPC
+  // Test IPC and storage
+  // Forward renderer console logs to main process
+  mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+    const levelStr = ['verbose', 'info', 'warning', 'error'][level] || 'unknown';
+    console.log(`[RENDERER ${levelStr.toUpperCase()}] ${message}`);
+    if (sourceId) {
+      console.log(`  Source: ${sourceId}:${line}`);
+    }
+  });
+
+  // Capture JavaScript errors
+  mainWindow.webContents.on('crashed', (event, killed) => {
+    console.error('❌ Renderer process crashed:', { killed });
+  });
+
+  mainWindow.webContents.on('render-process-gone', (event, details) => {
+    console.error('❌ Renderer process gone:', details);
+  });
+
   mainWindow.webContents.once('did-finish-load', () => {
-    console.log('🎯 Page loaded - Testing Electron IPC...');
+    console.log('🎯 Page loaded - Testing Electron IPC and storage...');
     mainWindow.webContents.executeJavaScript(`
+      // Set up error capturing first
+      window.addEventListener('error', (event) => {
+        console.error('❌ JavaScript Error:', event.error);
+        console.error('  Message:', event.message);
+        console.error('  File:', event.filename);
+        console.error('  Line:', event.lineno);
+        console.error('  Column:', event.colno);
+      });
+      
+      window.addEventListener('unhandledrejection', (event) => {
+        console.error('❌ Unhandled Promise Rejection:', event.reason);
+      });
+      
+      // Check basic React setup
+      console.log('🔍 React setup check...');
+      console.log('- React:', typeof React !== 'undefined' ? 'available' : 'not available');
+      console.log('- ReactDOM:', typeof ReactDOM !== 'undefined' ? 'available' : 'not available');
+      console.log('- Next.js:', typeof window.__NEXT_DATA__ !== 'undefined' ? 'available' : 'not available');
+      
       if (window.electronAPI) {
         window.electronAPI.ping().then(result => {
           console.log('✅ IPC Test successful:', result);
@@ -154,6 +198,25 @@ function createMainWindow() {
       } else {
         console.log('❌ Electron API not available');
       }
+      
+      // Test storage APIs
+      console.log('🔍 Storage API availability:');
+      console.log('- IndexedDB:', 'indexedDB' in window);
+      console.log('- Navigator.storage:', 'storage' in navigator);
+      console.log('- OPFS getDirectory:', 'storage' in navigator && 'getDirectory' in navigator.storage);
+      
+      // Test storage service
+      setTimeout(() => {
+        console.log('🔍 Storage service initialization test...');
+        if (window.storageService) {
+          console.log('- Storage service available');
+          console.log('- IndexedDB supported:', window.storageService.isIndexedDBSupported());
+          console.log('- OPFS supported:', window.storageService.isOPFSSupported());
+          console.log('- Fully supported:', window.storageService.isFullySupported());
+        } else {
+          console.log('❌ Storage service not available');
+        }
+      }, 2000);
     `);
   });
 }

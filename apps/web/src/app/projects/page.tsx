@@ -47,7 +47,7 @@ export default function ProjectsPage() {
   const handleCreateProject = async () => {
     const projectId = await createNewProject("New Project");
     console.log("projectId", projectId);
-    router.push(`/editor/${projectId}`);
+    router.push(`/editor/project?project_id=${encodeURIComponent(projectId)}`);
   };
 
   const handleSelectProject = (projectId: string, checked: boolean) => {
@@ -403,7 +403,7 @@ function ProjectCard({
           </Card>
         </div>
       ) : (
-        <Link href={`/editor/${project.id}`} className="block group">
+        <Link href={`/editor/project?project_id=${encodeURIComponent(project.id)}`} className="block group">
           <Card
             className={`overflow-hidden bg-background border-none p-0 transition-all ${
               isSelectionMode && isSelected ? "ring-2 ring-primary" : ""

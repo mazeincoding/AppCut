@@ -6,6 +6,7 @@
 # next.js
 /apps/web/.next/
 /apps/web/out/
+/apps/web/dist/
 
 # debug
 /apps/web/npm-debug.log*

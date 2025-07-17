@@ -77,6 +77,31 @@ Convert OpenCut from a web application to an Electron desktop application to ach
 **Expected**: ✅ Direct access to editor with local user
 **Result**: Complete offline authentication system with automatic local user creation and preference management
 
+### ✅ BUG FIX: Resolved "White Screen" on Project Load
+The blank-white window was happening because the Projects page was still navigating to the (now-removed) dynamic route `/editor/<project-id>`.
+During the static export only the new static page `/editor/project/index.html` is generated, so at runtime Electron could only load that file. When the router tried to reach `/editor/<id>` the file didn’t exist, which caused the white screen.
+
+**Fix applied**:
+- **Projects list & “New project”**: Navigates to the static page and passes the id as a query string `/editor/project?project_id=<id>`
+- **Editor page**: Accepts either style – it first checks for a path param, then falls back to the query string:
+  ```javascript
+     const params       = useParams();
+     const searchParams = useSearchParams();
+     const projectId =
+       (params?.project_id as string | undefined) ??
+       searchParams?.get('project_id') ??
+       '';
+  ```
+Behaviour is unchanged in dev (dynamic route still works), and in the packaged build the static page now receives the correct id.
+
+**Re-build and run the desktop app**:
+```bash
+bun run build      # regenerates /out with the route fixes
+bun run electron:pack
+bun run electron:dev   # or open the packaged build
+```
+After this, clicking on any project (or creating a new one) should open the editor instead of a white screen.
+
 ### Step 6: Enable Local File Access (2-3 minutes)
 **Goal**: Native file dialogs for media import
 **Actions**:

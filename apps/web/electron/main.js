@@ -18,7 +18,8 @@ function createMainWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       enableRemoteModule: false,
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.js'),
+      webSecurity: false // Allow loading local resources
     },
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
     show: false
@@ -29,6 +30,26 @@ function createMainWindow() {
     ? 'http://localhost:3002' 
     : `file://${path.join(__dirname, '../out/index.html')}`;
   
+  // Configure CSP for Electron
+  if (!isDev) {
+    mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+      callback({
+        responseHeaders: {
+          ...details.responseHeaders,
+          'Content-Security-Policy': [
+            "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: file: blob: https:; " +
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; " +
+            "style-src 'self' 'unsafe-inline' https:; " +
+            "img-src 'self' data: file: blob: https:; " +
+            "font-src 'self' data: file: https:; " +
+            "connect-src 'self' https: ws: wss:; " +
+            "media-src 'self' data: file: blob:;"
+          ]
+        }
+      });
+    });
+  }
+
   mainWindow.loadURL(startUrl);
 
   // Show window when ready

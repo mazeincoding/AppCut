@@ -16,26 +16,30 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  console.log('🏠 RootLayout: Component rendered');
+  
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${defaultFont.className} font-sans antialiased`}>
         <ThemeProvider attribute="class" forcedTheme="dark">
           <TooltipProvider>
             <StorageProvider>{children}</StorageProvider>
-            <Analytics />
+            {process.env.NEXT_PUBLIC_ELECTRON !== "true" && <Analytics />}
             <Toaster />
             <DevelopmentDebug />
-            <Script
-              src="https://cdn.databuddy.cc/databuddy.js"
-              strategy="afterInteractive"
-              async
-              data-client-id="UP-Wcoy5arxFeK7oyjMMZ"
-              data-track-attributes={false}
-              data-track-errors={true}
-              data-track-outgoing-links={false}
-              data-track-web-vitals={false}
-              data-track-sessions={false}
-            />
+            {process.env.NEXT_PUBLIC_ELECTRON !== "true" && (
+              <Script
+                src="https://cdn.databuddy.cc/databuddy.js"
+                strategy="afterInteractive"
+                async
+                data-client-id="UP-Wcoy5arxFeK7oyjMMZ"
+                data-track-attributes={false}
+                data-track-errors={true}
+                data-track-outgoing-links={false}
+                data-track-web-vitals={false}
+                data-track-sessions={false}
+              />
+            )}
           </TooltipProvider>
         </ThemeProvider>
       </body>

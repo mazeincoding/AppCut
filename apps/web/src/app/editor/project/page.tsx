@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -33,7 +33,12 @@ export default function Editor() {
 
   const { activeProject, loadProject, createNewProject } = useProjectStore();
   const params = useParams();
-  const projectId = params.project_id as string;
+  const searchParams = useSearchParams();
+
+  // Support both dynamic route (params) and static route with query param (?project_id=xxx)
+  const projectIdParam = (params?.project_id as string | undefined) ?? null;
+  const projectIdQuery = searchParams?.get("project_id");
+  const projectId = (projectIdParam ?? projectIdQuery ?? "") as string;
 
   usePlaybackControls();
 

@@ -9,6 +9,7 @@ const isElectron = process.env.NEXT_PUBLIC_ELECTRON === "true";
 // export const dynamic = "force-dynamic";
 
 export default async function Home() {
+  console.log('🏡 HomePage: Component rendered');
   let signupCount = 0;
   
   // Skip waitlist count for Electron static export

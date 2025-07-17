@@ -5,8 +5,9 @@ import { useMediaStore, type MediaItem } from "@/stores/media-store";
 import { TimelineTrack } from "@/types/timeline";
 import { usePlaybackStore } from "@/stores/playback-store";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { TimelineElement } from "@/types/timeline";
+import { storageService } from "@/lib/storage/storage-service";
 
 // Only show in development
 const SHOW_DEBUG_INFO = process.env.NODE_ENV === "development";
@@ -22,6 +23,13 @@ export function DevelopmentDebug() {
   const { mediaItems } = useMediaStore();
   const { currentTime } = usePlaybackStore();
   const [showDebug, setShowDebug] = useState(false);
+
+  // Expose storage service to global window for debugging
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).storageService = storageService;
+    }
+  }, []);
 
   // Don't render anything in production
   if (!SHOW_DEBUG_INFO) return null;
