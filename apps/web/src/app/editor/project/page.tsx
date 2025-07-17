@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import {
   ResizablePanelGroup,
@@ -17,7 +17,7 @@ import { useProjectStore } from "@/stores/project-store";
 import { EditorProvider } from "@/components/editor-provider";
 import { usePlaybackControls } from "@/hooks/use-playback-controls";
 
-export default function Editor() {
+function EditorContent() {
   const {
     toolsPanel,
     previewPanel,
@@ -132,5 +132,15 @@ export default function Editor() {
         </div>
       </div>
     </EditorProvider>
+  );
+}
+
+export default function Editor() {
+  return (
+    <Suspense fallback={<div className="h-screen w-screen flex items-center justify-center bg-background">
+      <div className="text-muted-foreground">Loading editor...</div>
+    </div>}>
+      <EditorContent />
+    </Suspense>
   );
 }
