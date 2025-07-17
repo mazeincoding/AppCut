@@ -82,12 +82,12 @@ function createMainWindow() {
   
   mainWindow.loadURL(startUrl);
 
-  // Configure CSP and security headers for local file access
+  // Configure CSP and security headers for local file access with app:// protocol
   mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
     callback({
       responseHeaders: {
         ...details.responseHeaders,
-        'Content-Security-Policy': ['default-src \'self\' \'unsafe-inline\' \'unsafe-eval\' data: file: blob: https:; img-src \'self\' data: file: blob: https:; media-src \'self\' data: file: blob:; style-src \'self\' \'unsafe-inline\' data: file: https:; script-src \'self\' \'unsafe-inline\' \'unsafe-eval\' https:; connect-src \'self\' https: ws: wss: http: data: blob:; font-src \'self\' data: file: https:;']
+        'Content-Security-Policy': ['default-src \'self\' \'unsafe-inline\' \'unsafe-eval\' data: file: blob: https: app:; img-src \'self\' data: file: blob: https: app:; media-src \'self\' data: file: blob: app:; style-src \'self\' \'unsafe-inline\' data: file: https: app:; script-src \'self\' \'unsafe-inline\' \'unsafe-eval\' https: app:; connect-src \'self\' https: ws: wss: http: data: blob: app:; font-src \'self\' data: file: https: app:; manifest-src \'self\' app:;']
       }
     });
   });
