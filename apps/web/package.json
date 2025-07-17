@@ -27,6 +27,7 @@
     "@upstash/redis": "^1.35.0",
     "@vercel/analytics": "^1.4.1",
     "better-auth": "^1.2.7",
+    "botid": "^1.4.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",

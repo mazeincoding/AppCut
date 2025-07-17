@@ -173,28 +173,24 @@ export default function ProjectsPage() {
         </div>
 
         {isSelectionMode && savedProjects.length > 0 && (
-          <div className="mb-6 p-4 bg-muted/30 rounded-lg border">
+          <div
+            className="mb-6 p-4 bg-muted/30 rounded-lg border cursor-pointer hover:bg-muted/40 transition-colors"
+            onClick={() => handleSelectAll(!allSelected)}
+          >
             <div className="flex items-center gap-3">
               <Checkbox
                 checked={allSelected}
-                ref={(el) => {
-                  if (el) {
-                    const checkboxElement = el.querySelector(
-                      "input"
-                    ) as HTMLInputElement;
-                    if (checkboxElement) {
-                      checkboxElement.indeterminate = someSelected;
-                    }
-                  }
-                }}
                 onCheckedChange={handleSelectAll}
+                onClick={(e) => e.stopPropagation()}
               />
-              <span className="text-sm font-medium">
-                {allSelected ? "Deselect All" : "Select All"}
-              </span>
-              <span className="text-sm text-muted-foreground">
-                ({selectedProjects.size} of {savedProjects.length} selected)
-              </span>
+              <div className="flex-1 flex items-center justify-start gap-2">
+                <span className="text-sm font-medium">
+                  {allSelected ? "Deselect All" : "Select All"}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  ({selectedProjects.size} of {savedProjects.length} selected)
+                </span>
+              </div>
             </div>
           </div>
         )}
@@ -296,7 +292,7 @@ function ProjectCard({
               {/* Selection checkbox */}
               {isSelectionMode && (
                 <div className="absolute top-3 left-3 z-10">
-                  <div className="w-5 h-5 rounded bg-background/80 backdrop-blur-sm border flex items-center justify-center">
+                  <div className="w-5 h-5 rounded-full bg-background/80 backdrop-blur-sm border flex items-center justify-center">
                     <Checkbox
                       checked={isSelected}
                       onCheckedChange={(checked) =>
@@ -326,7 +322,7 @@ function ProjectCard({
               </div>
             </div>
 
-            <CardContent className="px-0 pt-5 flex flex-col gap-1">
+            <CardContent className="px-0 pt-5 flex flex-col gap-1 p-2">
               <div className="flex items-start justify-between">
                 <h3 className="font-medium text-sm leading-snug group-hover:text-foreground/90 transition-colors line-clamp-2">
                   {project.name}

@@ -2,6 +2,11 @@
 
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { ReactNode, useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Plus } from "lucide-react";
@@ -139,7 +144,12 @@ export function DraggableMediaItem({
                 <div className="w-full h-full [&_img]:w-full [&_img]:h-full [&_img]:object-cover [&_img]:rounded-none">
                   {preview}
                 </div>
-                {showPlusOnDrag && <PlusButton onClick={handleAddToTimeline} tooltipText="Add to timeline or drag to position" />}
+                {showPlusOnDrag && (
+                  <PlusButton
+                    onClick={handleAddToTimeline}
+                    tooltipText="Add to timeline or drag to position"
+                  />
+                )}
               </AspectRatio>
             </div>
           </div>,
@@ -149,8 +159,16 @@ export function DraggableMediaItem({
   );
 }
 
-function PlusButton({ className, onClick }: { className?: string; onClick?: () => void }) {
-  return (
+function PlusButton({
+  className,
+  onClick,
+  tooltipText,
+}: {
+  className?: string;
+  onClick?: () => void;
+  tooltipText?: string;
+}) {
+  const button = (
     <Button
       size="icon"
       className={cn("absolute bottom-2 right-2 size-4", className)}
@@ -163,4 +181,17 @@ function PlusButton({ className, onClick }: { className?: string; onClick?: () =
       <Plus className="!size-3" />
     </Button>
   );
+
+  if (tooltipText) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>{button}</TooltipTrigger>
+        <TooltipContent>
+          <p>{tooltipText}</p>
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return button;
 }

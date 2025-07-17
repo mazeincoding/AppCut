@@ -347,7 +347,7 @@ export function PreviewPanel() {
         {hasAnyElements ? (
           <div
             ref={previewRef}
-            className="relative overflow-hidden rounded-sm border"
+            className="relative overflow-hidden border"
             style={{
               width: previewDimensions.width,
               height: previewDimensions.height,

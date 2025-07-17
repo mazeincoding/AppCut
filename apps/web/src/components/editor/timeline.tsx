@@ -15,7 +15,6 @@ import {
   Video,
   Music,
   TypeIcon,
-  Magnet,
   Lock,
   LockOpen,
 } from "lucide-react";
@@ -54,12 +53,14 @@ import {
   getCumulativeHeightBefore,
   getTotalTracksHeight,
   TIMELINE_CONSTANTS,
+  snapTimeToFrame,
 } from "@/constants/timeline-constants";
 
 export function Timeline() {
   // Timeline shows all tracks (video, audio, effects) and their elements.
   // You can drag media here to add it to your project.
   // elements can be trimmed, deleted, and moved.
+
   const {
     tracks,
     addTrack,
@@ -235,7 +236,6 @@ export function Timeline() {
 
       // Use frame snapping for timeline clicking
       const projectFps = activeProject?.fps || 30;
-      const { snapTimeToFrame } = require("@/constants/timeline-constants");
       const time = snapTimeToFrame(rawTime, projectFps);
 
       seek(time);
@@ -257,71 +257,6 @@ export function Timeline() {
     const totalDuration = getTotalDuration();
     setDuration(Math.max(totalDuration, 10)); // Minimum 10 seconds for empty timeline
   }, [tracks, setDuration, getTotalDuration]);
-
-  // Keyboard event for deleting selected elements
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger when typing in input fields or textareas
-      if (
-        e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLTextAreaElement
-      ) {
-        return;
-      }
-
-      // Only trigger when timeline is focused or mouse is over timeline
-      if (
-        !isInTimeline &&
-        !timelineRef.current?.contains(document.activeElement)
-      ) {
-        return;
-      }
-
-      if (
-        (e.key === "Delete" || e.key === "Backspace") &&
-        selectedElements.length > 0
-      ) {
-        selectedElements.forEach(({ trackId, elementId }) => {
-          removeElementFromTrack(trackId, elementId);
-        });
-        clearSelectedElements();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [
-    selectedElements,
-    removeElementFromTrack,
-    clearSelectedElements,
-    isInTimeline,
-  ]);
-
-  // Keyboard event for undo (Cmd+Z)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "z" && !e.shiftKey) {
-        e.preventDefault();
-        undo();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [undo]);
-
-  // Keyboard event for redo (Cmd+Shift+Z or Cmd+Y)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "z" && e.shiftKey) {
-        e.preventDefault();
-        redo();
-      } else if ((e.metaKey || e.ctrlKey) && e.key === "y") {
-        e.preventDefault();
-        redo();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [redo]);
 
   // Old marquee system removed - using new SelectionBox component instead
 
@@ -380,7 +315,9 @@ export function Timeline() {
           useTimelineStore.getState().addTextToNewTrack(dragData);
         } else {
           // Handle media items
-          const mediaItem = mediaItems.find((item) => item.id === dragData.id);
+          const mediaItem = mediaItems.find(
+            (item: any) => item.id === dragData.id
+          );
           if (!mediaItem) {
             toast.error("Media item not found");
             return;

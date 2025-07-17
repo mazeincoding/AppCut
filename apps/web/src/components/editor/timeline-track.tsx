@@ -55,11 +55,58 @@ export function TimelineTrackContent({
   const { currentTime } = usePlaybackStore();
 
   // Initialize snapping hook
-  const { snapElementPosition } = useTimelineSnapping({
+  const { snapElementPosition, snapElementEdge } = useTimelineSnapping({
     snapThreshold: 10,
     enableElementSnapping: snappingEnabled,
     enablePlayheadSnapping: snappingEnabled,
   });
+
+  // Helper function for drop snapping that tries both edges
+  const getDropSnappedTime = (
+    dropTime: number,
+    elementDuration: number,
+    excludeElementId?: string
+  ) => {
+    if (!snappingEnabled) {
+      // Use frame snapping if project has FPS, otherwise use decimal snapping
+      const projectStore = useProjectStore.getState();
+      const projectFps = projectStore.activeProject?.fps || 30;
+      return snapTimeToFrame(dropTime, projectFps);
+    }
+
+    // Try snapping both start and end edges for drops
+    const startSnapResult = snapElementEdge(
+      dropTime,
+      elementDuration,
+      tracks,
+      currentTime,
+      zoomLevel,
+      excludeElementId,
+      true // snap to start edge
+    );
+
+    const endSnapResult = snapElementEdge(
+      dropTime,
+      elementDuration,
+      tracks,
+      currentTime,
+      zoomLevel,
+      excludeElementId,
+      false // snap to end edge
+    );
+
+    // Choose the snap result with the smaller distance (closer snap)
+    let bestSnapResult = startSnapResult;
+    if (
+      endSnapResult.snapPoint &&
+      (!startSnapResult.snapPoint ||
+        endSnapResult.snapDistance < startSnapResult.snapDistance)
+    ) {
+      bestSnapResult = endSnapResult;
+    }
+
+    return bestSnapResult.snappedTime;
+  };
 
   const timelineRef = useRef<HTMLDivElement>(null);
   const [isDropping, setIsDropping] = useState(false);
@@ -104,15 +151,52 @@ export function TimelineTrackContent({
       let finalTime = adjustedTime;
       let snapPoint = null;
       if (snappingEnabled) {
-        const snapResult = snapElementPosition(
+        // Find the element being dragged to get its duration
+        let elementDuration = 5; // fallback duration
+        if (dragState.elementId && dragState.trackId) {
+          const sourceTrack = tracks.find((t) => t.id === dragState.trackId);
+          const element = sourceTrack?.elements.find(
+            (e) => e.id === dragState.elementId
+          );
+          if (element) {
+            elementDuration =
+              element.duration - element.trimStart - element.trimEnd;
+          }
+        }
+
+        // Try snapping both start and end edges
+        const startSnapResult = snapElementEdge(
           adjustedTime,
+          elementDuration,
           tracks,
           currentTime,
           zoomLevel,
-          dragState.elementId || undefined
+          dragState.elementId || undefined,
+          true // snap to start edge
         );
-        finalTime = snapResult.snappedTime;
-        snapPoint = snapResult.snapPoint;
+
+        const endSnapResult = snapElementEdge(
+          adjustedTime,
+          elementDuration,
+          tracks,
+          currentTime,
+          zoomLevel,
+          dragState.elementId || undefined,
+          false // snap to end edge
+        );
+
+        // Choose the snap result with the smaller distance (closer snap)
+        let bestSnapResult = startSnapResult;
+        if (
+          endSnapResult.snapPoint &&
+          (!startSnapResult.snapPoint ||
+            endSnapResult.snapDistance < startSnapResult.snapDistance)
+        ) {
+          bestSnapResult = endSnapResult;
+        }
+
+        finalTime = bestSnapResult.snappedTime;
+        snapPoint = bestSnapResult.snapPoint;
 
         // Notify parent component about snap point change
         onSnapPointChange?.(snapPoint);
@@ -391,9 +475,10 @@ export function TimelineTrackContent({
           if (dragData.type === "text") {
             // Text elements have default duration of 5 seconds
             const newElementDuration = 5;
-            const projectStore = useProjectStore.getState();
-            const projectFps = projectStore.activeProject?.fps || 30;
-            const snappedTime = snapTimeToFrame(dropTime, projectFps);
+            const snappedTime = getDropSnappedTime(
+              dropTime,
+              newElementDuration
+            );
             const newElementEnd = snappedTime + newElementDuration;
 
             wouldOverlap = track.elements.some((existingElement) => {
@@ -412,9 +497,10 @@ export function TimelineTrackContent({
             );
             if (mediaItem) {
               const newElementDuration = mediaItem.duration || 5;
-              const projectStore = useProjectStore.getState();
-              const projectFps = projectStore.activeProject?.fps || 30;
-              const snappedTime = snapTimeToFrame(dropTime, projectFps);
+              const snappedTime = getDropSnappedTime(
+                dropTime,
+                newElementDuration
+              );
               const newElementEnd = snappedTime + newElementDuration;
 
               wouldOverlap = track.elements.some((existingElement) => {
@@ -454,9 +540,11 @@ export function TimelineTrackContent({
               movingElement.duration -
               movingElement.trimStart -
               movingElement.trimEnd;
-            const projectStore = useProjectStore.getState();
-            const projectFps = projectStore.activeProject?.fps || 30;
-            const snappedTime = snapTimeToFrame(dropTime, projectFps);
+            const snappedTime = getDropSnappedTime(
+              dropTime,
+              movingElementDuration,
+              elementId
+            );
             const movingElementEnd = snappedTime + movingElementDuration;
 
             wouldOverlap = track.elements.some((existingElement) => {
@@ -483,17 +571,15 @@ export function TimelineTrackContent({
     if (wouldOverlap) {
       e.dataTransfer.dropEffect = "none";
       setWouldOverlap(true);
-      const projectStore = useProjectStore.getState();
-      const projectFps = projectStore.activeProject?.fps || 30;
-      setDropPosition(snapTimeToFrame(dropTime, projectFps));
+      // Use default duration for position indicator
+      setDropPosition(getDropSnappedTime(dropTime, 5));
       return;
     }
 
     e.dataTransfer.dropEffect = hasTimelineElement ? "move" : "copy";
     setWouldOverlap(false);
-    const projectStore = useProjectStore.getState();
-    const projectFps = projectStore.activeProject?.fps || 30;
-    setDropPosition(snapTimeToFrame(dropTime, projectFps));
+    // Use default duration for position indicator
+    setDropPosition(getDropSnappedTime(dropTime, 5));
   };
 
   const handleTrackDragEnter = (e: React.DragEvent) => {
@@ -615,18 +701,20 @@ export function TimelineTrackContent({
           return;
         }
 
-        // Adjust position based on where user clicked on the element
-        const adjustedStartTime = snappedTime - clickOffsetTime;
-        const finalStartTime = Math.max(
-          0,
-          snapTimeToFrame(adjustedStartTime, projectFps)
-        );
-
         // Check for overlaps with existing elements (excluding the moving element itself)
         const movingElementDuration =
           movingElement.duration -
           movingElement.trimStart -
           movingElement.trimEnd;
+
+        // Adjust position based on where user clicked on the element
+        const adjustedStartTime = newStartTime - clickOffsetTime;
+        const snappedStartTime = getDropSnappedTime(
+          adjustedStartTime,
+          movingElementDuration,
+          elementId
+        );
+        const finalStartTime = Math.max(0, snappedStartTime);
         const movingElementEnd = finalStartTime + movingElementDuration;
 
         const hasOverlap = track.elements.some((existingElement) => {
@@ -712,7 +800,11 @@ export function TimelineTrackContent({
 
           // Check for overlaps with existing elements in target track
           const newElementDuration = 5; // Default text duration
-          const newElementEnd = snappedTime + newElementDuration;
+          const textSnappedTime = getDropSnappedTime(
+            newStartTime,
+            newElementDuration
+          );
+          const newElementEnd = textSnappedTime + newElementDuration;
 
           const hasOverlap = targetTrack.elements.some((existingElement) => {
             const existingStart = existingElement.startTime;
@@ -723,7 +815,9 @@ export function TimelineTrackContent({
                 existingElement.trimEnd);
 
             // Check if elements overlap
-            return snappedTime < existingEnd && newElementEnd > existingStart;
+            return (
+              textSnappedTime < existingEnd && newElementEnd > existingStart
+            );
           });
 
           if (hasOverlap) {
@@ -738,7 +832,7 @@ export function TimelineTrackContent({
             name: dragData.name || "Text",
             content: dragData.content || "Default Text",
             duration: TIMELINE_CONSTANTS.DEFAULT_TEXT_DURATION,
-            startTime: snappedTime,
+            startTime: textSnappedTime,
             trimStart: 0,
             trimEnd: 0,
             fontSize: 48,
@@ -858,7 +952,11 @@ export function TimelineTrackContent({
 
           // Check for overlaps with existing elements in target track
           const newElementDuration = mediaItem.duration || 5;
-          const newElementEnd = snappedTime + newElementDuration;
+          const mediaSnappedTime = getDropSnappedTime(
+            newStartTime,
+            newElementDuration
+          );
+          const newElementEnd = mediaSnappedTime + newElementDuration;
 
           const hasOverlap = targetTrack.elements.some((existingElement) => {
             const existingStart = existingElement.startTime;
@@ -869,7 +967,9 @@ export function TimelineTrackContent({
                 existingElement.trimEnd);
 
             // Check if elements overlap
-            return snappedTime < existingEnd && newElementEnd > existingStart;
+            return (
+              mediaSnappedTime < existingEnd && newElementEnd > existingStart
+            );
           });
 
           if (hasOverlap) {
@@ -884,7 +984,7 @@ export function TimelineTrackContent({
             mediaId: mediaItem.id,
             name: mediaItem.name,
             duration: mediaItem.duration || 5,
-            startTime: snappedTime,
+            startTime: mediaSnappedTime,
             trimStart: 0,
             trimEnd: 0,
           });
