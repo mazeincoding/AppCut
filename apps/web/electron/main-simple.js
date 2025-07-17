@@ -172,4 +172,67 @@ ipcMain.handle('ping', () => {
   return 'pong from Electron main process';
 });
 
+// User data and preferences
+ipcMain.handle('get-user-data-path', () => {
+  return app.getPath('userData');
+});
+
+ipcMain.handle('get-projects-directory', () => {
+  return path.join(app.getPath('documents'), 'OpenCut Projects');
+});
+
+ipcMain.handle('get-user-preferences', () => {
+  try {
+    const preferencesPath = path.join(app.getPath('userData'), 'preferences.json');
+    if (fs.existsSync(preferencesPath)) {
+      return JSON.parse(fs.readFileSync(preferencesPath, 'utf8'));
+    }
+    return null;
+  } catch (error) {
+    console.error('Failed to load user preferences:', error);
+    return null;
+  }
+});
+
+ipcMain.handle('save-user-preferences', (event, preferences) => {
+  try {
+    const preferencesPath = path.join(app.getPath('userData'), 'preferences.json');
+    fs.writeFileSync(preferencesPath, JSON.stringify(preferences, null, 2));
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to save user preferences:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Project data management
+ipcMain.handle('save-project-data', (event, projectId, data) => {
+  try {
+    const projectsDir = path.join(app.getPath('documents'), 'OpenCut Projects');
+    if (!fs.existsSync(projectsDir)) {
+      fs.mkdirSync(projectsDir, { recursive: true });
+    }
+    
+    const projectPath = path.join(projectsDir, `${projectId}.json`);
+    fs.writeFileSync(projectPath, JSON.stringify(data, null, 2));
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to save project data:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('load-project-data', (event, projectId) => {
+  try {
+    const projectPath = path.join(app.getPath('documents'), 'OpenCut Projects', `${projectId}.json`);
+    if (fs.existsSync(projectPath)) {
+      return JSON.parse(fs.readFileSync(projectPath, 'utf8'));
+    }
+    return null;
+  } catch (error) {
+    console.error('Failed to load project data:', error);
+    return null;
+  }
+});
+
 console.log('🚀 Electron app starting...');

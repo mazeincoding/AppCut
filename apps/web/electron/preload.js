@@ -9,10 +9,29 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Platform info
   platform: process.platform,
   isElectron: true,
+  isDesktop: true,
+  
+  // Environment detection
+  getEnvironment: () => ({
+    platform: process.platform,
+    arch: process.arch,
+    isElectron: true,
+    isDesktop: true,
+    userDataPath: ipcRenderer.invoke('get-user-data-path')
+  }),
+  
+  // User preferences
+  getUserPreferences: () => ipcRenderer.invoke('get-user-preferences'),
+  saveUserPreferences: (preferences) => ipcRenderer.invoke('save-user-preferences', preferences),
   
   // File operations (to be implemented)
   selectFile: () => ipcRenderer.invoke('select-file'),
   saveFile: (data, filename) => ipcRenderer.invoke('save-file', data, filename),
+  
+  // Project operations
+  getProjectsDirectory: () => ipcRenderer.invoke('get-projects-directory'),
+  saveProjectData: (projectId, data) => ipcRenderer.invoke('save-project-data', projectId, data),
+  loadProjectData: (projectId) => ipcRenderer.invoke('load-project-data', projectId),
   
   // FFmpeg operations (to be implemented)
   exportVideo: (frames, options) => ipcRenderer.invoke('export-video', frames, options),
