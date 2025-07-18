@@ -22,7 +22,8 @@ function findFiles(dir, extensions = ['.html', '.js', '.css']) {
 
 // Fix paths in HTML content
 function fixHtmlPaths(content) {
-  return content
+  // First fix HTML attributes
+  content = content
     // Fix href attributes
     .replace(/href="\/([^"]+)"/g, 'href="app://$1"')
     // Fix src attributes
@@ -36,6 +37,34 @@ function fixHtmlPaths(content) {
     .replace(/href="app:\/\/http:/g, 'href="http:')
     .replace(/src="app:\/\/http:/g, 'src="http:')
     .replace(/content="app:\/\/http:/g, 'content="http:');
+
+  // Fix inline JavaScript in HTML - this is crucial for CSS loading
+  content = content
+    // Fix CSS paths in inline JavaScript (React Server Components)
+    .replace(/"href":"\/(_next\/static\/css\/[^"]+\.css)"/g, '"href":"app://$1"')
+    .replace(/"href":"\/(_next\/static\/media\/[^"]+)"/g, '"href":"app://$1"')
+    .replace(/"href":"\/([^"]+)"/g, function(match, path) {
+      // Don't fix external URLs
+      if (path.startsWith('http://') || path.startsWith('https://')) return match;
+      return '"href":"app://' + path + '"';
+    })
+    // Fix the specific :HL pattern for CSS hot-loading - be more specific
+    .replace(/:HL\[\\"\/_next\/static\/css\/([^"]+\.css)\\",\\"style\\"\]/g, ':HL[\\"app://_next/static/css/$1\\",\\"style\\"]')
+    .replace(/:HL\[\\"\/_next\/static\/([^"]+)\\",\\"style\\"\]/g, ':HL[\\"app://_next/static/$1\\",\\"style\\"]')
+    .replace(/:HL\["\/_next\/static\/css\/([^"]+\.css)","style"\]/g, ':HL["app://_next/static/css/$1","style"]')
+    .replace(/:HL\["\/_next\/static\/([^"]+)","style"\]/g, ':HL["app://_next/static/$1","style"]')
+    // Fix paths in inline scripts that reference _next
+    .replace(/["']\/_next\/static\/css\/([^"']+\.css)["']/g, '"app://_next/static/css/$1"')
+    .replace(/["']\/_next\/static\/chunks\/([^"']+\.js)["']/g, '"app://_next/static/chunks/$1"')
+    .replace(/["']\/_next\/static\/media\/([^"']+)["']/g, '"app://_next/static/media/$1"')
+    // Fix arrays of CSS files in inline scripts
+    .replace(/\["\/(_next\/static\/css\/[^"]+\.css)"/g, '["app://$1"')
+    // Fix chunk references in inline scripts - be more specific
+    .replace(/"static\/chunks\/([^"]+\.js)"/g, '"app://_next/static/chunks/$1"')
+    // Fix CSS file references that might be relative
+    .replace(/,\s*"(static\/css\/[^"]+\.css)"/g, ',"app://_next/$1"');
+
+  return content;
 }
 
 // Fix paths in JavaScript content
