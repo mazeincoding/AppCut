@@ -4,12 +4,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { ActionWithOptionalArgs } from "@/constants/actions";
 import { isAppleDevice, isDOMElement, isTypableElement } from "@/lib/utils";
-
-export type ShortcutKey = string;
-
-export interface KeybindingConfig {
-  [key: ShortcutKey]: ActionWithOptionalArgs;
-}
+import { KeybindingConfig, ShortcutKey } from "@/types/keybinding";
 
 // Default keybindings configuration
 export const defaultKeybindings: KeybindingConfig = {
@@ -19,23 +14,23 @@ export const defaultKeybindings: KeybindingConfig = {
   l: "seek-forward",
   left: "frame-step-backward",
   right: "frame-step-forward",
-  "shift-left": "jump-backward",
-  "shift-right": "jump-forward",
+  "shift+left": "jump-backward",
+  "shift+right": "jump-forward",
   home: "goto-start",
   end: "goto-end",
   s: "split-element",
   n: "toggle-snapping",
-  "ctrl-a": "select-all",
-  "ctrl-d": "duplicate-selected",
-  "ctrl-z": "undo",
-  "ctrl-shift-z": "redo",
-  "ctrl-y": "redo",
+  "ctrl+a": "select-all",
+  "ctrl+d": "duplicate-selected",
+  "ctrl+z": "undo",
+  "ctrl+shift+z": "redo",
+  "ctrl+y": "redo",
   delete: "delete-selected",
   backspace: "delete-selected",
 };
 
 export interface KeybindingConflict {
-  key: string;
+  key: ShortcutKey;
   existingAction: ActionWithOptionalArgs;
   newAction: ActionWithOptionalArgs;
 }
@@ -46,8 +41,8 @@ interface KeybindingsState {
   keybindingsEnabled: boolean;
 
   // Actions
-  updateKeybinding: (key: string, action: ActionWithOptionalArgs) => void;
-  removeKeybinding: (key: string) => void;
+  updateKeybinding: (key: ShortcutKey, action: ActionWithOptionalArgs) => void;
+  removeKeybinding: (key: ShortcutKey) => void;
   resetToDefaults: () => void;
   importKeybindings: (config: KeybindingConfig) => void;
   exportKeybindings: () => KeybindingConfig;
@@ -56,13 +51,13 @@ interface KeybindingsState {
 
   // Validation
   validateKeybinding: (
-    key: string,
+    key: ShortcutKey,
     action: ActionWithOptionalArgs
   ) => KeybindingConflict | null;
-  getKeybindingsForAction: (action: ActionWithOptionalArgs) => string[];
+  getKeybindingsForAction: (action: ActionWithOptionalArgs) => ShortcutKey[];
 
   // Utility
-  getKeybindingString: (ev: KeyboardEvent) => string | null;
+  getKeybindingString: (ev: KeyboardEvent) => ShortcutKey | null;
 }
 
 export const useKeybindingsStore = create<KeybindingsState>()(
@@ -72,7 +67,7 @@ export const useKeybindingsStore = create<KeybindingsState>()(
       isCustomized: false,
       keybindingsEnabled: true,
 
-      updateKeybinding: (key: string, action: ActionWithOptionalArgs) => {
+      updateKeybinding: (key: ShortcutKey, action: ActionWithOptionalArgs) => {
         set((state) => {
           const newKeybindings = { ...state.keybindings };
           newKeybindings[key] = action;
@@ -84,7 +79,7 @@ export const useKeybindingsStore = create<KeybindingsState>()(
         });
       },
 
-      removeKeybinding: (key: string) => {
+      removeKeybinding: (key: ShortcutKey) => {
         set((state) => {
           const newKeybindings = { ...state.keybindings };
           delete newKeybindings[key];
@@ -129,7 +124,10 @@ export const useKeybindingsStore = create<KeybindingsState>()(
         return get().keybindings;
       },
 
-      validateKeybinding: (key: string, action: ActionWithOptionalArgs) => {
+      validateKeybinding: (
+        key: ShortcutKey,
+        action: ActionWithOptionalArgs
+      ) => {
         const { keybindings } = get();
         const existingAction = keybindings[key];
 
@@ -147,12 +145,12 @@ export const useKeybindingsStore = create<KeybindingsState>()(
       getKeybindingsForAction: (action: ActionWithOptionalArgs) => {
         const { keybindings } = get();
         return Object.keys(keybindings).filter(
-          (key) => keybindings[key] === action
-        );
+          (key) => keybindings[key as ShortcutKey] === action
+        ) as ShortcutKey[];
       },
 
       getKeybindingString: (ev: KeyboardEvent) => {
-        return generateKeybindingString(ev);
+        return generateKeybindingString(ev) as ShortcutKey | null;
       },
     }),
     {
@@ -163,7 +161,7 @@ export const useKeybindingsStore = create<KeybindingsState>()(
 );
 
 // Utility functions
-function generateKeybindingString(ev: KeyboardEvent): string | null {
+function generateKeybindingString(ev: KeyboardEvent): ShortcutKey | null {
   const target = ev.target;
 
   // We may or may not have a modifier key
@@ -184,14 +182,14 @@ function generateKeybindingString(ev: KeyboardEvent): string | null {
       return null;
     }
 
-    return `${modifierKey}-${key}`;
+    return `${modifierKey}+${key}` as ShortcutKey;
   }
 
   // no modifier key here then we do not do anything while on input
   if (isDOMElement(target) && isTypableElement(target)) return null;
 
   // single key while not input
-  return `${key}`;
+  return `${key}` as ShortcutKey;
 }
 
 function getPressedKey(ev: KeyboardEvent): string | null {
@@ -233,11 +231,11 @@ function getActiveModifier(ev: KeyboardEvent): string | null {
     shift: ev.shiftKey,
   };
 
-  // active modifier: ctrl | alt | ctrl-alt | ctrl-shift | ctrl-alt-shift | alt-shift
+  // active modifier: ctrl | alt | ctrl+alt | ctrl+shift | ctrl+alt+shift | alt+shift
   // modiferKeys object's keys are sorted to match the above order
   const activeModifier = Object.keys(modifierKeys)
     .filter((key) => modifierKeys[key as keyof typeof modifierKeys])
-    .join("-");
+    .join("+");
 
   return activeModifier === "" ? null : activeModifier;
 }
