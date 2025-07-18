@@ -26,7 +26,7 @@ const nextConfig: NextConfig = {
     ],
   },
   ...(isElectron && {
-    // For Electron static export, skip build optimization and pre-rendering
+    // For Electron static export, ensure proper client-side hydration
     generateBuildId: async () => 'electron-static-build',
     skipTrailingSlashRedirect: true,
     skipMiddlewareUrlNormalize: true,

@@ -150,9 +150,11 @@ function createMainWindow() {
     }
   });
   
-  // Inject simple debug script for image investigation
+  // Inject debug scripts for investigation
   mainWindow.webContents.on('did-finish-load', () => {
-    console.log('🔧 Page finished loading - injecting simple debug script...');
+    console.log('🔧 Page finished loading - injecting debug scripts...');
+    
+    // Inject simple debug script
     try {
       const debugScript = fs.readFileSync(path.join(__dirname, 'simple-debug.js'), 'utf8');
       mainWindow.webContents.executeJavaScript(debugScript).then(() => {
@@ -164,29 +166,59 @@ function createMainWindow() {
       console.error('❌ Failed to read simple debug script:', error);
     }
     
-    // If test navigation is requested, inject navigation test script
+    // Inject hydration debug script
+    try {
+      const hydrationScript = fs.readFileSync(path.join(__dirname, 'hydration-debug.js'), 'utf8');
+      mainWindow.webContents.executeJavaScript(hydrationScript).then(() => {
+        console.log('✅ Hydration debug script injected successfully');
+      }).catch(err => {
+        console.error('❌ Hydration debug script injection failed:', err);
+      });
+    } catch (error) {
+      console.error('❌ Failed to read hydration debug script:', error);
+    }
+    
+    // Navigation test disabled to prevent infinite refresh loops
     console.log('🔍 Process argv:', process.argv);
     if (process.argv.includes('--test-navigation')) {
-      console.log('🧪 --test-navigation flag detected, injecting navigation test script...');
+      console.log('🧪 --test-navigation flag detected, but navigation test is disabled to prevent refresh loops');
+      
+      // Instead of injecting navigation test, just navigate once if needed
+      const targetPage = process.argv.find(arg => arg === 'projects' || arg === 'editor' || arg === 'login');
+      if (targetPage) {
+        console.log(`📄 Navigating to ${targetPage} page as requested`);
+        setTimeout(() => {
+          const url = `app://${targetPage}/index.html`;
+          console.log(`🔄 Loading: ${url}`);
+          mainWindow.loadURL(url);
+        }, 1000);
+      }
+    } else {
+      console.log('ℹ️ No --test-navigation flag, using normal navigation');
+    }
+    
+    // If test button is requested, inject button test script
+    if (process.argv.includes('--test-button')) {
+      console.log('🧪 --test-button flag detected, injecting button test script...');
       try {
-        const navScriptPath = path.join(__dirname, 'simple-nav-test.js');
-        console.log('📄 Reading navigation script from:', navScriptPath);
-        const navScript = fs.readFileSync(navScriptPath, 'utf8');
-        console.log('📜 Navigation script loaded, length:', navScript.length);
+        const buttonScriptPath = path.join(__dirname, 'simple-button-test.js');
+        console.log('📄 Reading button script from:', buttonScriptPath);
+        const buttonScript = fs.readFileSync(buttonScriptPath, 'utf8');
+        console.log('📜 Button script loaded, length:', buttonScript.length);
         
         // Wait a bit before injecting to ensure page is ready
         setTimeout(() => {
-          mainWindow.webContents.executeJavaScript(navScript).then(() => {
-            console.log('✅ Navigation test script injected and executed');
+          mainWindow.webContents.executeJavaScript(buttonScript).then(() => {
+            console.log('✅ Button test script injected and executed');
           }).catch(err => {
-            console.error('❌ Navigation test script execution failed:', err);
+            console.error('❌ Button test script execution failed:', err);
           });
         }, 2000);
       } catch (error) {
-        console.error('❌ Failed to read navigation test script:', error);
+        console.error('❌ Failed to read button test script:', error);
       }
     } else {
-      console.log('ℹ️ No --test-navigation flag, skipping navigation test');
+      console.log('ℹ️ No --test-button flag, skipping button test');
     }
   });
 
@@ -378,6 +410,23 @@ app.whenReady().then(() => {
       console.log('🔧 Extracted URL:', url);
     }
     
+    // Fix specific pattern: app://_next/app://_next/...
+    if (url && url.includes('app://_next/app://')) {
+      console.log('🔧 Detected double _next pattern:', url);
+      url = url.replace(/app:\/\/_next\/app:\/\//, 'app://');
+      console.log('🔧 Fixed _next pattern:', url);
+    }
+    
+    // Fix any remaining double app:// patterns
+    if (url && url.match(/app:\/\/.*app:\/\//)) {
+      console.log('🔧 Detected remaining double protocol:', url);
+      const matches = url.match(/app:\/\/(.*)app:\/\/(.+)/);
+      if (matches && matches[2]) {
+        url = 'app://' + matches[2];
+        console.log('🔧 Fixed to:', url);
+      }
+    }
+    
     // Now process normally
     url = url.substr(6); // Remove 'app://' prefix
     console.log('🔧 URL after prefix removal:', url);
@@ -416,7 +465,7 @@ app.whenReady().then(() => {
       return;
     }
     
-    // Check if file exists
+    // Check if file exists or if it's a directory that should serve index.html
     if (!fs.existsSync(normalizedPath)) {
       console.error('❌ File not found!');
       console.error('   Requested URL:', request.url);
@@ -432,9 +481,25 @@ app.whenReady().then(() => {
       callback({ error: -6 }); // FILE_NOT_FOUND
       return;
     }
+
+    // Check if the path is a directory and serve index.html from it
+    const stats = fs.statSync(normalizedPath);
+    if (stats.isDirectory()) {
+      console.log('📁 Directory detected, looking for index.html');
+      const indexPath = path.join(normalizedPath, 'index.html');
+      if (fs.existsSync(indexPath)) {
+        console.log('✅ Found index.html in directory, serving:', indexPath);
+        callback({ path: indexPath });
+        console.log('🔍 === PROTOCOL DEBUG END ===\n');
+        return;
+      } else {
+        console.error('❌ No index.html found in directory:', normalizedPath);
+        callback({ error: -6 }); // FILE_NOT_FOUND
+        return;
+      }
+    }
     
     // Get file stats for debugging (reduced logging)
-    const stats = fs.statSync(normalizedPath);
     const ext = path.extname(normalizedPath).toLowerCase();
     
     // Only log essential info for non-image files

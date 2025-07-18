@@ -17,20 +17,36 @@ const isElectron = () => {
   if (typeof window !== 'undefined') {
     // Primary check: electronAPI exists
     if (window.electronAPI !== undefined) {
+      console.log('🔍 [STORAGE] Electron detected via electronAPI');
       return true;
     }
     
     // Secondary check: environment variable
     if (process.env.NEXT_PUBLIC_ELECTRON === 'true') {
+      console.log('🔍 [STORAGE] Electron detected via env var');
       return true;
     }
     
     // Tertiary check: user agent contains Electron
     if (navigator.userAgent.toLowerCase().includes('electron')) {
+      console.log('🔍 [STORAGE] Electron detected via user agent');
+      return true;
+    }
+    
+    // Additional check: look for Electron in global
+    if (typeof window.require !== 'undefined') {
+      console.log('🔍 [STORAGE] Electron detected via require function');
+      return true;
+    }
+    
+    // Check document body for electron attribute
+    if (document.body && document.body.hasAttribute('data-electron')) {
+      console.log('🔍 [STORAGE] Electron detected via body data-electron attribute');
       return true;
     }
   }
   
+  console.log('🔍 [STORAGE] No Electron environment detected');
   return false;
 };
 
@@ -71,11 +87,13 @@ class StorageService {
       this.config.version
     );
 
-    // Use Electron adapter if running in Electron, otherwise use OPFS
+    // Re-check Electron environment at runtime (not just at initialization)
     const isElectronEnv = isElectron();
     console.log(`🔧 StorageService: Creating media adapter for project ${projectId}:`, {
       isElectronEnv,
-      adapterType: isElectronEnv ? 'ElectronOPFSAdapter' : 'OPFSAdapter'
+      adapterType: isElectronEnv ? 'ElectronOPFSAdapter' : 'OPFSAdapter',
+      hasElectronAPI: typeof window !== 'undefined' ? !!window.electronAPI : 'no window',
+      bodyDataElectron: typeof document !== 'undefined' && document.body ? document.body.getAttribute('data-electron') : 'no document'
     });
     
     const mediaFilesAdapter = isElectronEnv 
@@ -96,6 +114,8 @@ class StorageService {
 
   // Project operations
   async saveProject(project: TProject): Promise<void> {
+    console.log("🚀 [STORAGE DEBUG] Saving project:", project);
+    
     // Convert TProject to serializable format
     const serializedProject: SerializedProject = {
       id: project.id,
@@ -108,7 +128,16 @@ class StorageService {
       blurIntensity: project.blurIntensity,
     };
 
-    await this.projectsAdapter.set(project.id, serializedProject);
+    console.log("🚀 [STORAGE DEBUG] Serialized project:", serializedProject);
+    console.log("🚀 [STORAGE DEBUG] Using adapter:", this.projectsAdapter.constructor.name);
+    
+    try {
+      await this.projectsAdapter.set(project.id, serializedProject);
+      console.log("🚀 [STORAGE DEBUG] Project saved successfully to storage");
+    } catch (error) {
+      console.error("🚀 [STORAGE DEBUG] Failed to save project to adapter:", error);
+      throw error;
+    }
   }
 
   async loadProject(id: string): Promise<TProject | null> {

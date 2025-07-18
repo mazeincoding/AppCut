@@ -36,6 +36,8 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   isInitialized: false,
 
   createNewProject: async (name: string) => {
+    console.log("🚀 [PROJECT DEBUG] Creating new project:", name);
+    
     const newProject: TProject = {
       id: generateUUID(),
       name,
@@ -47,15 +49,34 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       blurIntensity: 8,
     };
 
-    set({ activeProject: newProject });
+    console.log("🚀 [PROJECT DEBUG] Generated project:", newProject);
 
     try {
+      console.log("🚀 [PROJECT DEBUG] Saving project to storage...");
       await storageService.saveProject(newProject);
+      console.log("🚀 [PROJECT DEBUG] Project saved successfully, reloading all projects...");
+      
       // Reload all projects to update the list
       await get().loadAllProjects();
+      
+      // Only set activeProject AFTER storage operations complete successfully
+      console.log("🚀 [PROJECT DEBUG] Setting active project after successful storage...");
+      set({ activeProject: newProject });
+      
+      // Validate state consistency before returning
+      const currentState = get();
+      if (!currentState.activeProject || currentState.activeProject.id !== newProject.id) {
+        console.error("🚀 [PROJECT DEBUG] State validation failed after project creation");
+        throw new Error("Project state validation failed");
+      }
+      
+      console.log("🚀 [PROJECT DEBUG] Project creation completed, returning ID:", newProject.id);
       return newProject.id;
     } catch (error) {
+      console.error("🚀 [PROJECT DEBUG] Failed to save project:", error);
       toast.error("Failed to save new project");
+      // Ensure activeProject is not set if creation failed
+      set({ activeProject: null });
       throw error;
     }
   },
@@ -110,17 +131,43 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   },
 
   loadAllProjects: async () => {
+    console.log("🚀 [PROJECT DEBUG] Loading all projects...");
     if (!get().isInitialized) {
       set({ isLoading: true });
     }
 
     try {
-      const projects = await storageService.loadAllProjects();
-      set({ savedProjects: projects });
+      console.log("🚀 [PROJECT DEBUG] Calling storageService.loadAllProjects...");
+      
+      // Add Electron environment guard to prevent blocking operations
+      const isElectronEnv = typeof window !== 'undefined' && window.electronAPI !== undefined;
+      if (isElectronEnv) {
+        console.log("🚀 [PROJECT DEBUG] Electron environment detected, using non-blocking approach");
+        // Use setTimeout to prevent blocking the main thread in Electron
+        const projects = await new Promise<any[]>((resolve, reject) => {
+          setTimeout(async () => {
+            try {
+              const result = await storageService.loadAllProjects();
+              resolve(result);
+            } catch (error) {
+              reject(error);
+            }
+          }, 0);
+        });
+        console.log("🚀 [PROJECT DEBUG] Loaded projects:", projects);
+        set({ savedProjects: projects });
+      } else {
+        const projects = await storageService.loadAllProjects();
+        console.log("🚀 [PROJECT DEBUG] Loaded projects:", projects);
+        set({ savedProjects: projects });
+      }
+      
+      console.log("🚀 [PROJECT DEBUG] Projects set in store");
     } catch (error) {
-      console.error("Failed to load projects:", error);
+      console.error("🚀 [PROJECT DEBUG] Failed to load projects:", error);
     } finally {
       set({ isLoading: false, isInitialized: true });
+      console.log("🚀 [PROJECT DEBUG] Store initialized");
     }
   },
 
