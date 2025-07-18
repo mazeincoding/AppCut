@@ -22,7 +22,9 @@
       "Bash(powershell:*)",
       "Bash(timeout 30 npx electron electron/main-simple.js)",
       "Bash(timeout 20 npx electron electron/main-simple.js)",
-      "Bash(timeout 15 npx electron electron/main-simple.js)"
+      "Bash(timeout 15 npx electron electron/main-simple.js)",
+      "Bash(timeout 10 npx electron electron/main-simple.js)",
+      "Bash(timeout 8 npx electron electron/main-simple.js --reset-window)"
     ],
     "deny": []
   }

@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, protocol } = require('electron');
+const { app, BrowserWindow, ipcMain, protocol, screen } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -6,10 +6,22 @@ const fs = require('fs');
 let windowState = {
   width: 1400,
   height: 1000,
-  x: undefined,
-  y: undefined,
+  x: 100, // Force position on screen
+  y: 100,
   isMaximized: false
 };
+
+function resetWindowState() {
+  try {
+    const configPath = path.join(app.getPath('userData'), 'window-state.json');
+    if (fs.existsSync(configPath)) {
+      fs.unlinkSync(configPath);
+      console.log('🗑️ Deleted problematic window state file');
+    }
+  } catch (error) {
+    console.log('Failed to delete window state:', error);
+  }
+}
 
 function saveWindowState() {
   if (!mainWindow) return;
@@ -40,6 +52,39 @@ function loadWindowState() {
   }
 }
 
+function ensureWindowOnScreen(windowState) {
+  // Get primary display bounds
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
+  const { x: screenX, y: screenY } = primaryDisplay.workArea;
+  
+  console.log('🖥️ Screen bounds:', { screenWidth, screenHeight, screenX, screenY });
+  console.log('🪟 Window state before validation:', windowState);
+  
+  // Ensure window is not off-screen
+  if (windowState.x < screenX || windowState.x > screenX + screenWidth - 200) {
+    console.log('⚠️ Window X position off-screen, resetting to center');
+    windowState.x = Math.max(screenX, Math.floor((screenWidth - windowState.width) / 2));
+  }
+  
+  if (windowState.y < screenY || windowState.y > screenY + screenHeight - 100) {
+    console.log('⚠️ Window Y position off-screen, resetting to center');
+    windowState.y = Math.max(screenY, Math.floor((screenHeight - windowState.height) / 2));
+  }
+  
+  // Ensure window dimensions are reasonable
+  if (windowState.width > screenWidth) {
+    windowState.width = Math.floor(screenWidth * 0.9);
+  }
+  
+  if (windowState.height > screenHeight) {
+    windowState.height = Math.floor(screenHeight * 0.9);
+  }
+  
+  console.log('✅ Window state after validation:', windowState);
+  return windowState;
+}
+
 // Handle GPU issues in headless environments
 app.commandLine.appendSwitch('--disable-gpu');
 app.commandLine.appendSwitch('--disable-software-rasterizer');
@@ -48,15 +93,24 @@ app.commandLine.appendSwitch('--no-sandbox');
 let mainWindow;
 
 function createMainWindow() {
-  // Load saved window state
+  // Check if we should reset window state (for debugging off-screen issues)
+  if (process.argv.includes('--reset-window')) {
+    console.log('🔄 Resetting window state due to --reset-window flag');
+    resetWindowState();
+  }
+  
+  // Load saved window state and ensure it's on screen
   loadWindowState();
+  const validatedState = ensureWindowOnScreen(windowState);
+  
+  console.log('🚀 Creating window with state:', validatedState);
   
   mainWindow = new BrowserWindow({
-    width: windowState.width,
-    height: windowState.height,
-    x: windowState.x,
-    y: windowState.y,
-    show: false,
+    width: validatedState.width,
+    height: validatedState.height,
+    x: validatedState.x,
+    y: validatedState.y,
+    show: true, // Show immediately for debugging
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -80,7 +134,21 @@ function createMainWindow() {
     console.log('📄 Loading static HTML fallback');
   }
   
+  console.log('🚀 Loading URL:', startUrl);
   mainWindow.loadURL(startUrl);
+  
+  // Add more debugging events
+  mainWindow.webContents.on('did-start-loading', () => {
+    console.log('📥 Started loading content...');
+  });
+  
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
+    console.error('❌ Failed to load:', errorCode, errorDescription, validatedURL);
+    // Show window anyway so user can see what happened
+    if (!mainWindow.isVisible()) {
+      mainWindow.show();
+    }
+  });
   
   // Inject simple debug script for image investigation
   mainWindow.webContents.on('did-finish-load', () => {
@@ -116,7 +184,21 @@ function createMainWindow() {
     }
     
     mainWindow.show();
+    mainWindow.focus();
+    mainWindow.setAlwaysOnTop(true);
+    mainWindow.setAlwaysOnTop(false); // Bring to front then allow normal behavior
   });
+
+  // Fallback: Show window after 3 seconds even if ready-to-show doesn't fire
+  setTimeout(() => {
+    if (mainWindow && !mainWindow.isVisible()) {
+      console.log('⚠️ Window not visible after 3s, forcing show...');
+      mainWindow.show();
+      mainWindow.focus();
+      mainWindow.setAlwaysOnTop(true);
+      mainWindow.setAlwaysOnTop(false);
+    }
+  }, 3000);
 
   // Save window state on close
   mainWindow.on('close', () => {
