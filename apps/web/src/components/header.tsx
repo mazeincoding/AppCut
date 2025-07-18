@@ -8,10 +8,12 @@ import { useSession } from "@/lib/auth-wrapper";
 import { getStars } from "@/lib/fetch-github-stars";
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { useElectronLink } from "@/lib/electron-navigation";
 
 export function Header() {
   const { data: session } = useSession();
   const [star, setStar] = useState<string>("");
+  const { handleClick, isElectron } = useElectronLink();
 
   useEffect(() => {
     const fetchStars = async () => {
@@ -27,7 +29,11 @@ export function Header() {
   }, []);
 
   const leftContent = (
-    <Link href="/" className="flex items-center gap-3">
+    <Link 
+      href="/" 
+      className="flex items-center gap-3"
+      onClick={(e) => handleClick(e, "/")}
+    >
       <Image src="/logo.svg" alt="OpenCut Logo" width={32} height={32} />
       <span className="text-xl font-medium hidden md:block">OpenCut</span>
     </Link>
@@ -35,12 +41,18 @@ export function Header() {
 
   const rightContent = (
     <nav className="flex items-center gap-3">
-      <Link href="/contributors">
+      <Link 
+        href="/contributors"
+        onClick={(e) => handleClick(e, "/contributors")}
+      >
         <Button variant="text" className="text-sm p-0">
           Contributors
         </Button>
       </Link>
-      <Link href="/projects">
+      <Link 
+        href="/projects"
+        onClick={(e) => handleClick(e, "/projects")}
+      >
         <Button size="sm" className="text-sm ml-4">
           Projects
           <ArrowRight className="h-4 w-4" />

@@ -224,9 +224,11 @@ function createMainWindow() {
 
   // Handle navigation for Next.js router support
   mainWindow.webContents.on('will-navigate', (event, url) => {
-    // Allow navigation to local files and same origin
-    if (url.startsWith('file://') || url.startsWith(startUrl)) {
-      console.log('🔗 Allowing navigation to:', url);
+    console.log('🔄 Navigation attempt to:', url);
+    
+    // Allow navigation to local files and all app:// protocol URLs
+    if (url.startsWith('file://') || url.startsWith('app://')) {
+      console.log('🔗 Allowing local navigation to:', url);
     } else {
       console.log('🚫 Blocking external navigation to:', url);
       event.preventDefault();
