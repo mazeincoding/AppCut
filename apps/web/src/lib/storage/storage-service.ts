@@ -103,8 +103,23 @@ class StorageService {
     );
   }
 
-  async deleteProject(id: string): Promise<void> {
-    await this.projectsAdapter.remove(id);
+  async deleteProject(projectId: string): Promise<void> {
+    // Delete project data from main projects database
+    await this.projectsAdapter.remove(projectId);
+
+    try {
+      // Delete project-specific databases
+      await Promise.all([
+        // Delete media metadata database
+        IndexedDBAdapter.deleteDatabase(`${this.config.mediaDb}-${projectId}`),
+        // Delete timeline database
+        IndexedDBAdapter.deleteDatabase(
+          `${this.config.timelineDb}-${projectId}`,
+        ),
+      ]);
+    } catch (error) {
+      console.error(`Failed to delete project ${projectId}:`, error);
+    }
   }
 
   // Media operations - now project-specific
