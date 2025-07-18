@@ -40,7 +40,10 @@
       "Bash(ls:*)",
       "Bash(mv:*)",
       "Bash(NEXT_PUBLIC_ELECTRON=true bun run build)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(NEXT_PUBLIC_ELECTRON=true npm run build)"
     ],
     "deny": []
   }
