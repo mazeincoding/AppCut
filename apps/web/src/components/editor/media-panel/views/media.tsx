@@ -28,7 +28,7 @@ import { useProjectStore } from "@/stores/project-store";
 import { useTimelineStore } from "@/stores/timeline-store";
 
 export function MediaView() {
-  const { mediaItems, addMediaItem, removeMediaItem, isLoading } = useMediaStore();
+  const { mediaItems, addMediaItem, removeMediaItem, isLoading, mediaCount } = useMediaStore();
   const { activeProject } = useProjectStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -196,8 +196,8 @@ export function MediaView() {
         {/* Search and filter controls skeleton */}
         <div className="p-3 pb-2">
           <div className="flex gap-2">
-            <Skeleton className="w-[80px] h-8" /> {/* Filter dropdown */}
-            <Skeleton className="flex-1 h-8" /> {/* Search input */}
+            <Skeleton className="w-[80px] h-10" /> {/* Filter dropdown */}
+            <Skeleton className="flex-1 h-10" /> {/* Search input */}
           </div>
         </div>
 
@@ -209,8 +209,8 @@ export function MediaView() {
               gridTemplateColumns: "repeat(auto-fill, 160px)",
             }}
           >
-            {/* 8 thumbnail skeletons */}
-            {Array.from({ length: 8 }).map((_, i) => (
+            {/* thumbnail skeletons */}
+            {Array.from({ length: mediaCount }).map((_, i) => (
               <div key={i} className="flex flex-col gap-2 w-28 h-28">
                 <Skeleton className="w-full aspect-video" />
                 <Skeleton className="w-full h-4" />
