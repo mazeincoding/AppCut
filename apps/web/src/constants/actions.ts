@@ -32,7 +32,20 @@ export type Action =
   | "toggle-play" // Toggle play/pause state
   | "stop-playback" // Stop playback
   | "seek-forward" // Seek forward in playback
-  | "seek-backward"; // Seek backward in playback
+  | "seek-backward" // Seek backward in playback
+  | "frame-step-forward" // Step forward by one frame
+  | "frame-step-backward" // Step backward by one frame
+  | "jump-forward" // Jump forward by 5 seconds
+  | "jump-backward" // Jump backward by 5 seconds
+  | "goto-start" // Go to timeline start
+  | "goto-end" // Go to timeline end
+  | "split-element" // Split element at current time
+  | "delete-selected" // Delete selected elements
+  | "select-all" // Select all elements
+  | "duplicate-selected" // Duplicate selected element
+  | "toggle-snapping" // Toggle snapping
+  | "undo" // Undo last action
+  | "redo"; // Redo last undone action
 
 /**
  * Defines the arguments, if present for a given type that is required to be passed on
@@ -46,8 +59,10 @@ export type Action =
  * will know if you got something wrong if there is a type error in this file
  */
 type ActionArgsMap = {
-  "seek-forward": { seconds: number }; // Args needed for seeking forward
-  "seek-backward": { seconds: number }; // Args needed for seeking backward
+  "seek-forward": { seconds: number } | undefined; // Args needed for seeking forward (default: 1)
+  "seek-backward": { seconds: number } | undefined; // Args needed for seeking backward (default: 1)
+  "jump-forward": { seconds: number } | undefined; // Args needed for jumping forward (default: 5)
+  "jump-backward": { seconds: number } | undefined; // Args needed for jumping backward (default: 5)
 };
 
 type KeysWithValueUndefined<T> = {
