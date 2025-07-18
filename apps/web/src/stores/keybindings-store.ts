@@ -112,6 +112,13 @@ export const useKeybindingsStore = create<KeybindingsState>()(
       },
 
       importKeybindings: (config: KeybindingConfig) => {
+        // Validate all keys and actions
+        for (const [key, action] of Object.entries(config)) {
+          // Validate the key format
+          if (typeof key !== "string" || key.length === 0) {
+            throw new Error(`Invalid key format: ${key}`);
+          }
+        }
         set({
           keybindings: { ...config },
           isCustomized: true,
@@ -198,6 +205,7 @@ function getPressedKey(ev: KeyboardEvent): string | null {
 
   // Check for special keys
   if (key === "tab") return "tab";
+  if (key === " " || key === "space") return "space";
   if (key === "home") return "home";
   if (key === "end") return "end";
   if (key === "delete") return "delete";

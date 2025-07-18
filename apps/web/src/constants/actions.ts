@@ -233,19 +233,19 @@ export function useActionHandler<A extends Action>(
   // Handle ref-based isActive changes
   useEffect(() => {
     if (isActive && typeof isActive === "object" && "current" in isActive) {
-      const checkActive = () => {
+      // Poll for ref changes
+      const interval = setInterval(() => {
         const shouldBind = isActive.current;
-        if (shouldBind && !isBound) {
-          bindAction(action, stableHandler);
-          setIsBound(true);
-        } else if (!shouldBind && isBound) {
-          unbindAction(action, stableHandler);
-          setIsBound(false);
+        if (shouldBind !== isBound) {
+          if (shouldBind) {
+            bindAction(action, stableHandler);
+          } else {
+            unbindAction(action, stableHandler);
+          }
+          setIsBound(shouldBind);
         }
-      };
-
-      // Initial check
-      checkActive();
+      }, 100);
+      return () => clearInterval(interval);
     }
   }, [action, stableHandler, isActive, isBound]);
 }

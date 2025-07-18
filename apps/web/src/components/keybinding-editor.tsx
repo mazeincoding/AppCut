@@ -224,10 +224,21 @@ export const KeybindingEditor = ({
     reader.onload = (e) => {
       try {
         const config = JSON.parse(e.target?.result as string);
+        // Validate config structure
+        if (!config || typeof config !== "object") {
+          throw new Error("Invalid configuration format");
+        }
+
+        // Validate each keybinding
+        for (const [key, action] of Object.entries(config)) {
+          if (typeof key !== "string" || typeof action !== "string") {
+            throw new Error(`Invalid keybinding: ${key} -> ${action}`);
+          }
+        }
         importKeybindings(config);
         toast.success("Keybindings imported successfully");
       } catch (error) {
-        toast.error("Failed to import keybindings file");
+        toast.error(`Failed to import keybindings: ${error}`);
       }
     };
     reader.readAsText(file);
