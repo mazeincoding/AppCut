@@ -6,7 +6,7 @@ import { useEditorStore } from "@/stores/editor-store";
 import {
   useKeybindingsListener,
   useKeybindingDisabler,
-} from "@/constants/keybindings";
+} from "@/hooks/use-keybindings";
 import { useEditorActions } from "@/hooks/use-editor-actions";
 
 interface EditorProviderProps {

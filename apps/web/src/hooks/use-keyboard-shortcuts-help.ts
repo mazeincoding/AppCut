@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { bindings } from "@/constants/keybindings";
+import { useKeybindingsStore } from "@/stores/keybindings-store";
 import { Action } from "@/constants/actions";
 
 export interface KeyboardShortcut {
@@ -83,13 +83,15 @@ const formatKey = (key: string): string => {
 };
 
 export const useKeyboardShortcutsHelp = () => {
+  const { keybindings } = useKeybindingsStore();
+
   const shortcuts = useMemo(() => {
     const result: KeyboardShortcut[] = [];
 
     // Group keybindings by action
     const actionToKeys: Record<Action, string[]> = {} as any;
 
-    Object.entries(bindings).forEach(([key, action]) => {
+    Object.entries(keybindings).forEach(([key, action]) => {
       if (action) {
         if (!actionToKeys[action]) {
           actionToKeys[action] = [];
@@ -113,7 +115,7 @@ export const useKeyboardShortcutsHelp = () => {
     });
 
     return result;
-  }, []);
+  }, [keybindings]);
 
   return {
     shortcuts,
