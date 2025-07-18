@@ -1,13 +1,6 @@
 import { useEffect } from "react";
-import { ActionWithOptionalArgs, invokeAction } from "../constants/actions";
+import { invokeAction } from "../constants/actions";
 import { useKeybindingsStore } from "@/stores/keybindings-store";
-
-/**
- * This variable keeps track whether keybindings are being accepted
- * true -> Keybindings are checked
- * false -> Key presses are ignored (Keybindings are not checked)
- */
-let keybindingsEnabled = true;
 
 /**
  * A composable that hooks to the caller component's
@@ -15,7 +8,8 @@ let keybindingsEnabled = true;
  * the appropriate actions based on keybindings
  */
 export function useKeybindingsListener() {
-  const { keybindings, getKeybindingString } = useKeybindingsStore();
+  const { keybindings, getKeybindingString, keybindingsEnabled } =
+    useKeybindingsStore();
 
   useEffect(() => {
     const handleKeyDown = (ev: KeyboardEvent) => {
@@ -51,20 +45,14 @@ export function useKeybindingsListener() {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [keybindings, getKeybindingString]);
+  }, [keybindings, getKeybindingString, keybindingsEnabled]);
 }
 
 /**
  * This composable allows for the UI component to be disabled if the component in question is mounted
  */
 export function useKeybindingDisabler() {
-  const disableKeybindings = () => {
-    keybindingsEnabled = false;
-  };
-
-  const enableKeybindings = () => {
-    keybindingsEnabled = true;
-  };
+  const { disableKeybindings, enableKeybindings } = useKeybindingsStore();
 
   return {
     disableKeybindings,

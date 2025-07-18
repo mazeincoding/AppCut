@@ -43,6 +43,7 @@ export interface KeybindingConflict {
 interface KeybindingsState {
   keybindings: KeybindingConfig;
   isCustomized: boolean;
+  keybindingsEnabled: boolean;
 
   // Actions
   updateKeybinding: (key: string, action: ActionWithOptionalArgs) => void;
@@ -50,6 +51,8 @@ interface KeybindingsState {
   resetToDefaults: () => void;
   importKeybindings: (config: KeybindingConfig) => void;
   exportKeybindings: () => KeybindingConfig;
+  enableKeybindings: () => void;
+  disableKeybindings: () => void;
 
   // Validation
   validateKeybinding: (
@@ -67,6 +70,7 @@ export const useKeybindingsStore = create<KeybindingsState>()(
     (set, get) => ({
       keybindings: { ...defaultKeybindings },
       isCustomized: false,
+      keybindingsEnabled: true,
 
       updateKeybinding: (key: string, action: ActionWithOptionalArgs) => {
         set((state) => {
@@ -97,6 +101,14 @@ export const useKeybindingsStore = create<KeybindingsState>()(
           keybindings: { ...defaultKeybindings },
           isCustomized: false,
         });
+      },
+
+      enableKeybindings: () => {
+        set({ keybindingsEnabled: true });
+      },
+
+      disableKeybindings: () => {
+        set({ keybindingsEnabled: false });
       },
 
       importKeybindings: (config: KeybindingConfig) => {
