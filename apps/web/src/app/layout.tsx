@@ -21,6 +21,16 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${defaultFont.className} font-sans antialiased`}>
+        {/* Electron detection script - runs immediately to set data-electron attribute */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if (typeof window !== 'undefined' && window.electronAPI) {
+                document.body.setAttribute('data-electron', 'true');
+              }
+            `,
+          }}
+        />
         <ThemeProvider attribute="class" forcedTheme="dark">
           <TooltipProvider>
             <StorageProvider>{children}</StorageProvider>

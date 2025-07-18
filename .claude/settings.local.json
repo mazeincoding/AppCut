@@ -19,7 +19,10 @@
       "Bash(rm:*)",
       "Bash(set NEXT_PUBLIC_ELECTRON=true)",
       "Bash(..test-electron.ps1)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(timeout 30 npx electron electron/main-simple.js)",
+      "Bash(timeout 20 npx electron electron/main-simple.js)",
+      "Bash(timeout 15 npx electron electron/main-simple.js)"
     ],
     "deny": []
   }

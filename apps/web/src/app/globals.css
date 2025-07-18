@@ -87,3 +87,23 @@
     overscroll-behavior-x: contain;
   }
 }
+
+/* Electron-specific CSS overrides to ensure content is visible */
+/* This fixes Framer Motion SSR opacity issues in Electron */
+@layer utilities {
+  /* Override any opacity:0 styles when running in Electron context */
+  body[data-electron] *[style*="opacity:0"],
+  body[data-electron] *[style*="opacity: 0"] {
+    opacity: 1 !important;
+  }
+  
+  /* Ensure transforms don't hide content in Electron */
+  body[data-electron] *[style*="transform:"] {
+    transform: none !important;
+  }
+  
+  /* Fallback for common Framer Motion classes that might be hidden */
+  body[data-electron] .max-w-3xl.mx-auto.w-full.flex-1.flex.flex-col.justify-center {
+    opacity: 1 !important;
+  }
+}

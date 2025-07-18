@@ -7,6 +7,12 @@ import { RiGithubLine, RiTwitterXLine } from "react-icons/ri";
 import { getStars } from "@/lib/fetch-github-stars";
 import Image from "next/image";
 
+// Check if we're running in Electron
+const isElectron = typeof window !== 'undefined' && window.electronAPI !== undefined;
+
+// Create motion component that disables animations in Electron
+const MotionFooter = isElectron ? "footer" : motion.footer;
+
 export function Footer() {
   const [star, setStar] = useState<string>();
 
@@ -24,11 +30,13 @@ export function Footer() {
   }, []);
 
   return (
-    <motion.footer
+    <MotionFooter
       className="bg-background border-t"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 0.8, duration: 0.8 }}
+      {...(!isElectron && {
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+        transition: { delay: 0.8, duration: 0.8 }
+      })}
     >
       <div className="max-w-5xl mx-auto px-8 py-10">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-8">
@@ -119,6 +127,6 @@ export function Footer() {
           </div>
         </div>
       </div>
-    </motion.footer>
+    </MotionFooter>
   );
 }

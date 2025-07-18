@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { ArrowRight } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 import Image from "next/image";
@@ -14,10 +14,22 @@ interface HeroProps {
   signupCount: number;
 }
 
+// Create a hook to detect Electron after hydration
+function useIsElectron() {
+  const [isElectron, setIsElectron] = useState(false);
+  
+  useEffect(() => {
+    setIsElectron(typeof window !== 'undefined' && window.electronAPI !== undefined);
+  }, []);
+  
+  return isElectron;
+}
+
 export function Hero({ signupCount }: HeroProps) {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const isElectron = useIsElectron();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,6 +82,56 @@ export function Hero({ signupCount }: HeroProps) {
     }
   };
 
+  const contentJSX = (
+    <>
+      <div className="inline-block font-bold tracking-tighter text-4xl md:text-[4rem]">
+        <h1>The Open Source</h1>
+        <Handlebars>Video Editor</Handlebars>
+      </div>
+
+      <p className="mt-10 text-base sm:text-xl text-muted-foreground font-light tracking-wide max-w-xl mx-auto">
+        A simple but powerful video editor that gets the job done. Works on
+        any platform.
+      </p>
+
+      <div className="mt-12 flex gap-8 justify-center">
+        <form
+          onSubmit={handleSubmit}
+          className="flex gap-3 w-full max-w-lg flex-col sm:flex-row"
+        >
+          <div className="relative w-full">
+            <Input
+              type="email"
+              placeholder="Enter your email"
+              className="h-11 text-base flex-1"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={isSubmitting}
+              required
+            />
+          </div>
+          <Button
+            type="submit"
+            className="h-11 text-base !bg-foreground"
+            disabled={isSubmitting}
+          >
+            <span className="relative z-10">
+              {isSubmitting ? "Joining..." : "Join waitlist"}
+            </span>
+            <ArrowRight className="relative z-10 ml-0.5 h-4 w-4 inline-block" />
+          </Button>
+        </form>
+      </div>
+
+      {signupCount > 0 && (
+        <div className="mt-8 inline-flex items-center gap-2 text-sm text-muted-foreground justify-center">
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+          <span>{signupCount.toLocaleString()} people already joined</span>
+        </div>
+      )}
+    </>
+  );
+
   return (
     <div className="min-h-[calc(100vh-4.5rem)] supports-[height:100dvh]:min-h-[calc(100dvh-4.5rem)] flex flex-col justify-between items-center text-center px-4">
       <Image
@@ -79,79 +141,88 @@ export function Hero({ signupCount }: HeroProps) {
         width={1269}
         alt="landing-page.bg"
       />
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1 }}
-        className="max-w-3xl mx-auto w-full flex-1 flex flex-col justify-center"
-      >
+      
+      {isElectron ? (
+        // Static version for Electron (no animations)
+        <div className="max-w-3xl mx-auto w-full flex-1 flex flex-col justify-center">
+          {contentJSX}
+        </div>
+      ) : (
+        // Animated version for browsers
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.8 }}
-          className="inline-block font-bold tracking-tighter text-4xl md:text-[4rem]"
-        >
-          <h1>The Open Source</h1>
-          <Handlebars>Video Editor</Handlebars>
-        </motion.div>
-
-        <motion.p
-          className="mt-10 text-base sm:text-xl text-muted-foreground font-light tracking-wide max-w-xl mx-auto"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.4, duration: 0.8 }}
+          transition={{ duration: 1 }}
+          className="max-w-3xl mx-auto w-full flex-1 flex flex-col justify-center"
         >
-          A simple but powerful video editor that gets the job done. Works on
-          any platform.
-        </motion.p>
-
-        <motion.div
-          className="mt-12 flex gap-8 justify-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6, duration: 0.8 }}
-        >
-          <form
-            onSubmit={handleSubmit}
-            className="flex gap-3 w-full max-w-lg flex-col sm:flex-row"
-          >
-            <div className="relative w-full">
-              <Input
-                type="email"
-                placeholder="Enter your email"
-                className="h-11 text-base flex-1"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isSubmitting}
-                required
-              />
-            </div>
-            <Button
-              type="submit"
-              size="lg"
-              className="px-6 h-11 text-base !bg-foreground"
-              disabled={isSubmitting}
-            >
-              <span className="relative z-10">
-                {isSubmitting ? "Joining..." : "Join waitlist"}
-              </span>
-              <ArrowRight className="relative z-10 ml-0.5 h-4 w-4 inline-block" />
-            </Button>
-          </form>
-        </motion.div>
-
-        {signupCount > 0 && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8, duration: 0.6 }}
-            className="mt-8 inline-flex items-center gap-2 text-sm text-muted-foreground justify-center"
+            transition={{ delay: 0.2, duration: 0.8 }}
           >
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span>{signupCount.toLocaleString()} people already joined</span>
+            <div className="inline-block font-bold tracking-tighter text-4xl md:text-[4rem]">
+              <h1>The Open Source</h1>
+              <Handlebars>Video Editor</Handlebars>
+            </div>
           </motion.div>
-        )}
-      </motion.div>
+
+          <motion.p
+            className="mt-10 text-base sm:text-xl text-muted-foreground font-light tracking-wide max-w-xl mx-auto"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.8 }}
+          >
+            A simple but powerful video editor that gets the job done. Works on
+            any platform.
+          </motion.p>
+
+          <motion.div
+            className="mt-12 flex gap-8 justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6, duration: 0.8 }}
+          >
+            <form
+              onSubmit={handleSubmit}
+              className="flex gap-3 w-full max-w-lg flex-col sm:flex-row"
+            >
+              <div className="relative w-full">
+                <Input
+                  type="email"
+                  placeholder="Enter your email"
+                  className="h-11 text-base flex-1"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isSubmitting}
+                  required
+                />
+              </div>
+              <Button
+                type="submit"
+                className="h-11 text-base !bg-foreground"
+                disabled={isSubmitting}
+              >
+                <span className="relative z-10">
+                  {isSubmitting ? "Joining..." : "Join waitlist"}
+                </span>
+                <ArrowRight className="relative z-10 ml-0.5 h-4 w-4 inline-block" />
+              </Button>
+            </form>
+          </motion.div>
+
+          {signupCount > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8, duration: 0.6 }}
+              className="mt-8 inline-flex items-center gap-2 text-sm text-muted-foreground justify-center"
+            >
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              <span>{signupCount.toLocaleString()} people already joined</span>
+            </motion.div>
+          )}
+        </motion.div>
+      )}
     </div>
   );
 }
