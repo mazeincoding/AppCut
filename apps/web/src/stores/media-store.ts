@@ -28,6 +28,7 @@ export interface MediaItem {
 interface MediaStore {
   mediaItems: MediaItem[];
   isLoading: boolean;
+  mediaCount: number; // keep a separate count for loading state
 
   // Actions - now require projectId
   addMediaItem: (
@@ -159,6 +160,7 @@ export const getMediaAspectRatio = (item: MediaItem): number => {
 export const useMediaStore = create<MediaStore>((set, get) => ({
   mediaItems: [],
   isLoading: false,
+  mediaCount: 0,
 
   addMediaItem: async (projectId, item) => {
     const newItem: MediaItem = {
@@ -169,6 +171,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     // Add to local state immediately for UI responsiveness
     set((state) => ({
       mediaItems: [...state.mediaItems, newItem],
+      mediaCount: state.mediaItems.length + 1,
     }));
 
     // Save to persistent storage in background
@@ -198,6 +201,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     // Remove from local state immediately
     set((state) => ({
       mediaItems: state.mediaItems.filter((media) => media.id !== id),
+      mediaCount: state.mediaItems.length - 1,
     }));
 
     // Remove from persistent storage
@@ -213,6 +217,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
 
     try {
       const mediaItems = await storageService.loadAllMediaItems(projectId);
+      set({ mediaCount: mediaItems.length });
 
       // Regenerate thumbnails for video items
       const updatedMediaItems = await Promise.all(
@@ -257,7 +262,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     });
 
     // Clear local state
-    set({ mediaItems: [] });
+    set({ mediaItems: [], mediaCount: 0 });
 
     // Clear persistent storage
     try {
@@ -284,6 +289,6 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     });
 
     // Clear local state
-    set({ mediaItems: [] });
+    set({ mediaItems: [], mediaCount: 0 });
   },
 }));
