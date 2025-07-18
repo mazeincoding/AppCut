@@ -4,6 +4,7 @@ import { TabBar } from "./tabbar";
 import { MediaView } from "./views/media";
 import { useMediaPanelStore, Tab } from "./store";
 import { TextView } from "./views/text";
+import { StickerView } from "./views/stickers";
 
 export function MediaPanel() {
   const { activeTab } = useMediaPanelStore();
@@ -14,11 +15,7 @@ export function MediaPanel() {
       <div className="p-4 text-muted-foreground">Audio view coming soon...</div>
     ),
     text: <TextView />,
-    stickers: (
-      <div className="p-4 text-muted-foreground">
-        Stickers view coming soon...
-      </div>
-    ),
+    stickers: <StickerView />,
     effects: (
       <div className="p-4 text-muted-foreground">
         Effects view coming soon...

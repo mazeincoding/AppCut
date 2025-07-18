@@ -399,12 +399,21 @@ export function Timeline() {
           let targetTrack = tracks.find((t) => t.type === trackType);
           const newTrackId = targetTrack ? targetTrack.id : addTrack(trackType);
 
+          // sometimes when i add the media it stacks it over the other media (like overlay it ontop of the existing media)
+          targetTrack = tracks.find((t) => t.id === newTrackId);
+          let startTime = 0;
+          if (targetTrack && targetTrack.elements.length > 0) {
+            // Find the end of the last element
+            const lastElement = targetTrack.elements[targetTrack.elements.length - 1];
+            startTime = lastElement.startTime + (lastElement.duration - lastElement.trimStart - lastElement.trimEnd);
+          }
+
           addElementToTrack(newTrackId, {
             type: "media",
             mediaId: mediaItem.id,
             name: mediaItem.name,
             duration: mediaItem.duration || 5,
-            startTime: 0,
+            startTime,
             trimStart: 0,
             trimEnd: 0,
           });

@@ -359,8 +359,9 @@ export function PreviewPanel() {
           >
             {renderBlurBackground()}
             {activeElements.length === 0 ? (
+              // made the message more user-friendly
               <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                No elements at current time
+                No media Playing at current time
               </div>
             ) : (
               activeElements.map((elementData, index) =>

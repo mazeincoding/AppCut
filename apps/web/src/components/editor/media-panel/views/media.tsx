@@ -118,7 +118,7 @@ export function MediaView() {
 
   const renderPreview = (item: MediaItem) => {
     // Render a preview for each media type (image, video, audio, unknown)
-    if (item.type === "image") {
+    if (item.type === "image" || item.type == "GIF") {
       return (
         <div className="w-full h-full flex items-center justify-center">
           <img
