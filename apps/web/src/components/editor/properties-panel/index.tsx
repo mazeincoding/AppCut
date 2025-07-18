@@ -83,7 +83,11 @@ export function PropertiesPanel() {
               );
 
               if (mediaItem?.type === "audio") {
-                return <AudioProperties element={element} />;
+                return (
+                  <div key={elementId}>
+                    <AudioProperties element={element} />
+                  </div>
+                );
               }
 
               return (

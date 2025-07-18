@@ -13,7 +13,10 @@ export function cn(...inputs: ClassValue[]) {
  */
 export function generateUUID(): string {
   // Use the native crypto.randomUUID if available
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
     return crypto.randomUUID();
   }
 
@@ -26,17 +29,33 @@ export function generateUUID(): string {
   // Set variant 10xxxxxx
   bytes[8] = (bytes[8] & 0x3f) | 0x80;
 
-  const hex = [...bytes].map(b => b.toString(16).padStart(2, '0'));
+  const hex = [...bytes].map((b) => b.toString(16).padStart(2, "0"));
 
   return (
-    hex.slice(0, 4).join('') + '-' +
-    hex.slice(4, 6).join('') + '-' +
-    hex.slice(6, 8).join('') + '-' +
-    hex.slice(8, 10).join('') + '-' +
-    hex.slice(10, 16).join('')
+    hex.slice(0, 4).join("") +
+    "-" +
+    hex.slice(4, 6).join("") +
+    "-" +
+    hex.slice(6, 8).join("") +
+    "-" +
+    hex.slice(8, 10).join("") +
+    "-" +
+    hex.slice(10, 16).join("")
   );
 }
 
 export function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value); 
+}
+
+export function isAppleDevice() {
+  return /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform);
+}
+
+export function getPlatformSpecialKey() {
+  return isAppleDevice() ? "⌘" : "Ctrl";
+}
+
+export function getPlatformAlternateKey() {
+  return isAppleDevice() ? "⌥" : "Alt";
 }

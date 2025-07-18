@@ -24,6 +24,7 @@ import { useTimelineElementResize } from "@/hooks/use-timeline-element-resize";
 import {
   getTrackElementClasses,
   TIMELINE_CONSTANTS,
+  getTrackHeight,
 } from "@/constants/timeline-constants";
 import {
   DropdownMenu,
@@ -267,35 +268,99 @@ export function TimelineElement({
       );
     }
 
+    const TILE_ASPECT_RATIO = 16 / 9;
+
     if (mediaItem.type === "image") {
+      // Calculate tile size based on 16:9 aspect ratio
+      const trackHeight = getTrackHeight(track.type);
+      const tileHeight = trackHeight - 8; // Account for padding
+      const tileWidth = tileHeight * TILE_ASPECT_RATIO;
+
       return (
         <div className="w-full h-full flex items-center justify-center">
-          <div className="bg-[#004D52] py-3 w-full h-full">
-            <img
-              src={mediaItem.url}
-              alt={mediaItem.name}
-              className="w-full h-full object-cover"
-              draggable={false}
+          <div className="bg-[#004D52] py-3 w-full h-full relative">
+            {/* Background with tiled images */}
+            <div
+              className="absolute top-3 bottom-3 left-0 right-0"
+              style={{
+                backgroundImage: mediaItem.url
+                  ? `url(${mediaItem.url})`
+                  : "none",
+                backgroundRepeat: "repeat-x",
+                backgroundSize: `${tileWidth}px ${tileHeight}px`,
+                backgroundPosition: "left center",
+                pointerEvents: "none",
+              }}
+              aria-label={`Tiled background of ${mediaItem.name}`}
+            />
+            {/* Overlay with vertical borders */}
+            <div
+              className="absolute top-3 bottom-3 left-0 right-0 pointer-events-none"
+              style={{
+                backgroundImage: `repeating-linear-gradient(
+                  to right,
+                  transparent 0px,
+                  transparent ${tileWidth - 1}px,
+                  rgba(255, 255, 255, 0.6) ${tileWidth - 1}px,
+                  rgba(255, 255, 255, 0.6) ${tileWidth}px
+                )`,
+                backgroundPosition: "left center",
+              }}
             />
           </div>
         </div>
       );
     }
 
+    const VIDEO_TILE_PADDING = 16;
+    const OVERLAY_SPACE_MULTIPLIER = 1.5;
+
     if (mediaItem.type === "video" && mediaItem.thumbnailUrl) {
+      const trackHeight = getTrackHeight(track.type);
+      const tileHeight = trackHeight - VIDEO_TILE_PADDING;
+      const tileWidth = tileHeight * TILE_ASPECT_RATIO;
+
       return (
         <div className="w-full h-full flex items-center gap-2">
-          <div className="w-8 h-8 flex-shrink-0">
-            <img
-              src={mediaItem.thumbnailUrl}
-              alt={mediaItem.name}
-              className="w-full h-full object-cover rounded-sm"
-              draggable={false}
+          <div className="flex-1 h-full relative overflow-hidden">
+            {/* Background with tiled thumbnails */}
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: mediaItem.thumbnailUrl
+                  ? `url(${mediaItem.thumbnailUrl})`
+                  : "none",
+                backgroundRepeat: "repeat-x",
+                backgroundSize: `${tileWidth}px ${tileHeight}px`,
+                backgroundPosition: "left center",
+                pointerEvents: "none",
+              }}
+              aria-label={`Tiled thumbnail of ${mediaItem.name}`}
+            />
+            {/* Overlay with vertical borders */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                backgroundImage: `repeating-linear-gradient(
+                  to right,
+                  transparent 0px,
+                  transparent ${tileWidth - 1}px,
+                  rgba(255, 255, 255, 0.6) ${tileWidth - 1}px,
+                  rgba(255, 255, 255, 0.6) ${tileWidth}px
+                )`,
+                backgroundPosition: "left center",
+              }}
             />
           </div>
-          <span className="text-xs text-foreground/80 truncate flex-1">
-            {element.name}
-          </span>
+          {elementWidth > tileWidth * OVERLAY_SPACE_MULTIPLIER ? (
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/70 text-white text-xs px-2 py-1 rounded pointer-events-none max-w-[40%] truncate">
+              {element.name}
+            </div>
+          ) : (
+            <span className="text-xs text-foreground/80 truncate flex-shrink-0 max-w-[120px]">
+              {element.name}
+            </span>
+          )}
         </div>
       );
     }

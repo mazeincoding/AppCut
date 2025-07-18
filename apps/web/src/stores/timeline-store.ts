@@ -5,15 +5,22 @@ import {
   CreateTimelineElement,
   TimelineTrack,
   TextElement,
+  DragData,
   sortTracksByOrder,
   ensureMainTrack,
   validateElementTrackCompatibility,
 } from "@/types/timeline";
 import { useEditorStore } from "./editor-store";
-import { useMediaStore, getMediaAspectRatio } from "./media-store";
+import {
+  useMediaStore,
+  getMediaAspectRatio,
+  type MediaItem,
+} from "./media-store";
 import { storageService } from "@/lib/storage/storage-service";
 import { useProjectStore } from "./project-store";
 import { generateUUID } from "@/lib/utils";
+import { TIMELINE_CONSTANTS } from "@/constants/timeline-constants";
+import { toast } from "sonner";
 
 // Helper function to manage element naming with suffixes
 const getElementNameWithSuffix = (
@@ -166,6 +173,17 @@ interface TimelineStore {
       >
     >
   ) => void;
+  checkElementOverlap: (
+    trackId: string,
+    startTime: number,
+    duration: number,
+    excludeElementId?: string
+  ) => boolean;
+  findOrCreateTrack: (trackType: TrackType) => string;
+  addMediaAtTime: (item: MediaItem, currentTime?: number) => boolean;
+  addTextAtTime: (item: TextElement, currentTime?: number) => boolean;
+  addMediaToNewTrack: (item: MediaItem) => boolean;
+  addTextToNewTrack: (item: TextElement | DragData) => boolean;
 }
 
 export const useTimelineStore = create<TimelineStore>((set, get) => {
@@ -962,6 +980,150 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
     // Snapping actions
     toggleSnapping: () => {
       set((state) => ({ snappingEnabled: !state.snappingEnabled }));
+    },
+
+    checkElementOverlap: (trackId, startTime, duration, excludeElementId) => {
+      const track = get()._tracks.find((t) => t.id === trackId);
+      if (!track) return false;
+
+      const overlap = track.elements.some((element) => {
+        const elementEnd =
+          element.startTime +
+          element.duration -
+          element.trimStart -
+          element.trimEnd;
+
+        if (element.id === excludeElementId) {
+          return false;
+        }
+
+        return (
+          (startTime >= element.startTime && startTime < elementEnd) ||
+          (startTime + duration > element.startTime &&
+            startTime + duration <= elementEnd) ||
+          (startTime < element.startTime && startTime + duration > elementEnd)
+        );
+      });
+      return overlap;
+    },
+
+    findOrCreateTrack: (trackType) => {
+      // Always create new text track to allow multiple text elements
+      if (trackType === "text") {
+        return get().addTrack(trackType);
+      }
+
+      const existingTrack = get()._tracks.find((t) => t.type === trackType);
+      if (existingTrack) {
+        return existingTrack.id;
+      }
+
+      return get().addTrack(trackType);
+    },
+
+    addMediaAtTime: (item, currentTime = 0) => {
+      const trackType = item.type === "audio" ? "audio" : "media";
+      const targetTrackId = get().findOrCreateTrack(trackType);
+
+      const duration =
+        item.duration || TIMELINE_CONSTANTS.DEFAULT_IMAGE_DURATION;
+
+      if (get().checkElementOverlap(targetTrackId, currentTime, duration)) {
+        toast.error(
+          "Cannot place element here - it would overlap with existing elements"
+        );
+        return false;
+      }
+
+      get().addElementToTrack(targetTrackId, {
+        type: "media",
+        mediaId: item.id,
+        name: item.name,
+        duration,
+        startTime: currentTime,
+        trimStart: 0,
+        trimEnd: 0,
+      });
+      return true;
+    },
+
+    addTextAtTime: (item, currentTime = 0) => {
+      const targetTrackId = get().addTrack("text"); // Always create new text track to allow multiple text elements
+
+      get().addElementToTrack(targetTrackId, {
+        type: "text",
+        name: item.name || "Text",
+        content: item.content || "Default Text",
+        duration: item.duration || TIMELINE_CONSTANTS.DEFAULT_TEXT_DURATION,
+        startTime: currentTime,
+        trimStart: 0,
+        trimEnd: 0,
+        fontSize: item.fontSize || 48,
+        fontFamily: item.fontFamily || "Arial",
+        color: item.color || "#ffffff",
+        backgroundColor: item.backgroundColor || "transparent",
+        textAlign: item.textAlign || "center",
+        fontWeight: item.fontWeight || "normal",
+        fontStyle: item.fontStyle || "normal",
+        textDecoration: item.textDecoration || "none",
+        x: item.x || 0,
+        y: item.y || 0,
+        rotation: item.rotation || 0,
+        opacity: item.opacity !== undefined ? item.opacity : 1,
+      });
+      return true;
+    },
+
+    addMediaToNewTrack: (item) => {
+      const trackType = item.type === "audio" ? "audio" : "media";
+      const targetTrackId = get().findOrCreateTrack(trackType);
+
+      get().addElementToTrack(targetTrackId, {
+        type: "media",
+        mediaId: item.id,
+        name: item.name,
+        duration: item.duration || TIMELINE_CONSTANTS.DEFAULT_IMAGE_DURATION,
+        startTime: 0,
+        trimStart: 0,
+        trimEnd: 0,
+      });
+      return true;
+    },
+
+    addTextToNewTrack: (item) => {
+      const targetTrackId = get().addTrack("text"); // Always create new text track to allow multiple text elements
+
+      get().addElementToTrack(targetTrackId, {
+        type: "text",
+        name: item.name || "Text",
+        content:
+          ("content" in item ? item.content : "Default Text") || "Default Text",
+        duration: TIMELINE_CONSTANTS.DEFAULT_TEXT_DURATION,
+        startTime: 0,
+        trimStart: 0,
+        trimEnd: 0,
+        fontSize: ("fontSize" in item ? item.fontSize : 48) || 48,
+        fontFamily:
+          ("fontFamily" in item ? item.fontFamily : "Arial") || "Arial",
+        color: ("color" in item ? item.color : "#ffffff") || "#ffffff",
+        backgroundColor:
+          ("backgroundColor" in item ? item.backgroundColor : "transparent") ||
+          "transparent",
+        textAlign:
+          ("textAlign" in item ? item.textAlign : "center") || "center",
+        fontWeight:
+          ("fontWeight" in item ? item.fontWeight : "normal") || "normal",
+        fontStyle:
+          ("fontStyle" in item ? item.fontStyle : "normal") || "normal",
+        textDecoration:
+          ("textDecoration" in item ? item.textDecoration : "none") || "none",
+        x: ("x" in item ? item.x : 0) || 0,
+        y: ("y" in item ? item.y : 0) || 0,
+        rotation: ("rotation" in item ? item.rotation : 0) || 0,
+        opacity:
+          "opacity" in item && item.opacity !== undefined ? item.opacity : 1,
+      });
+      return true;
     },
   };
 });

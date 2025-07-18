@@ -4,24 +4,65 @@ Thank you for your interest in contributing to OpenCut! This document provides g
 
 ## Getting Started
 
+### Prerequisites
+
+- [Node.js](https://nodejs.org/en/) (v18 or later)
+- [Bun](https://bun.sh/docs/installation)
+  (for `npm` alternative)
+- [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/)
+
+> **Note:** Docker is optional, but it's essential for running the local database and Redis services. If you're planning to contribute to frontend features, you can skip the Docker setup. If you have followed the steps below in [Setup](#setup), you're all set to go!
+
+### Setup
+
 1. Fork the repository
 2. Clone your fork locally
 3. Navigate to the web app directory: `cd apps/web`
-4. Install dependencies: `bun install`
-5. Start the development server: `bun run dev`
+4. Copy `.env.example` to `.env.local`:
+
+   ```bash
+   # Unix/Linux/Mac
+   cp .env.example .env.local
+
+   # Windows Command Prompt
+   copy .env.example .env.local
+
+   # Windows PowerShell
+   Copy-Item .env.example .env.local
+   ```
+
+5. Install dependencies: `bun install`
+6. Start the development server: `bun run dev`
 
 > **Note:** If you see an error like `Unsupported URL Type "workspace:*"` when running `npm install`, you have two options:
 >
 > 1. Upgrade to a recent npm version (v9 or later), which has full workspace protocol support.
 > 2. Use an alternative package manager such as **bun** or **pnpm**.
 
+## What to Focus On
+
+**🎯 Good Areas to Contribute:**
+
+- Timeline functionality and UI improvements
+- Project management features
+- Performance optimizations
+- Bug fixes in existing functionality
+- UI/UX improvements
+- Documentation and testing
+
+**⚠️ Areas to Avoid:**
+
+- Preview panel enhancements (text fonts, stickers, effects)
+- Export functionality improvements
+- Preview rendering optimizations
+
+**Why?** We're currently planning a major refactor of the preview system. The current preview renders DOM elements (HTML), but we're moving to a binary rendering approach similar to CapCut. This new system will ensure consistency between preview and export, and provide much better performance and quality.
+
+The current HTML-based preview is essentially a prototype - the binary approach will be the "real deal." To avoid wasted effort, please focus on other areas of the application until this refactor is complete.
+
+If you're unsure whether your idea falls into the preview category, feel free to ask us [directly in discord](https://discord.gg/zmR9N35cjK) or create a GitHub issue!
+
 ## Development Setup
-
-### Prerequisites
-
-- Node.js 18+
-- Bun (latest version)
-- Docker (for local database)
 
 ### Local Development
 

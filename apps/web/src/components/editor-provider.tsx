@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { useEditorStore } from "@/stores/editor-store";
+import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 
 interface EditorProviderProps {
   children: React.ReactNode;
@@ -10,6 +11,11 @@ interface EditorProviderProps {
 
 export function EditorProvider({ children }: EditorProviderProps) {
   const { isInitializing, isPanelsReady, initializeApp } = useEditorStore();
+
+  useKeyboardShortcuts({
+    enabled: !isInitializing && isPanelsReady,
+    context: "editor",
+  });
 
   useEffect(() => {
     initializeApp();

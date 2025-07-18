@@ -7,8 +7,16 @@ import { TooltipProvider } from "../components/ui/tooltip";
 import { StorageProvider } from "../components/storage-provider";
 import { baseMetaData } from "./metadata";
 import { defaultFont } from "../lib/font-config";
+import { BotIdClient } from "botid/client";
 
 export const metadata = baseMetaData;
+
+const protectedRoutes = [
+  {
+    path: "/api/waitlist",
+    method: "POST",
+  },
+];
 
 export default function RootLayout({
   children,
@@ -17,6 +25,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <BotIdClient protect={protectedRoutes} />
+      </head>
       <body className={`${defaultFont.className} font-sans antialiased`}>
         <ThemeProvider attribute="class" forcedTheme="dark">
           <TooltipProvider>

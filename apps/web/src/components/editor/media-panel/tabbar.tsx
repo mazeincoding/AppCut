@@ -69,7 +69,7 @@ export function TabBar() {
       />
       <div
         ref={scrollContainerRef}
-        className="h-12 bg-panel-accent px-3 flex justify-start items-center gap-5 overflow-x-auto scrollbar-x-hidden relative"
+        className="h-12 bg-panel-accent px-3 flex justify-start items-center gap-5 overflow-x-auto scrollbar-x-hidden relative w-full"
       >
         {(Object.keys(tabs) as Tab[]).map((tabKey) => {
           const tab = tabs[tabKey];

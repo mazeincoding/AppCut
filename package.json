@@ -2,7 +2,8 @@
   "name": "opencut",
   "packageManager": "bun@1.2.18",
   "devDependencies": {
-    "turbo": "^2.5.4"
+    "turbo": "^2.5.4",
+    "typescript": "5.8.3"
   },
   "workspaces": [
     "apps/*",

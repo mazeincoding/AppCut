@@ -27,6 +27,11 @@ interface ProjectStore {
     options?: { backgroundColor?: string; blurIntensity?: number }
   ) => Promise<void>;
   updateProjectFps: (fps: number) => Promise<void>;
+
+  getFilteredAndSortedProjects: (
+    searchQuery: string,
+    sortOption: string
+  ) => TProject[];
 }
 
 export const useProjectStore = create<ProjectStore>((set, get) => ({
@@ -316,5 +321,41 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         description: "Please try again",
       });
     }
+  },
+
+  getFilteredAndSortedProjects: (searchQuery: string, sortOption: string) => {
+    const { savedProjects } = get();
+
+    // Filter projects by search query
+    const filteredProjects = savedProjects.filter((project) =>
+      project.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    // Sort filtered projects
+    const sortedProjects = [...filteredProjects].sort((a, b) => {
+      const [key, order] = sortOption.split("-");
+
+      if (key !== "createdAt" && key !== "name") {
+        console.warn(`Invalid sort key: ${key}`);
+        return 0;
+      }
+
+      const aValue = a[key];
+      const bValue = b[key];
+
+      if (aValue === undefined || bValue === undefined) return 0;
+
+      if (order === "asc") {
+        if (aValue < bValue) return -1;
+        if (aValue > bValue) return 1;
+        return 0;
+      } else {
+        if (aValue > bValue) return -1;
+        if (aValue < bValue) return 1;
+        return 0;
+      }
+    });
+
+    return sortedProjects;
   },
 }));

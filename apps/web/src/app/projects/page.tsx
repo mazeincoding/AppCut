@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import {
   ChevronLeft,
   Plus,
@@ -14,6 +15,7 @@ import {
   Loader2,
   X,
   Trash2,
+  Search,
 } from "lucide-react";
 import { TProject } from "@/types/project";
 import Image from "next/image";
@@ -28,6 +30,13 @@ import { useProjectStore } from "@/stores/project-store";
 import { useRouter } from "next/navigation";
 import { DeleteProjectDialog } from "@/components/delete-project-dialog";
 import { RenameProjectDialog } from "@/components/rename-project-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function ProjectsPage() {
   const {
@@ -36,6 +45,7 @@ export default function ProjectsPage() {
     isLoading,
     isInitialized,
     deleteProject,
+    getFilteredAndSortedProjects,
   } = useProjectStore();
   const router = useRouter();
   const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -43,6 +53,8 @@ export default function ProjectsPage() {
     new Set()
   );
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOption, setSortOption] = useState("createdAt-desc");
 
   const handleCreateProject = async () => {
     const projectId = await createNewProject("New Project");
@@ -62,7 +74,7 @@ export default function ProjectsPage() {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedProjects(new Set(savedProjects.map((p) => p.id)));
+      setSelectedProjects(new Set(sortedProjects.map((p) => p.id)));
     } else {
       setSelectedProjects(new Set());
     }
@@ -82,10 +94,13 @@ export default function ProjectsPage() {
     setIsBulkDeleteDialogOpen(false);
   };
 
+  const sortedProjects = getFilteredAndSortedProjects(searchQuery, sortOption);
+
   const allSelected =
-    savedProjects.length > 0 && selectedProjects.size === savedProjects.length;
+    sortedProjects.length > 0 &&
+    selectedProjects.size === sortedProjects.length;
   const someSelected =
-    selectedProjects.size > 0 && selectedProjects.size < savedProjects.length;
+    selectedProjects.size > 0 && selectedProjects.size < sortedProjects.length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -172,28 +187,39 @@ export default function ProjectsPage() {
           </div>
         </div>
 
-        {isSelectionMode && savedProjects.length > 0 && (
+        <div className="mb-4 flex items-center justify-between gap-4">
+          <div className="flex-1 max-w-72">
+            <Input
+              placeholder="Search projects..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <Select value={sortOption} onValueChange={setSortOption}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="createdAt-desc">Newest to Oldest</SelectItem>
+              <SelectItem value="createdAt-asc">Oldest to Newest</SelectItem>
+              <SelectItem value="name-asc">Name (A-Z)</SelectItem>
+              <SelectItem value="name-desc">Name (Z-A)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {isSelectionMode && sortedProjects.length > 0 && (
           <div className="mb-6 p-4 bg-muted/30 rounded-lg border">
             <div className="flex items-center gap-3">
               <Checkbox
-                checked={allSelected}
-                ref={(el) => {
-                  if (el) {
-                    const checkboxElement = el.querySelector(
-                      "input"
-                    ) as HTMLInputElement;
-                    if (checkboxElement) {
-                      checkboxElement.indeterminate = someSelected;
-                    }
-                  }
-                }}
-                onCheckedChange={handleSelectAll}
+                checked={someSelected ? "indeterminate" : allSelected}
+                onCheckedChange={(value) => handleSelectAll(!!value)}
               />
               <span className="text-sm font-medium">
                 {allSelected ? "Deselect All" : "Select All"}
               </span>
               <span className="text-sm text-muted-foreground">
-                ({selectedProjects.size} of {savedProjects.length} selected)
+                ({selectedProjects.size} of {sortedProjects.length} selected)
               </span>
             </div>
           </div>
@@ -205,9 +231,14 @@ export default function ProjectsPage() {
           </div>
         ) : savedProjects.length === 0 ? (
           <NoProjects onCreateProject={handleCreateProject} />
+        ) : sortedProjects.length === 0 ? (
+          <NoResults
+            searchQuery={searchQuery}
+            onClearSearch={() => setSearchQuery("")}
+          />
         ) : (
           <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-            {savedProjects.map((project) => (
+            {sortedProjects.map((project) => (
               <ProjectCard
                 key={project.id}
                 project={project}
@@ -512,6 +543,7 @@ function ProjectCard({
         isOpen={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
         onConfirm={handleDeleteProject}
+        projectName={project.name}
       />
       <RenameProjectDialog
         isOpen={isRenameDialogOpen}
@@ -546,6 +578,29 @@ function NoProjects({ onCreateProject }: { onCreateProject: () => void }) {
       <Button size="lg" className="gap-2" onClick={onCreateProject}>
         <Plus className="h-4 w-4" />
         Create Your First Project
+      </Button>
+    </div>
+  );
+}
+
+function NoResults({
+  searchQuery,
+  onClearSearch,
+}: {
+  searchQuery: string;
+  onClearSearch: () => void;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mb-4">
+        <Search className="h-8 w-8 text-muted-foreground" />
+      </div>
+      <h3 className="text-lg font-medium mb-2">No results found</h3>
+      <p className="text-muted-foreground mb-6 max-w-md">
+        Your search for "{searchQuery}" did not return any results.
+      </p>
+      <Button onClick={onClearSearch} variant="outline">
+        Clear Search
       </Button>
     </div>
   );

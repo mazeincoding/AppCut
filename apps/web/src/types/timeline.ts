@@ -1,5 +1,6 @@
 import { MediaType } from "@/stores/media-store";
 import { generateUUID } from "@/lib/utils";
+import { ReactNode } from "react";
 
 export type TrackType = "media" | "text" | "audio";
 
@@ -154,4 +155,23 @@ export function validateElementTrackCompatibility(
   }
 
   return { isValid: true };
+}
+
+export interface TimelineTick {
+  left: number;
+  label?: string;
+  isMajor?: boolean;
+}
+
+export interface TimelineCanvasRulerWrapperProps {
+  children: ReactNode;
+  onMouseDown?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  className?: string;
+}
+
+export interface TimelineCanvasRulerProps {
+  zoomLevel: number;
+  duration: number;
+  width: number;
+  height?: number;
 }
