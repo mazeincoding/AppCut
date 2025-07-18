@@ -1,18 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,26 +10,38 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useKeybindingsStore } from "@/stores/keybindings-store";
-import { Action } from "@/constants/actions";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
-  useKeyboardShortcutsHelp,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
   KeyboardShortcut,
+  useKeyboardShortcutsHelp,
 } from "@/hooks/use-keyboard-shortcuts-help";
+import { getPlatformSpecialKey } from "@/lib/utils";
+import { useKeybindingsStore } from "@/stores/keybindings-store";
+import { ShortcutKey } from "@/types/keybinding";
 import {
-  Keyboard,
-  Settings,
-  RotateCcw,
+  AlertTriangle,
+  Check,
   Download,
+  Edit,
+  Keyboard,
+  RotateCcw,
+  Trash2,
   Upload,
   X,
-  Check,
-  AlertTriangle,
-  Edit,
-  Trash2,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ShortcutKey } from "@/types/keybinding";
 
 interface KeyRecorderProps {
   value: string;
@@ -133,22 +132,36 @@ const KeyRecorder = ({ value, onValueChange, onCancel }: KeyRecorderProps) => {
   );
 };
 
-const KeyBadge = ({ keyName }: { keyName: string }) => {
-  const displayKey = keyName
-    .replace("Cmd", "⌘")
-    .replace("Shift", "Shift")
-    .replace("ArrowLeft", "←")
-    .replace("ArrowRight", "→")
-    .replace("ArrowUp", "↑")
-    .replace("ArrowDown", "↓")
-    .replace("Space", "Space");
-
-  return (
-    <Badge variant="secondary" className="font-mono text-xs px-1.5 py-1">
-      {displayKey}
-    </Badge>
-  );
+const modifier: {
+  [key: string]: string;
+} = {
+  Shift: "Shift",
+  Alt: "Alt",
+  ArrowLeft: "←",
+  ArrowRight: "→",
+  ArrowUp: "↑",
+  ArrowDown: "↓",
+  Space: "Space",
 };
+
+function getKeyWithModifier(key: string) {
+  if (key === "Ctrl") return getPlatformSpecialKey();
+  return modifier[key] || key;
+}
+
+function Key({ children }: { children: React.ReactNode }) {
+  return (
+    <kbd
+      className="inline-flex font-sans text-xs rounded px-2 min-w-[1.5rem] min-h-[1.5rem] leading-none items-center justify-center shadow-sm border mr-1"
+      style={{
+        backgroundColor: "rgba(0, 0, 0, 0.2)",
+        borderColor: "rgba(255, 255, 255, 0.1)",
+      }}
+    >
+      {children}
+    </kbd>
+  );
+}
 
 const ShortcutRow = ({
   shortcut,
@@ -216,17 +229,7 @@ const ShortcutRow = ({
                     {key
                       .split("+")
                       .map((keyPart: string, partIndex: number) => (
-                        <div
-                          key={partIndex}
-                          className="flex items-center gap-1"
-                        >
-                          <KeyBadge keyName={keyPart} />
-                          {partIndex < key.split("+").length - 1 && (
-                            <span className="text-xs text-muted-foreground">
-                              +
-                            </span>
-                          )}
-                        </div>
+                        <Key key={partIndex}>{getKeyWithModifier(keyPart)}</Key>
                       ))}
                   </div>
                   {index < displayKeys.length - 1 && (
