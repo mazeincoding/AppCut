@@ -4,6 +4,7 @@ export class IndexedDBAdapter<T> implements StorageAdapter<T> {
   private dbName: string;
   private storeName: string;
   private version: number;
+  private db: IDBDatabase | null = null;
 
   constructor(dbName: string, storeName: string, version: number = 1) {
     this.dbName = dbName;
@@ -11,12 +12,33 @@ export class IndexedDBAdapter<T> implements StorageAdapter<T> {
     this.version = version;
   }
 
+  // Static method to delete a database with proper connection handling
+  static async deleteDatabase(dbName: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.deleteDatabase(dbName);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+    });
+  }
+
   private async getDB(): Promise<IDBDatabase> {
+    if (this.db) {
+      return this.db;
+    }
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(this.dbName, this.version);
 
       request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve(request.result);
+      request.onsuccess = () => {
+        this.db = request.result;
+        // onversionchange is triggered when deleteDatabase is called
+        this.db.onversionchange = () => {
+          this.db?.close();
+          this.db = null;
+        };
+
+        resolve(this.db);
+      };
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
