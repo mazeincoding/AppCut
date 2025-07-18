@@ -163,6 +163,31 @@ function createMainWindow() {
     } catch (error) {
       console.error('❌ Failed to read simple debug script:', error);
     }
+    
+    // If test navigation is requested, inject navigation test script
+    console.log('🔍 Process argv:', process.argv);
+    if (process.argv.includes('--test-navigation')) {
+      console.log('🧪 --test-navigation flag detected, injecting navigation test script...');
+      try {
+        const navScriptPath = path.join(__dirname, 'simple-nav-test.js');
+        console.log('📄 Reading navigation script from:', navScriptPath);
+        const navScript = fs.readFileSync(navScriptPath, 'utf8');
+        console.log('📜 Navigation script loaded, length:', navScript.length);
+        
+        // Wait a bit before injecting to ensure page is ready
+        setTimeout(() => {
+          mainWindow.webContents.executeJavaScript(navScript).then(() => {
+            console.log('✅ Navigation test script injected and executed');
+          }).catch(err => {
+            console.error('❌ Navigation test script execution failed:', err);
+          });
+        }, 2000);
+      } catch (error) {
+        console.error('❌ Failed to read navigation test script:', error);
+      }
+    } else {
+      console.log('ℹ️ No --test-navigation flag, skipping navigation test');
+    }
   });
 
   // Configure CSP and security headers for local file access with app:// protocol
@@ -229,10 +254,26 @@ function createMainWindow() {
     // Allow navigation to local files and all app:// protocol URLs
     if (url.startsWith('file://') || url.startsWith('app://')) {
       console.log('🔗 Allowing local navigation to:', url);
+      try {
+        console.log('  - Current URL:', event.sender.getURL());
+        console.log('  - Target URL:', url);
+      } catch (error) {
+        console.log('  - Could not get current URL:', error.message);
+      }
     } else {
       console.log('🚫 Blocking external navigation to:', url);
       event.preventDefault();
     }
+  });
+  
+  // Add did-navigate event to track successful navigation
+  mainWindow.webContents.on('did-navigate', (event, url) => {
+    console.log('✅ Navigation completed to:', url);
+  });
+  
+  // Add did-navigate-in-page for SPA navigation
+  mainWindow.webContents.on('did-navigate-in-page', (event, url) => {
+    console.log('📍 In-page navigation to:', url);
   });
   
   // Note: Removed all request interception to allow proper file loading
@@ -322,7 +363,23 @@ app.whenReady().then(() => {
     console.log('\n🔍 === PROTOCOL DEBUG START ===');
     console.log('📥 Raw request URL:', request.url);
     
-    let url = request.url.substr(6); // Remove 'app://' prefix
+    // Fix for relative app:// URLs issue
+    // When navigating to subpages, browser may append app:// URLs to current path
+    // Example: app://projects/index.html/_next/app://_next/static/...
+    // We need to extract the actual app:// URL from these malformed paths
+    let url = request.url;
+    
+    // Check if this is a malformed URL with double app:// protocol
+    if (url && url.includes('app://') && !url.startsWith('app://')) {
+      console.log('🔧 Detected malformed URL with embedded app://');
+      // Extract the actual app:// URL
+      const appIndex = url.lastIndexOf('app://');
+      url = url.substring(appIndex);
+      console.log('🔧 Extracted URL:', url);
+    }
+    
+    // Now process normally
+    url = url.substr(6); // Remove 'app://' prefix
     console.log('🔧 URL after prefix removal:', url);
     
     // Handle root requests
@@ -369,40 +426,24 @@ app.whenReady().then(() => {
       const dirPath = path.dirname(normalizedPath);
       if (fs.existsSync(dirPath)) {
         const files = fs.readdirSync(dirPath);
-        console.error('📂 Directory contents:', files);
+        console.error('📂 Directory contents:', files.slice(0, 10)); // Limit output
       }
       
       callback({ error: -6 }); // FILE_NOT_FOUND
       return;
     }
     
-    // Get file stats for debugging
+    // Get file stats for debugging (reduced logging)
     const stats = fs.statSync(normalizedPath);
     const ext = path.extname(normalizedPath).toLowerCase();
     
-    console.log('📊 File stats:');
-    console.log('   - Size:', stats.size, 'bytes');
-    console.log('   - Extension:', ext);
-    console.log('   - Modified:', stats.mtime.toISOString());
-    
-    // Special debugging for image files
-    if (['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp'].includes(ext)) {
-      console.log('🖼️ IMAGE FILE DETECTED:');
-      console.log('   - File:', url);
-      console.log('   - Size:', stats.size, 'bytes');
-      
-      // Read first few bytes to verify image header
-      const buffer = fs.readFileSync(normalizedPath);
-      const header = buffer.slice(0, 8);
-      console.log('   - Header bytes:', Array.from(header).map(b => '0x' + b.toString(16).padStart(2, '0')).join(' '));
-      
-      if (ext === '.png') {
-        const pngHeader = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
-        console.log('   - PNG header valid:', buffer.slice(0, 8).equals(pngHeader));
-      }
+    // Only log essential info for non-image files
+    if (!['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp'].includes(ext)) {
+      console.log('✅ Serving file:', url, '(', stats.size, 'bytes )');
+    } else {
+      console.log('🖼️ Serving image:', url, '(', stats.size, 'bytes )');
     }
     
-    console.log('✅ Serving file successfully');
     console.log('🔍 === PROTOCOL DEBUG END ===\n');
     
     // Use simple file path response - let Electron handle MIME types

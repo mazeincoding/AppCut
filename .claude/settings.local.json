@@ -27,7 +27,12 @@
       "Bash(timeout 8 npx electron electron/main-simple.js --reset-window)",
       "Bash(timeout 10 npx electron electron/main-simple.js --reset-window)",
       "Bash(timeout 8 npx electron electron/main-simple.js --reset-window --test-projects)",
-      "Bash(timeout 10 npx electron electron/main-simple.js --reset-window --test-projects)"
+      "Bash(timeout 10 npx electron electron/main-simple.js --reset-window --test-projects)",
+      "Bash(timeout 15 npx electron electron/main-simple.js --reset-window)",
+      "Bash(timeout 20 npx electron electron/main-simple.js --reset-window --test-navigation)",
+      "Bash(timeout 30 npx electron electron/main-simple.js --reset-window --test-navigation)",
+      "Bash(timeout 25 npx electron electron/main-simple.js --test-navigation)",
+      "Bash(timeout 20 npx electron electron/main-simple.js --test-navigation)"
     ],
     "deny": []
   }
