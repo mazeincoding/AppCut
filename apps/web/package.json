@@ -44,6 +44,7 @@
     "pg": "^8.16.2",
     "radix-ui": "^1.4.2",
     "react": "^18.2.0",
+    "react-colorful": "^5.6.1",
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.54.0",
