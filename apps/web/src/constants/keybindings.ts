@@ -29,7 +29,8 @@ type Key =
   | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t"
   | "u" | "v" | "w" | "x" | "y" | "z" | "0" | "1" | "2" | "3"
   | "4" | "5" | "6" | "7" | "8" | "9" | "up" | "down" | "left"
-  | "right" | "/" | "?" | "." | "enter" | "tab" | "space";
+  | "right" | "/" | "?" | "." | "enter" | "tab" | "space" | "home"
+  | "end" | "delete" | "backspace";
 /* eslint-enable */
 
 type ModifierBasedShortcutKey = `${ModifierKeys}-${Key}`;
@@ -43,6 +44,24 @@ const baseBindings: {
   [_ in ShortcutKey]?: ActionWithOptionalArgs;
 } = {
   space: "toggle-play",
+  j: "seek-backward",
+  k: "toggle-play",
+  l: "seek-forward",
+  left: "frame-step-backward",
+  right: "frame-step-forward",
+  "shift-left": "jump-backward",
+  "shift-right": "jump-forward",
+  home: "goto-start",
+  end: "goto-end",
+  s: "split-element",
+  n: "toggle-snapping",
+  "ctrl-a": "select-all",
+  "ctrl-d": "duplicate-selected",
+  "ctrl-z": "undo",
+  "ctrl-shift-z": "redo",
+  "ctrl-y": "redo",
+  delete: "delete-selected",
+  backspace: "delete-selected",
 };
 
 /**
@@ -81,6 +100,7 @@ function handleKeyDown(ev: KeyboardEvent) {
   if (!boundAction) return;
 
   ev.preventDefault();
+
   invokeAction(boundAction, undefined, "keypress");
 }
 
@@ -126,6 +146,12 @@ function getPressedKey(ev: KeyboardEvent): Key | null {
 
   // Check for Tab key
   if (key === "tab") return "tab";
+
+  // Check for special keys
+  if (key === "home") return "home";
+  if (key === "end") return "end";
+  if (key === "delete") return "delete";
+  if (key === "backspace") return "backspace";
 
   // Check letter keys
   const isLetter = key.length === 1 && key >= "a" && key <= "z";
