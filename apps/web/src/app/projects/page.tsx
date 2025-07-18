@@ -30,6 +30,7 @@ import { useProjectStore } from "@/stores/project-store";
 import { useRouter } from "next/navigation";
 import { DeleteProjectDialog } from "@/components/delete-project-dialog";
 import { RenameProjectDialog } from "@/components/rename-project-dialog";
+import { CreateProjectDialog } from "@/components/create-project-dialog";
 import {
   Select,
   SelectContent,
@@ -50,14 +51,19 @@ export default function ProjectsPage() {
   const router = useRouter();
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedProjects, setSelectedProjects] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState("createdAt-desc");
 
-  const handleCreateProject = async () => {
-    const projectId = await createNewProject("New Project");
+  const handleCreateProject = () => {
+    setIsCreateDialogOpen(true);
+  };
+
+  const handleConfirmCreateProject = async (projectName: string) => {
+    const projectId = await createNewProject(projectName);
     console.log("projectId", projectId);
     router.push(`/editor/${projectId}`);
   };
@@ -87,7 +93,7 @@ export default function ProjectsPage() {
 
   const handleBulkDelete = async () => {
     await Promise.all(
-      Array.from(selectedProjects).map((projectId) => deleteProject(projectId))
+      Array.from(selectedProjects).map((projectId) => deleteProject(projectId)),
     );
     setSelectedProjects(new Set());
     setIsSelectionMode(false);
@@ -255,6 +261,13 @@ export default function ProjectsPage() {
         isOpen={isBulkDeleteDialogOpen}
         onOpenChange={setIsBulkDeleteDialogOpen}
         onConfirm={handleBulkDelete}
+      />
+
+      <CreateProjectDialog
+        isOpen={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        onConfirm={handleConfirmCreateProject}
+        existingProjectNames={savedProjects.map((p) => p.name)}
       />
     </div>
   );
