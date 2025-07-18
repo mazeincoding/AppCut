@@ -8,7 +8,7 @@
     "dev": "next dev",
     "build": "next build",
     "build:electron": "cross-env NEXT_PUBLIC_ELECTRON=true next build",
-    "export:electron": "cross-env NEXT_PUBLIC_ELECTRON=true next build && node scripts/fix-electron-paths.js",
+    "export:electron": "cross-env NEXT_PUBLIC_ELECTRON=true next build && node scripts/fix-electron-paths-simple.js",
     "electron:dev": "node scripts/dev-electron.js",
     "electron:build": "npm run export:electron",
     "electron:pack": "npm run electron:build && electron-builder --dir",

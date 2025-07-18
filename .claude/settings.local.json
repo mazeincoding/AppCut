@@ -36,7 +36,11 @@
       "Bash(npm test:*)",
       "Bash(npm run:*)",
       "Bash(npx tsc:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(ls:*)",
+      "Bash(mv:*)",
+      "Bash(NEXT_PUBLIC_ELECTRON=true bun run build)",
+      "Bash(dir:*)"
     ],
     "deny": []
   }
