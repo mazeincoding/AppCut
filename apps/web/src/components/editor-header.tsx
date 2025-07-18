@@ -7,7 +7,7 @@ import { useTimelineStore } from "@/stores/timeline-store";
 import { HeaderBase } from "./header-base";
 import { formatTimeCode } from "@/lib/time";
 import { useProjectStore } from "@/stores/project-store";
-import { KeyboardShortcutsHelp } from "./keyboard-shortcuts-help";
+import { KeyboardShortcuts } from "./keyboard-shortcuts";
 
 export function EditorHeader() {
   const { getTotalDuration } = useTimelineStore();
@@ -44,7 +44,7 @@ export function EditorHeader() {
 
   const rightContent = (
     <nav className="flex items-center gap-2">
-      <KeyboardShortcutsHelp />
+      <KeyboardShortcuts />
       <Button
         size="sm"
         variant="primary"

@@ -29,6 +29,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { ShortcutKey } from "@/types/keybinding";
 
 interface KeybindingEditorProps {
   shortcuts: KeyboardShortcut[];
@@ -130,7 +131,7 @@ export const KeybindingEditor = ({
   } = useKeybindingsStore();
 
   const [editingShortcut, setEditingShortcut] = useState<string | null>(null);
-  const [newKeyBinding, setNewKeyBinding] = useState("");
+  const [newKeyBinding, setNewKeyBinding] = useState<ShortcutKey | string>("");
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -163,7 +164,10 @@ export const KeybindingEditor = ({
     if (!shortcut) return;
 
     // Validate the new keybinding
-    const conflict = validateKeybinding(newKeyBinding, shortcut.action);
+    const conflict = validateKeybinding(
+      newKeyBinding as ShortcutKey,
+      shortcut.action
+    );
     if (conflict) {
       toast.error(
         `Key "${newKeyBinding}" is already bound to "${conflict.existingAction}"`
@@ -176,7 +180,7 @@ export const KeybindingEditor = ({
     oldKeys.forEach((key) => removeKeybinding(key));
 
     // Add new keybinding
-    updateKeybinding(newKeyBinding, shortcut.action);
+    updateKeybinding(newKeyBinding as ShortcutKey, shortcut.action);
 
     setEditingShortcut(null);
     setNewKeyBinding("");
