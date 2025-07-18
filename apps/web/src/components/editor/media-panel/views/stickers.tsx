@@ -14,7 +14,7 @@ import { useProjectStore } from "@/stores/project-store";
 async function grab_data(searchTerm: string, setNext: Function, next: string = "")
 {
     // set the apikey and limit
-    var apikey = "AIzaSyBoGh9WszS_hXwaQP3ppEdLESqcyPg7mZs"; // add your tenor api key
+    var apikey = "ADD_YOUR_TENOR_API_KEY"; // add your tenor api key
     var clientkey = "openCut";
     var lmt = 20;
 
