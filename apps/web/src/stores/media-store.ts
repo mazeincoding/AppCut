@@ -3,7 +3,7 @@ import { storageService } from "@/lib/storage/storage-service";
 import { useTimelineStore } from "./timeline-store";
 import { generateUUID } from "@/lib/utils";
 
-export type MediaType = "image" | "video" | "audio";
+export type MediaType = "image" | "video" | "audio" | "GIF";
 
 export interface MediaItem {
   id: string;
@@ -62,6 +62,12 @@ export const getImageDimensions = (
   file: File
 ): Promise<{ width: number; height: number }> => {
   return new Promise((resolve, reject) => {
+    // check if the file is an image
+    if (!file.type.startsWith("image/")) {
+      reject(new Error("The media needs to be an image to extract its dimensions"))
+      return;
+    }
+
     const img = new window.Image();
 
     img.addEventListener("load", () => {
@@ -88,6 +94,12 @@ export const generateVideoThumbnail = (
     const video = document.createElement("video") as HTMLVideoElement;
     const canvas = document.createElement("canvas") as HTMLCanvasElement;
     const ctx = canvas.getContext("2d");
+
+    if (!file.type.startsWith("video/")) {
+      reject(new Error("The media needs to be an image to extract its dimensions"))
+      return;
+      
+    }
 
     if (!ctx) {
       reject(new Error("Could not get canvas context"));
@@ -202,6 +214,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
 
     // Remove from persistent storage
     try {
+      // TODO: remove the media from the timeline if it exists
       await storageService.deleteMediaItem(projectId, id);
     } catch (error) {
       console.error("Failed to delete media item:", error);
