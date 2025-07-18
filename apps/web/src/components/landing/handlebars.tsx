@@ -148,7 +148,7 @@ export function Handlebars({
           }}
         >
           <motion.div
-            className="w-full h-full flex items-center justify-center px-4"
+            className="w-full h-full flex items-center justify-center px-4 select-none"
             style={{
               x: contentLeft,
               width: contentWidth,
