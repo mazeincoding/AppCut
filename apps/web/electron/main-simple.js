@@ -117,7 +117,10 @@ function createMainWindow() {
       enableRemoteModule: false,
       allowRunningInsecureContent: true,
       webSecurity: false, // Allow local file access
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.js'),
+      partition: 'persist:opencut', // Enable localStorage with persistent session
+      nodeIntegrationInWorker: false,
+      nodeIntegrationInSubFrames: false
     }
   });
 
@@ -474,8 +477,17 @@ app.whenReady().then(() => {
       // List directory contents for debugging
       const dirPath = path.dirname(normalizedPath);
       if (fs.existsSync(dirPath)) {
-        const files = fs.readdirSync(dirPath);
-        console.error('📂 Directory contents:', files.slice(0, 10)); // Limit output
+        try {
+          const stats = fs.statSync(dirPath);
+          if (stats.isDirectory()) {
+            const files = fs.readdirSync(dirPath);
+            console.error('📂 Directory contents:', files.slice(0, 10)); // Limit output
+          } else {
+            console.error('📄 Path is not a directory:', dirPath);
+          }
+        } catch (error) {
+          console.error('❌ Error checking directory:', error.message);
+        }
       }
       
       callback({ error: -6 }); // FILE_NOT_FOUND
