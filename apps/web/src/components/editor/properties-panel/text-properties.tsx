@@ -91,8 +91,14 @@ export function TextProperties({
             <Input
               type="text"
               value={element.color}
-              onChange={(e) =>
-                updateTextElement(trackId, element.id, { color: e.target.value })
+              onChange={(e) => {
+                {
+                  const value = e.target.value;
+                  if (!value || /^#([0-9A-Fa-f]{3}){1,2}$/.test(value)) {
+                    updateTextElement(trackId, element.id, { color: value || element.color });
+                  }
+                }
+              }
               }
               className="w-24 !text-xs h-7 rounded-sm text-center"
             />
@@ -119,8 +125,16 @@ export function TextProperties({
             <Input
               type="text"
               value={element.backgroundColor}
-              onChange={(e) =>
-                updateTextElement(trackId, element.id, { backgroundColor: e.target.value === '' ? 'transparent' : e.target.value })
+              onChange={(e) => {
+                {
+                  const value = e.target.value.toLowerCase();
+                  if (!value || value === 'transparent' || /^#([0-9A-Fa-f]{3}){1,2}$/.test(value)) {
+                    updateTextElement(trackId, element.id, {
+                      backgroundColor: value || 'transparent'
+                    });
+                  }
+                }
+              }
               }
               className="w-24 !text-xs h-7 rounded-sm text-center"
             />
@@ -297,11 +311,11 @@ export function TextProperties({
         <PropertyItemValue>
           <ToggleGroup
             type="multiple"
-            value={element.textDecoration === "underline" ? ["underline"] : element.textDecoration === "line-through" ? ["line-through"]:[]}
+            value={element.textDecoration === "underline" ? ["underline"] : element.textDecoration === "line-through" ? ["line-through"] : []}
             onValueChange={(value: ("underline" | "line-through" | "none")[]) => {
-              if (value.length > 0){
-                updateTextElement(trackId, element.id, { textDecoration: value[0]});
-              }else{
+              if (value.length > 0) {
+                updateTextElement(trackId, element.id, { textDecoration: value[0] });
+              } else {
                 updateTextElement(trackId, element.id, { textDecoration: "none" });
               }
             }}
