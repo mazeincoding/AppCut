@@ -28,7 +28,13 @@ import { useProjectStore } from "@/stores/project-store";
 import { useTimelineStore } from "@/stores/timeline-store";
 
 export function MediaView() {
-  const { mediaItems, addMediaItem, removeMediaItem, isLoading, mediaCount } = useMediaStore();
+  const {
+    mediaItems,
+    addMediaItem,
+    removeMediaItem,
+    isLoading,
+    initialMediaCount,
+  } = useMediaStore();
   const { activeProject } = useProjectStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -48,7 +54,7 @@ export function MediaView() {
     try {
       // Process files (extract metadata, generate thumbnails, etc.)
       const processedItems = await processMediaFiles(files, (p) =>
-        setProgress(p)
+        setProgress(p),
       );
       // Add each processed media item to the store
       for (const item of processedItems) {
@@ -210,7 +216,7 @@ export function MediaView() {
             }}
           >
             {/* thumbnail skeletons */}
-            {Array.from({ length: mediaCount }).map((_, i) => (
+            {Array.from({ length: initialMediaCount }).map((_, i) => (
               <div key={i} className="flex flex-col gap-2 w-28 h-28">
                 <Skeleton className="w-full aspect-video" />
                 <Skeleton className="w-full h-4" />
