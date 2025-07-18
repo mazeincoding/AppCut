@@ -12,7 +12,14 @@
       "Bash(powershell.exe:*)",
       "Bash(bun run:*)",
       "Bash(node:*)",
-      "Bash(npx electron:*)"
+      "Bash(npx electron:*)",
+      "Bash(npm run build:electron:*)",
+      "Bash(npm run electron:dev:*)",
+      "Bash(rmdir:*)",
+      "Bash(rm:*)",
+      "Bash(set NEXT_PUBLIC_ELECTRON=true)",
+      "Bash(..test-electron.ps1)",
+      "Bash(powershell:*)"
     ],
     "deny": []
   }

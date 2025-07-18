@@ -13,7 +13,25 @@ import { TimelineTrack } from "@/types/timeline";
 
 // Check if we're running in Electron
 const isElectron = () => {
-  return typeof window !== 'undefined' && window.electronAPI !== undefined;
+  // Check multiple ways to detect Electron
+  if (typeof window !== 'undefined') {
+    // Primary check: electronAPI exists
+    if (window.electronAPI !== undefined) {
+      return true;
+    }
+    
+    // Secondary check: environment variable
+    if (process.env.NEXT_PUBLIC_ELECTRON === 'true') {
+      return true;
+    }
+    
+    // Tertiary check: user agent contains Electron
+    if (navigator.userAgent.toLowerCase().includes('electron')) {
+      return true;
+    }
+  }
+  
+  return false;
 };
 
 class StorageService {
@@ -21,6 +39,14 @@ class StorageService {
   private config: StorageConfig;
 
   constructor() {
+    console.log('🏗️ StorageService: Initializing storage service...');
+    console.log('🔍 StorageService: Environment check:', {
+      isElectron: isElectron(),
+      hasElectronAPI: typeof window !== 'undefined' ? !!window.electronAPI : 'window undefined',
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'navigator undefined',
+      electronEnvVar: process.env.NEXT_PUBLIC_ELECTRON
+    });
+    
     this.config = {
       projectsDb: "video-editor-projects",
       mediaDb: "video-editor-media",
@@ -33,6 +59,8 @@ class StorageService {
       "projects",
       this.config.version
     );
+    
+    console.log('✅ StorageService: Constructor completed');
   }
 
   // Helper to get project-specific media adapters
@@ -44,7 +72,13 @@ class StorageService {
     );
 
     // Use Electron adapter if running in Electron, otherwise use OPFS
-    const mediaFilesAdapter = isElectron() 
+    const isElectronEnv = isElectron();
+    console.log(`🔧 StorageService: Creating media adapter for project ${projectId}:`, {
+      isElectronEnv,
+      adapterType: isElectronEnv ? 'ElectronOPFSAdapter' : 'OPFSAdapter'
+    });
+    
+    const mediaFilesAdapter = isElectronEnv 
       ? new ElectronOPFSAdapter(`media-files-${projectId}`)
       : new OPFSAdapter(`media-files-${projectId}`);
 

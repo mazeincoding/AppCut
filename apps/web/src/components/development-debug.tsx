@@ -12,6 +12,11 @@ import { storageService } from "@/lib/storage/storage-service";
 // Only show in development
 const SHOW_DEBUG_INFO = process.env.NODE_ENV === "development";
 
+// Check if we're in Electron
+const isElectronEnvironment = () => {
+  return typeof window !== 'undefined' && window.electronAPI !== undefined;
+};
+
 interface ActiveElement {
   element: TimelineElement;
   track: TimelineTrack;
@@ -25,9 +30,27 @@ export function DevelopmentDebug() {
   const [showDebug, setShowDebug] = useState(false);
 
   // Expose storage service to global window for debugging
+  // Always expose in Electron, or in development mode
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && (isElectronEnvironment() || SHOW_DEBUG_INFO)) {
       (window as any).storageService = storageService;
+      console.log('📊 Storage service exposed to window.storageService', {
+        isElectron: isElectronEnvironment(),
+        isDevelopment: SHOW_DEBUG_INFO,
+        storageService: storageService,
+        isSupported: storageService.isFullySupported(),
+        isOPFSSupported: storageService.isOPFSSupported(),
+        isIndexedDBSupported: storageService.isIndexedDBSupported()
+      });
+      
+      // Test storage service in Electron
+      if (isElectronEnvironment()) {
+        console.log('🔧 Electron Storage Test:', {
+          electronAPI: !!window.electronAPI,
+          storageServiceAvailable: !!storageService,
+          storageFullySupported: storageService.isFullySupported()
+        });
+      }
     }
   }, []);
 

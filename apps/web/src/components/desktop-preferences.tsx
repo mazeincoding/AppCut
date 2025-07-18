@@ -146,14 +146,3 @@ export function DesktopPreferences({ className }: DesktopPreferencesProps) {
   );
 }
 
-// Type declaration for window.electronAPI (if not already defined)
-declare global {
-  interface Window {
-    electronAPI?: {
-      getUserPreferences: () => Promise<any>;
-      saveUserPreferences: (preferences: any) => Promise<{ success: boolean }>;
-      isElectron: boolean;
-      isDesktop: boolean;
-    };
-  }
-}

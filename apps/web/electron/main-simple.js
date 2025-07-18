@@ -82,10 +82,19 @@ function createMainWindow() {
   
   mainWindow.loadURL(startUrl);
   
-  // Inject debug script in development
-  mainWindow.webContents.on('dom-ready', () => {
-    const debugScript = fs.readFileSync(path.join(__dirname, 'debug-inject.js'), 'utf8');
-    mainWindow.webContents.executeJavaScript(debugScript);
+  // Inject simple debug script for image investigation
+  mainWindow.webContents.on('did-finish-load', () => {
+    console.log('🔧 Page finished loading - injecting simple debug script...');
+    try {
+      const debugScript = fs.readFileSync(path.join(__dirname, 'simple-debug.js'), 'utf8');
+      mainWindow.webContents.executeJavaScript(debugScript).then(() => {
+        console.log('✅ Simple debug script injected successfully');
+      }).catch(err => {
+        console.error('❌ Simple debug script injection failed:', err);
+      });
+    } catch (error) {
+      console.error('❌ Failed to read simple debug script:', error);
+    }
   });
 
   // Configure CSP and security headers for local file access with app:// protocol
@@ -224,45 +233,98 @@ function createMainWindow() {
 }
 
 app.whenReady().then(() => {
-  // Register custom protocol to serve static files
+  // Register custom protocol to serve static files with comprehensive debugging
   protocol.registerFileProtocol('app', (request, callback) => {
+    console.log('\n🔍 === PROTOCOL DEBUG START ===');
+    console.log('📥 Raw request URL:', request.url);
+    
     let url = request.url.substr(6); // Remove 'app://' prefix
+    console.log('🔧 URL after prefix removal:', url);
     
     // Handle root requests
     if (url === '' || url === '/') {
       url = 'index.html';
+      console.log('🏠 Root request, redirecting to:', url);
     }
     
     // Decode URL to handle special characters
-    url = decodeURIComponent(url);
+    const decodedUrl = decodeURIComponent(url);
+    console.log('🔓 URL after decoding:', decodedUrl);
+    url = decodedUrl;
     
     // Remove leading slash if present
     if (url.startsWith('/')) {
       url = url.substr(1);
+      console.log('✂️ URL after slash removal:', url);
     }
     
     const filePath = path.join(__dirname, '../out', url);
+    console.log('📁 Constructed file path:', filePath);
     
     // Security check - ensure the path is within the out directory
     const normalizedPath = path.normalize(filePath);
     const outDir = path.normalize(path.join(__dirname, '../out'));
+    console.log('🔒 Normalized path:', normalizedPath);
+    console.log('🔒 Out directory:', outDir);
     
     if (!normalizedPath.startsWith(outDir)) {
-      console.error('🚫 Security check failed for path:', normalizedPath);
+      console.error('🚫 Security check failed!');
+      console.error('   Path:', normalizedPath);
+      console.error('   Expected prefix:', outDir);
       callback({ error: -6 }); // FILE_NOT_FOUND
       return;
     }
     
     // Check if file exists
     if (!fs.existsSync(normalizedPath)) {
-      console.error('❌ File not found:', normalizedPath);
+      console.error('❌ File not found!');
       console.error('   Requested URL:', request.url);
+      console.error('   Final path:', normalizedPath);
+      
+      // List directory contents for debugging
+      const dirPath = path.dirname(normalizedPath);
+      if (fs.existsSync(dirPath)) {
+        const files = fs.readdirSync(dirPath);
+        console.error('📂 Directory contents:', files);
+      }
+      
       callback({ error: -6 }); // FILE_NOT_FOUND
       return;
     }
     
-    console.log('✅ Serving file:', url);
-    callback({ path: normalizedPath });
+    // Get file stats for debugging
+    const stats = fs.statSync(normalizedPath);
+    const ext = path.extname(normalizedPath).toLowerCase();
+    
+    console.log('📊 File stats:');
+    console.log('   - Size:', stats.size, 'bytes');
+    console.log('   - Extension:', ext);
+    console.log('   - Modified:', stats.mtime.toISOString());
+    
+    // Special debugging for image files
+    if (['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp'].includes(ext)) {
+      console.log('🖼️ IMAGE FILE DETECTED:');
+      console.log('   - File:', url);
+      console.log('   - Size:', stats.size, 'bytes');
+      
+      // Read first few bytes to verify image header
+      const buffer = fs.readFileSync(normalizedPath);
+      const header = buffer.slice(0, 8);
+      console.log('   - Header bytes:', Array.from(header).map(b => '0x' + b.toString(16).padStart(2, '0')).join(' '));
+      
+      if (ext === '.png') {
+        const pngHeader = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
+        console.log('   - PNG header valid:', buffer.slice(0, 8).equals(pngHeader));
+      }
+    }
+    
+    console.log('✅ Serving file successfully');
+    console.log('🔍 === PROTOCOL DEBUG END ===\n');
+    
+    // Use simple file path response - let Electron handle MIME types
+    callback({ 
+      path: normalizedPath
+    });
   });
   
   createMainWindow();
