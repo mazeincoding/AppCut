@@ -5,7 +5,14 @@
       "Bash(git pull:*)",
       "Bash(find:*)",
       "Bash(npm run electron:build:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(.test-electron.bat)",
+      "Bash(powershell.exe:*)",
+      "Bash(bun run:*)",
+      "Bash(node:*)",
+      "Bash(npx electron:*)"
     ],
     "deny": []
   }
