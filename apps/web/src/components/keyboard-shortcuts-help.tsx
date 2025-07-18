@@ -12,7 +12,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "./ui/dialog";
-import { getPlatformSpecialKey } from "@/lib/utils";
+import { Badge } from "./ui/badge";
+import { Keyboard } from "lucide-react";
+import {
+  useKeyboardShortcutsHelp,
+  KeyboardShortcut,
+} from "@/hooks/use-keyboard-shortcuts-help";
 
 const modifier: {
   [key: string]: string;
@@ -26,12 +31,7 @@ const modifier: {
   Space: "Space",
 };
 
-function getKeyWithModifier(key: string) {
-  if (key === "Ctrl") return getPlatformSpecialKey();
-  return modifier[key] || key;
-}
-
-const ShortcutItem = ({ shortcut }: { shortcut: any }) => {
+const ShortcutItem = ({ shortcut }: { shortcut: KeyboardShortcut }) => {
   // Filter out lowercase duplicates for display - if both "j" and "J" exist, only show "J"
   const displayKeys = shortcut.keys.filter((key: string) => {
     if (
@@ -74,8 +74,8 @@ const ShortcutItem = ({ shortcut }: { shortcut: any }) => {
 export const KeyboardShortcutsHelp = () => {
   const [open, setOpen] = useState(false);
 
-  // Get shortcuts from centralized hook (disabled so it doesn't add event listeners)
-  const { shortcuts } = useKeyboardShortcuts({ enabled: false });
+  // Get shortcuts from centralized hook
+  const { shortcuts } = useKeyboardShortcutsHelp();
 
   const categories = Array.from(new Set(shortcuts.map((s) => s.category)));
 
@@ -122,14 +122,14 @@ export const KeyboardShortcutsHelp = () => {
 
 function ShortcutKey({ children }: { children: React.ReactNode }) {
   return (
-    <kbd 
+    <kbd
       className="inline-flex font-sans text-xs rounded px-2 min-w-[1.5rem] min-h-[1.5rem] leading-none items-center justify-center shadow-sm border mr-1"
       style={{
         backgroundColor: "rgba(0, 0, 0, 0.2)",
-        borderColor: "rgba(255, 255, 255, 0.1)"
+        borderColor: "rgba(255, 255, 255, 0.1)",
       }}
     >
       {children}
     </kbd>
   );
-};
+}
