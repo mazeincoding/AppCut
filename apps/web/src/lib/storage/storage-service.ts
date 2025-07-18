@@ -2,6 +2,7 @@ import { TProject } from "@/types/project";
 import { MediaItem } from "@/stores/media-store";
 import { IndexedDBAdapter } from "./indexeddb-adapter";
 import { OPFSAdapter } from "./opfs-adapter";
+import { ElectronOPFSAdapter } from "./electron-opfs-adapter";
 import {
   MediaFileData,
   StorageConfig,
@@ -9,6 +10,11 @@ import {
   TimelineData,
 } from "./types";
 import { TimelineTrack } from "@/types/timeline";
+
+// Check if we're running in Electron
+const isElectron = () => {
+  return typeof window !== 'undefined' && window.electronAPI !== undefined;
+};
 
 class StorageService {
   private projectsAdapter: IndexedDBAdapter<SerializedProject>;
@@ -37,7 +43,10 @@ class StorageService {
       this.config.version
     );
 
-    const mediaFilesAdapter = new OPFSAdapter(`media-files-${projectId}`);
+    // Use Electron adapter if running in Electron, otherwise use OPFS
+    const mediaFilesAdapter = isElectron() 
+      ? new ElectronOPFSAdapter(`media-files-${projectId}`)
+      : new OPFSAdapter(`media-files-${projectId}`);
 
     return { mediaMetadataAdapter, mediaFilesAdapter };
   }
@@ -262,6 +271,10 @@ class StorageService {
 
   // Check browser support
   isOPFSSupported(): boolean {
+    // In Electron, we use IndexedDB fallback which is always supported
+    if (isElectron()) {
+      return true;
+    }
     return OPFSAdapter.isSupported();
   }
 

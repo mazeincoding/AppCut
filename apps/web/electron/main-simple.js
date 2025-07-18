@@ -81,6 +81,12 @@ function createMainWindow() {
   }
   
   mainWindow.loadURL(startUrl);
+  
+  // Inject debug script in development
+  mainWindow.webContents.on('dom-ready', () => {
+    const debugScript = fs.readFileSync(path.join(__dirname, 'debug-inject.js'), 'utf8');
+    mainWindow.webContents.executeJavaScript(debugScript);
+  });
 
   // Configure CSP and security headers for local file access with app:// protocol
   mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
@@ -220,7 +226,21 @@ function createMainWindow() {
 app.whenReady().then(() => {
   // Register custom protocol to serve static files
   protocol.registerFileProtocol('app', (request, callback) => {
-    const url = request.url.substr(6); // Remove 'app://' prefix
+    let url = request.url.substr(6); // Remove 'app://' prefix
+    
+    // Handle root requests
+    if (url === '' || url === '/') {
+      url = 'index.html';
+    }
+    
+    // Decode URL to handle special characters
+    url = decodeURIComponent(url);
+    
+    // Remove leading slash if present
+    if (url.startsWith('/')) {
+      url = url.substr(1);
+    }
+    
     const filePath = path.join(__dirname, '../out', url);
     
     // Security check - ensure the path is within the out directory
@@ -228,10 +248,20 @@ app.whenReady().then(() => {
     const outDir = path.normalize(path.join(__dirname, '../out'));
     
     if (!normalizedPath.startsWith(outDir)) {
+      console.error('🚫 Security check failed for path:', normalizedPath);
       callback({ error: -6 }); // FILE_NOT_FOUND
       return;
     }
     
+    // Check if file exists
+    if (!fs.existsSync(normalizedPath)) {
+      console.error('❌ File not found:', normalizedPath);
+      console.error('   Requested URL:', request.url);
+      callback({ error: -6 }); // FILE_NOT_FOUND
+      return;
+    }
+    
+    console.log('✅ Serving file:', url);
     callback({ path: normalizedPath });
   });
   

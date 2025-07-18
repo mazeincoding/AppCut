@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-// Function to recursively find all HTML and TXT files
+// Function to recursively find all HTML, TXT, and CSS files
 function findFiles(dir) {
   const files = [];
   const items = fs.readdirSync(dir);
@@ -12,7 +12,7 @@ function findFiles(dir) {
 
     if (stat.isDirectory()) {
       files.push(...findFiles(fullPath));
-    } else if (item.endsWith('.html') || item.endsWith('.txt')) {
+    } else if (item.endsWith('.html') || item.endsWith('.txt') || item.endsWith('.css')) {
       files.push(fullPath);
     }
   }
@@ -20,7 +20,7 @@ function findFiles(dir) {
   return files;
 }
 
-// Fix paths in HTML content
+// Fix paths in HTML and CSS content
 function fixPaths(content) {
   return content
     // Fix main _next paths to use app:// protocol

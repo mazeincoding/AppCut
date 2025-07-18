@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(git reset:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Bash(find:*)",
+      "Bash(npm run electron:build:*)",
+      "Bash(git add:*)"
     ],
     "deny": []
   }

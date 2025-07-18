@@ -44,3 +44,29 @@ contextBridge.exposeInMainWorld('electronAPI', {
 });
 
 console.log('Electron preload script loaded');
+
+// Add debugging to check when React loads
+window.addEventListener('DOMContentLoaded', () => {
+  console.log('🔍 DOM Content Loaded - Initial check:');
+  console.log('- window.React:', typeof window.React);
+  console.log('- window.ReactDOM:', typeof window.ReactDOM);
+  console.log('- window.next:', typeof window.next);
+  
+  // Check again after a delay to see if bundles load
+  setTimeout(() => {
+    console.log('🔍 After delay check (2s):');
+    console.log('- window.React:', typeof window.React);
+    console.log('- window.ReactDOM:', typeof window.ReactDOM);
+    console.log('- window.next:', typeof window.next);
+    console.log('- document.querySelector("#__next"):', !!document.querySelector('#__next'));
+    
+    // Check if app actually rendered
+    const appContent = document.querySelector('#__next');
+    if (appContent && appContent.children.length > 0) {
+      console.log('✅ Next.js app appears to be rendered');
+      console.log('- Child elements:', appContent.children.length);
+    } else {
+      console.log('❌ Next.js app not rendered');
+    }
+  }, 2000);
+});
