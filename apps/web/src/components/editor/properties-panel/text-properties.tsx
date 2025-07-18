@@ -68,7 +68,7 @@ export function TextProperties({
               value={element.fontSize}
               onChange={(e) =>
                 updateTextElement(trackId, element.id, {
-                  fontSize: parseInt(e.target.value),
+                  fontSize: parseInt(e.target.value) || element.fontSize,
                 })
               }
               className="w-12 !text-xs h-7 rounded-sm text-center

@@ -1,14 +1,9 @@
-import { Button } from "@/components/ui/button";
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
-    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
-import { Dispatch, SetStateAction } from "react";
 import { HexColorPicker } from "react-colorful";
 
 export function ChangeTextBackgroundColorDialog({
@@ -34,7 +29,7 @@ export function ChangeTextBackgroundColorDialog({
             >
                 <DialogHeader className="items-center space-y-2">
                     <DialogTitle className="text-md">
-                       Change the color of the text
+                       Change the background color
                     </DialogTitle>
                     <HexColorPicker color={color || '#000000'} onChange={(newColor) => setColor(newColor)}/>
                 </DialogHeader>
