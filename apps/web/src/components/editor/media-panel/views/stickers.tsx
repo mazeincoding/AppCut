@@ -28,10 +28,8 @@ async function grab_data(searchTerm: string, setNext: Function, next: string = "
         const response = await fetch(search_url)
         const data = await response.json()
 
-        console.log(data)
         const gifs = data.results.map((gif: any) => gif.media_formats.gif.url);
         const next = data.next // this will be used to load more gifs when scrolling down
-        console.log("Next page token: ", next)
         setNext(next)
         return gifs
 
@@ -106,7 +104,6 @@ export function StickerView() {
         grab_data(searchQuery, setNext, next).then((urls: string[]) => {
             urls.forEach((url: string) => {
                 if (!gifs.includes(url)) setGifs(prev => [...prev, url]);
-                else console.log("Already included: ", url)
 
             });
 

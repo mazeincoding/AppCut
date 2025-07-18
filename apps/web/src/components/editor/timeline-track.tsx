@@ -644,7 +644,6 @@ export function TimelineTrackContent({
       "application/x-media-item"
     );
 
-    console.log(e.dataTransfer.getData("application/x-media-item"))
 
     if (!hasTimelineElement && !hasMediaItem) return;
 
@@ -754,15 +753,11 @@ export function TimelineTrackContent({
           });
         }
       } else if (hasMediaItem) {
-        console.log("bruh")
-
         // Handle media item drop
         const mediaItemData = e.dataTransfer.getData(
           "application/x-media-item"
         );
         if (!mediaItemData) return;
-
-        console.log("bruh")
 
         const dragData: DragData = JSON.parse(mediaItemData);
 
@@ -854,75 +849,6 @@ export function TimelineTrackContent({
             opacity: 1,
           });
 
-        // } else if (dragData.type == "GIF") {
-        //   // code here
-          
-        //   const targetTrackId = track.id
-          // const projectId = window.location.href.split("/").reverse()[0]
-          // if (!projectId) {
-          //   toast.error("Project not found")
-          // }
-
-          // async function addToMedia() {
-          //   const gifUrl = dragData.content
-          //   const proxyUrl = `/api/proxy?url=${encodeURIComponent(gifUrl)}`;
-          //   const response = await fetch(proxyUrl);
-          //   const blob = await response.blob();
-          //   const file = new File([blob], "sticker.gif", { type: "image/gif" });
-
-            
-          //   console.log("here2")
-          //   const { width, height } = await getImageDimensions(file)
-          //   console.log("here2")
-
-
-          //   const mediaItem = await addMediaItem(projectId, {
-          //     name: dragData.name,
-          //     type: "GIF",
-          //     file: file,
-          //     url: URL.createObjectURL(file),
-          //     // url: gifUrl,
-          //     width: width,
-          //     height: height,
-
-          //   })
-
-          //   return mediaItem
-            
-          // }
-
-        //   addToMedia().then(() => {
-        //     const mediaItem = mediaItems.find(item => item.name === dragData.name)
-        //     if (!mediaItem) {
-        //       toast.error("Error saving GIF to media")
-        //       return
-        //     }
-
-        //     const mediaOptions = {
-        //       type: "GIF",
-        //       mediaId: mediaItem.id,
-        //       name: mediaItem.name,
-        //       duration: 5,
-        //       // startTime: snappedTime,
-              
-        //       trimStart: 0,
-        //       trimEnd: 0,
-        //     }
-
-        //     addElementToTrack(targetTrackId, {
-        //       type: "media",
-        //       mediaId: mediaItem.id,
-        //       name: mediaItem.name,
-        //       duration: 5,
-        //       startTime: snappedTime,
-        //       trimStart: 0,
-        //       trimEnd: 0,
-        //     });
-
-
-        //   })
-
-
 
         } else {
           // Handle media items
@@ -936,15 +862,10 @@ export function TimelineTrackContent({
             const gifUrl = dragData.content
             const proxyUrl = `/api/proxy?url=${encodeURIComponent(gifUrl)}`;
             const response = await fetch(proxyUrl);
-            console.log(response)
             const blob = await response.blob();
             const file = new File([blob], "sticker.gif", { type: "image/gif" });
 
-            
-            console.log("here2")
             const { width, height } = await getImageDimensions(file)
-            console.log("here2")
-
 
             const mediaItem = await addMediaItem(projectId, {
               name: dragData.name,
@@ -968,11 +889,9 @@ export function TimelineTrackContent({
             // Refresh mediaItems from the store after adding
             const updatedMediaItems = useMediaStore.getState().mediaItems;
             mediaItem = updatedMediaItems.find((item) => item.name === dragData.name);
-            console.log(mediaItem)
 
           } else {
             mediaItem = mediaItems.find((item) => item.id === dragData.id);
-            console.log(mediaItem);
           }
           if (!mediaItem) {
             toast.error("Media item not found");

@@ -13,7 +13,6 @@ export async function GET(req: NextRequest) {
     const url = req.nextUrl.searchParams.get("url")
     if (!url) return makeMsgResponse("Missing URL parameter.", 400)
 
-    console.log(url)
     try {
         const parsed = new URL(url)
         if (!ALLOWED_HOSTS.includes(parsed.host)) return makeMsgResponse(`THE HOST: ${parsed.host} IS NOT ALLOWED!`, 403)
