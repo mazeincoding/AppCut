@@ -829,8 +829,8 @@ export function TimelineTrackContent({
 
           let mediaItem;
           if (dragData.type == "GIF") {
-            console.log("GGGIIIFFFFFF");
-            await addToMedia();
+            mediaItem = mediaItems.find((item) => item.name === dragData.name);
+            if (!mediaItem) await addToMedia();
             // Refresh mediaItems from the store after adding
             const updatedMediaItems = useMediaStore.getState().mediaItems;
             mediaItem = updatedMediaItems.find((item) => item.name === dragData.name);

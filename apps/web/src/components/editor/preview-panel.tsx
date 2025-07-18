@@ -301,7 +301,7 @@ export function PreviewPanel() {
       }
 
       // Image elements
-      if (mediaItem.type === "image") {
+      if (mediaItem.type === "image" || mediaItem.type === "GIF") {
         return (
           <div
             key={element.id}
