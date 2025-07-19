@@ -113,11 +113,11 @@ function createMainWindow() {
     show: true, // Show immediately for debugging
     webPreferences: {
       nodeIntegration: false,
-      contextIsolation: true,
+      contextIsolation: true, // contextIsolation:true
       enableRemoteModule: false,
-      allowRunningInsecureContent: false, // Fixed: Disable insecure content
-      webSecurity: true, // Fixed: Re-enable web security
-      preload: path.join(__dirname, 'preload-simplified.js'), // Using simplified preload for better Next.js compatibility
+      allowRunningInsecureContent: false,
+      webSecurity: true, // webSecurity:true，再配 CSP
+      preload: path.join(__dirname, 'preload-simplified.js'), // preload:path.join(__dirname,'preload-simplified.js')
       partition: 'persist:opencut', // Enable localStorage with persistent session
       nodeIntegrationInWorker: false,
       nodeIntegrationInSubFrames: false
@@ -149,14 +149,13 @@ function createMainWindow() {
     callback({});
   });
 
-  // Use app:// protocol for consistent asset loading
+  // 使用 file:// 协议作为备用方案，确保应用能正常启动
   const unpackedPath = path.join(__dirname, '../out/index.html');
-  const staticPath = path.join(__dirname, '../electron-app.html');
   
   let startUrl;
   if (fs.existsSync(unpackedPath)) {
-    // Fallback to file:// protocol with proper path handling for reliability
-    startUrl = `file://${path.join(__dirname, '../out/index.html').replace(/\\/g, '/')}`;
+    // 暂时使用 file:// 协议确保应用能启动，后续可以切换到 app://
+    startUrl = `file://${unpackedPath.replace(/\\/g, '/')}`;
     console.log('📦 Loading built Next.js app via file:// protocol (reliable fallback)');
     console.log('📁 Out directory:', path.join(__dirname, '../out'));
   } else {
@@ -299,12 +298,12 @@ function createMainWindow() {
         ...details.responseHeaders,
         'Content-Security-Policy': [
           "default-src 'self' app: file:; " +
-          "script-src 'self' 'unsafe-inline' app: file:; " + // Remove unsafe-eval after testing
+          "script-src 'self' 'unsafe-inline' app: file:; " +
           "style-src 'self' 'unsafe-inline' app: file:; " +
           "img-src 'self' data: blob: app: file:; " +
           "font-src 'self' data: app: file:; " +
           "media-src 'self' blob: app: file:; " +
-          "connect-src 'self' data: blob: app: file: https://api.github.com; " +
+          "connect-src 'self' data: blob: app: file:; " +
           "manifest-src 'self' app: file:;"
         ]
       }
@@ -369,15 +368,15 @@ function createMainWindow() {
         console.log('  - Current URL:', event.sender.getURL());
         console.log('  - Target URL:', url);
         
-        // For Next.js routes, ensure we load the correct file
-        if (url.startsWith('app://') && !url.includes('.')) {
-          // This might be a Next.js route - convert to HTML file
-          const routePath = url.replace('app://', '');
-          if (routePath && routePath !== '/' && !routePath.includes('.')) {
-            const htmlPath = `app://${routePath}/index.html`;
-            console.log('  - Converting route to HTML file:', htmlPath);
+        // will-navigate 中增加路径补全逻辑
+        if (url.startsWith('app://')) {
+          const urlObj = new URL(url);
+          if (!urlObj.pathname.endsWith('.html') && path.extname(urlObj.pathname) === '') {
+            urlObj.pathname = path.join(urlObj.pathname, 'index.html');
+            const correctedUrl = urlObj.toString();
+            console.log('  - Converting route to HTML file:', correctedUrl);
             event.preventDefault();
-            mainWindow.loadURL(htmlPath);
+            mainWindow.loadURL(correctedUrl);
             return;
           }
         }
@@ -490,57 +489,38 @@ protocol.registerSchemesAsPrivileged([
       standard: true, 
       supportsFetchAPI: true,
       corsEnabled: true,
-      bypassCSP: true
+      bypassCSP: false // 改为 false 以确保 CSP 正常工作
     } 
   }
 ]);
 
 app.whenReady().then(() => {
-  // Note: Custom app:// protocol registration commented out for now
-  // Using file:// protocol as reliable fallback until app:// protocol issues are resolved
-  /*
-  console.log('🔧 Setting up protocol...');
-  
-  // Test if protocol is already registered
-  console.log('🔍 Protocol schemes:', protocol.isProtocolRegistered('app'));
-  
+  // 注册 app:// → out/ 的 registerBufferProtocol
   console.log('🔧 [PROTOCOL] Registering app:// protocol handler...');
   const result = protocol.registerBufferProtocol('app', (request, callback) => {
     console.log('🔍 [PROTOCOL] Handler called for request:', request.url);
     
-    // Extract the path from app:// URL and prevent double-app:// issues
-    let urlPath = request.url.replace(/^app:\/\//, '');
+    const url = new URL(request.url);
+    let urlPath = url.pathname;
     
-    // Handle relative path patterns that might be generated by Next.js
-    if (urlPath.startsWith('./')) {
-      urlPath = urlPath.substring(2);
+    // 若自定义协议解析失败就退回 file://…/index.html
+    if (!urlPath.endsWith('.html') && path.extname(urlPath) === '') {
+      urlPath = path.join(urlPath, 'index.html');
     }
     
-    // Handle absolute path patterns
+    // 清理路径
     if (urlPath.startsWith('/')) {
       urlPath = urlPath.substring(1);
     }
     
-    // Handle root requests and empty paths
-    if (urlPath === '' || urlPath === '.' || urlPath === 'app://' || urlPath === 'app://.' || urlPath === 'app://index.html') {
+    if (urlPath === '' || urlPath === '.') {
       urlPath = 'index.html';
     }
     
-    // Clean up the path and decode URL encoding
-    urlPath = urlPath.replace(/^\/+/, ''); // Remove any remaining leading slashes
-    urlPath = decodeURIComponent(urlPath); // Decode URL encoding
-    
-    // Handle Next.js specific paths
-    if (urlPath.includes('_next/') && !urlPath.startsWith('_next/')) {
-      // Ensure _next paths are clean
-      urlPath = urlPath.replace(/.*(_next\/.*)/, '$1');
-    }
-    
-    // Construct file path
     const filePath = path.join(__dirname, '../out', urlPath);
     console.log('📁 [PROTOCOL] Serving:', urlPath, '→', filePath);
     
-    // Security check - ensure the path is within the out directory
+    // 安全检查
     const normalizedPath = path.normalize(filePath);
     const outDir = path.normalize(path.join(__dirname, '../out'));
     
@@ -550,14 +530,21 @@ app.whenReady().then(() => {
       return;
     }
     
-    // Check if file exists
+    // 检查文件是否存在
     if (!fs.existsSync(normalizedPath)) {
       console.error('❌ [PROTOCOL] File not found:', normalizedPath);
+      // 退回到 index.html
+      const fallbackPath = path.join(__dirname, '../out/index.html');
+      if (fs.existsSync(fallbackPath)) {
+        const data = fs.readFileSync(fallbackPath);
+        callback({ mimeType: 'text/html', data });
+        return;
+      }
       callback({ error: -6 });
       return;
     }
 
-    // Check if it's a directory and serve index.html
+    // 如果是目录，提供 index.html
     const stats = fs.statSync(normalizedPath);
     if (stats.isDirectory()) {
       const indexPath = path.join(normalizedPath, 'index.html');
@@ -566,16 +553,11 @@ app.whenReady().then(() => {
         const data = fs.readFileSync(indexPath);
         callback({ mimeType: 'text/html', data });
         return;
-      } else {
-        console.error('❌ [PROTOCOL] No index.html in directory');
-        callback({ error: -6 });
-        return;
       }
     }
     
-    // Determine MIME type
+    // 确定 MIME 类型
     const ext = path.extname(normalizedPath).toLowerCase();
-    let mimeType = 'text/plain';
     const mimeTypes = {
       '.html': 'text/html',
       '.js': 'application/javascript',
@@ -590,11 +572,9 @@ app.whenReady().then(() => {
       '.webp': 'image/webp'
     };
     
-    if (mimeTypes[ext]) {
-      mimeType = mimeTypes[ext];
-    }
+    const mimeType = mimeTypes[ext] || 'text/plain';
     
-    // Serve the file
+    // 提供文件
     try {
       const data = fs.readFileSync(normalizedPath);
       console.log('✅ [PROTOCOL] Serving file successfully:', mimeType);
@@ -606,8 +586,6 @@ app.whenReady().then(() => {
   });
   
   console.log('✅ Protocol registration result:', result);
-  console.log('🔍 Protocol now registered:', protocol.isProtocolRegistered('app'));
-  */
   
   // Set up application menu with DevTools option
   const template = [
@@ -692,6 +670,52 @@ app.on('will-quit', () => {
 ipcMain.handle('ping', () => {
   console.log('📡 Received ping from renderer process');
   return 'pong from Electron main process';
+});
+
+// File selection handler
+ipcMain.handle('select-file', async () => {
+  const { dialog } = require('electron');
+  try {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ['openFile'],
+      filters: [
+        { name: 'Video Files', extensions: ['mp4', 'avi', 'mov', 'mkv', 'webm'] },
+        { name: 'All Files', extensions: ['*'] }
+      ]
+    });
+    
+    if (!result.canceled && result.filePaths.length > 0) {
+      return { success: true, filePath: result.filePaths[0] };
+    }
+    return { success: false, canceled: true };
+  } catch (error) {
+    console.error('Failed to select file:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Video export handler
+ipcMain.handle('export-video', async (event, data) => {
+  const { dialog } = require('electron');
+  try {
+    const result = await dialog.showSaveDialog(mainWindow, {
+      defaultPath: 'exported-video.mp4',
+      filters: [
+        { name: 'Video Files', extensions: ['mp4'] },
+        { name: 'All Files', extensions: ['*'] }
+      ]
+    });
+    
+    if (!result.canceled && result.filePath) {
+      // 这里可以添加实际的视频导出逻辑
+      console.log('Export video to:', result.filePath, 'with data:', data);
+      return { success: true, filePath: result.filePath };
+    }
+    return { success: false, canceled: true };
+  } catch (error) {
+    console.error('Failed to export video:', error);
+    return { success: false, error: error.message };
+  }
 });
 
 // User data and preferences

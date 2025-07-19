@@ -27,6 +27,8 @@ try {
 // PHASE 2: Set up IPC for Electron communication
 contextBridge.exposeInMainWorld('electronAPI', {
   ping: () => ipcRenderer.invoke('ping'),
+  selectFile: () => ipcRenderer.invoke('select-file'),
+  exportVideo: (data) => ipcRenderer.invoke('export-video', data),
   getUserDataPath: () => ipcRenderer.invoke('get-user-data-path'),
   getProjectsDirectory: () => ipcRenderer.invoke('get-projects-directory'),
   getUserPreferences: () => ipcRenderer.invoke('get-user-preferences'),
@@ -37,43 +39,113 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
 console.log('✅ [ELECTRON] IPC bridge established');
 
-// PHASE 3: Handle location patches for navigation
+// PHASE 3: 拦截 <a> / Link 点击，改写为 app://路径
 try {
-  const currentHref = window.location.href;
-  
-  // Create navigation handler
-  const handleNavigation = (url) => {
-    console.log('🔄 [ELECTRON] Navigation requested to:', url);
-    
-    // Handle relative paths for static export
-    if (!url.startsWith('http') && !url.startsWith('file://') && !url.startsWith('app://')) {
-      // For paths like '/projects', we need to append it correctly
-      if (url.startsWith('/')) {
-        // Get the base directory (remove index.html)
-        const base = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
-        const rootBase = base.substring(0, base.lastIndexOf('/out') + 4);
-        url = rootBase + url + '/index.html';
-      } else {
-        const base = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
-        url = base + '/' + url;
-      }
+  // 路径补全函数
+  const fixElectronPath = (url) => {
+    if (!url || url.startsWith('http') || url.startsWith('app://') || url.startsWith('file://')) {
+      return url;
     }
     
-    console.log('🔄 [ELECTRON] Resolved navigation URL:', url);
-    window.location.href = url;
+    // 对于相对路径，转换为正确的 HTML 文件路径
+    if (url.startsWith('/')) {
+      // 去掉开头的 /，然后添加正确的文件扩展名
+      const cleanPath = url.substring(1);
+      return cleanPath ? `file://${window.location.href.substring(0, window.location.href.lastIndexOf('/'))}/${cleanPath}.html` : window.location.href;
+    }
+    
+    // 处理相对路径如 './projects'
+    if (url.startsWith('./')) {
+      const cleanPath = url.substring(2);
+      return cleanPath ? `file://${window.location.href.substring(0, window.location.href.lastIndexOf('/'))}/${cleanPath}.html` : window.location.href;
+    }
+    
+    return url;
+  };
+
+  // Create navigation handler with path completion
+  const handleNavigation = (url) => {
+    console.log('🔄 [ELECTRON] Navigation requested to:', url);
+    const fixedUrl = fixElectronPath(url);
+    console.log('🔄 [ELECTRON] Fixed navigation URL:', fixedUrl);
+    window.location.href = fixedUrl;
   };
   
-  // Patch location methods
-  window._electronAssign = window.location.assign;
-  window.location.assign = handleNavigation;
+  // 对 location.assign/replace 做同样的路径补全
+  const originalAssign = window.location.assign;
+  const originalReplace = window.location.replace;
   
-  window._electronReplace = window.location.replace;
-  window.location.replace = handleNavigation;
+  window.location.assign = function(url) {
+    const fixedUrl = fixElectronPath(url);
+    console.log('🔄 [ELECTRON] location.assign:', url, '→', fixedUrl);
+    return originalAssign.call(this, fixedUrl);
+  };
   
-  console.log('✅ [ELECTRON] Navigation patches applied');
+  window.location.replace = function(url) {
+    const fixedUrl = fixElectronPath(url);
+    console.log('🔄 [ELECTRON] location.replace:', url, '→', fixedUrl);
+    return originalReplace.call(this, fixedUrl);
+  };
+  
+  // 重载 history.pushState/replaceState，保持单页导航
+  const originalPushState = history.pushState;
+  const originalReplaceState = history.replaceState;
+  
+  history.pushState = function(state, title, url) {
+    if (url) {
+      const fixedUrl = fixElectronPath(url);
+      console.log('🔄 [ELECTRON] history.pushState:', url, '→', fixedUrl);
+      if (fixedUrl !== url && fixedUrl.startsWith('app://')) {
+        // 如果需要跳转到不同的 HTML 文件，直接导航
+        window.location.href = fixedUrl;
+        return;
+      }
+    }
+    return originalPushState.call(this, state, title, url);
+  };
+  
+  history.replaceState = function(state, title, url) {
+    if (url) {
+      const fixedUrl = fixElectronPath(url);
+      console.log('🔄 [ELECTRON] history.replaceState:', url, '→', fixedUrl);
+      if (fixedUrl !== url && fixedUrl.startsWith('app://')) {
+        // 如果需要跳转到不同的 HTML 文件，直接导航
+        window.location.href = fixedUrl;
+        return;
+      }
+    }
+    return originalReplaceState.call(this, state, title, url);
+  };
+  
+  console.log('✅ [ELECTRON] Navigation and history patches applied');
 } catch (e) {
   console.warn('⚠️ [ELECTRON] Could not apply navigation patches:', e);
 }
+
+// PHASE 4: 拦截链接点击事件
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('🔗 [ELECTRON] Setting up link interception...');
+  
+  document.addEventListener('click', (event) => {
+    const target = event.target.closest('a');
+    if (!target) return;
+    
+    const href = target.getAttribute('href');
+    if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) {
+      return; // 忽略锚点和特殊链接
+    }
+    
+    // 拦截内部链接
+    if (href.startsWith('/') || (!href.startsWith('http') && !href.startsWith('app://') && !href.startsWith('file://'))) {
+      event.preventDefault();
+      const fixedUrl = fixElectronPath(href);
+      console.log('🔗 [ELECTRON] Link click intercepted:', href, '→', fixedUrl);
+      window.location.href = fixedUrl;
+    }
+  }, true);
+  
+  console.log('✅ [ELECTRON] Link interception ready');
+});
 
 console.log('✅ [ELECTRON] Simplified preload script ready');
 console.log('📍 [ELECTRON] Current location:', window.location.href);

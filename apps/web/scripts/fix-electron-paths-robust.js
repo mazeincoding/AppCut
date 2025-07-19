@@ -17,21 +17,21 @@ function fixHtmlFile(filePath) {
     let content = fs.readFileSync(filePath, 'utf8');
     let modified = false;
     
-    // Fix absolute paths to relative paths
-    // /_next/ -> ./_next/
     const originalContent = content;
+    
+    // 正则批量把 /_next/ 等绝对 URL 改成 ./_next/
     content = content.replace(/(?<![\w/])\/(_next\/[^"'\s>]+)/g, './$1');
     
-    // Fix root assets like /logo.svg -> ./logo.svg (only convert absolute paths starting with /)
-    // Must ensure we don't match ./logo.svg (already correct relative paths)
+    // 修复根目录资源路径 /logo.svg -> ./logo.svg
     content = content.replace(/(?<![\w/.])(?<!["'=]\.)\/([\w-]+\.(svg|png|jpg|jpeg|gif|ico|webp))(?=["'\s>])/g, './$1');
     
-    // Fix manifest and other root files (only convert absolute paths starting with /)
-    // Must ensure we don't match ./manifest.json (already correct relative paths)
+    // 修复 manifest 和其他根文件
     content = content.replace(/(?<![\w/.])(?<!["'=]\.)\/(manifest\.json|robots\.txt|sitemap\.xml|favicon\.ico)(?=["'\s>])/g, './$1');
     
-    // IMPORTANT: Do NOT convert already-correct relative paths (./logo.svg should stay ./logo.svg, not become ../logo.svg)
-    // This prevents the script from incorrectly changing already-correct paths
+    // 修复所有绝对路径为相对路径（针对 Electron 静态导出）
+    content = content.replace(/href="\//g, 'href="./');
+    content = content.replace(/src="\//g, 'src="./');
+    content = content.replace(/url\("\//g, 'url("./');
     
     if (content !== originalContent) {
       fs.writeFileSync(filePath, content);

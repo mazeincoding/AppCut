@@ -9,10 +9,10 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   productionBrowserSourceMaps: true,
   output: isElectron ? "export" : "standalone",
-  // Use relative paths for Electron - no assetPrefix to maintain font compatibility
-  assetPrefix: isElectron ? undefined : undefined,
+  // 强制相对路径用于 Electron
+  assetPrefix: isElectron ? "." : undefined,
   basePath: isElectron ? "" : undefined,
-  trailingSlash: false, // Disable trailing slash to prevent directory-based routing that causes ../paths
+  trailingSlash: false, // 避免重定向死循环
   distDir: isElectron ? "out" : ".next",
   images: {
     unoptimized: isElectron,

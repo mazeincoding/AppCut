@@ -9,8 +9,13 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "turbo run dev",
-    "build": "turbo run build",
+    "dev": "bun run dev:web & bun run dev:electron",
+    "build": "bun run build:web && bun run build:electron",
+    "build:web": "turbo run build",
+    "build:electron": "cd apps/web && bun run build:electron",
+    "dev:web": "turbo run dev",
+    "dev:electron": "cd apps/web && bun run electron:dev",
+    "electron:dist:win": "cd apps/web && bunx electron-builder --win",
     "check-types": "turbo run check-types",
     "lint": "turbo run lint",
     "format": "turbo run format"
