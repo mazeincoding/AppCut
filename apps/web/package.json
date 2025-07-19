@@ -10,10 +10,10 @@
     "build:electron": "cross-env NEXT_PUBLIC_ELECTRON=true next build",
     "export:electron": "cross-env NEXT_PUBLIC_ELECTRON=true next build && node scripts/fix-electron-static-paths.js",
     "electron:dev": "node scripts/dev-electron.js",
-    "electron:build": "npm run export:electron",
-    "electron:pack": "npm run electron:build && electron-builder --dir",
-    "electron:dist": "npm run electron:build && electron-builder --publish=never",
-    "electron:dist:win": "npm run electron:build && electron-builder --win"
+    "electron:build": "bun run export:electron",
+    "electron:pack": "bun run electron:build && bunx electron-builder --dir",
+    "electron:dist": "bun run electron:build && bunx electron-builder --publish=never",
+    "electron:dist:win": "bun run electron:build && bunx electron-builder --win"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.11",

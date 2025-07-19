@@ -11,7 +11,7 @@ process.env.NEXT_PUBLIC_ELECTRON = 'true';
 
 // Build static files for Electron
 console.log('📦 Building static files...');
-const buildProcess = spawn('npm', ['run', 'export:electron'], {
+const buildProcess = spawn('bun', ['run', 'export:electron'], {
   stdio: 'inherit',
   shell: true
 });
@@ -35,7 +35,7 @@ buildProcess.on('close', (code) => {
   console.log('🖥️  Starting Electron...');
   
   // Start Electron
-  const electronProcess = spawn('electron', ['electron/main-simple.js'], {
+  const electronProcess = spawn('bunx', ['electron', 'electron/main-simple.js'], {
     stdio: 'inherit',
     shell: true
   });

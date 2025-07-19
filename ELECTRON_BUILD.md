@@ -40,7 +40,7 @@ node scripts/fix-electron-static-paths.js
 node scripts/fix-electron-next-data.js
 
 # 5. Test with Electron
-npx electron electron/main-simple.js
+bunx electron electron/main-simple.js
 
 # 6. Package for distribution (optional)
 bun run electron:dist:win

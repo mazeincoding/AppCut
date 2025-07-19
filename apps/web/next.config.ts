@@ -42,8 +42,7 @@ const nextConfig: NextConfig = {
     compress: false,
     generateBuildId: () => 'electron-static',
     
-    // Disable font optimization to prevent preload issues
-    optimizeFonts: false,
+    // Font optimization is now handled automatically in Next.js 15
     
     // PHASE 2: Configure webpack for static export compatibility
     webpack: (config, { isServer, dev }) => {
