@@ -92,8 +92,13 @@
     window.fetch = function(input, init) {
       const url = typeof input === 'string' ? input : input.url;
       
-      // Log all fetch requests for debugging
-      console.log('🔍 [ELECTRON] Fetch request:', url);
+      // DETAILED DEBUG: Log all fetch requests for debugging
+      console.log('🔍 [PRELOAD FETCH DEBUG] Request intercepted:', {
+        url: url,
+        type: typeof input,
+        input: input,
+        stack: new Error().stack?.split('\n').slice(0, 5).join('\n')
+      });
       
       // =================== ULTRASYNC DEEPSYNC FACE-IT BLOCKING ===================
       // PERSPECTIVE: Catch ALL possible data fetching patterns from every conceivable angle
@@ -177,18 +182,22 @@
         (url.includes('.json') && url.includes('/out/')) || // Any JSON in out directory
         (url.includes('/_next/') && url.includes('.json')) // Any Next.js related JSON
       )) {
-        console.warn('🚫 [ELECTRON] Blocked Next.js data request:', url);
-        console.warn('🚫 [ELECTRON] Request pattern matched:', {
+        console.error('🚫 [PRELOAD FETCH BLOCKED] Request blocked with full debug info:');
+        console.error('URL:', url);
+        console.error('Input type:', typeof input);
+        console.error('Input object:', input);
+        console.error('Stack trace:', new Error().stack);
+        console.error('Pattern analysis:', {
           hasNextData: url.includes('/_next/data/'),
           hasAPI: url.includes('/api/'),
           hasJSON: url.includes('.json'),
-          hasBuildID: url.includes('/wHIyv0g59oH17q8m1tyXU/') || url.includes('/tuS_GvNDbMfvOCAIrmrp7/') || url.includes('/waKrJH0rxx6B322TnfBIx/') || url.includes('/66zZwW14Qejyf_lZt9a3l/') || url.includes('/xUF9JiSSZjidE53kQFWB9/'),
-          hasNextDataPattern: url.match(/\/_next\/data\/[A-Za-z0-9_-]+\//),
-          hasDirectJSON: url.includes('/projects.json') || url.includes('/contributors.json') || url.includes('/privacy.json'),
+          hasHTMLJSON: url.includes('.html.json'),
+          hasElectronStatic: url.includes('electron-static'),
           isWindowsPath: url.match(/\/[A-Z]:\//),
           fullURL: url
         });
-        return Promise.reject(new Error('Data fetching disabled in Electron static export'));
+        console.error('=================================');
+        return Promise.reject(new Error('PRELOAD: Data fetching disabled in Electron static export - URL: ' + url));
       }
       
       return originalFetch.apply(this, arguments);
@@ -197,8 +206,12 @@
     // Also intercept XMLHttpRequest for older request methods
     const originalXHROpen = XMLHttpRequest.prototype.open;
     XMLHttpRequest.prototype.open = function(method, url, ...args) {
-      // Log all XHR requests for debugging
-      console.log('🔍 [ELECTRON] XHR request:', method, url);
+      // DETAILED DEBUG: Log all XHR requests for debugging
+      console.log('🔍 [PRELOAD XHR DEBUG] Request intercepted:', {
+        method: method,
+        url: url,
+        stack: new Error().stack?.split('\n').slice(0, 5).join('\n')
+      });
       if (typeof url === 'string' && (
         // =================== ULTRASYNC DEEPSYNC FACE-IT XHR BLOCKING ===================
         // === CORE NEXT.JS PATTERNS ===
@@ -280,17 +293,19 @@
         (url.includes('.json') && url.includes('/out/')) || // Any JSON in out directory
         (url.includes('/_next/') && url.includes('.json')) // Any Next.js related JSON
       )) {
-        console.warn('🚫 [ELECTRON] Blocked XHR Next.js data request:', url);
-        console.warn('🚫 [ELECTRON] XHR pattern matched:', {
+        console.error('🚫 [PRELOAD XHR BLOCKED] Request blocked with full debug info:');
+        console.error('Method:', method, 'URL:', url);
+        console.error('Stack trace:', new Error().stack);
+        console.error('Pattern analysis:', {
           hasNextData: url.includes('/_next/data/'),
           hasAPI: url.includes('/api/'),
           hasJSON: url.includes('.json'),
-          hasBuildID: url.includes('/wHIyv0g59oH17q8m1tyXU/') || url.includes('/tuS_GvNDbMfvOCAIrmrp7/') || url.includes('/waKrJH0rxx6B322TnfBIx/') || url.includes('/66zZwW14Qejyf_lZt9a3l/') || url.includes('/xUF9JiSSZjidE53kQFWB9/'),
-          hasNextDataPattern: url.match(/\/_next\/data\/[A-Za-z0-9_-]+\//),
-          hasDirectJSON: url.includes('/projects.json') || url.includes('/contributors.json') || url.includes('/privacy.json'),
+          hasHTMLJSON: url.includes('.html.json'),
+          hasElectronStatic: url.includes('electron-static'),
           isWindowsPath: url.match(/\/[A-Z]:\//),
           fullURL: url
         });
+        console.error('=================================');
         // Call original but will fail gracefully
         this.addEventListener('readystatechange', function() {
           if (this.readyState === XMLHttpRequest.DONE) {

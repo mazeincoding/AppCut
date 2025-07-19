@@ -49,37 +49,130 @@ export default function Document() {
             __html: `
               console.log('🚀 [ELECTRON DEBUG] JavaScript executing in Electron');
               
-              // ROOT CAUSE FIX: Block ALL data fetching before Next.js can start
-              if (typeof window !== 'undefined') {
-                // Override fetch globally IMMEDIATELY before any library loads
-                const originalFetch = window.fetch;
-                window.fetch = function(input, init) {
-                  const url = typeof input === 'string' ? input : input.url || input.toString();
-                  // Block any .json requests or _next/data requests
-                  if (url.includes('.json') || url.includes('_next/data') || url.includes('.html.json')) {
-                    console.log('🚫 [ROOT FIX] Blocked fetch attempt:', url);
-                    return Promise.reject(new Error('Data fetching completely disabled'));
-                  }
-                  return originalFetch.apply(this, arguments);
-                };
-                
-                // Override XMLHttpRequest globally before any library loads
-                const OriginalXHR = window.XMLHttpRequest;
-                window.XMLHttpRequest = function() {
-                  const xhr = new OriginalXHR();
-                  const originalOpen = xhr.open;
-                  xhr.open = function(method, url) {
-                    if (typeof url === 'string' && (url.includes('.json') || url.includes('_next/data') || url.includes('.html.json'))) {
-                      console.log('🚫 [ROOT FIX] Blocked XHR attempt:', url);
-                      throw new Error('Data fetching completely disabled');
+              // ROOT CAUSE FIX: IMMEDIATE blocking before ANY library loads
+              (function() {
+                // Override fetch globally IMMEDIATELY - must be synchronous
+                if (typeof window !== 'undefined' && window.fetch) {
+                  const originalFetch = window.fetch;
+                  window.fetch = function(input, init) {
+                    const url = typeof input === 'string' ? input : (input && input.url) || input.toString();
+                    
+                    // DETAILED DEBUG: Log ALL fetch requests to understand the pattern
+                    console.log('🔍 [FETCH DEBUG] Request intercepted:', {
+                      url: url,
+                      type: typeof input,
+                      input: input,
+                      stack: new Error().stack
+                    });
+                    
+                    // Block ALL .json and _next/data requests completely
+                    if (url && (url.includes('.json') || url.includes('_next/data') || url.includes('.html.json'))) {
+                      console.error('🚫 [IMMEDIATE BLOCK] FETCH BLOCKED WITH STACK TRACE:');
+                      console.error('URL:', url);
+                      console.error('Called from:', new Error().stack);
+                      console.error('Input object:', input);
+                      console.error('=================================');
+                      return Promise.reject(new Error('Data fetching completely disabled in Electron - URL: ' + url));
                     }
-                    return originalOpen.apply(this, arguments);
+                    return originalFetch.apply(this, arguments);
                   };
-                  return xhr;
-                };
+                }
                 
-                console.log('✅ [ROOT FIX] All data fetching mechanisms blocked globally');
-              }
+                // Override XMLHttpRequest immediately
+                if (typeof window !== 'undefined' && window.XMLHttpRequest) {
+                  const OriginalXHR = window.XMLHttpRequest;
+                  window.XMLHttpRequest = function() {
+                    const xhr = new OriginalXHR();
+                    const originalOpen = xhr.open;
+                    xhr.open = function(method, url) {
+                      // DETAILED DEBUG: Log ALL XHR requests
+                      console.log('🔍 [XHR DEBUG] Request intercepted:', {
+                        method: method,
+                        url: url,
+                        stack: new Error().stack
+                      });
+                      
+                      if (typeof url === 'string' && (url.includes('.json') || url.includes('_next/data') || url.includes('.html.json'))) {
+                        console.error('🚫 [IMMEDIATE BLOCK] XHR BLOCKED WITH STACK TRACE:');
+                        console.error('Method:', method, 'URL:', url);
+                        console.error('Called from:', new Error().stack);
+                        console.error('=================================');
+                        throw new Error('Data fetching completely disabled in Electron - XHR URL: ' + url);
+                      }
+                      return originalOpen.apply(this, arguments);
+                    };
+                    return xhr;
+                  };
+                }
+                
+                // Override any resource creation that could trigger JSON requests
+                if (typeof document !== 'undefined' && document.createElement) {
+                  const originalCreateElement = document.createElement;
+                  document.createElement = function(tagName) {
+                    const element = originalCreateElement.call(this, tagName);
+                    
+                    if (tagName.toLowerCase() === 'script' && element.setAttribute) {
+                      const originalSetAttribute = element.setAttribute;
+                      element.setAttribute = function(name, value) {
+                        if (name === 'src' && typeof value === 'string' && (value.includes('.json') || value.includes('_next/data'))) {
+                          console.log('🚫 [IMMEDIATE BLOCK] Script creation blocked:', value);
+                          return;
+                        }
+                        return originalSetAttribute.call(this, name, value);
+                      };
+                    }
+                    
+                    return element;
+                  };
+                }
+                
+                // COMPREHENSIVE DEBUG: Monitor ALL resource loading  
+                if (typeof window !== 'undefined') {
+                  // Monitor Performance API for resource loading
+                  const originalPerformanceObserver = window.PerformanceObserver;
+                  if (originalPerformanceObserver) {
+                    try {
+                      const observer = new originalPerformanceObserver((list) => {
+                        for (const entry of list.getEntries()) {
+                          if (entry.name && (entry.name.includes('.json') || entry.name.includes('_next/data'))) {
+                            console.error('🚫 [PERFORMANCE API] Detected JSON resource load attempt:');
+                            console.error('Resource:', entry.name);
+                            console.error('Type:', entry.entryType);
+                            console.error('Entry:', entry);
+                            console.error('=================================');
+                          }
+                        }
+                      });
+                      observer.observe({entryTypes: ['resource', 'navigation']});
+                      console.log('✅ [DEBUG] Performance monitoring enabled for resource detection');
+                    } catch (e) {
+                      console.log('⚠️ [DEBUG] Performance monitoring not available:', e);
+                    }
+                  }
+                  
+                  // Monitor window errors for failed requests
+                  window.addEventListener('error', function(e) {
+                    if (e.target && e.target.src && (e.target.src.includes('.json') || e.target.src.includes('_next/data'))) {
+                      console.error('🚫 [WINDOW ERROR] Failed resource detected:');
+                      console.error('Failed resource:', e.target.src);
+                      console.error('Target:', e.target);
+                      console.error('Error:', e);
+                      console.error('=================================');
+                    }
+                  });
+                  
+                  // ElectronAPI detection debugging
+                  console.log('🔍 [ELECTRON API DEBUG] Detection status:', {
+                    electronAPI: typeof window.electronAPI,
+                    process: typeof window.process,
+                    require: typeof window.require,
+                    userAgent: navigator.userAgent,
+                    isElectron: window.process && window.process.type === 'renderer'
+                  });
+                }
+                
+                console.log('✅ [IMMEDIATE BLOCK] All data fetching mechanisms blocked at script level');
+              })();
               
               // Wait for DOM to be ready
               document.addEventListener('DOMContentLoaded', function() {
