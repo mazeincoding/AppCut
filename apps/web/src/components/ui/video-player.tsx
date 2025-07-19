@@ -11,6 +11,7 @@ interface VideoPlayerProps {
   trimStart: number;
   trimEnd: number;
   clipDuration: number;
+  volume: number;
 }
 
 export function VideoPlayer({
@@ -21,9 +22,10 @@ export function VideoPlayer({
   trimStart,
   trimEnd,
   clipDuration,
+  volume
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const { isPlaying, currentTime, volume, speed, muted } = usePlaybackStore();
+  const { isPlaying, currentTime, speed, muted } = usePlaybackStore();
 
   // Calculate if we're within this clip's timeline range
   const clipEndTime = clipStartTime + (clipDuration - trimStart - trimEnd);

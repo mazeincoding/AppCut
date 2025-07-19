@@ -239,7 +239,7 @@ export function TimelineElement({
       const tileWidth = tileHeight * TILE_ASPECT_RATIO;
 
       return (
-        <div className="w-full h-full flex items-center gap-2">
+        <div className="w-full h-full flex items-center gap-2" ref={timelineElementRef}>
           <div className="flex-1 h-full relative overflow-hidden">
             {/* Background with tiled thumbnails */}
             <div
@@ -279,6 +279,7 @@ export function TimelineElement({
               {element.name}
             </span>
           )}
+          <MediaVolume track={track} timelineElementRef={timelineElementRef} />
         </div>
       );
     }

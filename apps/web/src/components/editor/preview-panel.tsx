@@ -295,6 +295,7 @@ export function PreviewPanel() {
               trimStart={element.trimStart}
               trimEnd={element.trimEnd}
               clipDuration={element.duration}
+              volume={elementData.track.volume}
             />
           </div>
         );
