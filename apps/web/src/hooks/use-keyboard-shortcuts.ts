@@ -34,6 +34,7 @@ export const useKeyboardShortcuts = (
     setSelectedElements,
     removeElementFromTrack,
     splitElement,
+    separateAudio,
     addElementToTrack,
     snappingEnabled,
     toggleSnapping,
@@ -259,6 +260,26 @@ export const useKeyboardShortcuts = (
           });
         }
       },
+    },
+    {
+      id: "separate-audio",
+      keys: ["Cmd+Shift+D", "Ctrl+Shift+D"],
+      description: "Separate audio from video",
+      category: "Selection",
+      requiresSelection: true,
+      action: () => {
+        if (selectedElements.length !== 1) {
+          toast.error("Select exactly one media element to separate audio");
+          return;
+        }
+        const { trackId, elementId } = selectedElements[0];
+        const track = tracks.find((t) => t.id === trackId);
+        if (!track || track.type !== "media") {
+          toast.error("Select a media element to separate audio");
+          return;
+        }
+        separateAudio(trackId, elementId);
+      }
     },
 
     // History
