@@ -130,15 +130,32 @@ function createMainWindow() {
   
   let startUrl;
   if (fs.existsSync(unpackedPath)) {
-    startUrl = 'app://index.html';
-    console.log('📦 Loading built Next.js app via app:// protocol');
+    // Use file:// protocol with relative paths (app:// protocol has issues)
+    startUrl = `file://${unpackedPath}`;
+    console.log('📦 Loading built Next.js app via file:// protocol with relative paths');
+    console.log('📁 File path:', unpackedPath);
   } else {
     startUrl = `file://${staticPath}`;
     console.log('📄 Loading static HTML fallback');
   }
   
   console.log('🚀 Loading URL:', startUrl);
-  mainWindow.loadURL(startUrl);
+  
+  // Remove session-level request interceptor for better performance
+  // mainWindow.webContents.session.webRequest.onBeforeRequest((details, callback) => {
+  //   console.log('🔍 Session request intercepted:', details.url);
+  //   callback({});
+  // });
+  
+  // Try to load the URL
+  mainWindow.loadURL(startUrl).then(() => {
+    console.log('✅ loadURL promise resolved');
+  }).catch(error => {
+    console.error('❌ loadURL promise rejected:', error);
+  });
+  
+  // Open DevTools for debugging
+  mainWindow.webContents.openDevTools();
   
   // Add more debugging events
   mainWindow.webContents.on('did-start-loading', () => {
@@ -147,10 +164,39 @@ function createMainWindow() {
   
   mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
     console.error('❌ Failed to load:', errorCode, errorDescription, validatedURL);
+    console.error('❌ Error details:', {
+      errorCode,
+      errorDescription,
+      validatedURL,
+      currentURL: mainWindow.webContents.getURL()
+    });
     // Show window anyway so user can see what happened
     if (!mainWindow.isVisible()) {
       mainWindow.show();
     }
+  });
+  
+
+  mainWindow.webContents.on('did-finish-load', () => {
+    console.log('✅ Page finished loading successfully');
+    // Inject a simple script to verify JavaScript is running
+    mainWindow.webContents.executeJavaScript(`
+      console.log('🚀 [ELECTRON INJECT] JavaScript execution test');
+      console.log('🚀 [ELECTRON INJECT] Document ready state:', document.readyState);
+      console.log('🚀 [ELECTRON INJECT] Body exists:', !!document.body);
+      console.log('🚀 [ELECTRON INJECT] Window location:', window.location.href);
+      console.log('🚀 [ELECTRON INJECT] Body innerHTML length:', document.body ? document.body.innerHTML.length : 'no body');
+      console.log('🚀 [ELECTRON INJECT] Has React root:', !!document.getElementById('__next'));
+      console.log('🚀 [ELECTRON INJECT] React root content:', document.getElementById('__next') ? document.getElementById('__next').innerHTML.slice(0, 200) : 'no react root');
+    `).then(() => {
+      console.log('✅ JavaScript injection successful');
+    }).catch(err => {
+      console.error('❌ JavaScript injection failed:', err);
+    });
+  });
+  
+  mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+    console.log(`[RENDERER] ${message}`);
   });
   
   // Inject debug scripts for investigation
@@ -392,11 +438,33 @@ function createMainWindow() {
   });
 }
 
+// Register protocol scheme before app is ready
+protocol.registerSchemesAsPrivileged([
+  { 
+    scheme: 'app', 
+    privileges: { 
+      secure: true, 
+      standard: true, 
+      supportsFetchAPI: true,
+      corsEnabled: true,
+      bypassCSP: true
+    } 
+  }
+]);
+
 app.whenReady().then(() => {
   // Register custom protocol to serve static files with comprehensive debugging
-  protocol.registerFileProtocol('app', (request, callback) => {
+  console.log('🔧 Setting up protocol...');
+  
+  // Test if protocol is already registered
+  console.log('🔍 Protocol schemes:', protocol.isProtocolRegistered('app'));
+  
+  const result = protocol.registerFileProtocol('app', (request, callback) => {
     console.log('\n🔍 === PROTOCOL DEBUG START ===');
     console.log('📥 Raw request URL:', request.url);
+    
+    // Test if protocol is even being called
+    console.log('🚀 PROTOCOL HANDLER CALLED!');
     
     // Fix for relative app:// URLs issue
     // When navigating to subpages, browser may append app:// URLs to current path
@@ -528,6 +596,9 @@ app.whenReady().then(() => {
       path: normalizedPath
     });
   });
+  
+  console.log('✅ Protocol registration result:', result);
+  console.log('🔍 Protocol now registered:', protocol.isProtocolRegistered('app'));
   
   createMainWindow();
 });

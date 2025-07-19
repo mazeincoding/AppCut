@@ -93,27 +93,27 @@ function patchJavaScriptFiles() {
       const originalContent = content;
       
       // Replace location.assign calls with a safe wrapper
-      // This regex finds location.assign(something) and wraps it
+      // This regex finds location.assign(arg) and replaces with wrapper(arg)
       content = content.replace(
         /location\.assign\s*\(/g,
-        '(function(url){try{location.href=url}catch(e){console.warn("location navigation failed:",e)}})'
+        '(function(url){try{location.href=url}catch(e){console.warn("location navigation failed:",e)}})('
       );
       
       // Also handle cases where assign might be accessed as a property
       content = content.replace(
         /location\["assign"\]\s*\(/g,
-        '(function(url){try{location.href=url}catch(e){console.warn("location navigation failed:",e)}})'
+        '(function(url){try{location.href=url}catch(e){console.warn("location navigation failed:",e)}})('
       );
       
-      // Handle location.replace similarly
+      // Handle location.replace similarly  
       content = content.replace(
         /location\.replace\s*\(/g,
-        '(function(url){try{location.href=url}catch(e){console.warn("location navigation failed:",e)}})'
+        '(function(url){try{location.href=url}catch(e){console.warn("location navigation failed:",e)}})('
       );
       
       content = content.replace(
         /location\["replace"\]\s*\(/g,
-        '(function(url){try{location.href=url}catch(e){console.warn("location navigation failed:",e)}})'
+        '(function(url){try{location.href=url}catch(e){console.warn("location navigation failed:",e)}})('
       );
       
       if (content !== originalContent) {

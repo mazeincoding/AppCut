@@ -22,12 +22,12 @@ function findFiles(dir, extensions = ['.html', '.js', '.css']) {
 
 // Fix paths in HTML content
 function fixHtmlPaths(content) {
-  // First fix HTML attributes
+  // First fix HTML attributes - use relative paths for file:// protocol
   content = content
-    // Fix href attributes
-    .replace(/href="\/([^"]+)"/g, 'href="app://$1"')
-    // Fix src attributes
-    .replace(/src="\/([^"]+)"/g, 'src="app://$1"')
+    // Fix href attributes - use relative paths
+    .replace(/href="\/([^"]+)"/g, 'href="$1"')
+    // Fix src attributes - use relative paths
+    .replace(/src="\/([^"]+)"/g, 'src="$1"')
     // Fix content attributes for meta tags
     .replace(/content="\/([^"]+)"/g, 'content="app://$1"')
     // Don't touch external URLs
@@ -48,51 +48,51 @@ function fixHtmlPaths(content) {
       if (path.startsWith('http://') || path.startsWith('https://')) return match;
       return '"href":"app://' + path + '"';
     })
-    // Fix the specific :HL pattern for CSS hot-loading - be more specific
-    .replace(/:HL\[\\"\/_next\/static\/css\/([^"]+\.css)\\",\\"style\\"\]/g, ':HL[\\"app://_next/static/css/$1\\",\\"style\\"]')
-    .replace(/:HL\[\\"\/_next\/static\/([^"]+)\\",\\"style\\"\]/g, ':HL[\\"app://_next/static/$1\\",\\"style\\"]')
-    .replace(/:HL\["\/_next\/static\/css\/([^"]+\.css)","style"\]/g, ':HL["app://_next/static/css/$1","style"]')
-    .replace(/:HL\["\/_next\/static\/([^"]+)","style"\]/g, ':HL["app://_next/static/$1","style"]')
-    // Fix paths in inline scripts that reference _next
-    .replace(/["']\/_next\/static\/css\/([^"']+\.css)["']/g, '"app://_next/static/css/$1"')
-    .replace(/["']\/_next\/static\/chunks\/([^"']+\.js)["']/g, '"app://_next/static/chunks/$1"')
-    .replace(/["']\/_next\/static\/media\/([^"']+)["']/g, '"app://_next/static/media/$1"')
+    // Fix the specific :HL pattern for CSS hot-loading - use relative paths
+    .replace(/:HL\[\\"\/_next\/static\/css\/([^"]+\.css)\\",\\"style\\"\]/g, ':HL[\\"_next/static/css/$1\\",\\"style\\"]')
+    .replace(/:HL\[\\"\/_next\/static\/([^"]+)\\",\\"style\\"\]/g, ':HL[\\"_next/static/$1\\",\\"style\\"]')
+    .replace(/:HL\["\/_next\/static\/css\/([^"]+\.css)","style"\]/g, ':HL["_next/static/css/$1","style"]')
+    .replace(/:HL\["\/_next\/static\/([^"]+)","style"\]/g, ':HL["_next/static/$1","style"]')
+    // Fix paths in inline scripts that reference _next - use relative paths
+    .replace(/["']\/_next\/static\/css\/([^"']+\.css)["']/g, '"_next/static/css/$1"')
+    .replace(/["']\/_next\/static\/chunks\/([^"']+\.js)["']/g, '"_next/static/chunks/$1"')
+    .replace(/["']\/_next\/static\/media\/([^"']+)["']/g, '"_next/static/media/$1"')
     // Fix arrays of CSS files in inline scripts
-    .replace(/\["\/(_next\/static\/css\/[^"]+\.css)"/g, '["app://$1"')
+    .replace(/\["\/(_next\/static\/css\/[^"]+\.css)"/g, '["$1"')
     // Fix chunk references in inline scripts - be more specific
-    .replace(/"static\/chunks\/([^"]+\.js)"/g, '"app://_next/static/chunks/$1"')
+    .replace(/"static\/chunks\/([^"]+\.js)"/g, '"_next/static/chunks/$1"')
     // Fix CSS file references that might be relative
-    .replace(/,\s*"(static\/css\/[^"]+\.css)"/g, ',"app://_next/$1"');
+    .replace(/,\s*"(static\/css\/[^"]+\.css)"/g, ',"_next/$1"');
 
   return content;
 }
 
 // Fix paths in JavaScript content
 function fixJsPaths(content) {
-  // Fix webpack public path - this is crucial for dynamic imports
+  // Fix webpack public path - use relative paths for file:// protocol
   content = content
     // Fix webpack public path variable
-    .replace(/r\.p\s*=\s*["']\/(_next\/)?["']/g, 'r.p="app://_next/"')
+    .replace(/r\.p\s*=\s*["']\/(_next\/)?["']/g, 'r.p="./_next/"')
     // Fix webpack public path in different formats
-    .replace(/publicPath\s*:\s*["']\/(_next\/)?["']/g, 'publicPath:"app://_next/"')
+    .replace(/publicPath\s*:\s*["']\/(_next\/)?["']/g, 'publicPath:"./_next/"')
     // Fix __webpack_public_path__ assignments
-    .replace(/__webpack_public_path__\s*=\s*["']\/(_next\/)?["']/g, '__webpack_public_path__="app://_next/"');
+    .replace(/__webpack_public_path__\s*=\s*["']\/(_next\/)?["']/g, '__webpack_public_path__="./_next/"');
 
-  // Fix CSS imports in JavaScript
+  // Fix CSS imports in JavaScript - use relative paths for file:// protocol
   content = content
     // Fix CSS imports that use relative paths
-    .replace(/["']\.?\/_next\/static\/css\/([^"']+\.css)["']/g, '"app://_next/static/css/$1"')
+    .replace(/["']\.?\/_next\/static\/css\/([^"']+\.css)["']/g, '"_next/static/css/$1"')
     // Fix chunk paths
-    .replace(/["']\.?\/_next\/static\/chunks\/([^"']+)["']/g, '"app://_next/static/chunks/$1"')
+    .replace(/["']\.?\/_next\/static\/chunks\/([^"']+)["']/g, '"_next/static/chunks/$1"')
     // Fix media paths
-    .replace(/["']\.?\/_next\/static\/media\/([^"']+)["']/g, '"app://_next/static/media/$1"')
+    .replace(/["']\.?\/_next\/static\/media\/([^"']+)["']/g, '"_next/static/media/$1"')
     // Fix font files specifically (woff, woff2, ttf, etc.) without path
-    .replace(/["']([a-f0-9]+-[a-z0-9]+\.(?:woff2?|ttf|otf|eot))["']/g, '"app://_next/static/media/$1"')
+    .replace(/["']([a-f0-9]+-[a-z0-9]+\.(?:woff2?|ttf|otf|eot))["']/g, '"_next/static/media/$1"')
     // Fix buildManifest paths
     .replace(/["']\.?\/_next\/static\/([^"']+)["']/g, function(match, p1) {
       // Don't double-fix already fixed paths
-      if (match.includes('app://')) return match;
-      return match.replace(/["']\.?\/_next/, '"app://_next');
+      if (match.includes('_next/static')) return match;
+      return match.replace(/["']\.?\/_next/, '"_next');
     });
 
   // Fix dynamic imports and require statements

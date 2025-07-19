@@ -30,6 +30,10 @@ const nextConfig: NextConfig = {
     generateBuildId: async () => 'electron-static-build',
     skipTrailingSlashRedirect: true,
     skipMiddlewareUrlNormalize: true,
+    // Disable client-side routing for static export
+    experimental: {
+      scrollRestoration: false,
+    },
   }),
 };
 

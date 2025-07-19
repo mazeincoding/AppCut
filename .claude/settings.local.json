@@ -43,7 +43,13 @@
       "Bash(dir:*)",
       "Bash(mkdir:*)",
       "Bash(cp:*)",
-      "Bash(NEXT_PUBLIC_ELECTRON=true npm run build)"
+      "Bash(NEXT_PUBLIC_ELECTRON=true npm run build)",
+      "Bash(npx next:*)",
+      "Bash(timeout 8 npx electron electron/main-simple.js)",
+      "Bash(timeout 5 npx electron electron/main-simple.js)",
+      "Bash(cat:*)",
+      "Bash(bun install:*)",
+      "Bash(cross-env:*)"
     ],
     "deny": []
   }
