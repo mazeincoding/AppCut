@@ -45,12 +45,21 @@ try {
   const handleNavigation = (url) => {
     console.log('🔄 [ELECTRON] Navigation requested to:', url);
     
-    // Handle relative paths
-    if (!url.startsWith('http') && !url.startsWith('file://')) {
-      const base = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
-      url = base + url;
+    // Handle relative paths for static export
+    if (!url.startsWith('http') && !url.startsWith('file://') && !url.startsWith('app://')) {
+      // For paths like '/projects', we need to append it correctly
+      if (url.startsWith('/')) {
+        // Get the base directory (remove index.html)
+        const base = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+        const rootBase = base.substring(0, base.lastIndexOf('/out') + 4);
+        url = rootBase + url + '/index.html';
+      } else {
+        const base = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+        url = base + '/' + url;
+      }
     }
     
+    console.log('🔄 [ELECTRON] Resolved navigation URL:', url);
     window.location.href = url;
   };
   

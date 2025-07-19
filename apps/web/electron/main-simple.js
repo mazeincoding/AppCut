@@ -115,8 +115,8 @@ function createMainWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       enableRemoteModule: false,
-      allowRunningInsecureContent: true,
-      webSecurity: false, // Allow local file access
+      allowRunningInsecureContent: false, // Fixed: Disable insecure content
+      webSecurity: true, // Fixed: Re-enable web security
       preload: path.join(__dirname, 'preload-simplified.js'), // Using simplified preload for better Next.js compatibility
       partition: 'persist:opencut', // Enable localStorage with persistent session
       nodeIntegrationInWorker: false,
@@ -321,7 +321,16 @@ function createMainWindow() {
     callback({
       responseHeaders: {
         ...details.responseHeaders,
-        'Content-Security-Policy': ['default-src \'self\' \'unsafe-inline\' \'unsafe-eval\' data: file: blob: https: app:; img-src \'self\' data: file: blob: https: app:; media-src \'self\' data: file: blob: app:; style-src \'self\' \'unsafe-inline\' data: file: https: app:; script-src \'self\' \'unsafe-inline\' \'unsafe-eval\' https: app:; connect-src \'self\' https: ws: wss: http: data: blob: app:; font-src \'self\' data: file: https: app:; manifest-src \'self\' app:;']
+        'Content-Security-Policy': [
+          "default-src 'self' app: file:; " +
+          "script-src 'self' 'unsafe-inline' app: file:; " + // Remove unsafe-eval after testing
+          "style-src 'self' 'unsafe-inline' app: file:; " +
+          "img-src 'self' data: blob: app: file:; " +
+          "font-src 'self' data: app: file:; " +
+          "media-src 'self' blob: app: file:; " +
+          "connect-src 'self' data: blob: app: file: https://api.github.com; " +
+          "manifest-src 'self' app: file:;"
+        ]
       }
     });
   });
