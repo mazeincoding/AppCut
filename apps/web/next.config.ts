@@ -9,7 +9,8 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   productionBrowserSourceMaps: true,
   output: isElectron ? "export" : "standalone",
-  assetPrefix: isElectron ? "" : undefined,
+  assetPrefix: isElectron ? undefined : undefined,
+  basePath: isElectron ? "" : undefined,
   trailingSlash: isElectron,
   distDir: isElectron ? "out" : ".next",
   images: {

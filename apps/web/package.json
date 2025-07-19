@@ -8,7 +8,7 @@
     "dev": "next dev",
     "build": "next build",
     "build:electron": "cross-env NEXT_PUBLIC_ELECTRON=true next build",
-    "export:electron": "cross-env NEXT_PUBLIC_ELECTRON=true next build && node scripts/fix-electron-static-paths.js",
+    "export:electron": "cross-env NEXT_PUBLIC_ELECTRON=true next build && node scripts/fix-electron-paths-robust.js",
     "electron:dev": "node scripts/dev-electron.js",
     "electron:build": "bun run export:electron",
     "electron:pack": "bun run electron:build && bunx electron-builder --dir",

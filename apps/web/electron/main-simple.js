@@ -149,19 +149,19 @@ function createMainWindow() {
     callback({});
   });
 
-  // Try to load built Next.js app - use custom app:// protocol
+  // Use app:// protocol for consistent asset loading
   const unpackedPath = path.join(__dirname, '../out/index.html');
   const staticPath = path.join(__dirname, '../electron-app.html');
   
   let startUrl;
   if (fs.existsSync(unpackedPath)) {
-    // Use file:// protocol with relative paths (app:// protocol has issues)
-    startUrl = `file://${unpackedPath}`;
-    console.log('📦 Loading built Next.js app via file:// protocol with relative paths');
-    console.log('📁 File path:', unpackedPath);
+    // Use app:// protocol for proper relative path handling
+    startUrl = 'app://./index.html';
+    console.log('📦 Loading built Next.js app via app:// protocol');
+    console.log('📁 Out directory:', path.join(__dirname, '../out'));
   } else {
-    startUrl = `file://${staticPath}`;
-    console.log('📄 Loading static HTML fallback');
+    startUrl = 'app://./electron-app.html';
+    console.log('📄 Loading static HTML fallback via app:// protocol');
   }
   
   console.log('🚀 Loading URL:', startUrl);
@@ -578,141 +578,64 @@ app.whenReady().then(() => {
   console.log('🔍 Protocol schemes:', protocol.isProtocolRegistered('app'));
   
   const result = protocol.registerFileProtocol('app', (request, callback) => {
-    console.log('\n🔍 === PROTOCOL DEBUG START ===');
-    console.log('📥 Raw request URL:', request.url);
+    console.log('🔍 [PROTOCOL] Request:', request.url);
     
-    // Test if protocol is even being called
-    console.log('🚀 PROTOCOL HANDLER CALLED!');
+    // Extract the path from app:// URL
+    let urlPath = request.url.replace('app://', '');
     
-    // Fix for relative app:// URLs issue
-    // When navigating to subpages, browser may append app:// URLs to current path
-    // Example: app://projects/index.html/_next/app://_next/static/...
-    // We need to extract the actual app:// URL from these malformed paths
-    let url = request.url;
-    
-    // Check if this is a malformed URL with double app:// protocol
-    if (url && url.includes('app://') && !url.startsWith('app://')) {
-      console.log('🔧 Detected malformed URL with embedded app://');
-      // Extract the actual app:// URL
-      const appIndex = url.lastIndexOf('app://');
-      url = url.substring(appIndex);
-      console.log('🔧 Extracted URL:', url);
+    // Handle special cases for relative path resolution
+    if (urlPath.startsWith('./')) {
+      urlPath = urlPath.substring(2);
     }
-    
-    // Fix specific pattern: app://_next/app://_next/...
-    if (url && url.includes('app://_next/app://')) {
-      console.log('🔧 Detected double _next pattern:', url);
-      url = url.replace(/app:\/\/_next\/app:\/\//, 'app://');
-      console.log('🔧 Fixed _next pattern:', url);
-    }
-    
-    // Fix any remaining double app:// patterns
-    if (url && url.match(/app:\/\/.*app:\/\//)) {
-      console.log('🔧 Detected remaining double protocol:', url);
-      const matches = url.match(/app:\/\/(.*)app:\/\/(.+)/);
-      if (matches && matches[2]) {
-        url = 'app://' + matches[2];
-        console.log('🔧 Fixed to:', url);
-      }
-    }
-    
-    // Now process normally
-    url = url.substr(6); // Remove 'app://' prefix
-    console.log('🔧 URL after prefix removal:', url);
     
     // Handle root requests
-    if (url === '' || url === '/') {
-      url = 'index.html';
-      console.log('🏠 Root request, redirecting to:', url);
+    if (urlPath === '' || urlPath === '/' || urlPath === '.') {
+      urlPath = 'index.html';
     }
     
-    // Decode URL to handle special characters
-    const decodedUrl = decodeURIComponent(url);
-    console.log('🔓 URL after decoding:', decodedUrl);
-    url = decodedUrl;
+    // Clean up the path
+    urlPath = urlPath.replace(/^\/+/, ''); // Remove leading slashes
+    urlPath = decodeURIComponent(urlPath); // Decode URL encoding
     
-    // Remove leading slash if present
-    if (url.startsWith('/')) {
-      url = url.substr(1);
-      console.log('✂️ URL after slash removal:', url);
-    }
-    
-    const filePath = path.join(__dirname, '../out', url);
-    console.log('📁 Constructed file path:', filePath);
+    // Construct file path
+    const filePath = path.join(__dirname, '../out', urlPath);
+    console.log('📁 [PROTOCOL] Serving:', urlPath, '→', filePath);
     
     // Security check - ensure the path is within the out directory
     const normalizedPath = path.normalize(filePath);
     const outDir = path.normalize(path.join(__dirname, '../out'));
-    console.log('🔒 Normalized path:', normalizedPath);
-    console.log('🔒 Out directory:', outDir);
     
     if (!normalizedPath.startsWith(outDir)) {
-      console.error('🚫 Security check failed!');
-      console.error('   Path:', normalizedPath);
-      console.error('   Expected prefix:', outDir);
-      callback({ error: -6 }); // FILE_NOT_FOUND
+      console.error('🚫 [PROTOCOL] Security check failed:', normalizedPath);
+      callback({ error: -6 });
       return;
     }
     
-    // Check if file exists or if it's a directory that should serve index.html
+    // Check if file exists
     if (!fs.existsSync(normalizedPath)) {
-      console.error('❌ File not found!');
-      console.error('   Requested URL:', request.url);
-      console.error('   Final path:', normalizedPath);
-      
-      // List directory contents for debugging
-      const dirPath = path.dirname(normalizedPath);
-      if (fs.existsSync(dirPath)) {
-        try {
-          const stats = fs.statSync(dirPath);
-          if (stats.isDirectory()) {
-            const files = fs.readdirSync(dirPath);
-            console.error('📂 Directory contents:', files.slice(0, 10)); // Limit output
-          } else {
-            console.error('📄 Path is not a directory:', dirPath);
-          }
-        } catch (error) {
-          console.error('❌ Error checking directory:', error.message);
-        }
-      }
-      
-      callback({ error: -6 }); // FILE_NOT_FOUND
+      console.error('❌ [PROTOCOL] File not found:', normalizedPath);
+      callback({ error: -6 });
       return;
     }
 
-    // Check if the path is a directory and serve index.html from it
+    // Check if it's a directory and serve index.html
     const stats = fs.statSync(normalizedPath);
     if (stats.isDirectory()) {
-      console.log('📁 Directory detected, looking for index.html');
       const indexPath = path.join(normalizedPath, 'index.html');
       if (fs.existsSync(indexPath)) {
-        console.log('✅ Found index.html in directory, serving:', indexPath);
+        console.log('✅ [PROTOCOL] Serving index.html from directory');
         callback({ path: indexPath });
-        console.log('🔍 === PROTOCOL DEBUG END ===\n');
         return;
       } else {
-        console.error('❌ No index.html found in directory:', normalizedPath);
-        callback({ error: -6 }); // FILE_NOT_FOUND
+        console.error('❌ [PROTOCOL] No index.html in directory');
+        callback({ error: -6 });
         return;
       }
     }
     
-    // Get file stats for debugging (reduced logging)
-    const ext = path.extname(normalizedPath).toLowerCase();
-    
-    // Only log essential info for non-image files
-    if (!['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp'].includes(ext)) {
-      console.log('✅ Serving file:', url, '(', stats.size, 'bytes )');
-    } else {
-      console.log('🖼️ Serving image:', url, '(', stats.size, 'bytes )');
-    }
-    
-    console.log('🔍 === PROTOCOL DEBUG END ===\n');
-    
-    // Use simple file path response - let Electron handle MIME types
-    callback({ 
-      path: normalizedPath
-    });
+    // Serve the file
+    console.log('✅ [PROTOCOL] Serving file successfully');
+    callback({ path: normalizedPath });
   });
   
   console.log('✅ Protocol registration result:', result);

@@ -35,9 +35,7 @@ bun install
 # 3. Build for Electron
 bun run electron:build
 
-# 4. Apply fixes for static export
-node scripts/fix-electron-static-paths.js
-node scripts/fix-electron-next-data.js
+# 4. No post-processing needed - Next.js handles relative paths automatically
 
 # 5. Test with Electron
 bunx electron electron/main-simple.js
@@ -67,4 +65,11 @@ Try cleaning the build directories:
 ```
 
 ### Navigation errors in Electron
-The build process includes scripts to fix static export issues. These run automatically when using `test-electron.ps1`.
+The build process now uses native Next.js relative paths instead of post-processing scripts.
+
+## Recent Improvements
+
+- **Removed post-processing scripts**: No longer need `fix-electron-static-paths.js` or similar fragile workarounds
+- **Native relative paths**: Next.js now generates proper relative paths using `assetPrefix: "./"` 
+- **Robust protocol handler**: Simplified app:// protocol handler for consistent asset loading
+- **Cleaner build process**: Single command builds and exports without manual path fixes
