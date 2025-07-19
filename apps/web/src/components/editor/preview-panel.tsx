@@ -16,7 +16,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Play, Pause, Expand } from "lucide-react";
+import { Play, Pause, Expand, X as Close, Minimize2 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { formatTimeCode } from "@/lib/time";
@@ -41,6 +41,7 @@ export function PreviewPanel() {
     width: 0,
     height: 0,
   });
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const { activeProject } = useProjectStore();
 
   // Calculate optimal preview size that fits in container while maintaining aspect ratio
@@ -337,6 +338,49 @@ export function PreviewPanel() {
     return null;
   };
 
+  // Fullscreen handler
+  const handleExpand = () => {
+    if (previewRef.current) {
+      if (previewRef.current.requestFullscreen) {
+        previewRef.current.requestFullscreen();
+      } else if ((previewRef.current as any).webkitRequestFullscreen) {
+        (previewRef.current as any).webkitRequestFullscreen();
+      } else if ((previewRef.current as any).msRequestFullscreen) {
+        (previewRef.current as any).msRequestFullscreen();
+      }
+    }
+  };
+
+  // Exit fullscreen handler
+  const handleExitFullscreen = () => {
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    } else if ((document as any).webkitExitFullscreen) {
+      (document as any).webkitExitFullscreen();
+    } else if ((document as any).msExitFullscreen) {
+      (document as any).msExitFullscreen();
+    }
+  };
+
+  // Listen for fullscreen change events
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const fullscreenElement =
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).msFullscreenElement;
+      setIsFullscreen(!!fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+    document.addEventListener("msfullscreenchange", handleFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
+      document.removeEventListener("msfullscreenchange", handleFullscreenChange);
+    };
+  }, []);
+
   return (
     <div className="h-full w-full flex flex-col min-h-0 min-w-0 bg-panel rounded-sm">
       <div
@@ -357,6 +401,16 @@ export function PreviewPanel() {
                   : activeProject?.backgroundColor || "#000000",
             }}
           >
+            {isFullscreen && (
+              <button
+                onClick={handleExitFullscreen}
+                className="absolute top-2 right-2 z-[9999] bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+                title="Exit fullscreen"
+                style={{ pointerEvents: "auto" }}
+              >
+                <Minimize2 className="w-5 h-5" />
+              </button>
+            )}
             {renderBlurBackground()}
             {activeElements.length === 0 ? (
               <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
@@ -380,13 +434,13 @@ export function PreviewPanel() {
 
         <div className="flex-1"></div>
 
-        <PreviewToolbar hasAnyElements={hasAnyElements} />
+        <PreviewToolbar hasAnyElements={hasAnyElements} onExpand={handleExpand} />
       </div>
     </div>
   );
 }
 
-function PreviewToolbar({ hasAnyElements }: { hasAnyElements: boolean }) {
+function PreviewToolbar({ hasAnyElements, onExpand }: { hasAnyElements: boolean; onExpand: () => void }) {
   const { isPlaying, toggle, currentTime } = usePlaybackStore();
   const { setCanvasSize, setCanvasSizeToOriginal } = useEditorStore();
   const { getTotalDuration } = useTimelineStore();
@@ -488,6 +542,8 @@ function PreviewToolbar({ hasAnyElements }: { hasAnyElements: boolean }) {
           variant="text"
           size="icon"
           className="!size-4 text-muted-foreground"
+          onClick={onExpand}
+          title="Expand to fullscreen"
         >
           <Expand className="!size-4" />
         </Button>
