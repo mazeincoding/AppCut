@@ -41,23 +41,30 @@ console.log('✅ [ELECTRON] IPC bridge established');
 
 // PHASE 3: 拦截 <a> / Link 点击，改写为 app://路径
 try {
-  // 路径补全函数
+  // 路径补全函数 - 修复导航到正确的 HTML 文件
   const fixElectronPath = (url) => {
-    if (!url || url.startsWith('http') || url.startsWith('app://') || url.startsWith('file://')) {
+    if (!url || url.startsWith('http') || url.startsWith('app://')) {
       return url;
     }
     
-    // 对于相对路径，转换为正确的 HTML 文件路径
+    // 获取当前目录的基础路径
+    const currentDir = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+    
+    // 处理绝对路径 /projects -> projects.html
     if (url.startsWith('/')) {
-      // 去掉开头的 /，然后添加正确的文件扩展名
       const cleanPath = url.substring(1);
-      return cleanPath ? `file://${window.location.href.substring(0, window.location.href.lastIndexOf('/'))}/${cleanPath}.html` : window.location.href;
+      return cleanPath ? `${currentDir}/${cleanPath}.html` : window.location.href;
     }
     
-    // 处理相对路径如 './projects'
+    // 处理相对路径 ./projects -> projects.html
     if (url.startsWith('./')) {
       const cleanPath = url.substring(2);
-      return cleanPath ? `file://${window.location.href.substring(0, window.location.href.lastIndexOf('/'))}/${cleanPath}.html` : window.location.href;
+      return cleanPath ? `${currentDir}/${cleanPath}.html` : window.location.href;
+    }
+    
+    // 处理直接路径 projects -> projects.html
+    if (!url.includes('.') && !url.includes('/')) {
+      return `${currentDir}/${url}.html`;
     }
     
     return url;
@@ -87,65 +94,83 @@ try {
     return originalReplace.call(this, fixedUrl);
   };
   
-  // 重载 history.pushState/replaceState，保持单页导航
-  const originalPushState = history.pushState;
-  const originalReplaceState = history.replaceState;
-  
-  history.pushState = function(state, title, url) {
-    if (url) {
-      const fixedUrl = fixElectronPath(url);
-      console.log('🔄 [ELECTRON] history.pushState:', url, '→', fixedUrl);
-      if (fixedUrl !== url && fixedUrl.startsWith('app://')) {
-        // 如果需要跳转到不同的 HTML 文件，直接导航
-        window.location.href = fixedUrl;
-        return;
-      }
-    }
-    return originalPushState.call(this, state, title, url);
-  };
-  
-  history.replaceState = function(state, title, url) {
-    if (url) {
-      const fixedUrl = fixElectronPath(url);
-      console.log('🔄 [ELECTRON] history.replaceState:', url, '→', fixedUrl);
-      if (fixedUrl !== url && fixedUrl.startsWith('app://')) {
-        // 如果需要跳转到不同的 HTML 文件，直接导航
-        window.location.href = fixedUrl;
-        return;
-      }
-    }
-    return originalReplaceState.call(this, state, title, url);
-  };
+  // 注意：history API 重载已移至 NAV-FIX 脚本中，避免冲突
+  console.log('🔄 [ELECTRON] History API handling delegated to NAV-FIX script');
   
   console.log('✅ [ELECTRON] Navigation and history patches applied');
 } catch (e) {
   console.warn('⚠️ [ELECTRON] Could not apply navigation patches:', e);
 }
 
-// PHASE 4: 拦截链接点击事件
+// PHASE 4: 加载导航修复脚本
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('🔗 [ELECTRON] Setting up link interception...');
+  console.log('🔗 [ELECTRON] Loading navigation fix script...');
   
+  // 加载导航修复脚本
+  const script = document.createElement('script');
+  script.src = './electron/navigation-fix.js';
+  script.onload = () => {
+    console.log('✅ [ELECTRON] Navigation fix script loaded');
+  };
+  script.onerror = () => {
+    console.warn('⚠️ [ELECTRON] Failed to load navigation fix script');
+    // 如果加载失败，使用内联修复
+    setupInlineNavigationFix();
+  };
+  document.head.appendChild(script);
+});
+
+// 内联导航修复作为备用方案
+function setupInlineNavigationFix() {
+  console.log('🔗 [ELECTRON] Setting up inline navigation fix...');
+  
+  const currentDir = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+  
+  function fixPath(url) {
+    if (!url || url.startsWith('http') || (url.startsWith('file://') && url.includes('.html'))) {
+      return url;
+    }
+    
+    if (url.startsWith('./')) {
+      const cleanPath = url.substring(2);
+      return `${currentDir}/${cleanPath}.html`;
+    }
+    
+    if (url.startsWith('/')) {
+      const cleanPath = url.substring(1);
+      return `${currentDir}/${cleanPath}.html`;
+    }
+    
+    if (!url.includes('.') && !url.includes('/')) {
+      return `${currentDir}/${url}.html`;
+    }
+    
+    return url;
+  }
+  
+  // 拦截点击事件
   document.addEventListener('click', (event) => {
     const target = event.target.closest('a');
     if (!target) return;
     
     const href = target.getAttribute('href');
     if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) {
-      return; // 忽略锚点和特殊链接
+      return;
     }
     
-    // 拦截内部链接
-    if (href.startsWith('/') || (!href.startsWith('http') && !href.startsWith('app://') && !href.startsWith('file://'))) {
+    if (href.startsWith('/') || href.startsWith('./') || (!href.includes('://') && !href.includes('.'))) {
       event.preventDefault();
-      const fixedUrl = fixElectronPath(href);
+      const fixedUrl = fixPath(href);
       console.log('🔗 [ELECTRON] Link click intercepted:', href, '→', fixedUrl);
       window.location.href = fixedUrl;
     }
   }, true);
   
-  console.log('✅ [ELECTRON] Link interception ready');
-});
+  // 暴露修复函数
+  window.fixElectronPath = fixPath;
+  
+  console.log('✅ [ELECTRON] Inline navigation fix ready');
+}
 
 console.log('✅ [ELECTRON] Simplified preload script ready');
 console.log('📍 [ELECTRON] Current location:', window.location.href);
