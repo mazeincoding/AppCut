@@ -117,7 +117,7 @@ function createMainWindow() {
       enableRemoteModule: false,
       allowRunningInsecureContent: true,
       webSecurity: false, // Allow local file access
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, 'preload-simplified.js'), // Using simplified preload for better Next.js compatibility
       partition: 'persist:opencut', // Enable localStorage with persistent session
       nodeIntegrationInWorker: false,
       nodeIntegrationInSubFrames: false

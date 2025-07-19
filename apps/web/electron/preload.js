@@ -148,10 +148,9 @@
         url.includes('/yqnIL2rtY92z5V3Tf5maI/') ||          // Latest build ID data requests
         url.includes('/yq8G3Q4hvCgG6JpdmHyZD/') ||          // Current build ID data requests
         
-        // === ROOT CAUSE FIX: Block ALL .json requests that could be Next.js data ===
-        url.includes('.json') ||                               // Block ALL .json requests
-        url.includes('_next/data') ||                          // Block _next/data paths
+        // === SELECTIVE BLOCKING: Only block problematic patterns ===
         url.includes('.html.json') ||                          // Block .html.json files
+        (url.includes('_next/data') && url.includes('C:/')) || // Block Windows path data requests
         
         // === PERSPECTIVE: PAGE-SPECIFIC PATTERNS ===
         url.includes('/projects.json') ||                   // Direct page data requests
@@ -259,10 +258,9 @@
         url.includes('/yqnIL2rtY92z5V3Tf5maI/') ||          // Latest build ID data requests
         url.includes('/yq8G3Q4hvCgG6JpdmHyZD/') ||          // Current build ID data requests
         
-        // === ROOT CAUSE FIX: Block ALL .json requests that could be Next.js data ===
-        url.includes('.json') ||                               // Block ALL .json requests
-        url.includes('_next/data') ||                          // Block _next/data paths
+        // === SELECTIVE BLOCKING: Only block problematic patterns ===
         url.includes('.html.json') ||                          // Block .html.json files
+        (url.includes('_next/data') && url.includes('C:/')) || // Block Windows path data requests
         
         // === PERSPECTIVE: PAGE-SPECIFIC PATTERNS ===
         url.includes('/projects.json') ||                   // Direct page data requests
@@ -321,31 +319,10 @@
     console.warn('⚠️ [ELECTRON] Could not apply fetch interception:', e);
   }
   
-  // PHASE 4: Block Next.js router data fetching completely
+  // PHASE 4: Allow Next.js to work properly but with static export awareness
   try {
-    // Override the Next.js router to prevent any client-side data fetching
-    Object.defineProperty(window, '__NEXT_DATA__', {
-      value: {
-        props: { pageProps: {} },
-        page: '/',
-        query: {},
-        buildId: 'electron-static',
-        runtimeConfig: {},
-        isFallback: false,
-        dynamicIds: [],
-        err: null,
-        gsp: false,  // Disable getStaticProps client-side
-        gssp: false, // Disable getServerSideProps client-side
-        customServer: false,
-        gip: false,  // Disable getInitialProps client-side
-        appGip: false,
-        head: []
-      },
-      writable: false,
-      configurable: false
-    });
-    
-    console.log('✅ [ELECTRON] Next.js data fetching completely disabled');
+    // Don't override __NEXT_DATA__ - let Next.js manage it for proper hydration
+    console.log('✅ [ELECTRON] Next.js allowed to manage its own data for proper hydration');
   } catch (e) {
     console.warn('⚠️ [ELECTRON] Could not override __NEXT_DATA__:', e);
   }
