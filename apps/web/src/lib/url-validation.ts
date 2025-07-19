@@ -145,36 +145,74 @@ export function useUrlValidation(url: string, options?: UrlValidationOptions) {
 }
 
 /**
- * Patches window.location assignment to validate URLs
+ * Patches window.location assignment to validate URLs (Electron-safe)
  */
 export function patchLocationAssignment() {
   if (typeof window === 'undefined') return;
 
-  const originalAssign = window.location.assign.bind(window.location);
-  const originalReplace = window.location.replace.bind(window.location);
-  
-  // Patch window.location.assign
-  window.location.assign = function(url: string) {
-    const sanitized = sanitizeAppUrl(url);
-    return originalAssign(sanitized);
-  };
-
-  // Patch window.location.replace
-  window.location.replace = function(url: string) {
-    const sanitized = sanitizeAppUrl(url);
-    return originalReplace(sanitized);
-  };
-
-  // Patch href setter
-  let hrefValue = window.location.href;
-  Object.defineProperty(window.location, 'href', {
-    get() { return hrefValue; },
-    set(url: string) {
-      const sanitized = sanitizeAppUrl(url);
-      hrefValue = sanitized;
-      originalAssign(sanitized);
+  try {
+    const originalAssign = window.location.assign.bind(window.location);
+    const originalReplace = window.location.replace.bind(window.location);
+    
+    // Try to patch window.location.assign (may fail in Electron)
+    try {
+      Object.defineProperty(window.location, 'assign', {
+        value: function(url: string) {
+          const sanitized = sanitizeAppUrl(url);
+          return originalAssign(sanitized);
+        },
+        writable: false,
+        configurable: false
+      });
+    } catch (e) {
+      console.warn('[URL Validation] Cannot patch location.assign in Electron, using fallback');
+      // Fallback: Create a global navigation helper
+      (window as any).__urlValidationNavigate = function(url: string) {
+        const sanitized = sanitizeAppUrl(url);
+        try {
+          window.location.href = sanitized;
+        } catch (navError) {
+          console.warn('[URL Validation] Navigation fallback failed:', navError);
+        }
+      };
     }
-  });
+
+    // Try to patch window.location.replace (may fail in Electron)
+    try {
+      Object.defineProperty(window.location, 'replace', {
+        value: function(url: string) {
+          const sanitized = sanitizeAppUrl(url);
+          return originalReplace(sanitized);
+        },
+        writable: false,
+        configurable: false
+      });
+    } catch (e) {
+      console.warn('[URL Validation] Cannot patch location.replace in Electron');
+    }
+
+    // Try to patch href setter (may fail in Electron)
+    try {
+      let hrefValue = window.location.href;
+      Object.defineProperty(window.location, 'href', {
+        get() { return hrefValue; },
+        set(url: string) {
+          const sanitized = sanitizeAppUrl(url);
+          hrefValue = sanitized;
+          try {
+            originalAssign(sanitized);
+          } catch (e) {
+            console.warn('[URL Validation] href assignment failed:', e);
+          }
+        },
+        configurable: false
+      });
+    } catch (e) {
+      console.warn('[URL Validation] Cannot patch location.href in Electron');
+    }
+  } catch (e) {
+    console.warn('[URL Validation] Location patching failed completely:', e);
+  }
 }
 
 /**

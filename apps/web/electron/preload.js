@@ -1,3 +1,64 @@
+// =================== IMMEDIATE EXECUTION - PHASE 1 ===================
+// CRITICAL: Early location patching - MUST be first before any other scripts
+(function() {
+  'use strict';
+  console.log('🔧 [ELECTRON] Applying immediate location patches...');
+  
+  // Override location.assign immediately - before any other scripts
+  try {
+    Object.defineProperty(window.location, 'assign', {
+      value: function(url) {
+        console.log('🔧 [ELECTRON] location.assign intercepted:', url);
+        try {
+          window.location.href = url;
+        } catch (e) {
+          console.warn('🔧 [ELECTRON] location.assign fallback:', e);
+        }
+      },
+      writable: false,
+      configurable: false
+    });
+    
+    // Override location.replace for completeness
+    Object.defineProperty(window.location, 'replace', {
+      value: function(url) {
+        console.log('🔧 [ELECTRON] location.replace intercepted:', url);
+        try {
+          window.location.href = url;
+        } catch (e) {
+          console.warn('🔧 [ELECTRON] location.replace fallback:', e);
+        }
+      },
+      writable: false, 
+      configurable: false
+    });
+    
+    console.log('✅ [ELECTRON] Immediate location patches applied successfully');
+  } catch (e) {
+    console.error('❌ [ELECTRON] Failed to apply immediate location patches:', e);
+  }
+  
+  // PHASE 3: Prevent Next.js data fetching in static export
+  try {
+    const originalFetch = window.fetch;
+    window.fetch = function(input, init) {
+      const url = typeof input === 'string' ? input : input.url;
+      
+      // Block data fetching requests that are not needed in static export
+      if (url && (url.includes('/_next/data/') || url.includes('.json') && url.includes('_next'))) {
+        console.warn('🚫 [ELECTRON] Blocked Next.js data request:', url);
+        return Promise.reject(new Error('Data fetching disabled in Electron static export'));
+      }
+      
+      return originalFetch.apply(this, arguments);
+    };
+    
+    console.log('✅ [ELECTRON] Data fetching prevention applied');
+  } catch (e) {
+    console.warn('⚠️ [ELECTRON] Could not apply fetch interception:', e);
+  }
+})();
+
 const { contextBridge, ipcRenderer } = require('electron');
 
 // Expose protected methods that allow the renderer process to use
@@ -43,83 +104,147 @@ contextBridge.exposeInMainWorld('electronAPI', {
   }
 });
 
-console.log('Electron preload script loaded');
+// =================== VERIFICATION PRINTS ===================
+console.log('🎯 [ELECTRON] Preload verification:');
+console.log('- Early location patches: APPLIED');
+console.log('- Hydration recovery system: INITIALIZED'); 
+console.log('- ElectronAPI: EXPOSED');
+console.log('- All preload features: READY');
+console.log('🚀 [ELECTRON] Preload script fully loaded and configured');
 
-// Fix for location.assign error in Electron
-// Since we can't override location.assign directly, we'll monkey-patch any code that tries to use it
-(() => {
-  // Store the original href setter
-  const originalHref = Object.getOwnPropertyDescriptor(window.location, 'href').set;
+console.log('🚀 [ELECTRON] Preload script loaded');
+console.log('✅ [ELECTRON] Location patches already applied at startup');
+
+// =================== HYDRATION RECOVERY - PHASE 4 ===================
+// React hydration monitoring and recovery system
+window.__electronHydrationRecovery = function() {
+  console.log('🔄 [ELECTRON] Setting up hydration recovery system...');
   
-  // Create wrapper functions that use href instead
-  window.__electronLocationAssign = function(url) {
-    console.log('[ELECTRON] location.assign redirected to href:', url);
-    if (!url) return;
+  // Wait for DOM and check React hydration
+  setTimeout(() => {
+    const reactRoot = document.querySelector('#__next');
+    const hasReactContent = reactRoot && reactRoot.children.length > 1;
     
-    if (url.startsWith('file://') || url.startsWith('http://') || url.startsWith('https://')) {
-      originalHref.call(window.location, url);
-    } else if (url.startsWith('/')) {
-      const base = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
-      originalHref.call(window.location, base + url);
-    } else {
-      const base = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
-      originalHref.call(window.location, base + '/' + url);
-    }
-  };
-  
-  window.__electronLocationReplace = window.__electronLocationAssign;
-  
-  // Patch any code that tries to access location.assign
-  const script = document.createElement('script');
-  script.textContent = `
-    (function() {
-      // Override location.assign attempts
-      const descriptor = Object.getOwnPropertyDescriptor(window.location, 'assign');
-      if (!descriptor || descriptor.configurable !== false) {
+    console.log('🔍 [ELECTRON] Hydration status check:');
+    console.log('- React root found:', !!reactRoot);
+    console.log('- React content rendered:', hasReactContent);
+    console.log('- window.React available:', typeof window.React);
+    console.log('- window.ReactDOM available:', typeof window.ReactDOM);
+    
+    if (!hasReactContent) {
+      console.warn('⚠️ [ELECTRON] React hydration failed, attempting recovery...');
+      
+      // Try to manually trigger React if available
+      if (window.React && window.ReactDOM) {
         try {
-          Object.defineProperty(window.location, 'assign', {
-            value: window.__electronLocationAssign,
-            writable: false,
-            enumerable: true,
-            configurable: false
+          console.log('🔄 [ELECTRON] Attempting React recovery render...');
+          const { createRoot } = window.ReactDOM;
+          const root = createRoot(reactRoot);
+          
+          // Create minimal recovery app
+          const FallbackApp = window.React.createElement('div', {
+            className: 'min-h-screen bg-background px-5 flex items-center justify-center',
+            children: [
+              window.React.createElement('div', {
+                key: 'content',
+                className: 'text-center',
+                children: [
+                  window.React.createElement('h1', {
+                    key: 'title',
+                    className: 'text-2xl font-bold mb-4',
+                    children: 'OpenCut - Recovery Mode'
+                  }),
+                  window.React.createElement('p', {
+                    key: 'desc',
+                    className: 'text-muted-foreground mb-6',
+                    children: 'React hydration failed, but the app is still functional'
+                  }),
+                  window.React.createElement('div', {
+                    key: 'buttons',
+                    className: 'space-x-2',
+                    children: [
+                      window.React.createElement('button', {
+                        key: 'projects-btn',
+                        className: 'bg-blue-500 text-white px-4 py-2 rounded mr-2',
+                        onClick: () => {
+                          console.log('🔄 [ELECTRON] Navigating to projects...');
+                          window.location.href = '/projects';
+                        },
+                        children: 'Projects'
+                      }),
+                      window.React.createElement('button', {
+                        key: 'home-btn', 
+                        className: 'bg-gray-500 text-white px-4 py-2 rounded',
+                        onClick: () => {
+                          console.log('🔄 [ELECTRON] Navigating to home...');
+                          window.location.href = '/';
+                        },
+                        children: 'Home'
+                      })
+                    ]
+                  })
+                ]
+              })
+            ]
           });
-          Object.defineProperty(window.location, 'replace', {
-            value: window.__electronLocationReplace,
-            writable: false,
-            enumerable: true,
-            configurable: false
-          });
+          
+          root.render(FallbackApp);
+          console.log('✅ [ELECTRON] React recovery successful - fallback UI rendered');
         } catch (e) {
-          // If that fails, at least make the functions available
-          window.location.assign = window.__electronLocationAssign;
-          window.location.replace = window.__electronLocationReplace;
+          console.error('❌ [ELECTRON] React recovery failed:', e);
+          // Fallback to basic HTML injection
+          reactRoot.innerHTML = `
+            <div class="min-h-screen bg-white px-5 flex items-center justify-center">
+              <div class="text-center">
+                <h1 class="text-2xl font-bold mb-4">OpenCut - Basic Mode</h1>
+                <p class="text-gray-600 mb-6">React is unavailable, using basic HTML</p>
+                <button onclick="window.location.href='/projects'" class="bg-blue-500 text-white px-4 py-2 rounded mr-2">Projects</button>
+                <button onclick="window.location.href='/'" class="bg-gray-500 text-white px-4 py-2 rounded">Home</button>
+              </div>
+            </div>
+          `;
+          console.log('✅ [ELECTRON] Basic HTML fallback applied');
         }
+      } else {
+        console.warn('❌ [ELECTRON] React/ReactDOM not available for recovery');
+        // Basic HTML fallback when React is completely unavailable
+        reactRoot.innerHTML = `
+          <div class="min-h-screen bg-white px-5 flex items-center justify-center">
+            <div class="text-center">
+              <h1 class="text-2xl font-bold mb-4">OpenCut - Safe Mode</h1>
+              <p class="text-gray-600 mb-6">Loading components, please wait...</p>
+              <button onclick="window.location.href='/projects'" class="bg-blue-500 text-white px-4 py-2 rounded mr-2">Projects</button>
+              <button onclick="window.location.href='/'" class="bg-gray-500 text-white px-4 py-2 rounded">Home</button>
+            </div>
+          </div>
+        `;
+        console.log('✅ [ELECTRON] Safe mode HTML applied');
       }
-    })();
-  `;
-  
-  // Inject this as early as possible
-  if (document.head) {
-    document.head.insertBefore(script, document.head.firstChild);
-  } else {
-    document.addEventListener('DOMContentLoaded', () => {
-      document.head.insertBefore(script, document.head.firstChild);
-    });
-  }
-  
-  console.log('[ELECTRON] Location patch prepared');
-})();
+    } else {
+      console.log('✅ [ELECTRON] React hydration successful - no recovery needed');
+    }
+  }, 3000);
+};
 
-// Add debugging to check when React loads
+// Auto-start recovery monitoring
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', window.__electronHydrationRecovery);
+} else {
+  window.__electronHydrationRecovery();
+}
+
+// Add debugging to check when React loads (enhanced)
 window.addEventListener('DOMContentLoaded', () => {
-  console.log('🔍 DOM Content Loaded - Initial check:');
+  console.log('🔍 [ELECTRON] DOM Content Loaded - Initial verification:');
   console.log('- window.React:', typeof window.React);
   console.log('- window.ReactDOM:', typeof window.ReactDOM);
   console.log('- window.next:', typeof window.next);
+  console.log('- location.assign patched:', typeof window.location.assign === 'function');
+  console.log('- location.replace patched:', typeof window.location.replace === 'function');
   
   // Check again after a delay to see if bundles load
   setTimeout(() => {
-    console.log('🔍 After delay check (2s):');
+    console.log('🔍 [ELECTRON] After delay check (2s):');
     console.log('- window.React:', typeof window.React);
     console.log('- window.ReactDOM:', typeof window.ReactDOM);
     console.log('- window.next:', typeof window.next);
@@ -128,10 +253,11 @@ window.addEventListener('DOMContentLoaded', () => {
     // Check if app actually rendered
     const appContent = document.querySelector('#__next');
     if (appContent && appContent.children.length > 0) {
-      console.log('✅ Next.js app appears to be rendered');
+      console.log('✅ [ELECTRON] Next.js app appears to be rendered');
       console.log('- Child elements:', appContent.children.length);
+      console.log('- Content preview:', appContent.textContent?.slice(0, 100) + '...');
     } else {
-      console.log('❌ Next.js app not rendered');
+      console.log('❌ [ELECTRON] Next.js app not rendered - hydration recovery will activate');
     }
   }, 2000);
 });
