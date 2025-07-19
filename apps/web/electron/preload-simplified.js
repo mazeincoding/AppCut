@@ -39,30 +39,30 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
 console.log('✅ [ELECTRON] IPC bridge established');
 
-// PHASE 3: 拦截 <a> / Link 点击，改写为 app://路径
+// PHASE 3: Intercept <a> / Link clicks, rewrite to app:// paths
 try {
-  // 路径补全函数 - 修复导航到正确的 HTML 文件
+  // Path completion function - fix navigation to correct HTML files
   const fixElectronPath = (url) => {
     if (!url || url.startsWith('http') || url.startsWith('app://')) {
       return url;
     }
     
-    // 获取当前目录的基础路径
+    // Get base path of current directory
     const currentDir = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
     
-    // 处理绝对路径 /projects -> projects.html
+    // Handle absolute paths /projects -> projects.html
     if (url.startsWith('/')) {
       const cleanPath = url.substring(1);
       return cleanPath ? `${currentDir}/${cleanPath}.html` : window.location.href;
     }
     
-    // 处理相对路径 ./projects -> projects.html
+    // Handle relative paths ./projects -> projects.html
     if (url.startsWith('./')) {
       const cleanPath = url.substring(2);
       return cleanPath ? `${currentDir}/${cleanPath}.html` : window.location.href;
     }
     
-    // 处理直接路径 projects -> projects.html
+    // Handle direct paths projects -> projects.html
     if (!url.includes('.') && !url.includes('/')) {
       return `${currentDir}/${url}.html`;
     }
@@ -78,7 +78,7 @@ try {
     window.location.href = fixedUrl;
   };
   
-  // 对 location.assign/replace 做同样的路径补全
+  // Apply same path completion to location.assign/replace
   const originalAssign = window.location.assign;
   const originalReplace = window.location.replace;
   
@@ -94,7 +94,7 @@ try {
     return originalReplace.call(this, fixedUrl);
   };
   
-  // 注意：history API 重载已移至 NAV-FIX 脚本中，避免冲突
+  // Note: history API override moved to NAV-FIX script to avoid conflicts
   console.log('🔄 [ELECTRON] History API handling delegated to NAV-FIX script');
   
   console.log('✅ [ELECTRON] Navigation and history patches applied');
@@ -102,11 +102,11 @@ try {
   console.warn('⚠️ [ELECTRON] Could not apply navigation patches:', e);
 }
 
-// PHASE 4: 加载导航修复脚本
+// PHASE 4: Load navigation fix script
 document.addEventListener('DOMContentLoaded', () => {
   console.log('🔗 [ELECTRON] Loading navigation fix script...');
   
-  // 加载导航修复脚本
+  // Load navigation fix script
   const script = document.createElement('script');
   script.src = './electron/navigation-fix.js';
   script.onload = () => {
@@ -114,13 +114,13 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   script.onerror = () => {
     console.warn('⚠️ [ELECTRON] Failed to load navigation fix script');
-    // 如果加载失败，使用内联修复
+    // If loading fails, use inline fix
     setupInlineNavigationFix();
   };
   document.head.appendChild(script);
 });
 
-// 内联导航修复作为备用方案
+// Inline navigation fix as fallback
 function setupInlineNavigationFix() {
   console.log('🔗 [ELECTRON] Setting up inline navigation fix...');
   
@@ -148,7 +148,7 @@ function setupInlineNavigationFix() {
     return url;
   }
   
-  // 拦截点击事件
+  // Intercept click events
   document.addEventListener('click', (event) => {
     const target = event.target.closest('a');
     if (!target) return;
@@ -166,7 +166,7 @@ function setupInlineNavigationFix() {
     }
   }, true);
   
-  // 暴露修复函数
+  // Expose fix function
   window.fixElectronPath = fixPath;
   
   console.log('✅ [ELECTRON] Inline navigation fix ready');

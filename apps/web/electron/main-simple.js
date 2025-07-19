@@ -185,14 +185,16 @@ function createMainWindow() {
   mainWindow.webContents.on('before-input-event', (event, input) => {
     // F12 to toggle DevTools
     if (input.key === 'F12') {
+      event.preventDefault();
       if (mainWindow.webContents.isDevToolsOpened()) {
         mainWindow.webContents.closeDevTools();
       } else {
         mainWindow.webContents.openDevTools();
       }
     }
-    // Ctrl+Shift+I to toggle DevTools
-    if (input.control && input.shift && input.key === 'I') {
+    // Ctrl+Shift+I to toggle DevTools (check for uppercase 'I' as well)
+    if (input.control && input.shift && (input.key === 'I' || input.key === 'i')) {
+      event.preventDefault();
       if (mainWindow.webContents.isDevToolsOpened()) {
         mainWindow.webContents.closeDevTools();
       } else {
@@ -594,6 +596,19 @@ app.whenReady().then(() => {
       submenu: [
         {
           label: 'Toggle DevTools',
+          accelerator: process.platform === 'darwin' ? 'Cmd+Option+I' : 'Ctrl+Shift+I',
+          click: () => {
+            if (mainWindow) {
+              if (mainWindow.webContents.isDevToolsOpened()) {
+                mainWindow.webContents.closeDevTools();
+              } else {
+                mainWindow.webContents.openDevTools();
+              }
+            }
+          }
+        },
+        {
+          label: 'Toggle DevTools (F12)',
           accelerator: 'F12',
           click: () => {
             if (mainWindow) {

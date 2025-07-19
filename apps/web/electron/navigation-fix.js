@@ -1,9 +1,9 @@
-// 简单直接的导航修复脚本
-// 在页面加载后立即执行，确保所有导航都正确处理
+// Simple and direct navigation fix script
+// Execute immediately after page load to ensure all navigation is handled correctly
 
 console.log('🔧 [NAV-FIX] Starting navigation fix...');
 
-// 等待 DOM 加载完成
+// Wait for DOM to load
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initNavigationFix);
 } else {
@@ -13,10 +13,10 @@ if (document.readyState === 'loading') {
 function initNavigationFix() {
   console.log('🔧 [NAV-FIX] Initializing navigation fix...');
 
-  // 获取当前目录
+  // Get current directory
   const currentDir = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
 
-  // 修复路径的函数
+  // Function to fix paths
   function fixPath(url) {
     if (!url || url.startsWith('http') || (url.startsWith('file://') && url.includes('.html'))) {
       return url;
@@ -24,29 +24,29 @@ function initNavigationFix() {
 
     console.log('🔧 [NAV-FIX] Fixing path:', url, 'from currentDir:', currentDir);
 
-    // 获取应用根目录（out目录）- 修复路径解析
+    // Get app root directory (out directory) - fix path resolution
     let appRoot = currentDir;
 
-    // 标准化路径分隔符
+    // Normalize path separators
     const normalizedDir = currentDir.replace(/\\/g, '/');
 
-    // 查找 out 目录的位置
+    // Find location of out directory
     if (normalizedDir.includes('/out/')) {
-      // 找到 /out/ 目录，获取到 out 目录的完整路径
+      // Found /out/ directory, get full path to out directory
       const outIndex = normalizedDir.indexOf('/out/');
       appRoot = currentDir.substring(0, outIndex + 4); // +4 包含 '/out'
     } else if (normalizedDir.includes('/out')) {
-      // 找到 /out 目录（可能在末尾）
+      // Found /out directory (might be at the end)
       const outIndex = normalizedDir.indexOf('/out');
       appRoot = currentDir.substring(0, outIndex + 4); // +4 包含 '/out'
     } else {
-      // 如果没有找到out目录，使用当前目录的父目录
+      // If out directory not found, use parent directory of current directory
       appRoot = currentDir.substring(0, currentDir.lastIndexOf('/'));
     }
 
     console.log('🔧 [NAV-FIX] App root determined as:', appRoot);
 
-    // 处理相对路径
+    // Handle relative paths
     if (url.startsWith('./')) {
       const cleanPath = url.substring(2);
       const fixedUrl = `${currentDir}/${cleanPath}.html`;
@@ -54,25 +54,25 @@ function initNavigationFix() {
       return fixedUrl;
     }
 
-    // 处理绝对路径 - 关键修复
+    // Handle absolute paths - key fix
     if (url.startsWith('/')) {
       const cleanPath = url.substring(1);
 
-      // 特殊处理动态路由
+      // Special handling for dynamic routes
       if (cleanPath.startsWith('editor/project/')) {
-        // 对于 /editor/project/[id] 路由，导航到 [project_id].html
+        // For /editor/project/[id] route, navigate to [project_id].html
         const fixedUrl = `${appRoot}/editor/project/[project_id].html`;
         console.log('🔧 [NAV-FIX] Dynamic route fixed:', url, '→', fixedUrl);
         return fixedUrl;
       }
 
-      // 确保使用应用根目录而不是当前目录
+      // Ensure using app root directory instead of current directory
       const fixedUrl = `${appRoot}/${cleanPath}.html`;
       console.log('🔧 [NAV-FIX] Absolute path fixed:', url, '→', fixedUrl);
       return fixedUrl;
     }
 
-    // 处理直接路径名
+    // Handle direct pathnames
     if (!url.includes('.') && !url.includes('/')) {
       const fixedUrl = `${currentDir}/${url}.html`;
       console.log('🔧 [NAV-FIX] Direct path fixed:', url, '→', fixedUrl);
@@ -83,16 +83,16 @@ function initNavigationFix() {
     return url;
   }
 
-  // 拦截所有点击事件 - 使用最高优先级捕获
+  // Intercept all click events - use highest priority capture
   document.addEventListener('click', function (event) {
     const target = event.target.closest('a, button');
     if (!target) return;
 
-    // 处理链接
+    // Handle links
     if (target.tagName === 'A') {
       const href = target.getAttribute('href');
       if (href && !href.startsWith('#') && !href.startsWith('mailto:') && !href.startsWith('tel:')) {
-        // 完全阻止事件传播，防止其他处理器执行
+        // Completely stop event propagation to prevent other handlers from executing
         event.preventDefault();
         event.stopPropagation();
         event.stopImmediatePropagation();
@@ -100,7 +100,7 @@ function initNavigationFix() {
         const fixedUrl = fixPath(href);
         console.log('🔗 [NAV-FIX] Link click intercepted:', href, '→', fixedUrl);
 
-        // 延迟导航以确保事件完全被消费
+        // Delay navigation to ensure event is fully consumed
         setTimeout(() => {
           window.location.href = fixedUrl;
         }, 0);
@@ -108,9 +108,9 @@ function initNavigationFix() {
       }
     }
 
-    // 处理按钮（可能有导航逻辑）
+    // Handle buttons (may have navigation logic)
     if (target.tagName === 'BUTTON') {
-      // 特殊处理 Projects 按钮 - 最高优先级
+      // Special handling for Projects button - highest priority
       if (target.textContent && target.textContent.includes('Projects')) {
         event.preventDefault();
         event.stopPropagation();
@@ -125,7 +125,7 @@ function initNavigationFix() {
         return false;
       }
 
-      // 检查是否有 data-navigate 属性
+      // Check for data-navigate attribute
       const navigate = target.getAttribute('data-navigate');
       if (navigate) {
         event.preventDefault();
@@ -143,7 +143,7 @@ function initNavigationFix() {
     }
   }, true);
 
-  // 重写 location 方法
+  // Override location methods
   const originalAssign = window.location.assign;
   const originalReplace = window.location.replace;
 
@@ -159,7 +159,7 @@ function initNavigationFix() {
     return originalReplace.call(this, fixedUrl);
   };
 
-  // 重写 history API
+  // Override history API
   const originalPushState = history.pushState;
   const originalReplaceState = history.replaceState;
 
@@ -187,21 +187,21 @@ function initNavigationFix() {
     return originalReplaceState.call(this, state, title, url);
   };
 
-  // 拦截 window.location.href 设置 - 使用更安全的方法
+  // Intercept window.location.href setter - use safer method
   let isNavigating = false;
 
-  // 创建一个代理来拦截 location.href 的设置
+  // Create a proxy to intercept location.href setter
   let locationHrefSetter;
 
   try {
-    // 尝试获取 location.href 的 setter
+    // Try to get location.href setter
     const locationDescriptor = Object.getOwnPropertyDescriptor(window.location, 'href') ||
       Object.getOwnPropertyDescriptor(Location.prototype, 'href');
 
     if (locationDescriptor && locationDescriptor.set) {
       locationHrefSetter = locationDescriptor.set;
 
-      // 重写 location.href setter
+      // Override location.href setter
       Object.defineProperty(window.location, 'href', {
         get: locationDescriptor.get,
         set: function (url) {
@@ -226,7 +226,7 @@ function initNavigationFix() {
     console.log('🔧 [NAV-FIX] Could not intercept location.href:', error.message);
   }
 
-  // 拦截 Next.js Router 如果存在
+  // Intercept Next.js Router if exists
   if (window.next && window.next.router) {
     const originalPush = window.next.router.push;
     const originalReplace = window.next.router.replace;
@@ -252,7 +252,7 @@ function initNavigationFix() {
     };
   }
 
-  // 监听 popstate 事件并修复
+  // Listen to popstate event and fix
   window.addEventListener('popstate', function (event) {
     const currentUrl = window.location.href;
     const fixedUrl = fixPath(currentUrl);
@@ -266,7 +266,7 @@ function initNavigationFix() {
   console.log('✅ [NAV-FIX] Navigation fix initialized');
 }
 
-// 暴露修复函数到全局，以防其他代码需要
+// Expose fix function globally in case other code needs it
 window.fixElectronPath = function (url) {
   const currentDir = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
 
@@ -274,23 +274,23 @@ window.fixElectronPath = function (url) {
     return url;
   }
 
-  // 获取应用根目录（out目录）- 使用改进的路径解析
+  // Get app root directory (out directory) - use improved path resolution
   let appRoot = currentDir;
 
-  // 标准化路径分隔符
+  // Normalize path separators
   const normalizedDir = currentDir.replace(/\\/g, '/');
 
-  // 查找 out 目录的位置
+  // Find location of out directory
   if (normalizedDir.includes('/out/')) {
-    // 找到 /out/ 目录，获取到 out 目录的完整路径
+    // Found /out/ directory, get full path to out directory
     const outIndex = normalizedDir.indexOf('/out/');
     appRoot = currentDir.substring(0, outIndex + 4); // +4 包含 '/out'
   } else if (normalizedDir.includes('/out')) {
-    // 找到 /out 目录（可能在末尾）
+    // Found /out directory (might be at the end)
     const outIndex = normalizedDir.indexOf('/out');
     appRoot = currentDir.substring(0, outIndex + 4); // +4 包含 '/out'
   } else {
-    // 如果没有找到out目录，使用当前目录的父目录
+    // If out directory not found, use parent directory of current directory
     appRoot = currentDir.substring(0, currentDir.lastIndexOf('/'));
   }
 
@@ -302,13 +302,13 @@ window.fixElectronPath = function (url) {
   if (url.startsWith('/')) {
     const cleanPath = url.substring(1);
 
-    // 特殊处理动态路由
+    // Special handling for dynamic routes
     if (cleanPath.startsWith('editor/project/')) {
-      // 对于 /editor/project/[id] 路由，导航到 [project_id].html
+      // For /editor/project/[id] route, navigate to [project_id].html
       return `${appRoot}/editor/project/[project_id].html`;
     }
 
-    // 确保使用应用根目录而不是当前目录
+    // Ensure using app root directory instead of current directory
     return `${appRoot}/${cleanPath}.html`;
   }
 
