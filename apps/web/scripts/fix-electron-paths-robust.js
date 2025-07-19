@@ -22,11 +22,16 @@ function fixHtmlFile(filePath) {
     const originalContent = content;
     content = content.replace(/(?<![\w/])\/(_next\/[^"'\s>]+)/g, './$1');
     
-    // Fix root assets like /logo.svg -> ./logo.svg
-    content = content.replace(/(?<![\w/])\/([\w-]+\.(svg|png|jpg|jpeg|gif|ico|webp))(?=["'\s>])/g, './$1');
+    // Fix root assets like /logo.svg -> ./logo.svg (only convert absolute paths starting with /)
+    // Must ensure we don't match ./logo.svg (already correct relative paths)
+    content = content.replace(/(?<![\w/.])(?<!["'=]\.)\/([\w-]+\.(svg|png|jpg|jpeg|gif|ico|webp))(?=["'\s>])/g, './$1');
     
-    // Fix manifest and other root files
-    content = content.replace(/(?<![\w/])\/(manifest\.json|robots\.txt|sitemap\.xml|favicon\.ico)(?=["'\s>])/g, './$1');
+    // Fix manifest and other root files (only convert absolute paths starting with /)
+    // Must ensure we don't match ./manifest.json (already correct relative paths)
+    content = content.replace(/(?<![\w/.])(?<!["'=]\.)\/(manifest\.json|robots\.txt|sitemap\.xml|favicon\.ico)(?=["'\s>])/g, './$1');
+    
+    // IMPORTANT: Do NOT convert already-correct relative paths (./logo.svg should stay ./logo.svg, not become ../logo.svg)
+    // This prevents the script from incorrectly changing already-correct paths
     
     if (content !== originalContent) {
       fs.writeFileSync(filePath, content);

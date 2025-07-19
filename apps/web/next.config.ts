@@ -12,7 +12,7 @@ const nextConfig: NextConfig = {
   // Use relative paths for Electron - no assetPrefix to maintain font compatibility
   assetPrefix: isElectron ? undefined : undefined,
   basePath: isElectron ? "" : undefined,
-  trailingSlash: isElectron,
+  trailingSlash: false, // Disable trailing slash to prevent directory-based routing that causes ../paths
   distDir: isElectron ? "out" : ".next",
   images: {
     unoptimized: isElectron,
