@@ -54,6 +54,7 @@ export function Header() {
       <Link 
         href="/projects"
         onClick={(e) => handleClick(e, "/projects")}
+        prefetch={false}
       >
         <Button size="sm" className="text-sm ml-4">
           Projects

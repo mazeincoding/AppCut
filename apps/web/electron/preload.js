@@ -129,7 +129,9 @@
         url.includes('/waKrJH0rxx6B322TnfBIx/') ||         // Previous build ID data requests
         url.includes('/66zZwW14Qejyf_lZt9a3l/') ||         // Previous build ID data requests
         url.includes('/xUF9JiSSZjidE53kQFWB9/') ||         // Previous build ID data requests
-        url.includes('/3F6FMLMQ3eKsn8EKkbZTH/') ||         // Current build ID data requests
+        url.includes('/3F6FMLMQ3eKsn8EKkbZTH/') ||         // Previous build ID data requests
+        url.includes('/BqftMQUFTtQ5kC7JKAN6A/') ||         // Previous build ID data requests
+        url.includes('/R43QQ6API6EWSPJhrCgwO/') ||         // Current build ID data requests
         
         // === PERSPECTIVE: PAGE-SPECIFIC PATTERNS ===
         url.includes('/projects.json') ||                   // Direct page data requests
@@ -215,7 +217,9 @@
         url.includes('/waKrJH0rxx6B322TnfBIx/') ||         // Previous build ID data requests
         url.includes('/66zZwW14Qejyf_lZt9a3l/') ||         // Previous build ID data requests
         url.includes('/xUF9JiSSZjidE53kQFWB9/') ||         // Previous build ID data requests
-        url.includes('/3F6FMLMQ3eKsn8EKkbZTH/') ||         // Current build ID data requests
+        url.includes('/3F6FMLMQ3eKsn8EKkbZTH/') ||         // Previous build ID data requests
+        url.includes('/BqftMQUFTtQ5kC7JKAN6A/') ||         // Previous build ID data requests
+        url.includes('/R43QQ6API6EWSPJhrCgwO/') ||         // Current build ID data requests
         
         // === PERSPECTIVE: PAGE-SPECIFIC PATTERNS ===
         url.includes('/projects.json') ||                   // Direct page data requests

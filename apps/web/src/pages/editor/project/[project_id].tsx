@@ -154,3 +154,54 @@ export default function EditorPage() {
     </EditorProvider>
   );
 }
+
+// =================== ROOT CAUSE FIX: DYNAMIC ROUTE DATA FETCHING ===================
+// ULTRASYNC DEEPSYNC FACE-IT: The dynamic route [project_id] was causing Next.js to generate
+// data URLs during static export because getStaticPaths was missing
+
+import type { GetStaticPaths, GetStaticProps } from 'next';
+
+// CRITICAL: For Electron builds, we need to provide getStaticPaths to prevent data URL generation
+export const getStaticPaths: GetStaticPaths = async () => {
+  const isElectron = process.env.NEXT_PUBLIC_ELECTRON === "true";
+  
+  if (isElectron) {
+    console.log('🔧 [ROOT CAUSE FIX] Electron build - getStaticPaths with fallback blocking mode');
+    // For static export, return empty paths and fallback: 'blocking' 
+    // This prevents Next.js from trying to fetch data URLs for dynamic routes
+    return {
+      paths: [],
+      fallback: 'blocking'
+    };
+  }
+  
+  // For web builds, allow normal dynamic behavior
+  return {
+    paths: [],
+    fallback: true
+  };
+};
+
+// CRITICAL: Also need getStaticProps to complete the static generation contract
+export const getStaticProps: GetStaticProps = async ({ params }) => {
+  const isElectron = process.env.NEXT_PUBLIC_ELECTRON === "true";
+  
+  if (isElectron) {
+    console.log('🔧 [ROOT CAUSE FIX] Electron build - getStaticProps for dynamic route');
+    // For Electron builds, return minimal props without data fetching
+    return {
+      props: {
+        projectId: params?.project_id || 'default'
+      },
+      // Don't use revalidate in static export mode
+    };
+  }
+  
+  // For web builds, return normal props
+  return {
+    props: {
+      projectId: params?.project_id || 'default'
+    },
+    revalidate: 60
+  };
+};

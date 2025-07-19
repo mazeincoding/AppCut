@@ -103,6 +103,7 @@ export function Footer() {
                   <Link
                     href="/contributors"
                     className="text-muted-foreground hover:text-foreground transition-colors"
+                    prefetch={false}
                   >
                     Contributors
                   </Link>
