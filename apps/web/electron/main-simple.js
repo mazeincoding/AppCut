@@ -381,7 +381,7 @@ function createMainWindow() {
     if (url.startsWith('file://') || url.startsWith('app://')) {
       console.log('🔗 Allowing local navigation to:', url);
       try {
-        console.log('  - Current URL:', event.sender.getURL());
+        console.log('  - Current URL:', event.sender && event.sender.getURL ? event.sender.getURL() : 'unknown');
         console.log('  - Target URL:', url);
         
         // will-navigate 中增加路径补全逻辑
