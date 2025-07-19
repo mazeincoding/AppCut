@@ -41,7 +41,8 @@ export const useKeyboardShortcuts = (
     redo,
   } = useTimelineStore();
 
-  const { currentTime, duration, isPlaying, toggle, seek } = usePlaybackStore();
+  const { currentTime, duration, isPlaying, toggle, seek, toggleMute } =
+    usePlaybackStore();
 
   const { activeProject } = useProjectStore();
 
@@ -93,6 +94,15 @@ export const useKeyboardShortcuts = (
       category: "Playback",
       action: () => {
         seek(Math.min(duration, currentTime + 1));
+      },
+    },
+    {
+      id: "toggle-mute",
+      keys: ["M"],
+      description: "Toggle mute",
+      category: "Playback",
+      action: () => {
+        toggleMute();
       },
     },
 

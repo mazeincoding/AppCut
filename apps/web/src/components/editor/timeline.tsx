@@ -19,6 +19,8 @@ import {
   ZoomIn,
   ZoomOut,
   LockOpen,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import {
   Tooltip,
@@ -88,8 +90,16 @@ export function Timeline() {
   } = useTimelineStore();
   const { mediaItems, addMediaItem } = useMediaStore();
   const { activeProject } = useProjectStore();
-  const { currentTime, duration, seek, setDuration, isPlaying, toggle } =
-    usePlaybackStore();
+  const {
+    currentTime,
+    duration,
+    seek,
+    setDuration,
+    isPlaying,
+    toggle,
+    muted,
+    toggleMute,
+  } = usePlaybackStore();
   const [isDragOver, setIsDragOver] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -594,6 +604,22 @@ export function Timeline() {
               </TooltipTrigger>
               <TooltipContent>
                 {isPlaying ? "Pause (Space)" : "Play (Space)"}
+              </TooltipContent>
+            </Tooltip>
+
+            {/* Mute/Unmute Button */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="text" size="icon" onClick={toggleMute}>
+                  {muted ? (
+                    <VolumeX className="h-4 w-4 text-red-500" />
+                  ) : (
+                    <Volume2 className="h-4 w-4" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {muted ? "Unmute (M)" : "Mute (M)"}
               </TooltipContent>
             </Tooltip>
             <div className="w-px h-6 bg-border mx-1" />
