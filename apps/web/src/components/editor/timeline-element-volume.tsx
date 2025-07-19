@@ -1,7 +1,7 @@
 import { useTimelineElementVolume } from "@/hooks/use-timeline-element-volume";
 import { TimelineElement, TimelineTrack } from "@/types/timeline";
 
-interface TimelineElementVolume {
+interface TimelineElementVolumeProps {
   track: TimelineTrack,
   element: TimelineElement,
   timelineElementRef: React.RefObject<HTMLDivElement>
@@ -11,7 +11,7 @@ export function TimelineElementVolume({
   track,
   element,
   timelineElementRef
-}: TimelineElementVolume) {
+}: TimelineElementVolumeProps) {
   const { position, handleVolumeMouseDown } = useTimelineElementVolume({
     track,
     element,
