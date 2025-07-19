@@ -279,7 +279,7 @@ export function TimelineElement({
               {element.name}
             </span>
           )}
-          <MediaVolume track={track} timelineElementRef={timelineElementRef} />
+          <MediaVolume track={track} element={element} timelineElementRef={timelineElementRef} />
         </div>
       );
     }
@@ -295,7 +295,7 @@ export function TimelineElement({
               className="w-full"
             />
           </div>
-          <MediaVolume track={track} timelineElementRef={timelineElementRef} />
+          <MediaVolume track={track} element={element} timelineElementRef={timelineElementRef} />
         </div>
       );
     }

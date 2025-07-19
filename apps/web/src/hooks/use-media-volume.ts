@@ -1,16 +1,18 @@
 import { useTimelineStore } from "@/stores/timeline-store"
-import { TimelineTrack } from "@/types/timeline"
+import { TimelineElement, TimelineTrack } from "@/types/timeline"
 import { useCallback, useEffect, useState } from "react";
 
 const BAR_HEIGHT = 2
 
 interface UseMediaVolumeProps {
   track: TimelineTrack,
+  element: TimelineElement,
   timelineElementRef: React.RefObject<HTMLDivElement>
 }
 
 export function useMediaVolume({
   track,
+  element,
   timelineElementRef,
 }: UseMediaVolumeProps) {
   const { setTrackVolume } = useTimelineStore();
@@ -29,7 +31,7 @@ export function useMediaVolume({
     setPosition(clampedY);
 
     const volume = 1 - clampedY / (timelineElement.clientHeight-BAR_HEIGHT);
-    setTrackVolume(track.id, Math.max(0, Math.min(volume, 1)));
+    setTrackVolume(track.id, element.id, Math.max(0, Math.min(volume, 1)));
 
   }, [setTrackVolume, track.id, timelineElementRef]);
 

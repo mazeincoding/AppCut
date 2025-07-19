@@ -986,6 +986,7 @@ export function TimelineTrackContent({
             startTime: mediaSnappedTime,
             trimStart: 0,
             trimEnd: 0,
+            volume: 0.5
           });
         }
       }

@@ -1,17 +1,20 @@
 import { useMediaVolume } from "@/hooks/use-media-volume";
-import { TimelineTrack } from "@/types/timeline";
+import { TimelineElement, TimelineTrack } from "@/types/timeline";
 
 interface MediaVolumeProps {
   track: TimelineTrack,
+  element: TimelineElement,
   timelineElementRef: React.RefObject<HTMLDivElement>
 }
 
 export function MediaVolume({
   track,
+  element,
   timelineElementRef
 }: MediaVolumeProps) {
   const { position, handleVolumeMouseDown } = useMediaVolume({
     track,
+    element,
     timelineElementRef
   })
 

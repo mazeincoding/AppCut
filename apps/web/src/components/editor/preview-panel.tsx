@@ -189,6 +189,7 @@ export function PreviewPanel() {
             trimEnd={element.trimEnd}
             clipDuration={element.duration}
             className="w-full h-full object-cover"
+            volume={element.type === 'media' ? element.volume : 1.0}
           />
         </div>
       );
@@ -295,7 +296,7 @@ export function PreviewPanel() {
               trimStart={element.trimStart}
               trimEnd={element.trimEnd}
               clipDuration={element.duration}
-              volume={elementData.track.volume}
+              volume={elementData.element.type === 'media' ? elementData.element.volume : 1.0}
             />
           </div>
         );
@@ -329,7 +330,7 @@ export function PreviewPanel() {
               trimEnd={element.trimEnd}
               clipDuration={element.duration}
               trackMuted={elementData.track.muted}
-              volume={elementData.track.volume}
+              volume={elementData.element.type === 'media' ? elementData.element.volume : 1.0}
             />
           </div>
         );
