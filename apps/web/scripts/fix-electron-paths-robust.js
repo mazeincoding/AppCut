@@ -12,6 +12,26 @@ const path = require('path');
 
 const OUT_DIR = path.join(__dirname, '../out');
 
+// Copy navigation-fix.js to out directory
+function copyNavigationFix() {
+  const sourcePath = path.join(__dirname, '../electron/navigation-fix.js');
+  const targetPath = path.join(OUT_DIR, 'electron/navigation-fix.js');
+  
+  try {
+    // Create electron directory if it doesn't exist
+    const electronDir = path.dirname(targetPath);
+    if (!fs.existsSync(electronDir)) {
+      fs.mkdirSync(electronDir, { recursive: true });
+    }
+    
+    // Copy the file
+    fs.copyFileSync(sourcePath, targetPath);
+    console.log('✅ Copied navigation-fix.js to out directory');
+  } catch (error) {
+    console.error('❌ Failed to copy navigation-fix.js:', error.message);
+  }
+}
+
 function fixHtmlFile(filePath) {
   try {
     let content = fs.readFileSync(filePath, 'utf8');
@@ -105,6 +125,9 @@ function main() {
   });
   
   console.log(`✅ [ROBUST FIXER] Complete! Fixed ${totalFixed} files`);
+  
+  // Copy navigation-fix.js to out directory
+  copyNavigationFix();
   
   if (totalFixed === 0) {
     console.log('ℹ️  No files needed fixing - paths may already be relative');

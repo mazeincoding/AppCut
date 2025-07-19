@@ -85,10 +85,24 @@ function ensureWindowOnScreen(windowState) {
   return windowState;
 }
 
-// Handle GPU issues in headless environments
+// Handle GPU issues in headless environments and fix cache errors
 app.commandLine.appendSwitch('--disable-gpu');
 app.commandLine.appendSwitch('--disable-software-rasterizer');
 app.commandLine.appendSwitch('--no-sandbox');
+app.commandLine.appendSwitch('--disable-gpu-sandbox');
+app.commandLine.appendSwitch('--disable-dev-shm-usage');
+app.commandLine.appendSwitch('--disk-cache-size=1');
+
+// Set custom cache directory to avoid permission issues
+try {
+  const cacheDir = path.join(app.getPath('userData'), 'cache');
+  if (!fs.existsSync(cacheDir)) {
+    fs.mkdirSync(cacheDir, { recursive: true });
+  }
+  app.commandLine.appendSwitch('--disk-cache-dir', cacheDir);
+} catch (error) {
+  console.log('Warning: Could not set cache directory:', error.message);
+}
 
 let mainWindow;
 
