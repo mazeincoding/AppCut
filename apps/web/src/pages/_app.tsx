@@ -11,9 +11,10 @@ import { ElectronHydrationFix } from '@/components/electron-hydration-fix'
 import { ElectronErrorBoundary } from '@/components/electron-error-boundary'
 import { ElectronImmediateFix } from '@/components/electron-immediate-fix'
 import { ElectronRouterWrapper } from '@/components/electron-router-wrapper'
+import { ElectronReactProvider } from '@/components/electron-react-provider'
 import '../styles/globals.css'
 import '@/lib/electron-font-fix'
-import '@/lib/electron-router-override'
+// Removed problematic router override
 
 // =================== PHASE 4: ERROR BOUNDARY INTEGRATION ===================
 console.log('🚀 [APP] Loading OpenCut app with Electron error boundary and font fix...');
@@ -31,30 +32,31 @@ export default function App({ Component, pageProps }: AppProps) {
     }
   };
 
+  // Single consistent render tree to prevent hydration mismatches
   return (
     <ElectronErrorBoundary onError={handleError}>
-      <ElectronRouterWrapper>
-        <div className={`${inter.className} font-sans antialiased`}>
-          <ThemeProvider
-            attribute="class"
-            forcedTheme="dark"
-          >
-            <TooltipProvider>
-              <UrlValidationProvider>
-                <StorageProvider>
-                  <ElectronErrorBoundary>
+      <ElectronReactProvider>
+        <ElectronRouterWrapper>
+          <div className={`${inter.className} font-sans antialiased`}>
+            <ThemeProvider
+              attribute="class"
+              forcedTheme="dark"
+            >
+              <TooltipProvider>
+                <UrlValidationProvider>
+                  <StorageProvider>
                     <Component {...pageProps} />
-                  </ElectronErrorBoundary>
-                  <Toaster />
-                  <DevelopmentDebug />
-                  <ElectronHydrationFix />
-                  <ElectronImmediateFix />
-                </StorageProvider>
-              </UrlValidationProvider>
-            </TooltipProvider>
-          </ThemeProvider>
-        </div>
-      </ElectronRouterWrapper>
+                    <Toaster />
+                    <DevelopmentDebug />
+                  </StorageProvider>
+                </UrlValidationProvider>
+              </TooltipProvider>
+            </ThemeProvider>
+            <ElectronHydrationFix />
+            <ElectronImmediateFix />
+          </div>
+        </ElectronRouterWrapper>
+      </ElectronReactProvider>
     </ElectronErrorBoundary>
   )
 }

@@ -39,6 +39,8 @@ const nextConfig: NextConfig = {
       // Remove invalid options for Next.js 15.3.4 compatibility
     },
     
+    // PHASE 3: Disable problematic features for Electron static export
+    
     // REMOVED: rewrites, headers, redirects - these cause warnings in static export
     // Data fetching prevention is now handled entirely in preload.js
     
@@ -64,7 +66,7 @@ const nextConfig: NextConfig = {
           buffer: false,
         };
         
-        // PHASE 2: Optimize for static export
+        // PHASE 2: Optimize for static export with font handling
         config.optimization = {
           ...config.optimization,
           splitChunks: {
@@ -84,6 +86,19 @@ const nextConfig: NextConfig = {
             },
           },
         };
+        
+        // PHASE 3: Enhanced font handling for Electron
+        config.module.rules.push({
+          test: /\.(woff|woff2|eot|ttf|otf)$/,
+          use: {
+            loader: 'file-loader',
+            options: {
+              publicPath: './',
+              outputPath: 'static/fonts/',
+              name: '[name].[ext]',
+            },
+          },
+        });
       }
       
       console.log('✅ [NEXT-CONFIG] Webpack configured for Electron compatibility');

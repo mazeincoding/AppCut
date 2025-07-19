@@ -43,7 +43,7 @@ export function Footer() {
           {/* Brand Section */}
           <div className="md:col-span-1 max-w-sm">
             <div className="flex items-center gap-2 mb-4">
-              <Image src="/logo.svg" alt="OpenCut" width={24} height={24} />
+              <Image src="./logo.svg" alt="OpenCut" width={24} height={24} />
               <span className="font-bold text-lg">OpenCut</span>
             </div>
             <p className="text-sm text-muted-foreground mb-5">

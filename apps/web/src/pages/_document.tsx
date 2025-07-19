@@ -2,8 +2,10 @@ import { Html, Head, Main, NextScript } from 'next/document'
 import { metadata } from '../lib/metadata'
 
 export default function Document() {
+  const isElectron = process.env.NEXT_PUBLIC_ELECTRON === "true";
+  
   return (
-    <Html lang="en" suppressHydrationWarning>
+    <Html lang="en" suppressHydrationWarning={isElectron}>
       <Head>
         <meta charSet="utf-8" />
         <meta name="description" content={metadata.description as string} />
@@ -47,6 +49,37 @@ export default function Document() {
             __html: `
               console.log('🚀 [ELECTRON DEBUG] JavaScript executing in Electron');
               
+              // Early React setup for Electron
+              if (typeof window !== 'undefined' && window.electronAPI) {
+                console.log('🔧 [ELECTRON] Setting up early React environment...');
+                
+                // Disable Next.js hydration warnings in Electron
+                window.__NEXT_HYDRATE_ERROR__ = false;
+                
+                // Mark as Electron environment
+                window.__ELECTRON_ENV__ = true;
+                
+                // Override Next.js router data fetching immediately
+                window.__NEXT_DATA__ = {
+                  props: { pageProps: {} },
+                  page: '/',
+                  query: {},
+                  buildId: 'electron-static',
+                  runtimeConfig: {},
+                  isFallback: false,
+                  dynamicIds: [],
+                  err: null,
+                  gsp: false,
+                  gssp: false,
+                  customServer: false,
+                  gip: false,
+                  appGip: false,
+                  head: []
+                };
+                
+                console.log('✅ [ELECTRON] __NEXT_DATA__ overridden early');
+              }
+              
               // Wait for DOM to be ready
               document.addEventListener('DOMContentLoaded', function() {
                 console.log('🚀 [ELECTRON] DOM ready, checking for ElectronAPI');
@@ -54,6 +87,13 @@ export default function Document() {
                 if (typeof window !== 'undefined' && window.electronAPI && document.body) {
                   document.body.setAttribute('data-electron', 'true');
                   console.log('🚀 [ELECTRON] ElectronAPI detected and data-electron set');
+                  
+                  // Force React hydration to complete immediately for Electron
+                  if (window.__NEXT_DATA__) {
+                    window.__NEXT_DATA__.isFallback = false;
+                    window.__NEXT_DATA__.gsp = false;
+                    window.__NEXT_DATA__.gssp = false;
+                  }
                 }
                 
                 console.log('🚀 [DEBUG] Page loaded, body data-electron:', document.body ? document.body.getAttribute('data-electron') : 'body not found');

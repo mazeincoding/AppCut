@@ -33,8 +33,18 @@ export function fixElectronFontPaths() {
         /url\(["']?\/(.*?\.(woff2?|ttf|eot|otf))["']?\)/g,
         (match, path) => {
           modified = true;
-          console.log(`  🎯 [ELECTRON-FONT-FIX] Fixed font URL: /${path} → ${path}`);
-          return `url("${path}")`;
+          console.log(`  🎯 [ELECTRON-FONT-FIX] Fixed font URL: /${path} → ./${path}`);
+          return `url("./${path}")`;
+        }
+      );
+      
+      // Fix _next/static font paths specifically
+      cssText = cssText.replace(
+        /url\(["']?\/_next\/static\/media\/(.*?\.(woff2?|ttf|eot|otf))["']?\)/g,
+        (match, filename) => {
+          modified = true;
+          console.log(`  🎯 [ELECTRON-FONT-FIX] Fixed _next font: /_next/static/media/${filename} → ./_next/static/media/${filename}`);
+          return `url("./_next/static/media/${filename}")`;
         }
       );
 

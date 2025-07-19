@@ -35,7 +35,7 @@ export function Header() {
       onClick={(e) => handleClick(e, "/")}
       prefetch={false}
     >
-      <Image src="/logo.svg" alt="OpenCut Logo" width={32} height={32} />
+      <Image src="./logo.svg" alt="OpenCut Logo" width={32} height={32} />
       <span className="text-xl font-medium hidden md:block">OpenCut</span>
     </Link>
   );
