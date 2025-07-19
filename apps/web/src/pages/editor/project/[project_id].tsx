@@ -161,47 +161,26 @@ export default function EditorPage() {
 
 import type { GetStaticPaths, GetStaticProps } from 'next';
 
-// CRITICAL: For Electron builds, we need to provide getStaticPaths to prevent data URL generation
-export const getStaticPaths: GetStaticPaths = async () => {
-  const isElectron = process.env.NEXT_PUBLIC_ELECTRON === "true";
-  
-  if (isElectron) {
-    console.log('🔧 [ROOT CAUSE FIX] Electron build - getStaticPaths with fallback blocking mode');
-    // For static export, return empty paths and fallback: 'blocking' 
-    // This prevents Next.js from trying to fetch data URLs for dynamic routes
+// ROOT CAUSE FIX: Only export getStaticPaths for non-Electron builds
+const isElectronBuild = process.env.NEXT_PUBLIC_ELECTRON === "true";
+
+if (!isElectronBuild) {
+  module.exports.getStaticPaths = async () => {
     return {
       paths: [],
-      fallback: 'blocking'
+      fallback: true
     };
-  }
-  
-  // For web builds, allow normal dynamic behavior
-  return {
-    paths: [],
-    fallback: true
   };
-};
+}
 
-// CRITICAL: Also need getStaticProps to complete the static generation contract
-export const getStaticProps: GetStaticProps = async ({ params }) => {
-  const isElectron = process.env.NEXT_PUBLIC_ELECTRON === "true";
-  
-  if (isElectron) {
-    console.log('🔧 [ROOT CAUSE FIX] Electron build - getStaticProps for dynamic route');
-    // For Electron builds, return minimal props without data fetching
+// ROOT CAUSE FIX: Only export getStaticProps for non-Electron builds  
+if (!isElectronBuild) {
+  module.exports.getStaticProps = async ({ params }: { params: any }) => {
     return {
       props: {
         projectId: params?.project_id || 'default'
       },
-      // Don't use revalidate in static export mode
+      revalidate: 60
     };
-  }
-  
-  // For web builds, return normal props
-  return {
-    props: {
-      projectId: params?.project_id || 'default'
-    },
-    revalidate: 60
   };
-};
+}

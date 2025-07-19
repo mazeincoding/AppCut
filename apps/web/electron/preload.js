@@ -122,6 +122,10 @@
         url.startsWith('/E:/') ||                          // Windows E: drive paths
         url.startsWith('/F:/') ||                          // Windows F: drive paths
         url.startsWith('/G:/') ||                          // Windows G: drive paths
+        url.includes('/C:/Users/') ||                      // Windows user path patterns
+        url.includes('/C:/Users/zdhpe/Desktop/') ||        // Specific user desktop paths
+        url.includes('/New%20folder/') ||                  // URL encoded folder names
+        url.includes('/OpenCut/apps/web/out/') ||          // Specific project output paths
         
         // === FACE-IT: SPECIFIC BUILD IDS ===
         url.includes('/wHIyv0g59oH17q8m1tyXU/') ||         // Old build ID data requests  
@@ -134,6 +138,15 @@
         url.includes('/R43QQ6API6EWSPJhrCgwO/') ||         // Previous build ID data requests
         url.includes('/Do0f_-QcP-YLEMqmGDBpT/') ||         // Previous build ID data requests
         url.includes('/b35e06df1b701879/') ||               // Current build ID data requests
+        url.includes('/joyNm0R-IQLKaMW1IInis/') ||          // Latest build ID data requests
+        url.includes('/haSSHc0XVmEvzLL2Y5htf/') ||          // Current build ID data requests
+        url.includes('/yqnIL2rtY92z5V3Tf5maI/') ||          // Latest build ID data requests
+        url.includes('/yq8G3Q4hvCgG6JpdmHyZD/') ||          // Current build ID data requests
+        
+        // === NUCLEAR OPTION: Block ANY .json request containing build patterns ===
+        (url.includes('.json') && url.match(/\/[A-Za-z0-9_-]{20,}/)) || // Any .json with build-id-like pattern
+        (url.includes('.html.json')) ||                        // Any .html.json anywhere
+        (url.includes('_next/data') && url.includes('.json')) ||
         
         // === PERSPECTIVE: PAGE-SPECIFIC PATTERNS ===
         url.includes('/projects.json') ||                   // Direct page data requests
@@ -212,6 +225,10 @@
         url.startsWith('/E:/') ||                          // Windows E: drive paths
         url.startsWith('/F:/') ||                          // Windows F: drive paths
         url.startsWith('/G:/') ||                          // Windows G: drive paths
+        url.includes('/C:/Users/') ||                      // Windows user path patterns
+        url.includes('/C:/Users/zdhpe/Desktop/') ||        // Specific user desktop paths
+        url.includes('/New%20folder/') ||                  // URL encoded folder names
+        url.includes('/OpenCut/apps/web/out/') ||          // Specific project output paths
         
         // === FACE-IT: SPECIFIC BUILD IDS ===
         url.includes('/wHIyv0g59oH17q8m1tyXU/') ||         // Old build ID data requests  
@@ -224,6 +241,15 @@
         url.includes('/R43QQ6API6EWSPJhrCgwO/') ||         // Previous build ID data requests
         url.includes('/Do0f_-QcP-YLEMqmGDBpT/') ||         // Previous build ID data requests
         url.includes('/b35e06df1b701879/') ||               // Current build ID data requests
+        url.includes('/joyNm0R-IQLKaMW1IInis/') ||          // Latest build ID data requests
+        url.includes('/haSSHc0XVmEvzLL2Y5htf/') ||          // Current build ID data requests
+        url.includes('/yqnIL2rtY92z5V3Tf5maI/') ||          // Latest build ID data requests
+        url.includes('/yq8G3Q4hvCgG6JpdmHyZD/') ||          // Current build ID data requests
+        
+        // === NUCLEAR OPTION: Block ANY .json request containing build patterns ===
+        (url.includes('.json') && url.match(/\/[A-Za-z0-9_-]{20,}/)) || // Any .json with build-id-like pattern
+        (url.includes('.html.json')) ||                        // Any .html.json anywhere
+        (url.includes('_next/data') && url.includes('.json')) ||
         
         // === PERSPECTIVE: PAGE-SPECIFIC PATTERNS ===
         url.includes('/projects.json') ||                   // Direct page data requests
