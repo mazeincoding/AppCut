@@ -78,7 +78,6 @@ export function Timeline() {
     snappingEnabled,
     toggleSnapping,
     dragState,
-    justFinishedDragging,
   } = useTimelineStore();
   const { mediaItems, addMediaItem } = useMediaStore();
   const { activeProject } = useProjectStore();
@@ -91,6 +90,14 @@ export function Timeline() {
   const timelineRef = useRef<HTMLDivElement>(null);
   const rulerRef = useRef<HTMLDivElement>(null);
   const [isInTimeline, setIsInTimeline] = useState(false);
+
+  // Track mouse down/up for distinguishing clicks from drag/resize ends
+  const mouseTrackingRef = useRef({
+    isMouseDown: false,
+    downX: 0,
+    downY: 0,
+    downTime: 0,
+  });
 
   // Timeline zoom functionality
   const { zoomLevel, setZoomLevel, handleWheel } = useTimelineZoom({
@@ -158,16 +165,69 @@ export function Timeline() {
     setCurrentSnapPoint(snapPoint);
   }, []);
 
+  // Track mouse down to distinguish real clicks from drag/resize ends
+  const handleTimelineMouseDown = useCallback((e: React.MouseEvent) => {
+    // Only track mouse down on timeline background areas (not elements)
+    const target = e.target as HTMLElement;
+    const isTimelineBackground =
+      !target.closest(".timeline-element") &&
+      !playheadRef.current?.contains(target) &&
+      !target.closest("[data-track-labels]");
+
+    if (isTimelineBackground) {
+      mouseTrackingRef.current = {
+        isMouseDown: true,
+        downX: e.clientX,
+        downY: e.clientY,
+        downTime: e.timeStamp,
+      };
+    }
+  }, []);
+
   // Timeline content click to seek handler
   const handleTimelineContentClick = useCallback(
     (e: React.MouseEvent) => {
-      // Don't seek if this was a selection box operation
-      if (isSelecting || justFinishedSelecting) {
+      const { isMouseDown, downX, downY, downTime } = mouseTrackingRef.current;
+
+      // Reset mouse tracking
+      mouseTrackingRef.current = {
+        isMouseDown: false,
+        downX: 0,
+        downY: 0,
+        downTime: 0,
+      };
+
+      // Only process as click if we tracked a mouse down on timeline background
+      if (!isMouseDown) {
+        console.log(
+          JSON.stringify({
+            ignoredClickWithoutMouseDown: true,
+            timeStamp: e.timeStamp,
+          })
+        );
         return;
       }
 
-      // Don't seek if we just finished dragging an element
-      if (justFinishedDragging) {
+      // Check if mouse moved significantly (indicates drag, not click)
+      const deltaX = Math.abs(e.clientX - downX);
+      const deltaY = Math.abs(e.clientY - downY);
+      const deltaTime = e.timeStamp - downTime;
+
+      if (deltaX > 5 || deltaY > 5 || deltaTime > 500) {
+        console.log(
+          JSON.stringify({
+            ignoredDragNotClick: true,
+            deltaX,
+            deltaY,
+            deltaTime,
+            timeStamp: e.timeStamp,
+          })
+        );
+        return;
+      }
+
+      // Don't seek if this was a selection box operation
+      if (isSelecting || justFinishedSelecting) {
         return;
       }
 
@@ -183,19 +243,6 @@ export function Timeline() {
 
       // Don't seek if clicking on track labels
       if ((e.target as HTMLElement).closest("[data-track-labels]")) {
-        clearSelectedElements();
-        return;
-      }
-
-      // MAIN FIX: Only seek on direct clicks to timeline background areas
-      // Check if the click is on the actual timeline background, not on any interactive elements
-      const target = e.target as HTMLElement;
-      const isTimelineBackground =
-        target.classList.contains("track-elements-container") ||
-        target.closest("[data-ruler-area]") ||
-        target.classList.contains("timeline-track-background");
-
-      if (!isTimelineBackground) {
         clearSelectedElements();
         return;
       }
@@ -256,7 +303,6 @@ export function Timeline() {
       clearSelectedElements,
       isSelecting,
       justFinishedSelecting,
-      justFinishedDragging,
     ]
   );
 
@@ -756,9 +802,9 @@ export function Timeline() {
               <TooltipTrigger asChild>
                 <Button variant="text" size="icon" onClick={toggleSnapping}>
                   {snappingEnabled ? (
-                    <Lock className="h-4 w-4" />
-                  ) : (
                     <LockOpen className="h-4 w-4 text-primary" />
+                  ) : (
+                    <Lock className="h-4 w-4" />
                   )}
                 </Button>
               </TooltipTrigger>
@@ -932,7 +978,10 @@ export function Timeline() {
           <div
             className="flex-1 relative overflow-hidden"
             onWheel={handleWheel}
-            onMouseDown={handleSelectionMouseDown}
+            onMouseDown={(e) => {
+              handleTimelineMouseDown(e);
+              handleSelectionMouseDown(e);
+            }}
             onClick={handleTimelineContentClick}
             ref={tracksContainerRef}
           >
