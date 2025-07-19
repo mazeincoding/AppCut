@@ -186,12 +186,6 @@ export function useTimelineElementResize({
   };
 
   const handleResizeEnd = () => {
-    console.log(
-      JSON.stringify({
-        resizeEnd: true,
-        timeStamp: Date.now(),
-      })
-    );
     setResizing(null);
   };
 
