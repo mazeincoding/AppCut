@@ -64,7 +64,8 @@ export function useTimelineElementVolume({
   useEffect(() => {
     if (timelineElementRef.current) {
       const height = timelineElementRef.current.clientHeight-BAR_HEIGHT
-      setPosition(height - track.volume * height)
+      const elementVolume = element.type === "media" ? element.volume : 0.5
+      setPosition(height - elementVolume * height)
     }
   }, [])
 
