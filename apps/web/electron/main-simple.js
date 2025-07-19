@@ -138,43 +138,20 @@ function createMainWindow() {
     }
   });
 
-  // ROOT CAUSE FIX: Block JSON requests at the main process level
-  console.log('🔧 [MAIN PROCESS] Setting up JSON request blocking...');
-  
-  mainWindow.webContents.session.webRequest.onBeforeRequest((details, callback) => {
-    const url = details.url;
-    
-    // Block any JSON data requests
-    const shouldBlock = url && (
-      url.includes('.json') || 
-      url.includes('_next/data') || 
-      url.includes('.html.json') ||
-      url.includes('electron-static')
-    );
-    
-    if (shouldBlock) {
-      console.log('🚫 [MAIN PROCESS] Blocking JSON request:', url);
-      // Block the request by redirecting to a successful empty JSON response
-      callback({ redirectURL: 'data:application/json,{"blocked":true,"success":true}' });
-      return;
-    }
-    
-    // Allow all other requests
-    callback({});
-  });
+  // Simplified: No request blocking needed since paths are now relative
+  console.log('✅ [MAIN PROCESS] Using relative paths - no request blocking needed');
 
-  // 使用 file:// 协议作为备用方案，确保应用能正常启动
+  // Load the built Next.js app with relative paths
   const unpackedPath = path.join(__dirname, '../out/index.html');
   
   let startUrl;
   if (fs.existsSync(unpackedPath)) {
-    // 暂时使用 file:// 协议确保应用能启动，后续可以切换到 app://
     startUrl = `file://${unpackedPath.replace(/\\/g, '/')}`;
-    console.log('📦 Loading built Next.js app via file:// protocol (reliable fallback)');
+    console.log('📦 Loading built Next.js app with relative paths');
     console.log('📁 Out directory:', path.join(__dirname, '../out'));
   } else {
     startUrl = `file://${path.join(__dirname, '../electron-app.html').replace(/\\/g, '/')}`;
-    console.log('📄 Loading static HTML fallback via file:// protocol');
+    console.log('📄 Loading static HTML fallback');
   }
   
   console.log('🚀 Loading URL:', startUrl);
@@ -192,8 +169,10 @@ function createMainWindow() {
     console.error('❌ loadURL promise rejected:', error);
   });
   
-  // Open DevTools for debugging
-  mainWindow.webContents.openDevTools();
+  // Open DevTools for debugging (only in development)
+  if (process.env.NODE_ENV === 'development' || process.argv.includes('--dev')) {
+    mainWindow.webContents.openDevTools();
+  }
   
   // Add keyboard shortcuts for DevTools
   mainWindow.webContents.on('before-input-event', (event, input) => {
@@ -307,20 +286,21 @@ function createMainWindow() {
     }
   });
 
-  // Configure CSP and security headers for local file access with app:// protocol
+  // Configure CSP for local file access
   mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
     callback({
       responseHeaders: {
         ...details.responseHeaders,
         'Content-Security-Policy': [
-          "default-src 'self' app: file:; " +
-          "script-src 'self' 'unsafe-inline' app: file:; " +
-          "style-src 'self' 'unsafe-inline' app: file:; " +
-          "img-src 'self' data: blob: app: file:; " +
-          "font-src 'self' data: app: file:; " +
-          "media-src 'self' blob: app: file:; " +
-          "connect-src 'self' data: blob: app: file:; " +
-          "manifest-src 'self' app: file:;"
+          "default-src 'self' 'unsafe-inline' 'unsafe-eval' file: data: blob:; " +
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval' file: data: blob:; " +
+          "style-src 'self' 'unsafe-inline' file: data: blob:; " +
+          "img-src 'self' data: blob: file:; " +
+          "font-src 'self' data: file:; " +
+          "media-src 'self' blob: file:; " +
+          "connect-src 'self' data: blob: file: https://api.github.com; " +
+          "manifest-src 'self' file:; " +
+          "worker-src 'self' blob: data:;"
         ]
       }
     });
@@ -373,31 +353,28 @@ function createMainWindow() {
     }
   });
 
-  // Handle navigation for Next.js router support
+  // Simplified navigation handling for static HTML files
   mainWindow.webContents.on('will-navigate', (event, url) => {
     console.log('🔄 Navigation attempt to:', url);
     
-    // Allow navigation to local files and all app:// protocol URLs
-    if (url.startsWith('file://') || url.startsWith('app://')) {
-      console.log('🔗 Allowing local navigation to:', url);
-      try {
-        console.log('  - Current URL:', event.sender && event.sender.getURL ? event.sender.getURL() : 'unknown');
-        console.log('  - Target URL:', url);
+    // Allow local file navigation only, block external navigation
+    if (url.startsWith('file://')) {
+      console.log('✅ Allowing local file navigation to:', url);
+      
+      // Try to resolve route to HTML file (e.g., /projects -> projects.html)
+      const filePath = url.replace('file://', '').replace(/^\/+/, '');
+      if (!fs.existsSync(filePath) && !filePath.includes('out')) {
+        // This might be a route, try to find the corresponding HTML file
+        const routeName = path.basename(filePath);
+        const htmlFile = path.join(__dirname, '../out', routeName + '.html');
         
-        // will-navigate 中增加路径补全逻辑
-        if (url.startsWith('app://')) {
-          const urlObj = new URL(url);
-          if (!urlObj.pathname.endsWith('.html') && path.extname(urlObj.pathname) === '') {
-            urlObj.pathname = path.join(urlObj.pathname, 'index.html');
-            const correctedUrl = urlObj.toString();
-            console.log('  - Converting route to HTML file:', correctedUrl);
-            event.preventDefault();
-            mainWindow.loadURL(correctedUrl);
-            return;
-          }
+        if (fs.existsSync(htmlFile)) {
+          const htmlUrl = `file://${htmlFile.replace(/\\/g, '/')}`;
+          console.log('🔄 Redirecting route to HTML file:', htmlUrl);
+          event.preventDefault();
+          mainWindow.loadURL(htmlUrl);
+          return;
         }
-      } catch (error) {
-        console.log('  - Could not get current URL:', error.message);
       }
     } else {
       console.log('🚫 Blocking external navigation to:', url);
@@ -496,112 +473,10 @@ function createMainWindow() {
   });
 }
 
-// Register protocol scheme before app is ready
-protocol.registerSchemesAsPrivileged([
-  { 
-    scheme: 'app', 
-    privileges: { 
-      secure: true, 
-      standard: true, 
-      supportsFetchAPI: true,
-      corsEnabled: true,
-      bypassCSP: false // 改为 false 以确保 CSP 正常工作
-    } 
-  }
-]);
+// Using file:// protocol with relative paths - no custom protocol needed
 
 app.whenReady().then(() => {
-  // 注册 app:// → out/ 的 registerBufferProtocol
-  console.log('🔧 [PROTOCOL] Registering app:// protocol handler...');
-  const result = protocol.registerBufferProtocol('app', (request, callback) => {
-    console.log('🔍 [PROTOCOL] Handler called for request:', request.url);
-    
-    const url = new URL(request.url);
-    let urlPath = url.pathname;
-    
-    // 若自定义协议解析失败就退回 file://…/index.html
-    if (!urlPath.endsWith('.html') && path.extname(urlPath) === '') {
-      urlPath = path.join(urlPath, 'index.html');
-    }
-    
-    // 清理路径
-    if (urlPath.startsWith('/')) {
-      urlPath = urlPath.substring(1);
-    }
-    
-    if (urlPath === '' || urlPath === '.') {
-      urlPath = 'index.html';
-    }
-    
-    const filePath = path.join(__dirname, '../out', urlPath);
-    console.log('📁 [PROTOCOL] Serving:', urlPath, '→', filePath);
-    
-    // 安全检查
-    const normalizedPath = path.normalize(filePath);
-    const outDir = path.normalize(path.join(__dirname, '../out'));
-    
-    if (!normalizedPath.startsWith(outDir)) {
-      console.error('🚫 [PROTOCOL] Security check failed:', normalizedPath);
-      callback({ error: -6 });
-      return;
-    }
-    
-    // 检查文件是否存在
-    if (!fs.existsSync(normalizedPath)) {
-      console.error('❌ [PROTOCOL] File not found:', normalizedPath);
-      // 退回到 index.html
-      const fallbackPath = path.join(__dirname, '../out/index.html');
-      if (fs.existsSync(fallbackPath)) {
-        const data = fs.readFileSync(fallbackPath);
-        callback({ mimeType: 'text/html', data });
-        return;
-      }
-      callback({ error: -6 });
-      return;
-    }
-
-    // 如果是目录，提供 index.html
-    const stats = fs.statSync(normalizedPath);
-    if (stats.isDirectory()) {
-      const indexPath = path.join(normalizedPath, 'index.html');
-      if (fs.existsSync(indexPath)) {
-        console.log('✅ [PROTOCOL] Serving index.html from directory');
-        const data = fs.readFileSync(indexPath);
-        callback({ mimeType: 'text/html', data });
-        return;
-      }
-    }
-    
-    // 确定 MIME 类型
-    const ext = path.extname(normalizedPath).toLowerCase();
-    const mimeTypes = {
-      '.html': 'text/html',
-      '.js': 'application/javascript',
-      '.css': 'text/css',
-      '.json': 'application/json',
-      '.png': 'image/png',
-      '.jpg': 'image/jpeg',
-      '.jpeg': 'image/jpeg',
-      '.gif': 'image/gif',
-      '.svg': 'image/svg+xml',
-      '.ico': 'image/x-icon',
-      '.webp': 'image/webp'
-    };
-    
-    const mimeType = mimeTypes[ext] || 'text/plain';
-    
-    // 提供文件
-    try {
-      const data = fs.readFileSync(normalizedPath);
-      console.log('✅ [PROTOCOL] Serving file successfully:', mimeType);
-      callback({ mimeType, data });
-    } catch (error) {
-      console.error('❌ [PROTOCOL] Error reading file:', error);
-      callback({ error: -6 });
-    }
-  });
-  
-  console.log('✅ Protocol registration result:', result);
+  console.log('✅ App ready - using file:// protocol with relative paths');
   
   // Set up application menu with DevTools option
   const template = [

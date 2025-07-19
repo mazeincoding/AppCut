@@ -67,12 +67,8 @@ export default function Document() {
                     
                     // Block ALL .json and _next/data requests completely
                     if (url && (url.includes('.json') || url.includes('_next/data') || url.includes('.html.json'))) {
-                      console.error('🚫 [IMMEDIATE BLOCK] FETCH BLOCKED WITH STACK TRACE:');
-                      console.error('URL:', url);
-                      console.error('Called from:', new Error().stack);
-                      console.error('Input object:', input);
-                      console.error('=================================');
-                      return Promise.reject(new Error('Data fetching completely disabled in Electron - URL: ' + url));
+                      console.warn('🚫 [ELECTRON] Blocked data fetch:', url.split('/').pop());
+                      return Promise.reject(new Error('Data fetching disabled in Electron'));
                     }
                     return originalFetch.apply(this, arguments);
                   };
@@ -93,11 +89,8 @@ export default function Document() {
                       });
                       
                       if (typeof url === 'string' && (url.includes('.json') || url.includes('_next/data') || url.includes('.html.json'))) {
-                        console.error('🚫 [IMMEDIATE BLOCK] XHR BLOCKED WITH STACK TRACE:');
-                        console.error('Method:', method, 'URL:', url);
-                        console.error('Called from:', new Error().stack);
-                        console.error('=================================');
-                        throw new Error('Data fetching completely disabled in Electron - XHR URL: ' + url);
+                        console.warn('🚫 [ELECTRON] Blocked XHR:', method, url.split('/').pop());
+                        throw new Error('Data fetching disabled in Electron');
                       }
                       return originalOpen.apply(this, arguments);
                     };
