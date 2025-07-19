@@ -43,7 +43,7 @@ if (-not $SkipNextBuild) {
     
     # Fix paths for Electron
     Write-Host "Fixing paths for Electron..." -ForegroundColor Yellow
-    & bun run fix-electron-paths
+    & node scripts/fix-electron-static-paths.js
     
     Pop-Location
     Write-Host "Next.js build complete!" -ForegroundColor Green
@@ -69,7 +69,7 @@ Write-Host "Building Electron app..." -ForegroundColor Yellow
 Push-Location "apps\web"
 
 # Run electron-builder
-$electronBuildProcess = Start-Process -FilePath "bun" -ArgumentList "run", "dist:win" -PassThru -NoNewWindow
+$electronBuildProcess = Start-Process -FilePath "bun" -ArgumentList "run", "electron:dist:win" -PassThru -NoNewWindow
 $electronBuildProcess.WaitForExit()
 
 if ($electronBuildProcess.ExitCode -ne 0) {
