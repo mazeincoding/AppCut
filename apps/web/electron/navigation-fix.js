@@ -66,8 +66,9 @@ function initNavigationFix() {
         return fixedUrl;
       }
 
-      // Ensure using app root directory instead of current directory
-      const fixedUrl = `${appRoot}/${cleanPath}.html`;
+      // Ensure using app root directory and always add .html extension
+      const htmlPath = cleanPath.endsWith('.html') ? cleanPath : `${cleanPath}.html`;
+      const fixedUrl = `${appRoot}/${htmlPath}`;
       console.log('🔧 [NAV-FIX] Absolute path fixed:', url, '→', fixedUrl);
       return fixedUrl;
     }
@@ -308,8 +309,9 @@ window.fixElectronPath = function (url) {
       return `${appRoot}/editor/project/[project_id].html`;
     }
 
-    // Ensure using app root directory instead of current directory
-    return `${appRoot}/${cleanPath}.html`;
+    // Ensure using app root directory and always add .html extension
+    const htmlPath = cleanPath.endsWith('.html') ? cleanPath : `${cleanPath}.html`;
+    return `${appRoot}/${htmlPath}`;
   }
 
   if (!url.includes('.') && !url.includes('/')) {

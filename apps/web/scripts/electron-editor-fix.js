@@ -16,6 +16,20 @@ if (!fs.existsSync(editorHtmlPath)) {
 
 let html = fs.readFileSync(editorHtmlPath, 'utf8');
 
+console.log('🧹 [ELECTRON-EDITOR-FIX] Removing blocking fetch override script...');
+
+// CRITICAL FIX: Remove the massive blocking script that prevents React from working
+// This script overrides fetch/XMLHttpRequest and blocks React component mounting
+const blockingScriptPattern = /<script>\s*console\.log\('🚀 \[ELECTRON DEBUG\][\s\S]*?<\/script>/;
+const match = html.match(blockingScriptPattern);
+if (match) {
+  console.log('🗑️ [ELECTRON-EDITOR-FIX] Found and removing blocking script:', match[0].substring(0, 100) + '...');
+  html = html.replace(blockingScriptPattern, '');
+  console.log('✅ [ELECTRON-EDITOR-FIX] Blocking script removed successfully');
+} else {
+  console.log('ℹ️ [ELECTRON-EDITOR-FIX] No blocking script found to remove');
+}
+
 // Add a comprehensive fix script right before the closing body tag
 const editorFixScript = `
 <script>

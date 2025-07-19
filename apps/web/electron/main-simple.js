@@ -241,7 +241,7 @@ function createMainWindow() {
     });
   });
   
-  mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+  mainWindow.webContents.on('console', (event, level, message, line, sourceId) => {
     console.log(`[RENDERER] ${message}`);
   });
   
@@ -413,7 +413,7 @@ function createMainWindow() {
 
   // Test IPC and storage
   // Forward renderer console logs to main process
-  mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+  mainWindow.webContents.on('console', (event, level, message, line, sourceId) => {
     const levelStr = ['verbose', 'info', 'warning', 'error'][level] || 'unknown';
     console.log(`[RENDERER ${levelStr.toUpperCase()}] ${message}`);
     if (sourceId) {
