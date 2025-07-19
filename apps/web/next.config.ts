@@ -93,7 +93,7 @@ const nextConfig: NextConfig = {
           use: {
             loader: 'file-loader',
             options: {
-              publicPath: './',
+              publicPath: './_next/static/fonts/',
               outputPath: 'static/fonts/',
               name: '[name].[ext]',
             },

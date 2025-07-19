@@ -6,7 +6,7 @@ import {
   Comic_Neue,
 } from "next/font/google";
 
-// Configure all fonts
+// Configure all fonts - simplified for Electron compatibility
 const inter = Inter({ subsets: ["latin"] });
 const roboto = Roboto({ subsets: ["latin"], weight: ["400", "700"] });
 const openSans = Open_Sans({ subsets: ["latin"] });
