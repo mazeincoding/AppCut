@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   productionBrowserSourceMaps: true,
   output: isElectron ? "export" : "standalone",
+  // Use relative paths for Electron - no assetPrefix to maintain font compatibility
   assetPrefix: isElectron ? undefined : undefined,
   basePath: isElectron ? "" : undefined,
   trailingSlash: isElectron,
