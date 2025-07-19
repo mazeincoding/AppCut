@@ -114,7 +114,7 @@ interface TimelineStore {
     startTime: number
   ) => void;
   toggleTrackMute: (trackId: string) => void;
-  setTrackVolume: (trackId: string, elementId: string, volume: number) => void;
+  updateElementVolume: (trackId: string, elementId: string, volume: number) => void;
 
   // Split operations for elements
   splitElement: (
@@ -559,27 +559,26 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       );
     },
 
-    setTrackVolume: (trackId: string, elementId: string, volume: number) => {
+    updateElementVolume: (trackId: string, elementId: string, volume: number) => {
       if (volume < 0 || volume > 1) {
         return
       }
 
       get().pushHistory();
       updateTracksAndSave(
-        get()._tracks.map((track) => {
-          if (track.id === trackId) {
-            track.elements.map((element) => {
-              if (element.id === elementId && element.type === "media") {
-                element.volume = volume
+        get()._tracks.map((track) =>
+          track.id === trackId
+            ? {
+                ...track,
+                elements: track.elements.map((element) =>
+                  element.id === elementId && element.type === "media"
+                    ? { ...element, volume: volume }
+                    : element
+                ),
               }
-              return element
-            })
-          }
-          return track
-        })
+            : track
+        )
       );
-
-      console.log(get()._tracks)
     },
 
     updateTextElement: (trackId, elementId, updates) => {

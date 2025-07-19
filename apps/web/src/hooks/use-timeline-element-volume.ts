@@ -4,18 +4,18 @@ import { useCallback, useEffect, useState } from "react";
 
 const BAR_HEIGHT = 2
 
-interface UseMediaVolumeProps {
+interface UseTimelineElementVolumeProps {
   track: TimelineTrack,
   element: TimelineElement,
   timelineElementRef: React.RefObject<HTMLDivElement>
 }
 
-export function useMediaVolume({
+export function useTimelineElementVolume({
   track,
   element,
   timelineElementRef,
-}: UseMediaVolumeProps) {
-  const { setTrackVolume } = useTimelineStore();
+}: UseTimelineElementVolumeProps) {
+  const { updateElementVolume } = useTimelineStore();
 
   const [position, setPosition] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -31,9 +31,9 @@ export function useMediaVolume({
     setPosition(clampedY);
 
     const volume = 1 - clampedY / (timelineElement.clientHeight-BAR_HEIGHT);
-    setTrackVolume(track.id, element.id, Math.max(0, Math.min(volume, 1)));
+    updateElementVolume(track.id, element.id, Math.max(0, Math.min(volume, 1)));
 
-  }, [setTrackVolume, track.id, timelineElementRef]);
+  }, [updateElementVolume, track.id, timelineElementRef]);
 
   const handleVolumeMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();

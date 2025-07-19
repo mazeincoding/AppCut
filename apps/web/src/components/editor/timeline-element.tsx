@@ -43,7 +43,7 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "../ui/context-menu";
-import { MediaVolume } from "./media-volume";
+import { TimelineElementVolume } from "./timeline-element-volume";
 
 export function TimelineElement({
   element,
@@ -279,7 +279,7 @@ export function TimelineElement({
               {element.name}
             </span>
           )}
-          <MediaVolume track={track} element={element} timelineElementRef={timelineElementRef} />
+          <TimelineElementVolume track={track} element={element} timelineElementRef={timelineElementRef} />
         </div>
       );
     }
@@ -295,7 +295,7 @@ export function TimelineElement({
               className="w-full"
             />
           </div>
-          <MediaVolume track={track} element={element} timelineElementRef={timelineElementRef} />
+          <TimelineElementVolume track={track} element={element} timelineElementRef={timelineElementRef} />
         </div>
       );
     }
