@@ -155,32 +155,5 @@ export default function EditorPage() {
   );
 }
 
-// =================== ROOT CAUSE FIX: DYNAMIC ROUTE DATA FETCHING ===================
-// ULTRASYNC DEEPSYNC FACE-IT: The dynamic route [project_id] was causing Next.js to generate
-// data URLs during static export because getStaticPaths was missing
-
-import type { GetStaticPaths, GetStaticProps } from 'next';
-
-// ROOT CAUSE FIX: Only export getStaticPaths for non-Electron builds
-const isElectronBuild = process.env.NEXT_PUBLIC_ELECTRON === "true";
-
-if (!isElectronBuild) {
-  module.exports.getStaticPaths = async () => {
-    return {
-      paths: [],
-      fallback: true
-    };
-  };
-}
-
-// ROOT CAUSE FIX: Only export getStaticProps for non-Electron builds  
-if (!isElectronBuild) {
-  module.exports.getStaticProps = async ({ params }: { params: any }) => {
-    return {
-      props: {
-        projectId: params?.project_id || 'default'
-      },
-      revalidate: 60
-    };
-  };
-}
+// ROOT CAUSE FIX: No static generation for Electron builds
+// Dynamic routes are handled client-side only

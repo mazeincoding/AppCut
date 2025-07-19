@@ -143,10 +143,10 @@
         url.includes('/yqnIL2rtY92z5V3Tf5maI/') ||          // Latest build ID data requests
         url.includes('/yq8G3Q4hvCgG6JpdmHyZD/') ||          // Current build ID data requests
         
-        // === NUCLEAR OPTION: Block ANY .json request containing build patterns ===
-        (url.includes('.json') && url.match(/\/[A-Za-z0-9_-]{20,}/)) || // Any .json with build-id-like pattern
-        (url.includes('.html.json')) ||                        // Any .html.json anywhere
-        (url.includes('_next/data') && url.includes('.json')) ||
+        // === ROOT CAUSE FIX: Block ALL .json requests that could be Next.js data ===
+        url.includes('.json') ||                               // Block ALL .json requests
+        url.includes('_next/data') ||                          // Block _next/data paths
+        url.includes('.html.json') ||                          // Block .html.json files
         
         // === PERSPECTIVE: PAGE-SPECIFIC PATTERNS ===
         url.includes('/projects.json') ||                   // Direct page data requests
@@ -246,10 +246,10 @@
         url.includes('/yqnIL2rtY92z5V3Tf5maI/') ||          // Latest build ID data requests
         url.includes('/yq8G3Q4hvCgG6JpdmHyZD/') ||          // Current build ID data requests
         
-        // === NUCLEAR OPTION: Block ANY .json request containing build patterns ===
-        (url.includes('.json') && url.match(/\/[A-Za-z0-9_-]{20,}/)) || // Any .json with build-id-like pattern
-        (url.includes('.html.json')) ||                        // Any .html.json anywhere
-        (url.includes('_next/data') && url.includes('.json')) ||
+        // === ROOT CAUSE FIX: Block ALL .json requests that could be Next.js data ===
+        url.includes('.json') ||                               // Block ALL .json requests
+        url.includes('_next/data') ||                          // Block _next/data paths
+        url.includes('.html.json') ||                          // Block .html.json files
         
         // === PERSPECTIVE: PAGE-SPECIFIC PATTERNS ===
         url.includes('/projects.json') ||                   // Direct page data requests

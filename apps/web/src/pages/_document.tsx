@@ -49,35 +49,36 @@ export default function Document() {
             __html: `
               console.log('🚀 [ELECTRON DEBUG] JavaScript executing in Electron');
               
-              // Early React setup for Electron
-              if (typeof window !== 'undefined' && window.electronAPI) {
-                console.log('🔧 [ELECTRON] Setting up early React environment...');
-                
-                // Disable Next.js hydration warnings in Electron
-                window.__NEXT_HYDRATE_ERROR__ = false;
-                
-                // Mark as Electron environment
-                window.__ELECTRON_ENV__ = true;
-                
-                // Override Next.js router data fetching immediately
-                window.__NEXT_DATA__ = {
-                  props: { pageProps: {} },
-                  page: '/',
-                  query: {},
-                  buildId: 'electron-static',
-                  runtimeConfig: {},
-                  isFallback: false,
-                  dynamicIds: [],
-                  err: null,
-                  gsp: false,
-                  gssp: false,
-                  customServer: false,
-                  gip: false,
-                  appGip: false,
-                  head: []
+              // ROOT CAUSE FIX: Block ALL data fetching before Next.js can start
+              if (typeof window !== 'undefined') {
+                // Override fetch globally IMMEDIATELY before any library loads
+                const originalFetch = window.fetch;
+                window.fetch = function(input, init) {
+                  const url = typeof input === 'string' ? input : input.url || input.toString();
+                  // Block any .json requests or _next/data requests
+                  if (url.includes('.json') || url.includes('_next/data') || url.includes('.html.json')) {
+                    console.log('🚫 [ROOT FIX] Blocked fetch attempt:', url);
+                    return Promise.reject(new Error('Data fetching completely disabled'));
+                  }
+                  return originalFetch.apply(this, arguments);
                 };
                 
-                console.log('✅ [ELECTRON] __NEXT_DATA__ overridden early');
+                // Override XMLHttpRequest globally before any library loads
+                const OriginalXHR = window.XMLHttpRequest;
+                window.XMLHttpRequest = function() {
+                  const xhr = new OriginalXHR();
+                  const originalOpen = xhr.open;
+                  xhr.open = function(method, url) {
+                    if (typeof url === 'string' && (url.includes('.json') || url.includes('_next/data') || url.includes('.html.json'))) {
+                      console.log('🚫 [ROOT FIX] Blocked XHR attempt:', url);
+                      throw new Error('Data fetching completely disabled');
+                    }
+                    return originalOpen.apply(this, arguments);
+                  };
+                  return xhr;
+                };
+                
+                console.log('✅ [ROOT FIX] All data fetching mechanisms blocked globally');
               }
               
               // Wait for DOM to be ready
