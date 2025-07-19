@@ -6,9 +6,13 @@ export class OPFSAdapter implements StorageAdapter<File> {
   constructor(directoryName: string = "media") {
     this.directoryName = directoryName;
   }
+ 
+  private getOPFSRoot(): Promise<FileSystemDirectoryHandle> {
+    return navigator.storage.getDirectory();
+  }
 
   private async getDirectory(): Promise<FileSystemDirectoryHandle> {
-    const opfsRoot = await navigator.storage.getDirectory();
+    const opfsRoot = await this.getOPFSRoot();
     return await opfsRoot.getDirectoryHandle(this.directoryName, {
       create: true,
     });
@@ -59,11 +63,10 @@ export class OPFSAdapter implements StorageAdapter<File> {
   }
 
   async clear(): Promise<void> {
-    const directory = await this.getDirectory();
+    const opfsRoot = await this.getOPFSRoot();
 
-    for await (const name of directory.keys()) {
-      await directory.removeEntry(name);
-    }
+    // remove this directory and its contents
+    await opfsRoot.removeEntry(this.directoryName, { recursive: true });
   }
 
   // Helper method to check OPFS support
