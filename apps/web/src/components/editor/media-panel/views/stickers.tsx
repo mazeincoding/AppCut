@@ -1,20 +1,12 @@
 import { DraggableMediaItem } from "@/components/ui/draggable-item";
-import { Search } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { MediaItem, useMediaStore } from "@/stores/media-store";
 
-import { useDragDrop } from "@/hooks/use-drag-drop";
-import { processMediaFiles } from "@/lib/media-processing";
-import { toast } from "sonner";
-import { useProjectStore } from "@/stores/project-store";
 
 async function grab_data(searchTerm: string, setNext: Function, next: string = "")
 {
     // set the apikey and limit
-    var apikey = "AIzaSyBoGh9WszS_hXwaQP3ppEdLESqcyPg7mZs"; // add your tenor api key
+    var apikey = "ADD_YOUR_TENOR_KEY"; // add your tenor api key
     var clientkey = "openCut";
     var lmt = 20;
 
@@ -26,12 +18,12 @@ async function grab_data(searchTerm: string, setNext: Function, next: string = "
 
     try {
         const response = await fetch(search_url)
+        if (!response.ok) return Promise.reject(new Error("NOTE: make sure you've put your tenor api key."))
+
         const data = await response.json()
 
-        console.log(data)
         const gifs = data.results.map((gif: any) => gif.media_formats.gif.url);
         const next = data.next // this will be used to load more gifs when scrolling down
-        console.log("Next page token: ", next)
         setNext(next)
         return gifs
 
@@ -41,8 +33,6 @@ async function grab_data(searchTerm: string, setNext: Function, next: string = "
     }
 
 }
-
-
 
 
 function extractGifName(url: string) {
@@ -56,28 +46,10 @@ function extractGifName(url: string) {
 
 }
 
-async function createFileFromUrl(url: string){
-  const response = await fetch(url)
-
-  const blob: Blob = await response.blob()
-  const gifFileName: string = extractGifName(response.url)
-
-  const file: File = new File([blob], gifFileName, { type: blob.type })
-
-  const objUrl = URL.createObjectURL(file)
-  return objUrl
-
-}
-
-
-
 export function StickerView() {
   const [searchQuery, setSearchQuery] = useState("");
   const [gifs, setGifs] = useState<string[]>([]);
   const [next, setNext] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [progress, setProgress] = useState(0)
-  const { mediaItems, addMediaItem, removeMediaItem } = useMediaStore();
 
   useEffect(() => {
     if (searchQuery === "") return;
@@ -106,7 +78,6 @@ export function StickerView() {
         grab_data(searchQuery, setNext, next).then((urls: string[]) => {
             urls.forEach((url: string) => {
                 if (!gifs.includes(url)) setGifs(prev => [...prev, url]);
-                else console.log("Already included: ", url)
 
             });
 
@@ -126,45 +97,7 @@ export function StickerView() {
     setGifs([])
     setSearchQuery(searchTerm);
   }
-  async function processFiles(files: FileList | File[]) {
-    const { activeProject } = useProjectStore();
-    
-    if (!files || files.length === 0) return;
-    if (!activeProject) {
-      toast.error("No active project");
-      return;
-    }
-
-    setIsProcessing(true);
-    setProgress(0);
-    try {
-      // Process files (extract metadata, generate thumbnails, etc.)
-      const processedItems = await processMediaFiles(files, (p) =>
-        setProgress(p)
-      );
-
-      // Add each processed media item to the store
-      for (const item of processedItems) {
-        await addMediaItem(activeProject.id, item);
-      }
-      
-    } catch (error) {
-      // Show error toast if processing fails
-      console.error("Error processing files:", error);
-      toast.error("Failed to process files");
-    } finally {
-      setIsProcessing(false);
-      setProgress(0);
-    }
-  };
-
-
-  const { isDragOver, dragProps } = useDragDrop({
-    // When files are dropped, process them
-    // onDrop: processFiles,
-    onDrop: (files) => {console.log("askdsajdjhsadas")},
-
-  });
+  
 
   return (
     <>
@@ -181,14 +114,25 @@ export function StickerView() {
 
         </div>
 
-        <div   className="gifs flex flex-wrap gap-2 md:gap-10 p-4 ml-14 mt-5"
-               style={{
-                maxHeight: '50vh',
-                overflowY: 'auto', // Use auto instead of scroll for better UX
-               }}>
+        <div
+          className="gifs grid p-4 mt-5"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+            justifyContent: 'center',
+            gap: '1rem',
+            maxHeight: '50vh',
+            overflowY: 'auto',
+          }}
+        >
+          {gifs.length === 0 ? (
+            <p style={{ gridColumn: '1 / -1', textAlign: 'center', margin: '2rem 0', fontWeight: 'bold', color: '#888' }}>
+              NO GIFS
+            </p>
+          ) : null}
             {gifs.map((URL, index) => {
                 return (
-                    <div className="sticker w-1/2 sm:w-1/2 md:w-1/5 lg:w-1/6 xl:w-1/8 flex-grow-0 flex-shrink-0" key={index} style={{ boxSizing: "border-box" }}>
+                    <div className="sticker w-1/2 sm:w-1/2 md:w-1/5 lg:w-1/6 xl:w-1/8 flex-grow-0 flex-shrink-0 ml-5" key={index} style={{ boxSizing: "border-box" }}>
                         <DraggableMediaItem
                             name="GIF"
                             preview={
