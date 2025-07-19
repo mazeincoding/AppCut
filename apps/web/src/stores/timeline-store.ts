@@ -114,6 +114,7 @@ interface TimelineStore {
     startTime: number
   ) => void;
   toggleTrackMute: (trackId: string) => void;
+  setTrackVolume: (trackId: string, volume: number) => void;
 
   // Split operations for elements
   splitElement: (
@@ -315,6 +316,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
         type,
         elements: [],
         muted: false,
+        volume: 0.5
       };
 
       updateTracksAndSave([...get()._tracks, newTrack]);
@@ -340,6 +342,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
         type,
         elements: [],
         muted: false,
+        volume: 0.5
       };
 
       const newTracks = [...get()._tracks];
@@ -556,6 +559,19 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       );
     },
 
+    setTrackVolume: (trackId: string, volume: number) => {
+      if (volume < 0 || volume > 1) {
+        return
+      }
+
+      get().pushHistory();
+      updateTracksAndSave(
+        get()._tracks.map((track) =>
+          track.id === trackId ? { ...track, volume: volume } : track
+        )
+      );
+    },
+
     updateTextElement: (trackId, elementId, updates) => {
       get().pushHistory();
       updateTracksAndSave(
@@ -756,6 +772,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
             },
           ],
           muted: false,
+          volume: 0.5
         };
 
         updateTracksAndSave([...get()._tracks, newAudioTrack]);
@@ -943,7 +960,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
         },
         justFinishedDragging: true,
       });
-      
+
       setTimeout(() => {
         set({ justFinishedDragging: false });
       }, 50);

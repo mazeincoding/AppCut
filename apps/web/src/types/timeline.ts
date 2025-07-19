@@ -83,6 +83,7 @@ export interface TimelineTrack {
   name: string;
   type: TrackType;
   elements: TimelineElement[];
+  volume: number;
   muted?: boolean;
   isMain?: boolean;
 }
@@ -118,6 +119,7 @@ export function ensureMainTrack(tracks: TimelineTrack[]): TimelineTrack[] {
       elements: [],
       muted: false,
       isMain: true,
+      volume: 0.5
     };
     return [mainTrack, ...tracks];
   }
