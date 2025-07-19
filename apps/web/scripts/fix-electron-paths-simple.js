@@ -66,6 +66,35 @@ function validatePaths(content, filename) {
   return issues.length === 0;
 }
 
+// NEW: Enhanced font-specific validation function
+function validateFontPaths(content, filename) {
+  const fontIssues = [];
+  
+  // Check for remaining absolute font paths
+  const absoluteFontRegex = /(?:href|src|url)=?['"]?\/[^'"]*\.(woff2?|ttf|eot|otf)[^'"]*['"]?/g;
+  let match;
+  while ((match = absoluteFontRegex.exec(content)) !== null) {
+    fontIssues.push(`Absolute font path found: ${match[0]}`);
+  }
+  
+  // Check for CSS font-face issues
+  if (filename.endsWith('.css')) {
+    const cssUrlRegex = /url\(['"]?\/[^'"]*\.(woff2?|ttf|eot|otf)[^'")]*['"]?\)/g;
+    while ((match = cssUrlRegex.exec(content)) !== null) {
+      fontIssues.push(`CSS absolute font URL: ${match[0]}`);
+    }
+  }
+  
+  if (fontIssues.length > 0) {
+    console.warn(`⚠️ [FONT-FIX] ${filename} has ${fontIssues.length} font path issues:`);
+    fontIssues.forEach(issue => console.warn(`  - ${issue}`));
+  } else {
+    console.log(`✅ [FONT-FIX] ${filename} - all font paths are relative`);
+  }
+  
+  return fontIssues.length === 0;
+}
+
 // =================== ENHANCED PATH FIXING + LOCATION PATCHING ===================
 // Combined path fixing and location patching
 function fixElectronPaths(content, filename) {
@@ -92,14 +121,58 @@ function fixElectronPaths(content, filename) {
     return `url("${path}")`;
   });
   
-  // PHASE 3: Fix preload href for fonts and assets (enhanced)
-  fixedContent = fixedContent.replace(/href="([^"]*_next\/static\/media\/[^"]+)"/g, (match, path) => {
-    if (!path.startsWith('/')) {
-      // Already relative, but double-check it's correct
-      return match;
-    }
+  // REPLACE/ENHANCE LINES 95-109 WITH COMPREHENSIVE FONT FIXING:
+  // Fix preload href for fonts and assets (comprehensive) - ENHANCED
+  fixedContent = fixedContent.replace(/href="\/([^"]*_next\/static\/[^"]+)"/g, (match, path) => {
     changeCount++;
-    return `href="${path.substring(1)}"`;
+    console.log(`  🎯 [PATH-FIX] Fixed _next static href: /${path} → ${path}`);
+    return `href="${path}"`;
+  });
+
+  // NEW: Fix CSS @font-face src paths in CSS files
+  if (filename.endsWith('.css')) {
+    fixedContent = fixedContent.replace(/src:\s*url\(['"]?\/([^'"]+\.woff2?[^'")]*?)['"]?\)/g, (match, path) => {
+      changeCount++;
+      console.log(`  🎯 [PATH-FIX] Fixed CSS font src: /${path} → ${path}`);
+      return `src: url("${path}")`;
+    });
+    
+    // Fix any font-face url() references in CSS
+    fixedContent = fixedContent.replace(/url\(['"]?\/([^'"]*\.(woff2?|ttf|eot|otf)[^'")]*?)['"]?\)/g, (match, path) => {
+      changeCount++;
+      console.log(`  🎯 [PATH-FIX] Fixed CSS font url: /${path} → ${path}`);
+      return `url("${path}")`;
+    });
+  }
+
+  // NEW: Fix link rel="preload" as="font" specifically in HTML
+  if (filename.endsWith('.html')) {
+    fixedContent = fixedContent.replace(/(<link[^>]*rel=["']preload["'][^>]*as=["']font["'][^>]*href=["'])\/([^"']+)(["'][^>]*>)/g, (match, before, path, after) => {
+      changeCount++;
+      console.log(`  🎯 [PATH-FIX] Fixed HTML font preload: /${path} → ${path}`);
+      return `${before}${path}${after}`;
+    });
+    
+    // Fix any remaining font file references in link tags
+    fixedContent = fixedContent.replace(/(<link[^>]*href=["'])\/([^"']*\.(woff2?|ttf|eot|otf)[^"']*)(["'][^>]*>)/g, (match, before, path, after) => {
+      changeCount++;
+      console.log(`  🎯 [PATH-FIX] Fixed HTML font link: /${path} → ${path}`);
+      return `${before}${path}${after}`;
+    });
+  }
+
+  // NEW: Fix any remaining font file references (catch-all)
+  fixedContent = fixedContent.replace(/"\/([^"]*\.(woff2?|ttf|eot|otf)[^"]*)"/g, (match, path) => {
+    changeCount++;
+    console.log(`  🎯 [PATH-FIX] Fixed general font reference: /${path} → ${path}`);
+    return `"${path}"`;
+  });
+
+  // NEW: Fix Next.js font optimization paths
+  fixedContent = fixedContent.replace(/href="\/([^"]*\/_next\/static\/[^"]*\.(woff2?|ttf)[^"]*)"/g, (match, path) => {
+    changeCount++;
+    console.log(`  🎯 [PATH-FIX] Fixed Next.js optimized font: /${path} → ${path}`);
+    return `href="${path}"`;
   });
   
   // PHASE 3: Fix any remaining absolute _next references
@@ -170,6 +243,12 @@ function fixElectronPaths(content, filename) {
   const isValid = validatePaths(fixedContent, path.basename(filename));
   if (isValid) {
     console.log(`  ✅ [PATH-FIX] All paths validated for ${path.basename(filename)}`);
+  }
+  
+  // NEW: Validate font paths specifically
+  const fontValid = validateFontPaths(fixedContent, path.basename(filename));
+  if (!fontValid) {
+    console.warn(`  ⚠️ [PATH-FIX] Font path issues detected in ${path.basename(filename)}`);
   }
   
   return fixedContent;

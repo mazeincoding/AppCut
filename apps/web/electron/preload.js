@@ -4,38 +4,86 @@
   'use strict';
   console.log('🔧 [ELECTRON] Applying immediate location patches...');
   
-  // Override location.assign immediately - before any other scripts
+  // SAFE: Check if properties exist before attempting to redefine
   try {
-    Object.defineProperty(window.location, 'assign', {
-      value: function(url) {
-        console.log('🔧 [ELECTRON] location.assign intercepted:', url);
+    // Check if location properties are already defined and configurable
+    const assignDescriptor = Object.getOwnPropertyDescriptor(window.location, 'assign');
+    const replaceDescriptor = Object.getOwnPropertyDescriptor(window.location, 'replace');
+    
+    console.log('🔧 [ELECTRON] Checking location property descriptors...');
+    console.log('- assign configurable:', assignDescriptor?.configurable);
+    console.log('- replace configurable:', replaceDescriptor?.configurable);
+    
+    // Safe patching approach for location.assign
+    if (!assignDescriptor || assignDescriptor.configurable) {
+      Object.defineProperty(window.location, 'assign', {
+        value: function(url) {
+          console.log('🔧 [ELECTRON] location.assign intercepted:', url);
+          try {
+            window.location.href = url;
+          } catch (e) {
+            console.warn('🔧 [ELECTRON] location.assign fallback:', e);
+          }
+        },
+        writable: false,
+        configurable: false
+      });
+      console.log('✅ [ELECTRON] location.assign patched successfully');
+    } else {
+      console.log('ℹ️ [ELECTRON] location.assign non-configurable, using fallback method');
+      // Store original if it exists
+      window.location._originalAssign = window.location.assign;
+      // Create safe wrapper 
+      window.location._electronAssign = function(url) {
+        console.log('🔧 [ELECTRON] _electronAssign called:', url);
         try {
           window.location.href = url;
         } catch (e) {
-          console.warn('🔧 [ELECTRON] location.assign fallback:', e);
+          console.warn('🔧 [ELECTRON] _electronAssign fallback:', e);
         }
-      },
-      writable: false,
-      configurable: false
-    });
+      };
+    }
     
-    // Override location.replace for completeness
-    Object.defineProperty(window.location, 'replace', {
-      value: function(url) {
-        console.log('🔧 [ELECTRON] location.replace intercepted:', url);
+    // Safe patching approach for location.replace
+    if (!replaceDescriptor || replaceDescriptor.configurable) {
+      Object.defineProperty(window.location, 'replace', {
+        value: function(url) {
+          console.log('🔧 [ELECTRON] location.replace intercepted:', url);
+          try {
+            window.location.href = url;
+          } catch (e) {
+            console.warn('🔧 [ELECTRON] location.replace fallback:', e);
+          }
+        },
+        writable: false,
+        configurable: false
+      });
+      console.log('✅ [ELECTRON] location.replace patched successfully');
+    } else {
+      console.log('ℹ️ [ELECTRON] location.replace non-configurable, using fallback method');
+      window.location._originalReplace = window.location.replace;
+      window.location._electronReplace = function(url) {
+        console.log('🔧 [ELECTRON] _electronReplace called:', url);
         try {
           window.location.href = url;
         } catch (e) {
-          console.warn('🔧 [ELECTRON] location.replace fallback:', e);
+          console.warn('🔧 [ELECTRON] _electronReplace fallback:', e);
         }
-      },
-      writable: false, 
-      configurable: false
-    });
+      };
+    }
     
-    console.log('✅ [ELECTRON] Immediate location patches applied successfully');
+    console.log('✅ [ELECTRON] All location patches applied safely without errors');
   } catch (e) {
-    console.error('❌ [ELECTRON] Failed to apply immediate location patches:', e);
+    console.warn('⚠️ [ELECTRON] Location patching failed completely, using emergency fallbacks:', e);
+    // Emergency fallbacks that always work
+    window.location._electronAssign = function(url) { 
+      console.log('🚨 [ELECTRON] Emergency assign:', url);
+      window.location.href = url; 
+    };
+    window.location._electronReplace = function(url) { 
+      console.log('🚨 [ELECTRON] Emergency replace:', url);
+      window.location.href = url; 
+    };
   }
   
   // PHASE 3: Prevent Next.js data fetching in static export
@@ -260,4 +308,63 @@ window.addEventListener('DOMContentLoaded', () => {
       console.log('❌ [ELECTRON] Next.js app not rendered - hydration recovery will activate');
     }
   }, 2000);
+});
+
+// =================== ENHANCED VERIFICATION - NEW SECTION ===================
+window.addEventListener('DOMContentLoaded', function() {
+  console.log('🎯 [ELECTRON] Enhanced preload verification:');
+  
+  // Verify location patches with detailed info
+  try {
+    const assignDesc = Object.getOwnPropertyDescriptor(window.location, 'assign');
+    const replaceDesc = Object.getOwnPropertyDescriptor(window.location, 'replace');
+    
+    console.log('- location.assign type:', typeof window.location.assign);
+    console.log('- location.assign configurable:', assignDesc?.configurable);
+    console.log('- location.assign patched:', window.location.assign?.toString().includes('ELECTRON') || false);
+    console.log('- location.replace type:', typeof window.location.replace);
+    console.log('- location.replace configurable:', replaceDesc?.configurable);
+    console.log('- location.replace patched:', window.location.replace?.toString().includes('ELECTRON') || false);
+    console.log('- _electronAssign available:', typeof window.location._electronAssign);
+    console.log('- _electronReplace available:', typeof window.location._electronReplace);
+  } catch (e) {
+    console.warn('- Location verification failed:', e);
+  }
+  
+  // Verify font loading with enhanced detection
+  const allLinks = document.querySelectorAll('link[href]');
+  const fontLinks = Array.from(allLinks).filter(link => 
+    link.getAttribute('as') === 'font' || 
+    link.getAttribute('href')?.includes('.woff') ||
+    link.getAttribute('href')?.includes('font')
+  );
+  
+  console.log(`- Total link elements: ${allLinks.length}`);
+  console.log(`- Font-related elements: ${fontLinks.length}`);
+  
+  fontLinks.forEach((el, i) => {
+    const href = el.getAttribute('href');
+    const isAbsolute = href?.startsWith('/') && !href.startsWith('//');
+    console.log(`  Font ${i+1}: ${href} (${isAbsolute ? 'ABSOLUTE ❌' : 'RELATIVE ✅'})`);
+  });
+  
+  // Check for any failed resource loads
+  const images = document.querySelectorAll('img');
+  const scripts = document.querySelectorAll('script[src]');
+  const links = document.querySelectorAll('link[href]');
+  
+  let absolutePathCount = 0;
+  [...images, ...scripts, ...links].forEach(el => {
+    const src = el.src || el.href;
+    if (src && !src.includes('://') && src.startsWith('/')) {
+      absolutePathCount++;
+    }
+  });
+  
+  console.log(`- Total assets checked: ${images.length + scripts.length + links.length}`);
+  console.log(`- Assets with absolute paths: ${absolutePathCount} ${absolutePathCount > 0 ? '❌' : '✅'}`);
+  console.log('- ElectronAPI exposed:', window.electronAPI ? '✅' : '❌');
+  console.log('- Hydration recovery ready:', typeof window.__electronHydrationRecovery === 'function' ? '✅' : '❌');
+  
+  console.log('🚀 [ELECTRON] Enhanced verification complete - all systems checked');
 });
