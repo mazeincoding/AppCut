@@ -78,6 +78,7 @@ export function Footer() {
                   <Link
                     href="/privacy"
                     className="text-muted-foreground hover:text-foreground transition-colors"
+                    prefetch={false}
                   >
                     Privacy policy
                   </Link>
@@ -86,6 +87,7 @@ export function Footer() {
                   <Link
                     href="/terms"
                     className="text-muted-foreground hover:text-foreground transition-colors"
+                    prefetch={false}
                   >
                     Terms of use
                   </Link>

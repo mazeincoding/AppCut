@@ -27,19 +27,20 @@ const nextConfig: NextConfig = {
   },
   ...(isElectron && {
     // =================== PHASE 2: ENHANCED ELECTRON CONFIGURATION ===================
-    // For Electron static export, ensure proper client-side hydration
-    generateBuildId: async () => 'electron-static-build',
+    // For Electron static export - clean configuration without problematic features
     skipTrailingSlashRedirect: true,
     skipMiddlewareUrlNormalize: true,
     
     // PHASE 2: Enhanced experimental settings for Electron
     experimental: {
       scrollRestoration: false,
+      optimizeCss: false,
+      linkNoTouchStart: true,
       // Remove invalid options for Next.js 15.3.4 compatibility
     },
     
-    // PHASE 3: Disable runtime data fetching for static export
-    // Note: generateStaticParams and dynamicParams are not valid for this Next.js version
+    // REMOVED: rewrites, headers, redirects - these cause warnings in static export
+    // Data fetching prevention is now handled entirely in preload.js
     
     // PHASE 2: Configure webpack for static export compatibility
     webpack: (config, { isServer, dev }) => {

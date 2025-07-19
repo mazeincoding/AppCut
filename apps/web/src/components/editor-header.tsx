@@ -24,6 +24,7 @@ export function EditorHeader() {
       <Link
         href="/projects"
         className="font-medium tracking-tight flex items-center gap-2 hover:opacity-80 transition-opacity"
+        prefetch={false}
       >
         <ChevronLeft className="h-4 w-4" />
         <span className="text-sm">{activeProject?.name}</span>

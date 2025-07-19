@@ -9,10 +9,12 @@ import { Toaster } from '@/components/ui/sonner'
 import { DevelopmentDebug } from '@/components/development-debug'
 import { ElectronHydrationFix } from '@/components/electron-hydration-fix'
 import { ElectronErrorBoundary } from '@/components/electron-error-boundary'
+import { ElectronImmediateFix } from '@/components/electron-immediate-fix'
 import '../styles/globals.css'
+import '@/lib/electron-font-fix'
 
 // =================== PHASE 4: ERROR BOUNDARY INTEGRATION ===================
-console.log('🚀 [APP] Loading OpenCut app with Electron error boundary...');
+console.log('🚀 [APP] Loading OpenCut app with Electron error boundary and font fix...');
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -43,6 +45,7 @@ export default function App({ Component, pageProps }: AppProps) {
                 <Toaster />
                 <DevelopmentDebug />
                 <ElectronHydrationFix />
+                <ElectronImmediateFix />
               </StorageProvider>
             </UrlValidationProvider>
           </TooltipProvider>

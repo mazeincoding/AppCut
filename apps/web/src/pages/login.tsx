@@ -126,6 +126,7 @@ const LoginPage = () => {
               <Link
                 href="/signup"
                 className="font-medium text-primary underline-offset-4 hover:underline"
+                prefetch={false}
               >
                 Sign up
               </Link>

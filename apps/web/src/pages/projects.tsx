@@ -115,6 +115,7 @@ export default function ProjectsPage() {
         <Link
           href="/"
           className="flex items-center gap-1 hover:text-muted-foreground transition-colors"
+          prefetch={false}
         >
           <ChevronLeft className="!size-5 shrink-0" />
           <span className="text-sm font-medium">Back</span>
@@ -426,7 +427,7 @@ function ProjectCard({
           </Card>
         </div>
       ) : (
-        <Link href={`/editor/project/${encodeURIComponent(project.id)}`} className="block group">
+        <Link href={`/editor/project/${encodeURIComponent(project.id)}`} className="block group" prefetch={false}>
           <Card
             className={`overflow-hidden bg-background border-none p-0 transition-all ${
               isSelectionMode && isSelected ? "ring-2 ring-primary" : ""

@@ -33,6 +33,7 @@ export function Header() {
       href="/" 
       className="flex items-center gap-3"
       onClick={(e) => handleClick(e, "/")}
+      prefetch={false}
     >
       <Image src="/logo.svg" alt="OpenCut Logo" width={32} height={32} />
       <span className="text-xl font-medium hidden md:block">OpenCut</span>
@@ -44,6 +45,7 @@ export function Header() {
       <Link 
         href="/contributors"
         onClick={(e) => handleClick(e, "/contributors")}
+        prefetch={false}
       >
         <Button variant="text" className="text-sm p-0">
           Contributors

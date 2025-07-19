@@ -25,6 +25,13 @@ export default function ContributorsPage() {
 
   useEffect(() => {
     async function fetchContributors() {
+      // Skip API calls in Electron builds
+      if (typeof window !== 'undefined' && window.electronAPI) {
+        setError("Contributors list is not available in the desktop version");
+        setLoading(false);
+        return;
+      }
+
       try {
         const response = await fetch(
           "https://api.github.com/repos/OpenCut-app/OpenCut/contributors",

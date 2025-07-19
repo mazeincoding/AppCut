@@ -1,13 +1,14 @@
 import { Hero } from "@/components/landing/hero";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
-import { GetStaticProps } from 'next';
+// CONDITIONAL IMPORT: Only import GetStaticProps for web builds
+import type { GetStaticProps } from 'next';
 
 interface HomeProps {
-  signupCount: number;
+  signupCount?: number;
 }
 
-export default function Home({ signupCount }: HomeProps) {
+export default function Home({ signupCount = 0 }: HomeProps) {
   console.log('🏡 HomePage: Component rendered');
   
   return (
@@ -19,32 +20,38 @@ export default function Home({ signupCount }: HomeProps) {
   );
 }
 
-export const getStaticProps: GetStaticProps<HomeProps> = async () => {
-  console.log('🏡 HomePage: getStaticProps called');
-  let signupCount = 0;
-  
-  // Skip waitlist count for Electron static export
-  const isElectron = process.env.NEXT_PUBLIC_ELECTRON === "true";
-  
-  if (!isElectron) {
+// =================== ROOT CAUSE FIX: PREVENT DATA FETCHING IN ELECTRON ===================
+// ULTRASYNC DEEPSYNC FACE-IT: Remove getStaticProps entirely for Electron builds
+// This prevents Next.js from generating data URLs that cause fetch requests
+
+// Only export getStaticProps for web builds - completely exclude for Electron
+// NOTE: This is build-time elimination, not runtime conditional
+const isElectronBuild = process.env.NEXT_PUBLIC_ELECTRON === "true";
+
+// FACE-IT: Conditionally export getStaticProps to prevent data generation
+if (!isElectronBuild) {
+  // DEEPSYNC: Use eval to prevent webpack from analyzing the import during Electron builds
+  const getStaticPropsFunc = async () => {
+    console.log('🏡 HomePage: getStaticProps called (web build only)');
+    let signupCount = 0;
+    
     try {
-      const { getWaitlistCount } = await import("@/lib/waitlist");
-      signupCount = await getWaitlistCount();
+      // ULTRASYNC: Dynamic import only executed at runtime, not build analysis time
+      const waitlistModule = await eval('import("@/lib/waitlist")');
+      signupCount = await waitlistModule.getWaitlistCount();
     } catch (error) {
       console.warn("Failed to load waitlist count:", error);
     }
-  }
 
-  const result: any = {
-    props: {
-      signupCount,
-    },
+    return {
+      props: {
+        signupCount,
+      },
+      revalidate: 60, // Revalidate every 60 seconds
+    };
   };
-
-  // Only use revalidate for non-Electron builds (static export doesn't support ISR)
-  if (!isElectron) {
-    result.revalidate = 60; // Revalidate every 60 seconds
-  }
-
-  return result;
-};
+  
+  module.exports.getStaticProps = getStaticPropsFunc;
+} else {
+  console.log('🔧 [ROOT CAUSE FIX] Electron build detected - getStaticProps completely excluded');
+}

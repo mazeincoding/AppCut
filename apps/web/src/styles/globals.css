@@ -95,15 +95,38 @@
   body[data-electron] *[style*="opacity:0"],
   body[data-electron] *[style*="opacity: 0"] {
     opacity: 1 !important;
+    animation: none !important;
   }
   
   /* Ensure transforms don't hide content in Electron */
   body[data-electron] *[style*="transform:"] {
     transform: none !important;
+    animation: none !important;
   }
   
-  /* Fallback for common Framer Motion classes that might be hidden */
+  /* Force visibility on main content areas */
   body[data-electron] .max-w-3xl.mx-auto.w-full.flex-1.flex.flex-col.justify-center {
     opacity: 1 !important;
+    transform: none !important;
+  }
+  
+  /* Force visibility on all child elements of main content */
+  body[data-electron] .max-w-3xl.mx-auto.w-full.flex-1.flex.flex-col.justify-center > * {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  
+  /* Force visibility on footer */
+  body[data-electron] footer {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  
+  /* Disable all animations in Electron for immediate visibility */
+  body[data-electron] * {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
   }
 }

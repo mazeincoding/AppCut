@@ -43,6 +43,16 @@ export function Hero({ signupCount }: HeroProps) {
       return;
     }
 
+    // Skip API call in Electron builds
+    if (isElectron) {
+      toast({
+        title: "Not available in desktop version",
+        description: "Waitlist signup is only available in the web version.",
+        variant: "default",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {

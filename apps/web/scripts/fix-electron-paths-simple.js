@@ -285,6 +285,24 @@ function main() {
 
   console.log(`\n✅ [PATH-FIX] Processed ${processedCount}/${htmlFiles.length} HTML files successfully`);
   
+  // Process CSS files for font path fixing
+  const cssFiles = findFilesByType(outDir, ['.css']);
+  console.log(`📄 [PATH-FIX] Found ${cssFiles.length} CSS files to process`);
+
+  let cssProcessedCount = 0;
+  for (const file of cssFiles) {
+    try {
+      const content = fs.readFileSync(file, 'utf8');
+      const fixedContent = fixElectronPaths(content, file);
+      fs.writeFileSync(file, fixedContent, 'utf8');
+      cssProcessedCount++;
+    } catch (error) {
+      console.error(`❌ [PATH-FIX] Error processing ${file}:`, error.message);
+    }
+  }
+
+  console.log(`\n✅ [PATH-FIX] Processed ${cssProcessedCount}/${cssFiles.length} CSS files successfully`);
+  
   // Process JavaScript files for location patching
   patchJavaScriptFiles();
   
