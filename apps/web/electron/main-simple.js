@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, protocol, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, protocol, screen, Menu, globalShortcut } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -124,6 +124,31 @@ function createMainWindow() {
     }
   });
 
+  // ROOT CAUSE FIX: Block JSON requests at the main process level
+  console.log('🔧 [MAIN PROCESS] Setting up JSON request blocking...');
+  
+  mainWindow.webContents.session.webRequest.onBeforeRequest((details, callback) => {
+    const url = details.url;
+    
+    // Block any JSON data requests
+    const shouldBlock = url && (
+      url.includes('.json') || 
+      url.includes('_next/data') || 
+      url.includes('.html.json') ||
+      url.includes('electron-static')
+    );
+    
+    if (shouldBlock) {
+      console.log('🚫 [MAIN PROCESS] Blocking JSON request:', url);
+      // Block the request by redirecting to a successful empty JSON response
+      callback({ redirectURL: 'data:application/json,{"blocked":true,"success":true}' });
+      return;
+    }
+    
+    // Allow all other requests
+    callback({});
+  });
+
   // Try to load built Next.js app - use custom app:// protocol
   const unpackedPath = path.join(__dirname, '../out/index.html');
   const staticPath = path.join(__dirname, '../electron-app.html');
@@ -156,6 +181,26 @@ function createMainWindow() {
   
   // Open DevTools for debugging
   mainWindow.webContents.openDevTools();
+  
+  // Add keyboard shortcuts for DevTools
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    // F12 to toggle DevTools
+    if (input.key === 'F12') {
+      if (mainWindow.webContents.isDevToolsOpened()) {
+        mainWindow.webContents.closeDevTools();
+      } else {
+        mainWindow.webContents.openDevTools();
+      }
+    }
+    // Ctrl+Shift+I to toggle DevTools
+    if (input.control && input.shift && input.key === 'I') {
+      if (mainWindow.webContents.isDevToolsOpened()) {
+        mainWindow.webContents.closeDevTools();
+      } else {
+        mainWindow.webContents.openDevTools();
+      }
+    }
+  });
   
   // Add more debugging events
   mainWindow.webContents.on('did-start-loading', () => {
@@ -453,6 +498,70 @@ protocol.registerSchemesAsPrivileged([
 ]);
 
 app.whenReady().then(() => {
+  // Set up application menu with DevTools option
+  const template = [
+    {
+      label: 'View',
+      submenu: [
+        {
+          label: 'Toggle DevTools',
+          accelerator: 'F12',
+          click: () => {
+            if (mainWindow) {
+              if (mainWindow.webContents.isDevToolsOpened()) {
+                mainWindow.webContents.closeDevTools();
+              } else {
+                mainWindow.webContents.openDevTools();
+              }
+            }
+          }
+        },
+        {
+          label: 'Reload',
+          accelerator: 'CmdOrCtrl+R',
+          click: () => {
+            if (mainWindow) {
+              mainWindow.webContents.reload();
+            }
+          }
+        },
+        {
+          label: 'Force Reload',
+          accelerator: 'CmdOrCtrl+Shift+R',
+          click: () => {
+            if (mainWindow) {
+              mainWindow.webContents.reloadIgnoringCache();
+            }
+          }
+        }
+      ]
+    }
+  ];
+  
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
+  
+  // Register global shortcuts
+  globalShortcut.register('F12', () => {
+    if (mainWindow) {
+      if (mainWindow.webContents.isDevToolsOpened()) {
+        mainWindow.webContents.closeDevTools();
+      } else {
+        mainWindow.webContents.openDevTools();
+      }
+    }
+  });
+  
+  globalShortcut.register('CommandOrControl+Shift+I', () => {
+    if (mainWindow) {
+      if (mainWindow.webContents.isDevToolsOpened()) {
+        mainWindow.webContents.closeDevTools();
+      } else {
+        mainWindow.webContents.openDevTools();
+      }
+    }
+  });
+
   // Register custom protocol to serve static files with comprehensive debugging
   console.log('🔧 Setting up protocol...');
   
@@ -604,7 +713,14 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
+  // Unregister all global shortcuts
+  globalShortcut.unregisterAll();
   app.quit();
+});
+
+app.on('will-quit', () => {
+  // Unregister all global shortcuts
+  globalShortcut.unregisterAll();
 });
 
 // IPC handlers

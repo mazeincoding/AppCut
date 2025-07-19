@@ -33,6 +33,35 @@ function createMainWindow() {
   // ROOT CAUSE DEBUG: Intercept ALL network requests at Electron main process level
   console.log('🔧 [MAIN PROCESS] Setting up comprehensive network request interception...');
   
+  // AGGRESSIVE FIX: Intercept file:// protocol requests for JSON files
+  mainWindow.webContents.session.protocol.interceptFileProtocol('file', (request, callback) => {
+    const url = request.url;
+    
+    // Block any JSON data requests
+    if (url.includes('.json') || url.includes('_next/data')) {
+      console.log('🚫 [PROTOCOL INTERCEPT] Blocking file:// JSON request:', url);
+      // Return empty JSON to prevent errors
+      callback({ data: Buffer.from('{"blocked":true}'), mimeType: 'application/json' });
+      return;
+    }
+    
+    // Normal file handling for Windows paths
+    let normalizedPath;
+    try {
+      // Handle Windows file:/// URLs properly
+      if (process.platform === 'win32') {
+        normalizedPath = decodeURI(url.replace('file:///', '').replace(/\//g, '\\'));
+      } else {
+        normalizedPath = decodeURI(url.replace('file://', ''));
+      }
+      normalizedPath = path.normalize(normalizedPath);
+      callback({ path: normalizedPath });
+    } catch (error) {
+      console.error('🚨 [PROTOCOL] Error processing file path:', url, error);
+      callback({ error: -6 }); // ERR_FILE_NOT_FOUND
+    }
+  });
+  
   mainWindow.webContents.session.webRequest.onBeforeRequest((details, callback) => {
     const url = details.url;
     
