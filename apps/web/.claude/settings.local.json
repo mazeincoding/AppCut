@@ -4,7 +4,8 @@
       "Bash(Remove-Item -Recurse -Force out)",
       "Bash(rd:*)",
       "Bash(rm:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(bun run:*)"
     ],
     "deny": []
   }

@@ -42,6 +42,11 @@ const nextConfig: NextConfig = {
     // REMOVED: rewrites, headers, redirects - these cause warnings in static export
     // Data fetching prevention is now handled entirely in preload.js
     
+    // PHASE 5: NUCLEAR OPTION - Disable ALL Next.js data fetching mechanisms
+    pageExtensions: ['tsx', 'ts', 'jsx', 'js'],
+    poweredByHeader: false,
+    compress: false,
+    
     // PHASE 2: Configure webpack for static export compatibility
     webpack: (config, { isServer, dev }) => {
       // Add verification print
