@@ -102,22 +102,13 @@ try {
   console.warn('⚠️ [ELECTRON] Could not apply navigation patches:', e);
 }
 
-// PHASE 4: Load navigation fix script
+// PHASE 4: Setup navigation fix
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('🔗 [ELECTRON] Loading navigation fix script...');
+  console.log('🔗 [ELECTRON] Setting up navigation fix...');
   
-  // Load navigation fix script
-  const script = document.createElement('script');
-  script.src = './electron/navigation-fix.js';
-  script.onload = () => {
-    console.log('✅ [ELECTRON] Navigation fix script loaded');
-  };
-  script.onerror = () => {
-    console.warn('⚠️ [ELECTRON] Failed to load navigation fix script');
-    // If loading fails, use inline fix
-    setupInlineNavigationFix();
-  };
-  document.head.appendChild(script);
+  // Always use inline navigation fix to avoid path resolution issues
+  // The external script loading was unreliable due to complex path calculations
+  setupInlineNavigationFix();
 });
 
 // Inline navigation fix as fallback

@@ -39,23 +39,44 @@ function fixHtmlFile(filePath) {
     
     const originalContent = content;
     
-    // 正则批量把 /_next/ 等绝对 URL 改成 ./_next/
-    content = content.replace(/(?<![\w/])\/(_next\/[^"'\s>]+)/g, './$1');
+    // Calculate the depth of the file relative to OUT_DIR
+    const relativePath = path.relative(OUT_DIR, filePath);
+    const depth = relativePath.split(path.sep).length - 1;
+    const pathPrefix = depth > 0 ? '../'.repeat(depth) : './';
     
-    // 修复根目录资源路径 /logo.svg -> ./logo.svg
-    content = content.replace(/(?<![\w/.])(?<!["'=]\.)\/([\w-]+\.(svg|png|jpg|jpeg|gif|ico|webp))(?=["'\s>])/g, './$1');
-    
-    // 修复 manifest 和其他根文件
-    content = content.replace(/(?<![\w/.])(?<!["'=]\.)\/(manifest\.json|robots\.txt|sitemap\.xml|favicon\.ico)(?=["'\s>])/g, './$1');
-    
-    // 修复所有绝对路径为相对路径（针对 Electron 静态导出）
-    content = content.replace(/href="\//g, 'href="./');
-    content = content.replace(/src="\//g, 'src="./');
-    content = content.replace(/url\("\//g, 'url("./');
+    // For deeply nested files, we need to go back to root
+    if (depth > 0) {
+      // Replace all relative paths with correct depth-adjusted paths
+      content = content.replace(/href="\.\//g, `href="${pathPrefix}`);
+      content = content.replace(/src="\.\//g, `src="${pathPrefix}`);
+      content = content.replace(/url\("\.\//g, `url("${pathPrefix}`);
+      
+      // Fix preload links
+      content = content.replace(/rel="preload" href="\.\//g, `rel="preload" href="${pathPrefix}`);
+      
+      // Fix any absolute paths that might have been missed
+      content = content.replace(/href="\/(?!\/)/g, `href="${pathPrefix}`);
+      content = content.replace(/src="\/(?!\/)/g, `src="${pathPrefix}`);
+    } else {
+      // For root level files, keep using ./
+      // 正则批量把 /_next/ 等绝对 URL 改成 ./_next/
+      content = content.replace(/(?<![\w/])\/(_next\/[^"'\s>]+)/g, './$1');
+      
+      // 修复根目录资源路径 /logo.svg -> ./logo.svg
+      content = content.replace(/(?<![\w/.])(?<!["'=]\.)\/([\w-]+\.(svg|png|jpg|jpeg|gif|ico|webp))(?=["'\s>])/g, './$1');
+      
+      // 修复 manifest 和其他根文件
+      content = content.replace(/(?<![\w/.])(?<!["'=]\.)\/(manifest\.json|robots\.txt|sitemap\.xml|favicon\.ico)(?=["'\s>])/g, './$1');
+      
+      // 修复所有绝对路径为相对路径（针对 Electron 静态导出）
+      content = content.replace(/href="\//g, 'href="./');
+      content = content.replace(/src="\//g, 'src="./');
+      content = content.replace(/url\("\//g, 'url("./');
+    }
     
     if (content !== originalContent) {
       fs.writeFileSync(filePath, content);
-      console.log(`✅ Fixed paths in ${path.basename(filePath)}`);
+      console.log(`✅ Fixed paths in ${path.basename(filePath)} (depth: ${depth})`);
       modified = true;
     }
     
@@ -72,8 +93,13 @@ function fixCssFile(filePath) {
     let modified = false;
     
     const originalContent = content;
-    // Fix font paths in CSS files
+    
+    // Fix absolute font paths in CSS files
     content = content.replace(/url\(["']?\/(_next\/[^"')]+)["']?\)/g, 'url("./$1")');
+    
+    // Fix relative font paths that incorrectly reference _next/static/media from within _next/static/css
+    // These need to go up one directory level: ./_next/static/media -> ../media
+    content = content.replace(/url\(["']?\.\/_next\/static\/media\/([^"')]+)["']?\)/g, 'url("../media/$1")');
     
     if (content !== originalContent) {
       fs.writeFileSync(filePath, content);

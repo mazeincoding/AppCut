@@ -4,14 +4,29 @@
 
 To build and test the Electron version of OpenCut:
 
-### Option 1: Using PowerShell Script (Windows - Currently has issues)
+### Option 1: Simple Dev Mode (Recommended - No Path Issues!)
+```powershell
+# From the OpenCut root directory - Uses Next.js dev server
+.\run-simple-electron.ps1
+```
+**Benefits**: 
+- No path fixing needed
+- Instant hot-reload
+- All features work perfectly
+- Much faster development
+
+### Option 2: Static Build Mode (Complex)
 ```powershell
 # From the OpenCut root directory
 .\test-electron.ps1
-```
-**Note**: The PowerShell script currently has path issues. Use Option 2 instead.
 
-### Option 2: Manual Build Steps (Recommended)
+# Additional options:
+.\test-electron.ps1 -SkipNextBuild  # Skip build, just run existing
+.\test-electron.ps1 -DebugMode      # Run with debug logging
+.\test-electron.ps1 -CleanBuild     # Clean and rebuild from scratch
+```
+
+### Option 3: Manual Build Steps
 ```bash
 # Navigate to the web app directory
 cd apps/web

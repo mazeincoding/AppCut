@@ -11,6 +11,7 @@
     "postexport": "node scripts/fix-electron-paths-robust.js && node scripts/electron-editor-fix.js",
     "export:electron": "cross-env NEXT_PUBLIC_ELECTRON=true next build && bun run postexport",
     "electron:dev": "node scripts/dev-electron.js",
+    "electron:simple": "bunx electron electron/main-dev.js",
     "electron:build": "bun run export:electron",
     "electron:pack": "bun run electron:build && bunx electron-builder --dir",
     "electron:dist": "bun run electron:build && bunx electron-builder --publish=never",
