@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 import {
 	Dialog,
 	DialogContent,
@@ -21,6 +22,7 @@ export function RenameProjectDialog({
 	onConfirm: (name: string) => void;
 	projectName: string;
 }) {
+	const { t } = useTranslation("common");
 	const [name, setName] = useState(projectName);
 
 	// Reset the name when dialog opens - this is better UX than syncing with every prop change
@@ -35,9 +37,9 @@ export function RenameProjectDialog({
 		<Dialog open={isOpen} onOpenChange={handleOpenChange}>
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>Rename Project</DialogTitle>
+					<DialogTitle>{t("rename_project", "Rename Project")}</DialogTitle>
 					<DialogDescription>
-						Enter a new name for your project.
+						{t("rename_project_description", "Enter a new name for your project.")}
 					</DialogDescription>
 				</DialogHeader>
 
@@ -50,7 +52,7 @@ export function RenameProjectDialog({
 							onConfirm(name);
 						}
 					}}
-					placeholder="Enter a new name"
+					placeholder={t("rename_project_placeholder", "Enter a new name")}
 					className="mt-4"
 				/>
 
@@ -63,9 +65,9 @@ export function RenameProjectDialog({
 							onOpenChange(false);
 						}}
 					>
-						Cancel
+						{t("cancel", "Cancel")}
 					</Button>
-					<Button onClick={() => onConfirm(name)}>Rename</Button>
+					<Button onClick={() => onConfirm(name)}>{t("rename", "Rename")}</Button>
 				</DialogFooter>
 			</DialogContent>
 		</Dialog>

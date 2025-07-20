@@ -10,6 +10,7 @@ import { getStars } from "@/lib/fetch-github-stars";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 
+export function Header() {
 	const { t } = useTranslation("common");
 	const { data: session } = useSession();
 	const [star, setStar] = useState<string>("");

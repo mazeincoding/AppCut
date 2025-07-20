@@ -1,5 +1,5 @@
 import { ThemeProvider } from "next-themes";
-import { appWithTranslation } from "next-i18next";
+// import { appWithTranslation } from "next-i18next";
 import { Analytics } from "@vercel/analytics/react";
 import Script from "next/script";
 import "./globals.css";
@@ -20,10 +20,7 @@ const protectedRoutes = [
 	},
 ];
 
-	children,
-}: Readonly<{
-	children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<head>
@@ -54,4 +51,4 @@ const protectedRoutes = [
 	);
 }
 
-export default appWithTranslation(RootLayout);
+// ...existing code...

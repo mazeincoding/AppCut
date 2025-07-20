@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
+import { useTranslation } from "react-i18next";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { RiDiscordFill, RiGithubLine, RiTwitterXLine } from "react-icons/ri";
@@ -8,6 +9,7 @@ import { getStars } from "@/lib/fetch-github-stars";
 import Image from "next/image";
 
 export function Footer() {
+	const { t } = useTranslation("common");
 	const [star, setStar] = useState<string>();
 
 	useEffect(() => {
@@ -19,7 +21,6 @@ export function Footer() {
 				console.error("Failed to fetch GitHub stars", err);
 			}
 		};
-
 		fetchStars();
 	}, []);
 
@@ -35,12 +36,11 @@ export function Footer() {
 					{/* Brand Section */}
 					<div className="md:col-span-1 max-w-sm">
 						<div className="flex justify-start items-center gap-2 mb-4">
-							<Image src="/logo.svg" alt="OpenCut" width={24} height={24} />
-							<span className="font-bold text-lg">OpenCut</span>
+							<Image src="/logo.svg" alt={t("header")} width={24} height={24} />
+							<span className="font-bold text-lg">{t("welcome")}</span>
 						</div>
 						<p className="text-sm md:text-left text-muted-foreground mb-5">
-							The open source video editor that gets the job done. Simple,
-							powerful, and works on any platform.
+							{t("footer_description", "The open source video editor that gets the job done. Simple, powerful, and works on any platform.")}
 						</p>
 						<div className="flex justify-start gap-3">
 							<Link
@@ -72,14 +72,14 @@ export function Footer() {
 
 					<div className="flex gap-12 justify-start items-start py-2">
 						<div>
-							<h3 className="font-semibold text-foreground mb-4">Resources</h3>
+							<h3 className="font-semibold text-foreground mb-4">{t("resources")}</h3>
 							<ul className="space-y-2 text-sm">
 								<li>
 									<Link
 										href="/roadmap"
 										className="text-muted-foreground hover:text-foreground transition-colors"
 									>
-										Roadmap
+										{t("roadmap")}
 									</Link>
 								</li>
 								<li>
@@ -87,7 +87,7 @@ export function Footer() {
 										href="/privacy"
 										className="text-muted-foreground hover:text-foreground transition-colors"
 									>
-										Privacy policy
+										{t("privacy_policy")}
 									</Link>
 								</li>
 								<li>
@@ -95,7 +95,7 @@ export function Footer() {
 										href="/terms"
 										className="text-muted-foreground hover:text-foreground transition-colors"
 									>
-										Terms of use
+										{t("terms_of_use")}
 									</Link>
 								</li>
 							</ul>
@@ -103,14 +103,14 @@ export function Footer() {
 
 						{/* Company Links */}
 						<div>
-							<h3 className="font-semibold text-foreground mb-4">Company</h3>
+							<h3 className="font-semibold text-foreground mb-4">{t("company")}</h3>
 							<ul className="space-y-2 text-sm">
 								<li>
 									<Link
 										href="/contributors"
 										className="text-muted-foreground hover:text-foreground transition-colors"
 									>
-										Contributors
+										{t("contributors")}
 									</Link>
 								</li>
 								<li>
@@ -120,7 +120,7 @@ export function Footer() {
 										target="_blank"
 										rel="noopener noreferrer"
 									>
-										About
+										{t("about")}
 									</Link>
 								</li>
 							</ul>
@@ -131,7 +131,7 @@ export function Footer() {
 				{/* Bottom Section */}
 				<div className="pt-2 flex flex-col md:flex-row justify-between items-start gap-4">
 					<div className="flex items-center gap-4 text-sm text-muted-foreground">
-						<span>© 2025 OpenCut, All Rights Reserved</span>
+						<span>{t("copyright", "© 2025 OpenCut, All Rights Reserved")}</span>
 					</div>
 				</div>
 			</div>

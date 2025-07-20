@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslation } from "react-i18next";
 import { Button } from "./ui/button";
 import { ChevronLeft, Download } from "lucide-react";
 import { useTimelineStore } from "@/stores/timeline-store";
@@ -10,12 +11,13 @@ import { useProjectStore } from "@/stores/project-store";
 import { KeyboardShortcutsHelp } from "./keyboard-shortcuts-help";
 
 export function EditorHeader() {
+	const { t } = useTranslation("common");
 	const { getTotalDuration } = useTimelineStore();
 	const { activeProject } = useProjectStore();
 
 	const handleExport = () => {
 		// TODO: Implement export functionality
-		console.log("Export project");
+		console.log(t("export_project_log", "Export project"));
 	};
 
 	const leftContent = (
@@ -52,7 +54,7 @@ export function EditorHeader() {
 				onClick={handleExport}
 			>
 				<Download className="h-4 w-4" />
-				<span className="text-sm">Export</span>
+				<span className="text-sm">{t("export", "Export")}</span>
 			</Button>
 		</nav>
 	);

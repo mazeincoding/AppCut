@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 import {
 	Dialog,
 	DialogContent,
@@ -20,6 +21,7 @@ export function DeleteProjectDialog({
 	onConfirm: () => void;
 	projectName?: string;
 }) {
+	const { t } = useTranslation("common");
 	return (
 		<Dialog open={isOpen} onOpenChange={onOpenChange}>
 			<DialogContent
@@ -32,19 +34,18 @@ export function DeleteProjectDialog({
 					<DialogTitle>
 						{projectName ? (
 							<>
-								{"Delete '"}
+								{t("delete_project_with_name", "Delete '")}
 								<span className="inline-block max-w-[300px] truncate align-bottom">
 									{projectName}
 								</span>
-								{"'?"}
+								{t("delete_project_question_mark", "'?")}
 							</>
 						) : (
-							"Delete Project?"
+							t("delete_project", "Delete Project?")
 						)}
 					</DialogTitle>
 					<DialogDescription>
-						Are you sure you want to delete this project? This action cannot be
-						undone.
+						{t("delete_project_confirm", "Are you sure you want to delete this project? This action cannot be undone.")}
 					</DialogDescription>
 				</DialogHeader>
 				<DialogFooter>
@@ -56,10 +57,10 @@ export function DeleteProjectDialog({
 							onOpenChange(false);
 						}}
 					>
-						Cancel
+						{t("cancel", "Cancel")}
 					</Button>
 					<Button variant="destructive" onClick={onConfirm}>
-						Delete
+						{t("delete", "Delete")}
 					</Button>
 				</DialogFooter>
 			</DialogContent>
