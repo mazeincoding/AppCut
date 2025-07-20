@@ -64,7 +64,7 @@ export function PropertiesPanel() {
   );
 
   return (
-    <ScrollArea className="h-full bg-panel border rounded-sm">
+    <ScrollArea className="h-full bg-panel border-panel-primary rounded-sm">
       {selectedElements.length > 0
         ? selectedElements.map(({ trackId, elementId }) => {
             const track = tracks.find((t) => t.id === trackId);

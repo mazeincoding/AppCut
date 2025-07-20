@@ -61,7 +61,7 @@ export function TabBar() {
   }, []);
 
   return (
-    <div className="flex border rounded-sm">
+    <div className="flex border-timeline rounded-sm">
       <ScrollButton
         direction="left"
         onClick={scrollToStart}
@@ -69,21 +69,21 @@ export function TabBar() {
       />
       <div
         ref={scrollContainerRef}
-        className="h-12 bg-panel-accent px-3 flex justify-start items-center gap-5 overflow-x-auto scrollbar-x-hidden relative"
+        className="h-12 bg-panel-accent px-8 flex justify-start items-center gap-16 overflow-x-auto scrollbar-x-hidden relative"
       >
         {(Object.keys(tabs) as Tab[]).map((tabKey) => {
           const tab = tabs[tabKey];
           return (
             <div
               className={cn(
-                "flex flex-col gap-0.5 items-center cursor-pointer",
+                "flex flex-col gap-2 items-center cursor-pointer px-6 py-3 rounded-md transition-colors hover:bg-hover-bg",
                 activeTab === tabKey ? "text-primary" : "text-muted-foreground"
               )}
               onClick={() => setActiveTab(tabKey)}
               key={tabKey}
             >
               <tab.icon className="!size-[1.1rem]" />
-              <span className="text-[0.65rem]">{tab.label}</span>
+              <span className="text-[0.65rem] tracking-wide">{tab.label}</span>
             </div>
           );
         })}

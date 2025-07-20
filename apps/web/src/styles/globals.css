@@ -88,6 +88,63 @@
   }
 }
 
+/* Low-Opacity Accent Borders for Better Visual Hierarchy */
+@layer utilities {
+  /* Primary panel dividers - Main separation */
+  .border-panel-primary {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Secondary dividers - Timeline tracks, nested elements */
+  .border-panel-secondary {
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  
+  /* Timeline bar specific border */
+  .border-timeline {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  
+  /* Subtle edge borders */
+  .border-subtle {
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  
+  /* For dark mode, use appropriate opacity levels */
+  .dark .border-panel-primary {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .dark .border-panel-secondary {
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  
+  .dark .border-timeline {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  
+  .dark .border-subtle {
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  
+  /* Light mode uses darker semi-transparent borders */
+  .border-panel-primary {
+    border: 1px solid rgba(0, 0, 0, 0.08);
+  }
+  
+  .border-panel-secondary {
+    border: 1px solid rgba(0, 0, 0, 0.04);
+  }
+  
+  .border-timeline {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  }
+  
+  .border-subtle {
+    border: 1px solid rgba(0, 0, 0, 0.04);
+  }
+}
+
 /* Electron-specific CSS overrides to ensure content is visible */
 /* This fixes Framer Motion SSR opacity issues in Electron */
 @layer utilities {

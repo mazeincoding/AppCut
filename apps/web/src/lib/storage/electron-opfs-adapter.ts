@@ -77,11 +77,9 @@ export class ElectronOPFSAdapter implements StorageAdapter<File> {
 
   private async setToIndexedDB(key: string, file: File): Promise<void> {
     const dbName = `electron-media-${this.directoryName}`;
-    const db = await this.openDB(dbName);
-    const transaction = db.transaction(['files'], 'readwrite');
-    const store = transaction.objectStore('files');
     
-    // Convert File to ArrayBuffer for storage
+    // Convert File to ArrayBuffer BEFORE creating transaction
+    // This prevents transaction timeout during async file processing
     const arrayBuffer = await file.arrayBuffer();
     const fileData = {
       key,
@@ -92,11 +90,22 @@ export class ElectronOPFSAdapter implements StorageAdapter<File> {
       lastModified: file.lastModified
     };
     
-    // Use direct promise to avoid transaction timeout
+    // Create transaction after file processing is complete
+    const db = await this.openDB(dbName);
+    const transaction = db.transaction(['files'], 'readwrite');
+    const store = transaction.objectStore('files');
+    
+    // Store the processed data immediately
     const request = store.put(fileData);
+    
+    // Wait for the operation to complete
     await new Promise<void>((resolve, reject) => {
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
+      
+      // Handle transaction abort/error
+      transaction.onerror = () => reject(transaction.error);
+      transaction.onabort = () => reject(new Error('Transaction aborted'));
     });
   }
 

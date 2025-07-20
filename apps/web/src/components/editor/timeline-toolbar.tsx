@@ -59,7 +59,7 @@ export function TimelineToolbar({
   handleDeleteSelected,
 }: TimelineToolbarProps) {
   return (
-    <div className="border-b flex items-center px-2 py-1 gap-1">
+    <div className="border-b flex items-center px-4 py-3 gap-4">
       <TooltipProvider delayDuration={500}>
         {/* Play/Pause Button */}
         <Tooltip>
@@ -126,7 +126,7 @@ export function TimelineToolbar({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="text" size="icon" onClick={handleSplitSelected}>
+            <Button variant="text" size="icon" onClick={handleSplitSelected} className="mx-2">
               <Scissors className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
@@ -135,7 +135,7 @@ export function TimelineToolbar({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="text" size="icon">
+            <Button variant="text" size="icon" className="mx-2">
               <ArrowLeftToLine className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
@@ -144,7 +144,7 @@ export function TimelineToolbar({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="text" size="icon">
+            <Button variant="text" size="icon" className="mx-2">
               <ArrowRightToLine className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
@@ -153,7 +153,7 @@ export function TimelineToolbar({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="text" size="icon">
+            <Button variant="text" size="icon" className="mx-2">
               <SplitSquareHorizontal className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
@@ -166,6 +166,7 @@ export function TimelineToolbar({
               variant="text"
               size="icon"
               onClick={handleDuplicateSelected}
+              className="mx-2"
             >
               <Copy className="h-4 w-4" />
             </Button>
@@ -175,7 +176,7 @@ export function TimelineToolbar({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="text" size="icon" onClick={handleFreezeSelected}>
+            <Button variant="text" size="icon" onClick={handleFreezeSelected} className="mx-2">
               <Snowflake className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
@@ -184,7 +185,7 @@ export function TimelineToolbar({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="text" size="icon" onClick={handleDeleteSelected}>
+            <Button variant="text" size="icon" onClick={handleDeleteSelected} className="mx-2">
               <Trash2 className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
