@@ -1747,3 +1747,60 @@ $ next dev
   path: 'C:\\Users\\zdhpe\\Desktop\\New folder\\OpenCut\\apps\\web\\out\\server\\pages\\projects.js',
   page: '/projects'
 }
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ [Error: ENOENT: no such file or directory, open 'C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\server\pages\_document.js'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\zdhpe\\Desktop\\New folder\\OpenCut\\apps\\web\\out\\server\\pages\\_document.js',
+  page: '/projects'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open 'C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\server\pages\_document.js'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\zdhpe\\Desktop\\New folder\\OpenCut\\apps\\web\\out\\server\\pages\\_document.js',
+  page: '/projects'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open 'C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\server\pages\_document.js'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\zdhpe\\Desktop\\New folder\\OpenCut\\apps\\web\\out\\server\\pages\\_document.js'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open 'C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\server\pages\_document.js'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\zdhpe\\Desktop\\New folder\\OpenCut\\apps\\web\\out\\server\\pages\\_document.js'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open 'C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\server\pages\_document.js'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\zdhpe\\Desktop\\New folder\\OpenCut\\apps\\web\\out\\server\\pages\\_document.js'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open 'C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\server\pages\_document.js'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\zdhpe\\Desktop\\New folder\\OpenCut\\apps\\web\\out\\server\\pages\\_document.js'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open 'C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\server\pages\_document.js'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\zdhpe\\Desktop\\New folder\\OpenCut\\apps\\web\\out\\server\\pages\\_document.js'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open 'C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\server\pages\_document.js'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\zdhpe\\Desktop\\New folder\\OpenCut\\apps\\web\\out\\server\\pages\\_document.js'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open 'C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\server\pages\_document.js'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\zdhpe\\Desktop\\New folder\\OpenCut\\apps\\web\\out\\server\\pages\\_document.js'
+}
