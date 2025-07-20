@@ -119,6 +119,7 @@ interface TimelineStore {
 		startTime: number,
 	) => void;
 	toggleTrackMute: (trackId: string) => void;
+	updateElementVolume: (trackId: string, elementId: string, volume: number) => void;
 
 	// Split operations for elements
 	splitElement: (
@@ -330,6 +331,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
 				type,
 				elements: [],
 				muted: false,
+				volume: 0.5
 			};
 
 			updateTracksAndSave([...get()._tracks, newTrack]);
@@ -355,6 +357,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
 				type,
 				elements: [],
 				muted: false,
+				volume: 0.5
 			};
 
 			const newTracks = [...get()._tracks];
@@ -855,6 +858,28 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
 			);
 		},
 
+  updateElementVolume: (trackId: string, elementId: string, volume: number) => {
+      if (volume < 0 || volume > 1) {
+        return
+      }
+
+      get().pushHistory();
+      updateTracksAndSave(
+        get()._tracks.map((track) =>
+          track.id === trackId
+            ? {
+                ...track,
+                elements: track.elements.map((element) =>
+                  element.id === elementId && element.type === "media"
+                    ? { ...element, volume: volume }
+                    : element
+                ),
+              }
+            : track
+        )
+      );
+    },
+
 		splitElement: (trackId, elementId, splitTime) => {
 			const { _tracks } = get();
 			const track = _tracks.find((t) => t.id === trackId);
@@ -1037,6 +1062,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
 						},
 					],
 					muted: false,
+					volume: 0.5
 				};
 
 				updateTracksAndSave([...get()._tracks, newAudioTrack]);
@@ -1334,6 +1360,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
 				startTime: currentTime,
 				trimStart: 0,
 				trimEnd: 0,
+				volume: 0.5
 			});
 			return true;
 		},
@@ -1377,6 +1404,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
 				startTime: 0,
 				trimStart: 0,
 				trimEnd: 0,
+				volume: 0.5
 			});
 			return true;
 		},

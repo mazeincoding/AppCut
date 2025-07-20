@@ -11,6 +11,7 @@ interface AudioPlayerProps {
 	trimEnd: number;
 	clipDuration: number;
 	trackMuted?: boolean;
+  volume: number;
 }
 
 export function AudioPlayer({
@@ -21,9 +22,10 @@ export function AudioPlayer({
 	trimEnd,
 	clipDuration,
 	trackMuted = false,
+	volume
 }: AudioPlayerProps) {
 	const audioRef = useRef<HTMLAudioElement>(null);
-	const { isPlaying, currentTime, volume, speed, muted } = usePlaybackStore();
+	const { isPlaying, currentTime, speed, muted } = usePlaybackStore();
 
 	// Calculate if we're within this clip's timeline range
 	const clipEndTime = clipStartTime + (clipDuration - trimStart - trimEnd);

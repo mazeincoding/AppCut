@@ -170,29 +170,30 @@ export function PreviewPanel() {
 
 		const blurIntensity = activeProject.blurIntensity || 8;
 
-		if (mediaItem.type === "video") {
-			return (
-				<div
-					key={`blur-${element.id}`}
-					className="absolute inset-0 overflow-hidden"
-					style={{
-						filter: `blur(${blurIntensity}px)`,
-						transform: "scale(1.1)", // Slightly zoom to avoid blur edge artifacts
-						transformOrigin: "center",
-					}}
-				>
-					<VideoPlayer
-						src={mediaItem.url!}
-						poster={mediaItem.thumbnailUrl}
-						clipStartTime={element.startTime}
-						trimStart={element.trimStart}
-						trimEnd={element.trimEnd}
-						clipDuration={element.duration}
-						className="w-full h-full object-cover"
-					/>
-				</div>
-			);
-		}
+    if (mediaItem.type === "video") {
+      return (
+        <div
+          key={`blur-${element.id}`}
+          className="absolute inset-0 overflow-hidden"
+          style={{
+            filter: `blur(${blurIntensity}px)`,
+            transform: "scale(1.1)", // Slightly zoom to avoid blur edge artifacts
+            transformOrigin: "center",
+          }}
+        >
+          <VideoPlayer
+            src={mediaItem.url!}
+            poster={mediaItem.thumbnailUrl}
+            clipStartTime={element.startTime}
+            trimStart={element.trimStart}
+            trimEnd={element.trimEnd}
+            clipDuration={element.duration}
+            volume={element.type === 'media' ? element.volume : 1.0}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      );
+    }
 
 		if (mediaItem.type === "image") {
 			return (
@@ -281,24 +282,25 @@ export function PreviewPanel() {
 				);
 			}
 
-			// Video elements
-			if (mediaItem.type === "video") {
-				return (
-					<div
-						key={element.id}
-						className="absolute inset-0 flex items-center justify-center"
-					>
-						<VideoPlayer
-							src={mediaItem.url!}
-							poster={mediaItem.thumbnailUrl}
-							clipStartTime={element.startTime}
-							trimStart={element.trimStart}
-							trimEnd={element.trimEnd}
-							clipDuration={element.duration}
-						/>
-					</div>
-				);
-			}
+      // Video elements
+      if (mediaItem.type === "video") {
+        return (
+          <div
+            key={element.id}
+            className="absolute inset-0 flex items-center justify-center"
+          >
+            <VideoPlayer
+              src={mediaItem.url!}
+              poster={mediaItem.thumbnailUrl}
+              clipStartTime={element.startTime}
+              trimStart={element.trimStart}
+              trimEnd={element.trimEnd}
+              clipDuration={element.duration}
+              volume={elementData.element.type === 'media' ? elementData.element.volume : 1.0}
+            />
+          </div>
+        );
+      }
 
 			// Image elements
 			if (mediaItem.type === "image") {
@@ -317,22 +319,23 @@ export function PreviewPanel() {
 				);
 			}
 
-			// Audio elements (no visual representation)
-			if (mediaItem.type === "audio") {
-				return (
-					<div key={element.id} className="absolute inset-0">
-						<AudioPlayer
-							src={mediaItem.url!}
-							clipStartTime={element.startTime}
-							trimStart={element.trimStart}
-							trimEnd={element.trimEnd}
-							clipDuration={element.duration}
-							trackMuted={elementData.track.muted}
-						/>
-					</div>
-				);
-			}
-		}
+      // Audio elements (no visual representation)
+      if (mediaItem.type === "audio") {
+        return (
+          <div key={element.id} className="absolute inset-0">
+            <AudioPlayer
+              src={mediaItem.url!}
+              clipStartTime={element.startTime}
+              trimStart={element.trimStart}
+              trimEnd={element.trimEnd}
+              clipDuration={element.duration}
+              trackMuted={elementData.track.muted}
+              volume={elementData.element.type === 'media' ? elementData.element.volume : 1.0}
+            />
+          </div>
+        );
+      }
+    }
 
 		return null;
 	};

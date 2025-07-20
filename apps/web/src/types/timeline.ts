@@ -15,8 +15,9 @@ interface BaseTimelineElement {
 
 // Media element that references MediaStore
 export interface MediaElement extends BaseTimelineElement {
-	type: "media";
-	mediaId: string;
+  type: "media";
+  mediaId: string;
+  volume: number;
 }
 
 // Text element with embedded text data
@@ -79,12 +80,13 @@ export interface TextItemDragData {
 export type DragData = MediaItemDragData | TextItemDragData;
 
 export interface TimelineTrack {
-	id: string;
-	name: string;
-	type: TrackType;
-	elements: TimelineElement[];
-	muted?: boolean;
-	isMain?: boolean;
+  id: string;
+  name: string;
+  type: TrackType;
+  elements: TimelineElement[];
+  volume: number;
+  muted?: boolean;
+  isMain?: boolean;
 }
 
 export function sortTracksByOrder(tracks: TimelineTrack[]): TimelineTrack[] {
@@ -109,18 +111,19 @@ export function getMainTrack(tracks: TimelineTrack[]): TimelineTrack | null {
 export function ensureMainTrack(tracks: TimelineTrack[]): TimelineTrack[] {
 	const hasMainTrack = tracks.some((track) => track.isMain);
 
-	if (!hasMainTrack) {
-		// Create main track if it doesn't exist
-		const mainTrack: TimelineTrack = {
-			id: generateUUID(),
-			name: "Main Track",
-			type: "media",
-			elements: [],
-			muted: false,
-			isMain: true,
-		};
-		return [mainTrack, ...tracks];
-	}
+  if (!hasMainTrack) {
+    // Create main track if it doesn't exist
+    const mainTrack: TimelineTrack = {
+      id: generateUUID(),
+      name: "Main Track",
+      type: "media",
+      elements: [],
+      muted: false,
+      isMain: true,
+      volume: 0.5
+    };
+    return [mainTrack, ...tracks];
+  }
 
 	return tracks;
 }

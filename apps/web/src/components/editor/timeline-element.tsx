@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "../ui/button";
 import {
 	MoreVertical,
@@ -43,6 +43,7 @@ import {
 	ContextMenuSeparator,
 	ContextMenuTrigger,
 } from "../ui/context-menu";
+import { TimelineElementVolume } from "./timeline-element-volume";
 
 export function TimelineElement({
 	element,
@@ -70,6 +71,8 @@ export function TimelineElement({
 	const { currentTime } = usePlaybackStore();
 
 	const [elementMenuOpen, setElementMenuOpen] = useState(false);
+
+	const timelineElementRef = useRef<HTMLDivElement>(null);
 
 	const {
 		resizing,
@@ -244,7 +247,7 @@ export function TimelineElement({
 
 			return (
 				<div className="w-full h-full flex items-center gap-2">
-					<div className="flex-1 h-full relative overflow-hidden">
+					<div className="flex-1 h-full relative overflow-hidden" ref={timelineElementRef}>
 						{/* Background with tiled thumbnails */}
 						<div
 							className="absolute inset-0"
@@ -283,6 +286,7 @@ export function TimelineElement({
 							{element.name}
 						</span>
 					)}
+					<TimelineElementVolume track={track} element={element} timelineElementRef={timelineElementRef} />
 				</div>
 			);
 		}
@@ -290,14 +294,15 @@ export function TimelineElement({
 		// Render audio element ->
 		if (mediaItem.type === "audio") {
 			return (
-				<div className="w-full h-full flex items-center gap-2">
-					<div className="flex-1 min-w-0">
+				<div className="w-full h-full flex items-center gap-2 relative" ref={timelineElementRef}>
+					<div className="flex-1 min-w-0 relative">
 						<AudioWaveform
 							audioUrl={mediaItem.url || ""}
 							height={24}
 							className="w-full"
 						/>
 					</div>
+					<TimelineElementVolume track={track} element={element} timelineElementRef={timelineElementRef} />
 				</div>
 			);
 		}

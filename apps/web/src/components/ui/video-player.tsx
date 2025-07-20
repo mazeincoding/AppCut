@@ -4,26 +4,28 @@ import { useRef, useEffect } from "react";
 import { usePlaybackStore } from "@/stores/playback-store";
 
 interface VideoPlayerProps {
-	src: string;
-	poster?: string;
-	className?: string;
-	clipStartTime: number;
-	trimStart: number;
-	trimEnd: number;
-	clipDuration: number;
+  src: string;
+  poster?: string;
+  className?: string;
+  clipStartTime: number;
+  trimStart: number;
+  trimEnd: number;
+  clipDuration: number;
+  volume: number;
 }
 
 export function VideoPlayer({
-	src,
-	poster,
-	className = "",
-	clipStartTime,
-	trimStart,
-	trimEnd,
-	clipDuration,
+  src,
+  poster,
+  className = "",
+  clipStartTime,
+  trimStart,
+  trimEnd,
+  clipDuration,
+  volume
 }: VideoPlayerProps) {
-	const videoRef = useRef<HTMLVideoElement>(null);
-	const { isPlaying, currentTime, volume, speed, muted } = usePlaybackStore();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const { isPlaying, currentTime, speed, muted } = usePlaybackStore();
 
 	// Calculate if we're within this clip's timeline range
 	const clipEndTime = clipStartTime + (clipDuration - trimStart - trimEnd);
