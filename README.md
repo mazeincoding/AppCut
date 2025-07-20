@@ -39,27 +39,35 @@
 
 Before you begin, ensure you have the following installed on your system:
 
+- [Node.js](https://nodejs.org/en/) (v18 or later)
 - [Bun](https://bun.sh/docs/installation)
+  (for `npm` alternative)
 - [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/)
-- [Node.js](https://nodejs.org/en/) (for `npm` alternative)
+
+> **Note:** Docker is optional, but it's essential for running the local database and Redis services. If you're planning to run the frontend or want to contribute to frontend features, you can skip the Docker setup. If you have followed the steps below in [Setup](#setup), you're all set to go!
 
 ### Setup
-
-## Getting Started
 
 1. Fork the repository
 2. Clone your fork locally
 3. Navigate to the web app directory: `cd apps/web`
-4. Install dependencies: `bun install`
-5. Start the development server: `bun run dev`
+4. Copy `.env.example` to `.env.local`:
+
+   ```bash
+   # Unix/Linux/Mac
+   cp .env.example .env.local
+
+   # Windows Command Prompt
+   copy .env.example .env.local
+
+   # Windows PowerShell
+   Copy-Item .env.example .env.local
+   ```
+
+5. Install dependencies: `bun install`
+6. Start the development server: `bun dev`
 
 ## Development Setup
-
-### Prerequisites
-
-- Node.js 18+
-- Bun (latest version)
-- Docker (for local database)
 
 ### Local Development
 
@@ -124,14 +132,6 @@ Before you begin, ensure you have the following installed on your system:
    # Or use an online generator: https://generate-secret.vercel.app/32
    ```
 
-   **Optional Variables (for Google OAuth):**
-
-   ```bash
-   # Only needed if you want to test Google login
-   GOOGLE_CLIENT_ID="your-google-client-id"
-   GOOGLE_CLIENT_SECRET="your-google-client-secret"
-   ```
-
 5. Run database migrations: `bun run db:migrate` from (inside apps/web)
 6. Start the development server: `bun run dev` from (inside apps/web)
 
@@ -139,11 +139,13 @@ The application will be available at [http://localhost:3000](http://localhost:30
 
 ## Contributing
 
-**Note**: We're currently moving at an extremely fast pace with rapid development and breaking changes. While we appreciate the interest, it's recommended to wait until the project stabilizes before contributing to avoid conflicts and wasted effort.
+We welcome contributions! While we're actively developing and refactoring certain areas, there are plenty of opportunities to contribute effectively.
 
-## Visit [CONTRIBUTING.md](.github/CONTRIBUTING.md)
+**🎯 Focus areas:** Timeline functionality, project management, performance, bug fixes, and UI improvements outside the preview panel.
 
-We welcome contributions! Please see our [Contributing Guide](.github/CONTRIBUTING.md) for detailed setup instructions and development guidelines.
+**⚠️ Avoid for now:** Preview panel enhancements (fonts, stickers, effects) and export functionality - we're refactoring these with a new binary rendering approach.
+
+See our [Contributing Guide](.github/CONTRIBUTING.md) for detailed setup instructions, development guidelines, and complete focus area guidance.
 
 **Quick start for contributors:**
 

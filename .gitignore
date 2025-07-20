@@ -9,8 +9,6 @@
 
 # debug
 /apps/web/npm-debug.log*
-/apps/web/yarn-debug.log*
-/apps/web/yarn-error.log* 
 
 # env files (can opt-in for committing if needed)
 /apps/web/.env*
@@ -18,7 +16,6 @@
 
 # typescript
 /apps/web/next-env.d.ts
-/apps/web/yarn.lock
 
 # asdf version management
 .tool-versions
@@ -33,3 +30,6 @@ node_modules
 
 .cursor/
 bun.lockb
+
+# mac
+.DS_Store
