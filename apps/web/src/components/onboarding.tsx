@@ -9,7 +9,6 @@ import {
 } from "./ui/dialog";
 import { useTranslation } from "react-i18next";
 
-
 export function Onboarding({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
 	   const { t } = useTranslation("common");
 	   return (
