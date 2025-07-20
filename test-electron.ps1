@@ -1,5 +1,5 @@
 # OpenCut Electron Test Script for Windows
-# Accelerates development iteration by automating build and test process
+# Builds and runs the Electron app for development testing
 
 param(
     [switch]$SkipNextBuild,
@@ -32,7 +32,7 @@ if (-not $SkipNextBuild) {
     Push-Location "apps\web"
     
     # Export Next.js for Electron
-    $buildProcess = Start-Process -FilePath "bun" -ArgumentList "run", "build" -PassThru -NoNewWindow
+    $buildProcess = Start-Process -FilePath "bun" -ArgumentList "run", "export:electron" -PassThru -NoNewWindow
     $buildProcess.WaitForExit()
     
     if ($buildProcess.ExitCode -ne 0) {
@@ -40,10 +40,6 @@ if (-not $SkipNextBuild) {
         Pop-Location
         exit 1
     }
-    
-    # Fix paths for Electron
-    Write-Host "Fixing paths for Electron..." -ForegroundColor Yellow
-    & node scripts/fix-electron-static-paths.js
     
     Pop-Location
     Write-Host "Next.js build complete!" -ForegroundColor Green
@@ -64,43 +60,24 @@ if ($DebugMode) {
     Write-Host "Debug mode enabled" -ForegroundColor Magenta
 }
 
-# Build Electron app
-Write-Host "Building Electron app..." -ForegroundColor Yellow
+# Run Electron app
+Write-Host "Launching Electron app..." -ForegroundColor Yellow
 Push-Location "apps\web"
 
-# Run electron-builder
-$electronBuildProcess = Start-Process -FilePath "bun" -ArgumentList "run", "electron:dist:win" -PassThru -NoNewWindow
-$electronBuildProcess.WaitForExit()
-
-if ($electronBuildProcess.ExitCode -ne 0) {
-    Write-Host "Electron build failed!" -ForegroundColor Red
-    Pop-Location
-    exit 1
+# Launch with bunx electron
+if ($DebugMode) {
+    # In debug mode, run with logging script
+    $electronProcess = Start-Process -FilePath "node" -ArgumentList "scripts/run-electron-with-logs.js" -PassThru -NoNewWindow
+} else {
+    # Normal launch
+    $electronProcess = Start-Process -FilePath "bunx" -ArgumentList "electron", "electron/main-simple.js" -PassThru -NoNewWindow
 }
 
 Pop-Location
 
-# Find the built executable
-$exePath = Get-ChildItem -Path "apps\web\dist\win-unpacked" -Filter "*.exe" | Select-Object -First 1
-
-if (-not $exePath) {
-    Write-Host "Error: Could not find built Electron executable" -ForegroundColor Red
-    exit 1
-}
-
 Write-Host ""
-Write-Host "Build complete! Launching Electron app..." -ForegroundColor Green
-Write-Host "Executable: $($exePath.FullName)" -ForegroundColor Gray
+Write-Host "Electron app launched!" -ForegroundColor Green
 Write-Host ""
-
-# Launch the app
-if ($DebugMode) {
-    # In debug mode, launch with console visible
-    Start-Process -FilePath $exePath.FullName -NoNewWindow
-} else {
-    # Normal launch
-    Start-Process -FilePath $exePath.FullName
-}
 
 Write-Host "App launched! Check for errors in the console." -ForegroundColor Cyan
 
@@ -116,7 +93,7 @@ if ($DebugMode) {
 
 Write-Host ""
 Write-Host "Quick Commands:" -ForegroundColor Yellow
-Write-Host "  .\test-electron.ps1              # Full build and test" -ForegroundColor Gray
-Write-Host "  .\test-electron.ps1 -SkipNextBuild  # Skip Next.js build" -ForegroundColor Gray
-Write-Host "  .\test-electron.ps1 -DebugMode   # Enable debug logging" -ForegroundColor Gray
-Write-Host "  .\test-electron.ps1 -CleanBuild  # Clean build from scratch" -ForegroundColor Gray
+Write-Host "  .\test-electron.ps1                 # Full build and run" -ForegroundColor Gray
+Write-Host "  .\test-electron.ps1 -SkipNextBuild  # Skip build, just run" -ForegroundColor Gray
+Write-Host "  .\test-electron.ps1 -DebugMode      # Run with debug logging" -ForegroundColor Gray
+Write-Host "  .\test-electron.ps1 -CleanBuild     # Clean build from scratch" -ForegroundColor Gray

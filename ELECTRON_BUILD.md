@@ -4,13 +4,14 @@
 
 To build and test the Electron version of OpenCut:
 
-### Option 1: Using PowerShell Script (Recommended for Windows)
+### Option 1: Using PowerShell Script (Windows - Currently has issues)
 ```powershell
 # From the OpenCut root directory
 .\test-electron.ps1
 ```
+**Note**: The PowerShell script currently has path issues. Use Option 2 instead.
 
-### Option 2: Manual Build Steps
+### Option 2: Manual Build Steps (Recommended)
 ```bash
 # Navigate to the web app directory
 cd apps/web
@@ -18,8 +19,8 @@ cd apps/web
 # Install dependencies
 bun install
 
-# Build for Electron
-bun run electron:build
+# Build for Electron (uses export:electron command)
+bun run export:electron
 
 # Run the Electron app
 bunx electron electron/main-simple.js
@@ -31,11 +32,12 @@ bunx electron electron/main-simple.js
 - `test-electron.ps1` - Main build and test script for Windows
 
 ### In apps/web/package.json:
-- `bun run electron:build` - Build Next.js for Electron
+- `bun run export:electron` - Build Next.js for Electron (primary build command)
 - `bun run electron:dev` - Run Electron in development mode
 - `bun run electron:pack` - Create unpacked Electron app
 - `bun run electron:dist` - Create distributable (all platforms)
 - `bun run electron:dist:win` - Create Windows distributable
+- `bun run postexport` - Post-processing scripts (automatically run after export)
 
 ## Verification Steps
 
@@ -48,16 +50,15 @@ After building, verify the navigation is working:
    - Create/open a project → Should navigate to editor
 3. **Check DevTools**: Press F12 to open DevTools and check for any errors
 
-## Navigation Script Setup
+## Build Process Scripts
 
-If you need to manually set up the navigation fix:
+The build process automatically runs several scripts in the `apps/web/scripts/` folder:
 
-```bash
-# Copy the navigation fix script (from apps/web directory)
-node scripts/copy-nav-fix.js
-```
+1. **fix-electron-paths-robust.js** - Converts relative paths to app:// protocol
+2. **electron-editor-fix.js** - Removes blocking scripts from editor HTML
+3. **copy-nav-fix.js** - Copies navigation fix to output directory
 
-This copies the navigation fix script to the output directory for proper path resolution.
+These scripts are automatically executed during `bun run export:electron`.
 
 ## Cross-Platform Building
 
@@ -75,12 +76,39 @@ Make sure you're running from the correct directory:
 
 ### Build fails
 Try cleaning the build directories:
-```powershell
-.\test-electron.ps1 -CleanBuild
+```bash
+# From apps/web directory
+rm -rf out
+bun run export:electron
 ```
 
 ### Navigation errors in Electron
-The build process now uses native Next.js relative paths instead of post-processing scripts.
+The build process uses:
+- Native Next.js relative paths with `assetPrefix: "./"`
+- Post-processing scripts to fix remaining path issues
+- Navigation fix script for dynamic route handling
+
+## Important Scripts Folder
+
+The `apps/web/scripts/` folder contains critical build scripts that make Electron work properly:
+
+### Core Build Scripts:
+- **build-electron.js** - Main build orchestrator for Electron
+- **fix-electron-paths-robust.js** - Converts relative paths to app:// protocol for assets
+- **electron-editor-fix.js** - Removes blocking scripts that prevent React rendering
+- **copy-nav-fix.js** - Copies navigation handler to output directory
+
+### Utility Scripts:
+- **run-electron-with-logs.js** - Debug wrapper with enhanced logging
+- **validate-electron-urls.js** - Validates URLs in build output
+- **test-build.js** - Build verification script
+- **dev-electron.js** - Development mode runner
+
+These scripts are essential for:
+- Fixing path resolution issues in static HTML
+- Removing code that blocks React hydration
+- Enabling proper navigation between pages
+- Debugging build and runtime issues
 
 ## Recent Improvements
 
@@ -94,10 +122,10 @@ The build process now uses native Next.js relative paths instead of post-process
   - `electron/main-simple.js` - Main process with DevTools shortcuts (F12, Ctrl+Shift+I)
 
 ### Build System
-- **Removed post-processing scripts**: No longer need fragile workarounds
-- **Native relative paths**: Next.js generates proper relative paths using `assetPrefix: "./"` 
-- **Robust protocol handler**: Simplified app:// protocol handler for consistent asset loading
-- **Cleaner build process**: Single command builds and exports without manual path fixes
+- **Automated post-processing**: Scripts automatically fix paths after build
+- **Native relative paths**: Next.js generates proper relative paths using `assetPrefix: "./"`
+- **Robust protocol handler**: app:// protocol handler for consistent asset loading
+- **Script pipeline**: `export:electron` runs build → fix paths → remove blocking scripts → copy navigation fix
 
 ## Keyboard Shortcuts
 
