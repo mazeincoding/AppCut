@@ -25,8 +25,6 @@ export function UrlValidationProvider({ children }: UrlValidationProviderProps) 
       (window as any).electronAPI !== undefined;
 
     if (isElectron) {
-      console.log('🔗 URL Validation: Initializing Electron URL middleware');
-      
       // Patch window.location methods to auto-fix URLs
       patchLocationAssignment();
       
@@ -40,8 +38,6 @@ export function UrlValidationProvider({ children }: UrlValidationProviderProps) 
       
       // Patch fetch for API calls
       patchFetch();
-      
-      console.log('✅ URL Validation: Middleware initialized');
     }
   }, []);
 
@@ -71,8 +67,6 @@ function patchNextRouter() {
           const validatedUrl = result.correctedUrl || url;
           return originalReplace(validatedUrl, as, options);
         };
-
-        console.log('🔗 URL Validation: Next.js router patched');
       }
     }
   };
@@ -117,8 +111,6 @@ function patchFetch() {
 
     return originalFetch(input, init);
   };
-
-  console.log('🔗 URL Validation: Fetch patched');
 }
 
 /**

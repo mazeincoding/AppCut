@@ -35,32 +35,24 @@ export function StorageProvider({ children }: StorageProviderProps) {
     error: null,
   });
 
-  console.log('🚀 StorageProvider: Component rendered');
-
   const loadAllProjects = useProjectStore((state) => state.loadAllProjects);
 
   useEffect(() => {
     const initializeStorage = async () => {
-      console.log('🔄 StorageProvider: Starting initialization...');
       setStatus((prev) => ({ ...prev, isLoading: true }));
 
       try {
         // Check browser support
-        console.log('🔍 StorageProvider: Checking browser support...');
         const hasSupport = storageService.isFullySupported();
-        console.log('🔍 StorageProvider: Browser support:', hasSupport);
 
         if (!hasSupport) {
-          console.log('⚠️ StorageProvider: Storage not fully supported');
           toast.warning(
             "Storage not fully supported. Some features may not work."
           );
         }
 
         // Load saved projects (media will be loaded when a project is loaded)
-        console.log('📦 StorageProvider: Loading all projects...');
         await loadAllProjects();
-        console.log('✅ StorageProvider: Projects loaded successfully');
 
         setStatus({
           isInitialized: true,
@@ -68,9 +60,7 @@ export function StorageProvider({ children }: StorageProviderProps) {
           hasSupport,
           error: null,
         });
-        console.log('✅ StorageProvider: Initialization complete');
       } catch (error) {
-        console.error("❌ StorageProvider: Failed to initialize storage:", error);
         setStatus({
           isInitialized: false,
           isLoading: false,

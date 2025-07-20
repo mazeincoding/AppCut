@@ -82,11 +82,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   initializeApp: async () => {
-    console.log("Initializing video editor...");
     set({ isInitializing: true, isPanelsReady: false });
 
     set({ isPanelsReady: true, isInitializing: false });
-    console.log("Video editor ready");
   },
 
   setCanvasSize: (size) => {

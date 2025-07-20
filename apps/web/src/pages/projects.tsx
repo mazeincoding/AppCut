@@ -29,8 +29,6 @@ import { RenameProjectDialog } from "@/components/rename-project-dialog";
 import { ProjectCreationErrorBoundary } from "@/components/project-creation-error-boundary";
 
 export default function ProjectsPage() {
-  console.log('🚀 [PROJECTS PAGE] Component rendering...');
-  
   const {
     createNewProject,
     savedProjects,
@@ -39,13 +37,6 @@ export default function ProjectsPage() {
     deleteProject,
   } = useProjectStore();
   const router = useRouter();
-  
-  console.log('🚀 [PROJECTS PAGE] Store state:', {
-    savedProjects: savedProjects.length,
-    isLoading,
-    isInitialized,
-    createNewProject: typeof createNewProject
-  });
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedProjects, setSelectedProjects] = useState<Set<string>>(
     new Set()
@@ -53,20 +44,14 @@ export default function ProjectsPage() {
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
 
   const handleCreateProject = async () => {
-    console.log("🚀 [PROJECTS PAGE] Create project button clicked");
     try {
-      console.log("🚀 [PROJECTS PAGE] Calling createNewProject...");
       const projectId = await createNewProject("New Project");
-      console.log("🚀 [PROJECTS PAGE] Project created with ID:", projectId);
       
       // Add small delay to ensure state has stabilized before navigation
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      console.log("🚀 [PROJECTS PAGE] Navigating to editor...");
       router.push(`/editor/project/${encodeURIComponent(projectId)}`);
-      console.log("🚀 [PROJECTS PAGE] Navigation call completed");
     } catch (error) {
-      console.error("🚀 [PROJECTS PAGE] Error creating project:", error);
       throw error; // Re-throw to trigger error boundary
     }
   };
@@ -548,18 +533,8 @@ function ProjectCard({
 }
 
 function CreateButton({ onClick }: { onClick?: () => void }) {
-  const handleClick = () => {
-    console.log("🚀 [CREATE BUTTON] Button clicked!");
-    if (onClick) {
-      console.log("🚀 [CREATE BUTTON] Calling onClick handler");
-      onClick();
-    } else {
-      console.log("🚀 [CREATE BUTTON] No onClick handler provided");
-    }
-  };
-
   return (
-    <Button className="flex" onClick={handleClick}>
+    <Button className="flex" onClick={onClick}>
       <Plus className="!size-4" />
       <span className="text-sm font-medium">New project</span>
     </Button>
