@@ -30,8 +30,8 @@ export function Footer() {
       animate={{ opacity: 1 }}
       transition={{ delay: 0.8, duration: 0.8 }}
     >
-      <div className="max-w-5xl mx-auto px-8 py-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-8">
+      <div className="max-w-5xl mx-auto px-4 xl:px-0 py-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-12 mb-8">
           {/* Brand Section */}
           <div className="md:col-span-1 max-w-sm">
             <div className="flex justify-start items-center gap-2 mb-4">
@@ -100,7 +100,6 @@ export function Footer() {
                 </li>
               </ul>
             </div>
-
             {/* Company Links */}
             <div>
               <h3 className="font-semibold text-foreground mb-4">Company</h3>
@@ -127,7 +126,6 @@ export function Footer() {
             </div>
           </div>
         </div>
-
         {/* Bottom Section */}
         <div className="pt-2 flex flex-col md:flex-row justify-between items-start gap-4">
           <div className="flex items-center gap-4 text-sm text-muted-foreground">

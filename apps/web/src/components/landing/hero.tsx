@@ -1,8 +1,8 @@
 "use client";
 
 import { motion } from "motion/react";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { SponsorButton } from "../ui/sponsor-button";
 import { VercelIcon } from "../icons";
 import { ArrowRight } from "lucide-react";
@@ -10,11 +10,14 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 import Image from "next/image";
-import { Handlebars } from "./handlebars";
+import { Handlebars } from "@/components/landing/handlebars";
+import { isValidEmail } from "@/lib/utils";
 
 export function Hero() {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [shake, setShake] = useState(false);
+
   const [csrfToken, setCsrfToken] = useState<string | null>(null);
 
   useEffect(() => {
@@ -41,11 +44,13 @@ export function Hero() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email.trim()) {
+    if (!isValidEmail(email.trim())) {
       toast.error("Email required", {
-        description: "Please enter your email address.",
+        description: "Please enter a valid email",
       });
+      setShake(true);
       return;
+
     }
 
     if (!csrfToken) {
@@ -101,7 +106,7 @@ export function Hero() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4.5rem)] supports-[height:100dvh]:min-h-[calc(100dvh-4.5rem)] flex flex-col justify-between items-center text-center px-4">
+    <div className="min-h-[calc(100vh-4.5rem)] supports-[height:100dvh]:min-h-[calc(100dvh-4.5rem)] flex flex-col justify-between items-center text-center px-4 pt-8 sm:pt-20">
       <Image
         className="absolute top-0 left-0 -z-50 size-full object-cover"
         src="/landing-page-bg.png"
@@ -156,8 +161,18 @@ export function Hero() {
           <form
             onSubmit={handleSubmit}
             className="flex gap-3 w-full max-w-lg flex-col sm:flex-row"
+            noValidate
           >
-            <div className="relative w-full">
+            <motion.div
+              animate={
+                shake
+                  ? { x: [0, -8, 8, -8, 8, 0] } // key‑frame wiggle
+                  : { x: 0 }
+              }
+              transition={{ duration: 0.45, ease: "easeInOut" }}
+              onAnimationComplete={() => setShake(false)} // stop shaking once a cycle is done
+              className="relative w-full"
+            >
               <Input
                 type="email"
                 placeholder="Enter your email"
@@ -167,7 +182,7 @@ export function Hero() {
                 disabled={isSubmitting || !csrfToken}
                 required
               />
-            </div>
+            </motion.div>
             <Button
               type="submit"
               size="lg"
