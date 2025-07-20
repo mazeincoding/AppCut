@@ -47,7 +47,7 @@ export function MediaView() {
     try {
       // Process files (extract metadata, generate thumbnails, etc.)
       const processedItems = await processMediaFiles(files, (p) =>
-        setProgress(p)
+        setProgress(p),
       );
       // Add each processed media item to the store
       for (const item of processedItems) {
