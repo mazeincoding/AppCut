@@ -22,13 +22,16 @@ import {
   TIMELINE_CONSTANTS,
 } from "@/constants/timeline-constants";
 import { useProjectStore } from "@/stores/project-store";
+import { useTimelineSnapping, SnapPoint } from "@/hooks/use-timeline-snapping";
 
 export function TimelineTrackContent({
   track,
   zoomLevel,
+  onSnapPointChange,
 }: {
   track: TimelineTrack;
   zoomLevel: number;
+  onSnapPointChange?: (snapPoint: SnapPoint | null) => void;
 }) {
   const { mediaItems } = useMediaStore();
   const {
@@ -45,7 +48,17 @@ export function TimelineTrackContent({
     endDrag: endDragAction,
     clearSelectedElements,
     insertTrackAt,
+    snappingEnabled,
   } = useTimelineStore();
+
+  const { currentTime } = usePlaybackStore();
+
+  // Initialize snapping hook
+  const { snapElementPosition } = useTimelineSnapping({
+    snapThreshold: 10,
+    enableElementSnapping: snappingEnabled,
+    enablePlayheadSnapping: snappingEnabled,
+  });
 
   const timelineRef = useRef<HTMLDivElement>(null);
   const [isDropping, setIsDropping] = useState(false);
@@ -85,12 +98,34 @@ export function TimelineTrackContent({
         mouseX / (TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel)
       );
       const adjustedTime = Math.max(0, mouseTime - dragState.clickOffsetTime);
-      // Use frame snapping if project has FPS, otherwise use decimal snapping
-      const projectStore = useProjectStore.getState();
-      const projectFps = projectStore.activeProject?.fps || 30;
-      const snappedTime = snapTimeToFrame(adjustedTime, projectFps);
 
-      updateDragTime(snappedTime);
+      // Apply snapping if enabled
+      let finalTime = adjustedTime;
+      let snapPoint = null;
+      if (snappingEnabled) {
+        const snapResult = snapElementPosition(
+          adjustedTime,
+          tracks,
+          currentTime,
+          zoomLevel,
+          dragState.elementId || undefined
+        );
+        finalTime = snapResult.snappedTime;
+        snapPoint = snapResult.snapPoint;
+
+        // Notify parent component about snap point change
+        onSnapPointChange?.(snapPoint);
+      } else {
+        // Use frame snapping if project has FPS, otherwise use decimal snapping
+        const projectStore = useProjectStore.getState();
+        const projectFps = projectStore.activeProject?.fps || 30;
+        finalTime = snapTimeToFrame(adjustedTime, projectFps);
+
+        // Clear snap point when not snapping
+        onSnapPointChange?.(null);
+      }
+
+      updateDragTime(finalTime);
     };
 
     const handleMouseUp = (e: MouseEvent) => {
@@ -108,6 +143,8 @@ export function TimelineTrackContent({
             dragState.currentTime
           );
           endDragAction();
+          // Clear snap point when drag ends
+          onSnapPointChange?.(null);
         }
         return;
       }
@@ -204,6 +241,8 @@ export function TimelineTrackContent({
 
       if (isTrackThatStartedDrag) {
         endDragAction();
+        // Clear snap point when drag ends
+        onSnapPointChange?.(null);
       }
     };
 
@@ -229,6 +268,7 @@ export function TimelineTrackContent({
     endDragAction,
     selectedElements,
     selectElement,
+    onSnapPointChange,
   ]);
 
   const handleElementMouseDown = (

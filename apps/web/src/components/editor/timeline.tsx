@@ -15,6 +15,9 @@ import {
   Video,
   Music,
   TypeIcon,
+  Magnet,
+  Lock,
+  LockOpen,
 } from "lucide-react";
 import {
   Tooltip,
@@ -36,13 +39,6 @@ import { useTimelineZoom } from "@/hooks/use-timeline-zoom";
 import { processMediaFiles } from "@/lib/media-processing";
 import { toast } from "sonner";
 import { useState, useRef, useEffect, useCallback } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
 import { TimelineTrackContent } from "./timeline-track";
 import {
   TimelinePlayhead,
@@ -50,6 +46,8 @@ import {
 } from "./timeline-playhead";
 import { SelectionBox } from "./selection-box";
 import { useSelectionBox } from "@/hooks/use-selection-box";
+import { SnapIndicator } from "./snap-indicator";
+import { SnapPoint } from "@/hooks/use-timeline-snapping";
 import type { DragData, TimelineTrack } from "@/types/timeline";
 import {
   getTrackHeight,
@@ -78,6 +76,9 @@ export function Timeline() {
     separateAudio,
     undo,
     redo,
+    snappingEnabled,
+    toggleSnapping,
+    dragState,
   } = useTimelineStore();
   const { mediaItems, addMediaItem } = useMediaStore();
   const { activeProject } = useProjectStore();
@@ -118,7 +119,7 @@ export function Timeline() {
   const lastVerticalSync = useRef(0);
 
   // Timeline playhead ruler handlers
-  const { handleRulerMouseDown, isDraggingRuler } = useTimelinePlayheadRuler({
+  const { handleRulerMouseDown } = useTimelinePlayheadRuler({
     currentTime,
     duration,
     zoomLevel,
@@ -144,6 +145,18 @@ export function Timeline() {
       setSelectedElements(elements);
     },
   });
+
+  // Calculate snap indicator state
+  const [currentSnapPoint, setCurrentSnapPoint] = useState<SnapPoint | null>(
+    null
+  );
+  const showSnapIndicator =
+    dragState.isDragging && snappingEnabled && currentSnapPoint !== null;
+
+  // Callback to handle snap point changes from TimelineTrackContent
+  const handleSnapPointChange = useCallback((snapPoint: SnapPoint | null) => {
+    setCurrentSnapPoint(snapPoint);
+  }, []);
 
   // Timeline content click to seek handler
   const handleTimelineContentClick = useCallback(
@@ -364,29 +377,7 @@ export function Timeline() {
 
         if (dragData.type === "text") {
           // Always create new text track to avoid overlaps
-          const newTrackId = addTrack("text");
-
-          addElementToTrack(newTrackId, {
-            type: "text",
-            name: dragData.name || "Text",
-            content: dragData.content || "Default Text",
-            duration: TIMELINE_CONSTANTS.DEFAULT_TEXT_DURATION,
-            startTime: 0,
-            trimStart: 0,
-            trimEnd: 0,
-            fontSize: 48,
-            fontFamily: "Arial",
-            color: "#ffffff",
-            backgroundColor: "transparent",
-            textAlign: "center",
-            fontWeight: "normal",
-            fontStyle: "normal",
-            textDecoration: "none",
-            x: 0,
-            y: 0,
-            rotation: 0,
-            opacity: 1,
-          });
+          useTimelineStore.getState().addTextToNewTrack(dragData);
         } else {
           // Handle media items
           const mediaItem = mediaItems.find((item) => item.id === dragData.id);
@@ -395,19 +386,7 @@ export function Timeline() {
             return;
           }
 
-          const trackType = dragData.type === "audio" ? "audio" : "media";
-          let targetTrack = tracks.find((t) => t.type === trackType);
-          const newTrackId = targetTrack ? targetTrack.id : addTrack(trackType);
-
-          addElementToTrack(newTrackId, {
-            type: "media",
-            mediaId: mediaItem.id,
-            name: mediaItem.name,
-            duration: mediaItem.duration || 5,
-            startTime: 0,
-            trimStart: 0,
-            trimEnd: 0,
-          });
+          useTimelineStore.getState().addMediaToNewTrack(mediaItem);
         }
       } catch (error) {
         console.error("Error parsing dropped item data:", error);
@@ -435,18 +414,7 @@ export function Timeline() {
               item.name === processedItem.name && item.url === processedItem.url
           );
           if (addedItem) {
-            const trackType =
-              processedItem.type === "audio" ? "audio" : "media";
-            const newTrackId = addTrack(trackType);
-            addElementToTrack(newTrackId, {
-              type: "media",
-              mediaId: addedItem.id,
-              name: addedItem.name,
-              duration: addedItem.duration || 5,
-              startTime: 0,
-              trimStart: 0,
-              trimEnd: 0,
-            });
+            useTimelineStore.getState().addMediaToNewTrack(addedItem);
           }
         }
       } catch (error) {
@@ -686,136 +654,172 @@ export function Timeline() {
       onMouseLeave={() => setIsInTimeline(false)}
     >
       {/* Toolbar */}
-      <div className="border-b flex items-center px-2 py-1 gap-1">
-        <TooltipProvider delayDuration={500}>
-          {/* Play/Pause Button */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="text"
-                size="icon"
-                onClick={toggle}
-                className="mr-2"
-              >
-                {isPlaying ? (
-                  <Pause className="h-4 w-4" />
-                ) : (
-                  <Play className="h-4 w-4" />
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              {isPlaying ? "Pause (Space)" : "Play (Space)"}
-            </TooltipContent>
-          </Tooltip>
-          <div className="w-px h-6 bg-border mx-1" />
-          {/* Time Display */}
-          <div
-            className="text-xs text-muted-foreground font-mono px-2"
-            style={{ minWidth: "18ch", textAlign: "center" }}
-          >
-            {currentTime.toFixed(1)}s / {duration.toFixed(1)}s
-          </div>
-          {/* Test Clip Button - for debugging */}
-          {tracks.length === 0 && (
-            <>
-              <div className="w-px h-6 bg-border mx-1" />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const trackId = addTrack("media");
-                      addElementToTrack(trackId, {
-                        type: "media",
-                        mediaId: "test",
-                        name: "Test Clip",
-                        duration: TIMELINE_CONSTANTS.DEFAULT_TEXT_DURATION,
-                        startTime: 0,
-                        trimStart: 0,
-                        trimEnd: 0,
-                      });
-                    }}
-                    className="text-xs"
-                  >
-                    Add Test Clip
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Add a test clip to try playback</TooltipContent>
-              </Tooltip>
-            </>
-          )}
-          <div className="w-px h-6 bg-border mx-1" />
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="text" size="icon" onClick={handleSplitSelected}>
-                <Scissors className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Split element (Ctrl+S)</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="text"
-                size="icon"
-                onClick={handleSplitAndKeepLeft}
-              >
-                <ArrowLeftToLine className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Split and keep left (Ctrl+Q)</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="text"
-                size="icon"
-                onClick={handleSplitAndKeepRight}
-              >
-                <ArrowRightToLine className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Split and keep right (Ctrl+W)</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="text" size="icon" onClick={handleSeparateAudio}>
-                <SplitSquareHorizontal className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Separate audio (Ctrl+D)</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="text"
-                size="icon"
-                onClick={handleDuplicateSelected}
-              >
-                <Copy className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Duplicate element (Ctrl+D)</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="text" size="icon" onClick={handleFreezeSelected}>
-                <Snowflake className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Freeze frame (F)</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="text" size="icon" onClick={handleDeleteSelected}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Delete element (Delete)</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+      <div className="border-b flex items-center justify-between px-2 py-1">
+        <div className="flex items-center gap-1 w-full">
+          <TooltipProvider delayDuration={500}>
+            {/* Play/Pause Button */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="text"
+                  size="icon"
+                  onClick={toggle}
+                  className="mr-2"
+                >
+                  {isPlaying ? (
+                    <Pause className="h-4 w-4" />
+                  ) : (
+                    <Play className="h-4 w-4" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {isPlaying ? "Pause (Space)" : "Play (Space)"}
+              </TooltipContent>
+            </Tooltip>
+            <div className="w-px h-6 bg-border mx-1" />
+            {/* Time Display */}
+            <div
+              className="text-xs text-muted-foreground font-mono px-2"
+              style={{ minWidth: "18ch", textAlign: "center" }}
+            >
+              {currentTime.toFixed(1)}s / {duration.toFixed(1)}s
+            </div>
+            {/* Test Clip Button - for debugging */}
+            {tracks.length === 0 && (
+              <>
+                <div className="w-px h-6 bg-border mx-1" />
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const trackId = addTrack("media");
+                        addElementToTrack(trackId, {
+                          type: "media",
+                          mediaId: "test",
+                          name: "Test Clip",
+                          duration: TIMELINE_CONSTANTS.DEFAULT_TEXT_DURATION,
+                          startTime: 0,
+                          trimStart: 0,
+                          trimEnd: 0,
+                        });
+                      }}
+                      className="text-xs"
+                    >
+                      Add Test Clip
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    Add a test clip to try playback
+                  </TooltipContent>
+                </Tooltip>
+              </>
+            )}
+            <div className="w-px h-6 bg-border mx-1" />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="text"
+                  size="icon"
+                  onClick={handleSplitSelected}
+                >
+                  <Scissors className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Split element (Ctrl+S)</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="text"
+                  size="icon"
+                  onClick={handleSplitAndKeepLeft}
+                >
+                  <ArrowLeftToLine className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Split and keep left (Ctrl+Q)</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="text"
+                  size="icon"
+                  onClick={handleSplitAndKeepRight}
+                >
+                  <ArrowRightToLine className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Split and keep right (Ctrl+W)</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="text"
+                  size="icon"
+                  onClick={handleSeparateAudio}
+                >
+                  <SplitSquareHorizontal className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Separate audio (Ctrl+D)</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="text"
+                  size="icon"
+                  onClick={handleDuplicateSelected}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Duplicate element (Ctrl+D)</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="text"
+                  size="icon"
+                  onClick={handleFreezeSelected}
+                >
+                  <Snowflake className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Freeze frame (F)</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="text"
+                  size="icon"
+                  onClick={handleDeleteSelected}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Delete element (Delete)</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+        <div className="flex items-center gap-1">
+          <TooltipProvider delayDuration={500}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="text" size="icon" onClick={toggleSnapping}>
+                  {snappingEnabled ? (
+                    <Lock className="h-4 w-4" />
+                  ) : (
+                    <LockOpen className="h-4 w-4 text-primary" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Auto snapping</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </div>
 
       {/* Timeline Container */}
@@ -835,6 +839,17 @@ export function Timeline() {
           trackLabelsRef={trackLabelsRef}
           timelineRef={timelineRef}
           playheadRef={playheadRef}
+          isSnappingToPlayhead={
+            showSnapIndicator && currentSnapPoint?.type === "playhead"
+          }
+        />
+        <SnapIndicator
+          snapPoint={currentSnapPoint}
+          zoomLevel={zoomLevel}
+          tracks={tracks}
+          timelineRef={timelineRef}
+          trackLabelsRef={trackLabelsRef}
+          isVisible={showSnapIndicator}
         />
         {/* Timeline Header with Ruler */}
         <div className="flex bg-panel sticky top-0 z-10">
@@ -1016,6 +1031,7 @@ export function Timeline() {
                             <TimelineTrackContent
                               track={track}
                               zoomLevel={zoomLevel}
+                              onSnapPointChange={handleSnapPointChange}
                             />
                           </div>
                         </ContextMenuTrigger>

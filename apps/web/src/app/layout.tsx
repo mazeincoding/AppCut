@@ -4,7 +4,6 @@ import Script from "next/script";
 import "./globals.css";
 import { Toaster } from "../components/ui/sonner";
 import { TooltipProvider } from "../components/ui/tooltip";
-import { DevelopmentDebug } from "../components/development-debug";
 import { StorageProvider } from "../components/storage-provider";
 import { baseMetaData } from "./metadata";
 import { defaultFont } from "../lib/font-config";
@@ -24,7 +23,6 @@ export default function RootLayout({
             <StorageProvider>{children}</StorageProvider>
             <Analytics />
             <Toaster />
-            <DevelopmentDebug />
             <Script
               src="https://cdn.databuddy.cc/databuddy.js"
               strategy="afterInteractive"

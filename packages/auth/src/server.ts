@@ -1,13 +1,16 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@opencut/db";
+import { keys } from "./keys";
+
+const { NEXT_PUBLIC_BETTER_AUTH_URL, BETTER_AUTH_SECRET } = keys()
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
     usePlural: true,
   }),
-  secret: process.env.BETTER_AUTH_SECRET,
+  secret: BETTER_AUTH_SECRET,
   user: {
     deleteUser: {
       enabled: true,
@@ -16,13 +19,7 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
-  socialProviders: {
-    google: {
-      clientId: process.env.GOOGLE_CLIENT_ID as string,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-    },
-  },
-  baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL,
+  baseURL: NEXT_PUBLIC_BETTER_AUTH_URL,
   appName: "OpenCut",
   trustedOrigins: ["http://localhost:3000"],
 });

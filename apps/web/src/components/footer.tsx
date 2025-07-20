@@ -3,7 +3,7 @@
 import { motion } from "motion/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { RiGithubLine, RiTwitterXLine } from "react-icons/ri";
+import { RiDiscordFill, RiGithubLine, RiTwitterXLine } from "react-icons/ri";
 import { getStars } from "@/lib/fetch-github-stars";
 import Image from "next/image";
 
@@ -59,6 +59,14 @@ export function Footer() {
               >
                 <RiTwitterXLine className="h-5 w-5" />
               </Link>
+              <Link
+                href="https://discord.com/invite/Mu3acKZvCp"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <RiDiscordFill className="h-5 w-5" />
+              </Link>
             </div>
           </div>
 
@@ -66,6 +74,14 @@ export function Footer() {
             <div>
               <h3 className="font-semibold text-foreground mb-4">Resources</h3>
               <ul className="space-y-2 text-sm">
+                <li>
+                  <Link
+                    href="/roadmap"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Roadmap
+                  </Link>
+                </li>
                 <li>
                   <Link
                     href="/privacy"

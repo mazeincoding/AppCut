@@ -20,6 +20,7 @@ interface TimelinePlayheadProps {
   trackLabelsRef?: React.RefObject<HTMLDivElement>;
   timelineRef: React.RefObject<HTMLDivElement>;
   playheadRef?: React.RefObject<HTMLDivElement>;
+  isSnappingToPlayhead?: boolean;
 }
 
 export function TimelinePlayhead({
@@ -34,6 +35,7 @@ export function TimelinePlayhead({
   trackLabelsRef,
   timelineRef,
   playheadRef: externalPlayheadRef,
+  isSnappingToPlayhead = false,
 }: TimelinePlayheadProps) {
   const internalPlayheadRef = useRef<HTMLDivElement>(null);
   const playheadRef = externalPlayheadRef || internalPlayheadRef;
@@ -73,11 +75,15 @@ export function TimelinePlayhead({
       }}
       onMouseDown={handlePlayheadMouseDown}
     >
-      {/* The red line spanning full height */}
-      <div className="absolute left-0 w-0.5 bg-foreground cursor-col-resize h-full" />
+      {/* The playhead line spanning full height */}
+      <div
+        className={`absolute left-0 w-0.5 cursor-col-resize h-full ${isSnappingToPlayhead ? "bg-primary" : "bg-foreground"}`}
+      />
 
-      {/* Red dot indicator at the top (in ruler area) */}
-      <div className="absolute top-1 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-foreground rounded-full border-2 border-foreground shadow-sm" />
+      {/* Playhead dot indicator at the top (in ruler area) */}
+      <div
+        className={`absolute top-1 left-1/2 transform -translate-x-1/2 w-3 h-3 rounded-full border-2 shadow-sm ${isSnappingToPlayhead ? "bg-primary border-primary" : "bg-foreground border-foreground"}`}
+      />
     </div>
   );
 }

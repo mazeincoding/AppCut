@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { DraggableMediaItem } from "@/components/ui/draggable-item";
 import { useProjectStore } from "@/stores/project-store";
+import { useTimelineStore } from "@/stores/timeline-store";
 
 export function MediaView() {
   const { mediaItems, addMediaItem, removeMediaItem } = useMediaStore();
@@ -207,9 +208,8 @@ export function MediaView() {
         <DragOverlay isVisible={isDragOver} />
 
         <div className="p-3 pb-2">
-          {/* Button to add/upload media */}
+          {/* Search and filter controls */}
           <div className="flex gap-2">
-            {/* Search and filter controls */}
             <Select value={mediaFilter} onValueChange={setMediaFilter}>
               <SelectTrigger className="w-[80px] h-full text-xs">
                 <SelectValue />
@@ -228,29 +228,6 @@ export function MediaView() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-
-            {/* Add media button */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleFileSelect}
-              disabled={isProcessing}
-              className="flex-none bg-transparent min-w-[30px] whitespace-nowrap overflow-hidden px-2 justify-center items-center"
-            >
-              {isProcessing ? (
-                <>
-                  <Upload className="h-4 w-4 animate-spin" />
-                  <span className="hidden md:inline ml-2">{progress}%</span>
-                </>
-              ) : (
-                <>
-                  <Plus className="h-4 w-4" />
-                  <span className="hidden sm:inline ml-2" aria-label="Add file">
-                    Add
-                  </span>
-                </>
-              )}
-            </Button>
           </div>
         </div>
 
@@ -265,8 +242,32 @@ export function MediaView() {
                 No media in project
               </p>
               <p className="text-xs text-muted-foreground/70 mt-1">
-                Drag files here or use the button above
+                Drag files here or use the button below
               </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleFileSelect}
+                disabled={isProcessing}
+                className="flex-none bg-transparent min-w-[30px] whitespace-nowrap overflow-hidden px-2 justify-center items-center mt-2"
+              >
+                {isProcessing ? (
+                  <>
+                    <Upload className="h-4 w-4 animate-spin" />
+                    <span className="hidden md:inline ml-2">{progress}%</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4" />
+                    <span
+                      className="hidden sm:inline ml-2"
+                      aria-label="Add file"
+                    >
+                      Add
+                    </span>
+                  </>
+                )}
+              </Button>
             </div>
           ) : (
             <div
@@ -288,6 +289,11 @@ export function MediaView() {
                         name: item.name,
                       }}
                       showPlusOnDrag={false}
+                      onAddToTimeline={(currentTime) =>
+                        useTimelineStore
+                          .getState()
+                          .addMediaAtTime(item, currentTime)
+                      }
                       rounded={false}
                     />
                   </ContextMenuTrigger>

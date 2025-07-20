@@ -3,8 +3,8 @@ import { Metadata } from "next";
 const title = "OpenCut";
 const description =
   "A simple but powerful video editor that gets the job done. In your browser.";
-const openGraphImageUrl = "https://opencut.app/opengraph-image.jpg";
-const twitterImageUrl = "/opengraph-image.jpg";
+const openGraphImageUrl = "https://opencut.app/open-graph/default.jpg";
+const twitterImageUrl = "/open-graph/default.jpg";
 
 export const baseMetaData: Metadata = {
   metadataBase: new URL("https://opencut.app"),

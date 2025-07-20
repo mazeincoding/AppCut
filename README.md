@@ -124,14 +124,6 @@ Before you begin, ensure you have the following installed on your system:
    # Or use an online generator: https://generate-secret.vercel.app/32
    ```
 
-   **Optional Variables (for Google OAuth):**
-
-   ```bash
-   # Only needed if you want to test Google login
-   GOOGLE_CLIENT_ID="your-google-client-id"
-   GOOGLE_CLIENT_SECRET="your-google-client-secret"
-   ```
-
 5. Run database migrations: `bun run db:migrate` from (inside apps/web)
 6. Start the development server: `bun run dev` from (inside apps/web)
 
@@ -154,6 +146,10 @@ We welcome contributions! Please see our [Contributing Guide](.github/CONTRIBUTI
 ## Sponsors
 
 Thanks to [Vercel](https://vercel.com?utm_source=github-opencut&utm_campaign=oss) for their support of open-source software.
+
+<a href="https://vercel.com/oss">
+  <img alt="Vercel OSS Program" src="https://vercel.com/oss/program-badge.svg" />
+</a>
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FOpenCut-app%2FOpenCut&project-name=opencut&repository-name=opencut)
 
