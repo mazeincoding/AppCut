@@ -69,7 +69,8 @@ export function Footer() {
               </Link>
             </div>
           </div>
-          <div className="flex gap-12  md:justify-end items-start py-2">
+
+          <div className="flex gap-12 justify-start items-start py-2">
             <div>
               <h3 className="font-semibold text-foreground mb-4">Resources</h3>
               <ul className="space-y-2 text-sm">
@@ -99,7 +100,6 @@ export function Footer() {
                 </li>
               </ul>
             </div>
-
             {/* Company Links */}
             <div>
               <h3 className="font-semibold text-foreground mb-4">Company</h3>
@@ -126,7 +126,6 @@ export function Footer() {
             </div>
           </div>
         </div>
-
         {/* Bottom Section */}
         <div className="pt-2 flex flex-col md:flex-row justify-between items-start gap-4">
           <div className="flex items-center gap-4 text-sm text-muted-foreground">

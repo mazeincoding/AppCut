@@ -17,6 +17,7 @@ export function Hero() {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [shake, setShake] = useState(false);
+
   const [csrfToken, setCsrfToken] = useState<string | null>(null);
 
   useEffect(() => {
@@ -47,8 +48,9 @@ export function Hero() {
       toast.error("Email required", {
         description: "Please enter a valid email",
       });
-      setShake(true); // fire the animation
-      return; // don’t go further
+      setShake(true);
+      return;
+
     }
 
     if (!csrfToken) {
@@ -124,7 +126,7 @@ export function Hero() {
           transition={{ delay: 0.6, duration: 0.8 }}
           className="mb-8 flex justify-center"
         >
-          <SponsorButton
+          <SponsorButton 
             href="https://vercel.com/?utm_source=opencut"
             logo={VercelIcon}
             companyName="Vercel"
@@ -194,15 +196,15 @@ export function Hero() {
             </Button>
           </form>
         </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8, duration: 0.6 }}
-          className="mt-8 inline-flex items-center gap-2 text-sm text-muted-foreground justify-center"
-        >
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-          <span>50k+ people already joined</span>
-        </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8, duration: 0.6 }}
+            className="mt-8 inline-flex items-center gap-2 text-sm text-muted-foreground justify-center"
+          >
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <span>50k+ people already joined</span>
+          </motion.div>
       </motion.div>
     </div>
   );

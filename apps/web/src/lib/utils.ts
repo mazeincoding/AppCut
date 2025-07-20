@@ -42,10 +42,10 @@ export function generateUUID(): string {
     "-" +
     hex.slice(10, 16).join("")
   );
-}
 
 export function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
 }
 
 export function isDOMElement(el: any): el is HTMLElement {
