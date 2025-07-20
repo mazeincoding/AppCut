@@ -82,9 +82,31 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   initializeApp: async () => {
-    set({ isInitializing: true, isPanelsReady: false });
+    try {
+      console.log('🎬 EDITOR STORE INIT START:', {
+        currentState: get(),
+        timestamp: Date.now()
+      });
+      
+      set({ isInitializing: true, isPanelsReady: false });
+      console.log('🎬 EDITOR STORE SET INITIALIZING:', {
+        newState: get(),
+        timestamp: Date.now()
+      });
 
-    set({ isPanelsReady: true, isInitializing: false });
+      // Add a small delay to ensure state updates properly
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      set({ isPanelsReady: true, isInitializing: false });
+      console.log('🎬 EDITOR STORE INIT COMPLETE:', {
+        finalState: get(),
+        timestamp: Date.now()
+      });
+    } catch (error) {
+      console.error('❌ EDITOR STORE INIT ERROR:', error);
+      // Ensure we don't get stuck in loading state on error
+      set({ isPanelsReady: true, isInitializing: false });
+    }
   },
 
   setCanvasSize: (size) => {

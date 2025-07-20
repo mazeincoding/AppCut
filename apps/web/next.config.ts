@@ -1,10 +1,13 @@
 import type { NextConfig } from "next";
 
 const isElectron = process.env.NEXT_PUBLIC_ELECTRON === "true";
+const isElectronProd = isElectron && process.env.NODE_ENV === "production";
 
 // Debug logging to detect environment variables
 console.log('🔧 [DETECTION]', {
   isElectron, 
+  isElectronProd,
+  nodeEnv: process.env.NODE_ENV,
   envVar: process.env.NEXT_PUBLIC_ELECTRON, 
   allElectronEnv: Object.keys(process.env).filter(k => k.includes('ELECTRON')).map(k => `${k}=${process.env[k]}`)
 });
@@ -15,12 +18,12 @@ const nextConfig: NextConfig = {
   },
   reactStrictMode: true,
   productionBrowserSourceMaps: true,
-  output: isElectron ? "export" : "standalone",
-  // 强制相对路径用于 Electron
-  assetPrefix: isElectron ? "." : undefined,
-  basePath: isElectron ? "" : undefined,
+  output: isElectronProd ? "export" : "standalone", // Only use export for Electron PRODUCTION
+  // 强制相对路径用于 Electron PRODUCTION
+  assetPrefix: isElectronProd ? "." : undefined,
+  basePath: isElectronProd ? "" : undefined,
   trailingSlash: false, // 避免重定向死循环
-  distDir: isElectron ? "out" : ".next",
+  distDir: isElectronProd ? "out" : ".next",
   images: {
     unoptimized: isElectron,
     remotePatterns: [
@@ -34,7 +37,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  ...(isElectron && {
+  ...(isElectronProd && {
     // ROOT CAUSE FIX: Complete data fetching disable for Electron
     skipTrailingSlashRedirect: true,
     skipMiddlewareUrlNormalize: true,

@@ -53,7 +53,8 @@
       "Bash(bunx:*)",
       "Bash(.electron-dev.ps1)",
       "Bash(echo:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(pkill:*)"
     ],
     "deny": []
   }

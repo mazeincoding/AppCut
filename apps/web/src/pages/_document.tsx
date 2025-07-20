@@ -65,8 +65,13 @@ export default function Document() {
                       stack: new Error().stack
                     });
                     
-                    // Block ALL .json and _next/data requests completely
+                    // Block problematic .json requests but allow Next.js development files
                     if (url && (url.includes('.json') || url.includes('_next/data') || url.includes('.html.json'))) {
+                      // Allow Next.js development middleware files
+                      if (url.includes('_devMiddleware') || url.includes('_devPage') || url.includes('page-loader')) {
+                        console.log('✅ [ELECTRON] Allowing Next.js dev file:', url.split('/').pop());
+                        return originalFetch.apply(this, arguments);
+                      }
                       console.warn('🚫 [ELECTRON] Blocked data fetch:', url.split('/').pop());
                       return Promise.reject(new Error('Data fetching disabled in Electron'));
                     }

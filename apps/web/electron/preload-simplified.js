@@ -1,7 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 // === SIMPLE PRELOAD: Minimal blocking for Electron static export ===
-console.log('🚀 [ELECTRON] Simplified preload script loading...');
+console.log('🚀 [ELECTRON] Simplified preload script loading... VERSION 2.0 - FETCH BLOCKING DISABLED');
 
 // PHASE 1: Apply minimal patches for Electron compatibility
 try {
@@ -10,12 +10,14 @@ try {
   window.fetch = function(input, init) {
     const url = typeof input === 'string' ? input : (input && input.url) || input.toString();
     
-    // Only block problematic file:// JSON requests, allow Next.js dev server files
-    if (url && url.startsWith('file://') && url.includes('.json') && 
+    // TEMPORARILY DISABLED: Allow all requests to test if fetch blocking is causing infinite loop
+    // TODO: Re-enable selective blocking after confirming this fixes the issue
+    if (false && url && url.startsWith('file://') && url.includes('.json') && 
         !url.includes('_devMiddleware') && !url.includes('page-loader')) {
       console.log('🚫 [ELECTRON] Blocking file:// JSON request:', url);
       return Promise.reject(new Error('File protocol JSON requests not supported'));
     }
+    console.log('✅ [ELECTRON] Allowing all fetch requests for debugging:', url);
     
     return originalFetch.apply(this, arguments);
   };
