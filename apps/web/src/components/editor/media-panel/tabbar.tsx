@@ -8,6 +8,8 @@ import { useRef, useState, useEffect } from "react";
 
 export function TabBar() {
   const { activeTab, setActiveTab } = useMediaPanelStore();
+  
+  
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isAtEnd, setIsAtEnd] = useState(false);
   const [isAtStart, setIsAtStart] = useState(true);
@@ -76,7 +78,7 @@ export function TabBar() {
           return (
             <div
               className={cn(
-                "flex flex-col gap-2 items-center cursor-pointer px-6 py-3 rounded-md transition-colors hover:bg-hover-bg",
+                "flex flex-col gap-2 items-center cursor-pointer px-2 py-2 mx-4 rounded-md transition-colors hover:bg-white/5 flex-shrink-0 min-w-[60px]",
                 activeTab === tabKey ? "text-primary" : "text-muted-foreground"
               )}
               onClick={() => setActiveTab(tabKey)}
