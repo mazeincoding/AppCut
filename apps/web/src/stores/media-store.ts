@@ -53,6 +53,9 @@ export const getFileType = (file: File): MediaType | null => {
 	if (type.startsWith("audio/")) {
 		return "audio";
 	}
+	if (type.startsWith("image/gif")) {
+		return "GIF";
+	}
 
 	return null;
 };
@@ -95,11 +98,11 @@ export const generateVideoThumbnail = (
 		const canvas = document.createElement("canvas") as HTMLCanvasElement;
 		const ctx = canvas.getContext("2d");
 
-    if (!file.type.startsWith("video/")) {
-      reject(new Error("The media needs to be an image to extract its dimensions"))
-      return;
-      
-    }
+		if (!file.type.startsWith("video/")) {
+			reject(new Error("The media needs to be a video to generate a thumbnail"))
+			return;
+		
+		}
 
 		if (!ctx) {
 			reject(new Error("Could not get canvas context"));

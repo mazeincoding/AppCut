@@ -3,47 +3,44 @@ import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 
 
-async function grab_data(searchTerm: string, setNext: Function, next: string = "")
-{
-    // set the apikey and limit
-    var apikey = "ADD_YOUR_TENOR_KEY"; // add your tenor api key
-    var clientkey = "openCut";
-    var lmt = 20;
+async function grab_data(searchTerm: string, setNext: Function, pos: string = "") {
+  const response = await fetch("/api/tenor_gifs", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ searchTerm, pos })
 
-    let search_url = "https://tenor.googleapis.com/v2/search?q=" + searchTerm + "&key=" +
-            apikey +"&client_key=" + clientkey +  "&limit=" + lmt + "&contentfilter=off";
+  })
 
-    if (next) search_url += "&pos=" + next;
-    
+  const data = await response.json()
+  const { gifs, next } = data; // next and pos are the same thing, they both represent the position for the next batch of gifs
 
-    try {
-        const response = await fetch(search_url)
-        if (!response.ok) return Promise.reject(new Error("NOTE: make sure you've put your tenor api key."))
-
-        const data = await response.json()
-
-        const gifs = data.results.map((gif: any) => gif.media_formats.gif.url);
-        const next = data.next // this will be used to load more gifs when scrolling down
-        setNext(next)
-        return gifs
-
-    } catch (err) {
-        console.log("An error happend while loading stickers: ", err)
-        return err
-    }
-
+  if (next) setNext(next);
+  return gifs;
 }
 
 
 function extractGifName(url: string) {
-  const baseUrl = "https://media.tenor.com/"
-    
-  let url2 = url.replace(baseUrl, "")
-  const slashIndex = url2.indexOf("/")
-  const fileName = url2.slice(slashIndex+1)
+  const defaulName = `Gif${Date.now()}.gif`
 
-  return fileName
+  try {
+    const urlObj = new URL(url)
+    const segments = urlObj.pathname.split("/")
+    const fileName = segments[segments.length - 1] || defaulName;
 
+    return fileName
+
+  } catch (error) {
+    console.error("Error extracting GIF name: ", error, " defaulting to: ", defaulName);
+    return defaulName;
+  }
+
+
+}
+
+function changeMsg(msg: string) {
+  const msgP = document.getElementById("msg")
+  if (!msgP) return;
+  msgP.innerHTML = msg
 }
 
 export function StickerView() {
@@ -55,8 +52,9 @@ export function StickerView() {
     if (searchQuery === "") return;
 
     const delayDebounce = setTimeout(() => {
-      const urls = grab_data(searchQuery, setNext)
-      urls.then(urls => setGifs(urls))
+      changeMsg("Loading more GIFs...");
+      grab_data(searchQuery, setNext, "")
+      .then(urls => setGifs(urls))
 
     }, 1000); // 1 second delay
 
@@ -75,6 +73,7 @@ export function StickerView() {
 
       if (isAtBottom && !isFetching && searchQuery !== "" && next) {
         isFetching = true;
+
         grab_data(searchQuery, setNext, next).then((urls: string[]) => {
             urls.forEach((url: string) => {
                 if (!gifs.includes(url)) setGifs(prev => [...prev, url]);
@@ -97,7 +96,7 @@ export function StickerView() {
     setGifs([])
     setSearchQuery(searchTerm);
   }
-  
+
 
   return (
     <>
@@ -126,7 +125,7 @@ export function StickerView() {
           }}
         >
           {gifs.length === 0 ? (
-            <p style={{ gridColumn: '1 / -1', textAlign: 'center', margin: '2rem 0', fontWeight: 'bold', color: '#888' }}>
+            <p style={{ gridColumn: '1 / -1', textAlign: 'center', margin: '2rem 0', fontWeight: 'bold', color: '#888' }} id="msg">
               NO GIFS
             </p>
           ) : null}
