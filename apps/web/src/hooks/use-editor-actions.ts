@@ -22,7 +22,7 @@ export function useEditorActions() {
     redo,
   } = useTimelineStore();
 
-  const { currentTime, duration, isPlaying, toggle, seek } = usePlaybackStore();
+  const { currentTime, duration, isPlaying, toggle, toggleMute, seek } = usePlaybackStore();
   const { activeProject } = useProjectStore();
 
   // Playback actions
@@ -35,6 +35,10 @@ export function useEditorActions() {
       toggle();
     }
     seek(0);
+  });
+
+  useActionHandler("toggle-mute", () => {
+    toggleMute();
   });
 
   useActionHandler("seek-forward", (args) => {
