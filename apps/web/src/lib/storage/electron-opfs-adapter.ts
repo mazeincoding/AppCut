@@ -92,7 +92,12 @@ export class ElectronOPFSAdapter implements StorageAdapter<File> {
       lastModified: file.lastModified
     };
     
-    await this.promisifyRequest(store.put(fileData));
+    // Use direct promise to avoid transaction timeout
+    const request = store.put(fileData);
+    await new Promise<void>((resolve, reject) => {
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
   }
 
   private async removeFromIndexedDB(key: string): Promise<void> {

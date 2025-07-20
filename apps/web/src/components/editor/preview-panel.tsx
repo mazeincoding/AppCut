@@ -342,41 +342,53 @@ export function PreviewPanel() {
       <div
         ref={containerRef}
         className="flex-1 flex flex-col items-center justify-center p-3 min-h-0 min-w-0"
+        style={{
+          backgroundColor: "transparent",
+          backgroundImage: "none",
+        }}
       >
         <div className="flex-1"></div>
-        {hasAnyElements ? (
-          <div
-            ref={previewRef}
-            className="relative overflow-hidden rounded-sm border"
-            style={{
-              width: previewDimensions.width,
-              height: previewDimensions.height,
-              backgroundColor:
-                activeProject?.backgroundType === "blur"
-                  ? "transparent"
-                  : activeProject?.backgroundColor || "#000000",
-            }}
-          >
-            {renderBlurBackground()}
-            {activeElements.length === 0 ? (
-              <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                No elements at current time
+        {/* Always show preview window */}
+        <div
+          ref={previewRef}
+          className="relative overflow-hidden rounded-sm border"
+          style={{
+            width: previewDimensions.width,
+            height: previewDimensions.height,
+            backgroundColor:
+              activeProject?.backgroundType === "blur"
+                ? activeProject?.backgroundColor || "#000000" // Use solid color as fallback for blur
+                : activeProject?.backgroundColor || "#000000",
+            backgroundImage: "none", // Explicitly remove any background patterns
+            backgroundRepeat: "no-repeat",
+          }}
+        >
+          {renderBlurBackground()}
+          {!hasAnyElements ? (
+            <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+              <div className="text-center">
+                <div className="text-sm mb-2">No media added to timeline</div>
+                <div className="text-xs opacity-70">Drag media from the left panel to the timeline below</div>
               </div>
-            ) : (
-              activeElements.map((elementData, index) =>
-                renderElement(elementData, index)
-              )
+            </div>
+          ) : activeElements.length === 0 ? (
+            <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+              No elements at current time
+            </div>
+          ) : (
+            activeElements.map((elementData, index) =>
+              renderElement(elementData, index)
+            )
+          )}
+          {/* Show message when blur is selected but no media available */}
+          {activeProject?.backgroundType === "blur" &&
+            blurBackgroundElements.length === 0 &&
+            activeElements.length > 0 && (
+              <div className="absolute bottom-2 left-2 right-2 bg-black/70 text-white text-xs p-2 rounded">
+                Add a video or image to use blur background
+              </div>
             )}
-            {/* Show message when blur is selected but no media available */}
-            {activeProject?.backgroundType === "blur" &&
-              blurBackgroundElements.length === 0 &&
-              activeElements.length > 0 && (
-                <div className="absolute bottom-2 left-2 right-2 bg-black/70 text-white text-xs p-2 rounded">
-                  Add a video or image to use blur background
-                </div>
-              )}
-          </div>
-        ) : null}
+        </div>
 
         <div className="flex-1"></div>
 
