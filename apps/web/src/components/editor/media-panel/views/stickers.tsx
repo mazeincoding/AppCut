@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 
 
-async function grab_data(searchTerm: string, setNext: Function, pos: string = "") {
+async function fetchGifs(searchTerm: string, setNext: Function, pos: string = "") {
   const response = await fetch("/api/tenor_gifs", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -20,40 +20,36 @@ async function grab_data(searchTerm: string, setNext: Function, pos: string = ""
 
 
 function extractGifName(url: string) {
-  const defaulName = `Gif${Date.now()}.gif`
+  const defaultName = `Gif${Date.now()}.gif`
 
   try {
     const urlObj = new URL(url)
     const segments = urlObj.pathname.split("/")
-    const fileName = segments[segments.length - 1] || defaulName;
+    const fileName = segments[segments.length - 1] || defaultName;
 
     return fileName
 
   } catch (error) {
-    console.error("Error extracting GIF name: ", error, " defaulting to: ", defaulName);
-    return defaulName;
+    console.error("Error extracting GIF name: ", error, " defaulting to: ", defaultName);
+    return defaultName;
   }
 
 
 }
 
-function changeMsg(msg: string) {
-  const msgP = document.getElementById("msg")
-  if (!msgP) return;
-  msgP.innerHTML = msg
-}
 
 export function StickerView() {
   const [searchQuery, setSearchQuery] = useState("");
   const [gifs, setGifs] = useState<string[]>([]);
   const [next, setNext] = useState("");
+  const [msg, setMsg] = useState("NO GIFS")
 
   useEffect(() => {
     if (searchQuery === "") return;
 
     const delayDebounce = setTimeout(() => {
-      changeMsg("Loading GIFs...");
-      grab_data(searchQuery, setNext, "")
+      setMsg("Loading GIFs...");
+      fetchGifs(searchQuery, setNext, "")
       .then(urls => setGifs(urls))
 
     }, 1000); // 1 second delay
@@ -74,7 +70,7 @@ export function StickerView() {
       if (isAtBottom && !isFetching && searchQuery !== "" && next) {
         isFetching = true;
 
-        grab_data(searchQuery, setNext, next).then((urls: string[]) => {
+        fetchGifs(searchQuery, setNext, next).then((urls: string[]) => {
             const uniqueUrls = urls.filter((url: string) => !gifs.includes(url))
             if (uniqueUrls.length === 0) {
               setGifs(prev => [...prev, ...uniqueUrls]);
@@ -127,7 +123,7 @@ export function StickerView() {
         >
           {gifs.length === 0 ? (
             <p style={{ gridColumn: '1 / -1', textAlign: 'center', margin: '2rem 0', fontWeight: 'bold', color: '#888' }} id="msg">
-              NO GIFS
+              {msg}
             </p>
           ) : null}
             {gifs.map((URL, index) => {
