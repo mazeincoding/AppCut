@@ -2,6 +2,28 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { signUp, signIn } from "@opencut/auth/client";
 
+// Helper to map raw error messages to user-friendly messages
+function getFriendlySignUpError(message?: string): string {
+    if (!message) return "An unexpected error occurred. Please try again.";
+    const msg = message.toLowerCase();
+    if (msg.includes("email already registered") || msg.includes("email already exists") || msg.includes("user already exists")) {
+        return "An account with this email already exists.";
+    }
+    if (msg.includes("invalid email")) {
+        return "Please enter a valid email address.";
+    }
+    if (msg.includes("weak password") || msg.includes("password too short") || msg.includes("password must be")) {
+        return "Password is too weak. Please use a stronger password.";
+    }
+    if (msg.includes("too many requests") || msg.includes("rate limit")) {
+        return "Too many signup attempts. Please wait and try again later.";
+    }
+    if (msg.includes("network error") || msg.includes("failed to fetch")) {
+        return "Network error. Please check your connection and try again.";
+    }
+    return message;
+}
+
 export function useSignUp() {
     const router = useRouter();
     const [name, setName] = useState("");
@@ -22,7 +44,7 @@ export function useSignUp() {
         });
 
         if (error) {
-            setError(error.message || "An unexpected error occurred.");
+            setError(getFriendlySignUpError(error.message));
             setIsEmailLoading(false);
             return;
         }

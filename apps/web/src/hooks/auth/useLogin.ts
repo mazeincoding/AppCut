@@ -2,6 +2,28 @@ import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "@opencut/auth/client";
 
+// Helper to map raw error messages to user-friendly messages
+function getFriendlyLoginError(message?: string): string {
+    if (!message) return "An unexpected error occurred. Please try again.";
+    const msg = message.toLowerCase();
+    if (msg.includes("invalid credentials") || msg.includes("invalid email or password") || msg.includes("incorrect password")) {
+        return "Invalid email or password. Please try again.";
+    }
+    if (msg.includes("user not found") || msg.includes("no account") || msg.includes("not registered")) {
+        return "No account found with this email.";
+    }
+    if (msg.includes("verify your email") || msg.includes("email not verified")) {
+        return "Please verify your email address before logging in.";
+    }
+    if (msg.includes("too many requests") || msg.includes("rate limit")) {
+        return "Too many login attempts. Please wait and try again later.";
+    }
+    if (msg.includes("network error") || msg.includes("failed to fetch")) {
+        return "Network error. Please check your connection and try again.";
+    }
+    return message;
+}
+
 export function useLogin() {
     const router = useRouter();
     const [email, setEmail] = useState("");
@@ -20,6 +42,7 @@ export function useLogin() {
         });
 
         if (error) {
+            setError(getFriendlyLoginError(error.message));
             setError(getFriendlyError(error));
             setIsEmailLoading(false);
             return;
