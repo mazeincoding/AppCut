@@ -12,11 +12,16 @@ export interface MediaItem {
   file: File;
   url?: string; // Object URL for preview
   thumbnailUrl?: string; // For video thumbnails
-  duration?: number; // For video/audio duration
+  duration?: number; // For video/audio duration in seconds
   width?: number; // For video/image width
   height?: number; // For video/image height
   fps?: number; // For video frame rate
-  // Text-specific properties
+  bitrate?: number; // For video/audio bitrate
+  codecName?: string; // Codec information
+  createdAt?: Date; // When added to project
+  lastModified?: Date; // File last modified date
+  tags?: string[]; // User-defined tags for organization
+  // Text-specific properties (for future text elements)
   content?: string; // Text content
   fontSize?: number; // Font size
   fontFamily?: string; // Font family
@@ -32,25 +37,76 @@ interface MediaStore {
   // Actions - now require projectId
   addMediaItem: (
     projectId: string,
-    item: Omit<MediaItem, "id">
+    item: Omit<MediaItem, "id" | "createdAt">
   ) => Promise<void>;
   removeMediaItem: (projectId: string, id: string) => Promise<void>;
   loadProjectMedia: (projectId: string) => Promise<void>;
   clearProjectMedia: (projectId: string) => Promise<void>;
   clearAllMedia: () => void; // Clear local state only
+  updateMediaTags: (id: string, tags: string[]) => void;
+  getMediaByType: (type: MediaType) => MediaItem[];
+  getMediaStats: () => {
+    total: number;
+    video: number;
+    audio: number;
+    image: number;
+    totalSize: number;
+    totalDuration: number;
+  };
 }
 
-// Helper function to determine file type
+// Helper function to determine file type with enhanced format support
 export const getFileType = (file: File): MediaType | null => {
-  const { type } = file;
+  const { type, name } = file;
+  const extension = name.toLowerCase().split(".").pop();
 
-  if (type.startsWith("image/")) {
+  // Image formats
+  if (
+    type.startsWith("image/") ||
+    ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg", "tiff", "ico"].includes(
+      extension || ""
+    )
+  ) {
     return "image";
   }
-  if (type.startsWith("video/")) {
+
+  // Video formats
+  if (
+    type.startsWith("video/") ||
+    [
+      "mp4",
+      "avi",
+      "mov",
+      "mkv",
+      "wmv",
+      "flv",
+      "webm",
+      "m4v",
+      "3gp",
+      "ogv",
+      "mts",
+      "ts",
+    ].includes(extension || "")
+  ) {
     return "video";
   }
-  if (type.startsWith("audio/")) {
+
+  // Audio formats
+  if (
+    type.startsWith("audio/") ||
+    [
+      "mp3",
+      "wav",
+      "ogg",
+      "aac",
+      "m4a",
+      "wma",
+      "flac",
+      "opus",
+      "aiff",
+      "au",
+    ].includes(extension || "")
+  ) {
     return "audio";
   }
 
@@ -164,6 +220,10 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     const newItem: MediaItem = {
       ...item,
       id: generateUUID(),
+      createdAt: new Date(),
+      lastModified: item.file.lastModified
+        ? new Date(item.file.lastModified)
+        : new Date(),
     };
 
     // Add to local state immediately for UI responsiveness
@@ -219,15 +279,19 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
         mediaItems.map(async (item) => {
           if (item.type === "video" && item.file) {
             try {
-              const { thumbnailUrl, width, height } = await generateVideoThumbnail(item.file);
+              const { thumbnailUrl, width, height } =
+                await generateVideoThumbnail(item.file);
               return {
                 ...item,
                 thumbnailUrl,
                 width: width || item.width,
-                height: height || item.height
+                height: height || item.height,
               };
             } catch (error) {
-              console.error(`Failed to regenerate thumbnail for video ${item.id}:`, error);
+              console.error(
+                `Failed to regenerate thumbnail for video ${item.id}:`,
+                error
+              );
               return item;
             }
           }
@@ -285,5 +349,40 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
 
     // Clear local state
     set({ mediaItems: [] });
+  },
+
+  updateMediaTags: (id: string, tags: string[]) => {
+    set((state) => ({
+      mediaItems: state.mediaItems.map((item) =>
+        item.id === id ? { ...item, tags } : item
+      ),
+    }));
+  },
+
+  getMediaByType: (type: MediaType) => {
+    const state = get();
+    return state.mediaItems.filter((item) => item.type === type);
+  },
+
+  getMediaStats: () => {
+    const state = get();
+    const stats = {
+      total: state.mediaItems.length,
+      video: 0,
+      audio: 0,
+      image: 0,
+      totalSize: 0,
+      totalDuration: 0,
+    };
+
+    state.mediaItems.forEach((item) => {
+      stats[item.type]++;
+      stats.totalSize += item.file.size;
+      if (item.duration) {
+        stats.totalDuration += item.duration;
+      }
+    });
+
+    return stats;
   },
 }));
