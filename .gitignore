@@ -25,6 +25,7 @@ node_modules
 .turbo
 
 *.env
+*.venv
 
 # cursor
 
