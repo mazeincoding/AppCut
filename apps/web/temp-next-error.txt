@@ -1,0 +1,5 @@
+$ next dev
+ ⨯ Middleware cannot be used with "output: export". See more info here: https://nextjs.org/docs/advanced-features/static-html-export
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload

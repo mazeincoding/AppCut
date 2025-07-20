@@ -1,0 +1,246 @@
+   ▲ Next.js 15.3.4
+   - Local:        http://localhost:3000
+   - Network:      http://100.102.106.37:3000
+
+ ✓ Starting...
+ ✓ Ready in 2.6s
+ ○ Compiling / ...
+ ✓ Compiled / in 5.3s (953 modules)
+🏗️ StorageService: Initializing storage service...
+🔍 [STORAGE] No Electron environment detected
+🔍 StorageService: Environment check: {
+  isElectron: false,
+  hasElectronAPI: 'window undefined',
+  userAgent: 'Node.js/23',
+  electronEnvVar: undefined
+}
+✅ StorageService: Constructor completed
+🎯 [ERROR-BOUNDARY] ElectronErrorBoundary component loaded
+- React error catching: ENABLED
+- Electron-specific recovery: ENABLED
+- Fallback UI with navigation: ENABLED
+- Development error details: ENABLED
+🚀 [APP] Loading OpenCut app with Electron error boundary and font fix...
+🎯 [APP] App configuration:
+- Error boundary: ENABLED
+- Electron hydration fix: ENABLED
+- Theme provider: ENABLED
+- Storage provider: ENABLED
+🚀 [APP] All providers and error boundaries configured
+🚀 StorageProvider: Component rendered
+🏡 HomePage: Component rendered
+🚀 StorageProvider: Component rendered
+🏡 HomePage: Component rendered
+🚀 StorageProvider: Component rendered
+🏡 HomePage: Component rendered
+ GET / 200 in 1100ms
+ ✓ Compiled in 981ms (953 modules)
+🏗️ StorageService: Initializing storage service...
+🔍 [STORAGE] No Electron environment detected
+🔍 StorageService: Environment check: {
+  isElectron: false,
+  hasElectronAPI: 'window undefined',
+  userAgent: 'Node.js/23',
+  electronEnvVar: undefined
+}
+✅ StorageService: Constructor completed
+🎯 [ERROR-BOUNDARY] ElectronErrorBoundary component loaded
+- React error catching: ENABLED
+- Electron-specific recovery: ENABLED
+- Fallback UI with navigation: ENABLED
+- Development error details: ENABLED
+🚀 [APP] Loading OpenCut app with Electron error boundary and font fix...
+🎯 [APP] App configuration:
+- Error boundary: ENABLED
+- Electron hydration fix: ENABLED
+- Theme provider: ENABLED
+- Storage provider: ENABLED
+🚀 [APP] All providers and error boundaries configured
+🚀 StorageProvider: Component rendered
+🏡 HomePage: Component rendered
+ GET / 200 in 809ms
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 2.4s (1025 modules)
+🏗️ StorageService: Initializing storage service...
+🔍 [STORAGE] No Electron environment detected
+🔍 StorageService: Environment check: {
+  isElectron: false,
+  hasElectronAPI: 'window undefined',
+  userAgent: 'Node.js/23',
+  electronEnvVar: undefined
+}
+✅ StorageService: Constructor completed
+🎯 [ERROR-BOUNDARY] ElectronErrorBoundary component loaded
+- React error catching: ENABLED
+- Electron-specific recovery: ENABLED
+- Fallback UI with navigation: ENABLED
+- Development error details: ENABLED
+🚀 [APP] Loading OpenCut app with Electron error boundary and font fix...
+🎯 [APP] App configuration:
+- Error boundary: ENABLED
+- Electron hydration fix: ENABLED
+- Theme provider: ENABLED
+- Storage provider: ENABLED
+🚀 [APP] All providers and error boundaries configured
+🚀 StorageProvider: Component rendered
+🚀 StorageProvider: Component rendered
+🏡 HomePage: Component rendered
+ GET /api/auth/get-session 404 in 2957ms
+ GET / 200 in 1232ms
+🚀 StorageProvider: Component rendered
+ GET /api/auth/get-session 404 in 226ms
+ ○ Compiling /projects ...
+ ✓ Compiled /projects in 1196ms (1175 modules)
+🏗️ StorageService: Initializing storage service...
+🔍 [STORAGE] No Electron environment detected
+🔍 StorageService: Environment check: {
+  isElectron: false,
+  hasElectronAPI: 'window undefined',
+  userAgent: 'Node.js/23',
+  electronEnvVar: undefined
+}
+✅ StorageService: Constructor completed
+🎯 [ERROR-BOUNDARY] ElectronErrorBoundary component loaded
+- React error catching: ENABLED
+- Electron-specific recovery: ENABLED
+- Fallback UI with navigation: ENABLED
+- Development error details: ENABLED
+🚀 [APP] Loading OpenCut app with Electron error boundary and font fix...
+🎯 [APP] App configuration:
+- Error boundary: ENABLED
+- Electron hydration fix: ENABLED
+- Theme provider: ENABLED
+- Storage provider: ENABLED
+🚀 [APP] All providers and error boundaries configured
+🚀 StorageProvider: Component rendered
+🏡 HomePage: Component rendered
+ GET / 200 in 812ms
+🚀 StorageProvider: Component rendered
+🚀 [PROJECTS PAGE] Component rendering...
+🚀 [PROJECTS PAGE] Store state: {
+  savedProjects: 0,
+  isLoading: true,
+  isInitialized: false,
+  createNewProject: 'function'
+}
+🚀 StorageProvider: Component rendered
+ GET /api/auth/get-session 404 in 228ms
+🚀 StorageProvider: Component rendered
+🚀 [PROJECTS PAGE] Component rendering...
+🚀 [PROJECTS PAGE] Store state: {
+  savedProjects: 0,
+  isLoading: true,
+  isInitialized: false,
+  createNewProject: 'function'
+}
+ GET /projects 200 in 227ms
+ ○ Compiling /editor/project/[project_id] ...
+ ✓ Compiled /editor/project/[project_id] in 1896ms (1468 modules)
+🏗️ StorageService: Initializing storage service...
+🔍 [STORAGE] No Electron environment detected
+🔍 StorageService: Environment check: {
+  isElectron: false,
+  hasElectronAPI: 'window undefined',
+  userAgent: 'Node.js/23',
+  electronEnvVar: undefined
+}
+✅ StorageService: Constructor completed
+🎯 [ERROR-BOUNDARY] ElectronErrorBoundary component loaded
+- React error catching: ENABLED
+- Electron-specific recovery: ENABLED
+- Fallback UI with navigation: ENABLED
+- Development error details: ENABLED
+🚀 [APP] Loading OpenCut app with Electron error boundary and font fix...
+🎯 [APP] App configuration:
+- Error boundary: ENABLED
+- Electron hydration fix: ENABLED
+- Theme provider: ENABLED
+- Storage provider: ENABLED
+🚀 [APP] All providers and error boundaries configured
+🚀 StorageProvider: Component rendered
+🚀 [PROJECTS PAGE] Component rendering...
+🚀 [PROJECTS PAGE] Store state: {
+  savedProjects: 0,
+  isLoading: true,
+  isInitialized: false,
+  createNewProject: 'function'
+}
+🚀 StorageProvider: Component rendered
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 625ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 226ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 221ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 219ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 218ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 231ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 219ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 218ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 226ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 217ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 214ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 224ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 226ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 228ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 221ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 215ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 217ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 222ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 225ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 232ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 218ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 218ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 215ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 228ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 234ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 215ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 227ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 218ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 223ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 214ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 222ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 222ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 218ms
+🚀 StorageProvider: Component rendered
+ GET /editor/project/3506859a-e6d7-41e2-b8c7-e67ed20ab46d 200 in 227ms
+ ✓ Compiled in 434ms (1029 modules)
+ ✓ Compiled in 319ms (1029 modules)
+ ✓ Compiled in 277ms (1029 modules)
+ ✓ Compiled in 274ms (1029 modules)
+ ✓ Compiled in 266ms (1029 modules)
+ ✓ Compiled in 227ms (1029 modules)
+ ✓ Compiled in 230ms (1029 modules)
+ ✓ Compiled in 256ms (866 modules)
+ ✓ Compiled in 273ms (866 modules)
+ ✓ Compiled in 241ms (866 modules)
