@@ -9,7 +9,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5433:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U opencut"]
       interval: 30s
@@ -55,9 +55,9 @@ services:
       - "3100:3000" # app is running on 3000 so we run this at 3100
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://opencut:opencutthegoat@db:5432/opencut
+      - DATABASE_URL=postgresql://opencut:opencutthegoat@db:5433/opencut
       - BETTER_AUTH_URL=http://localhost:3000
-      - BETTER_AUTH_SECRET=your-production-secret-key-here
+      - BETTER_AUTH_SECRET=my7s9A8YfUwyBL4ye3VlwZl4fwKisVhIZZMq1Ga5Jq4=
       - UPSTASH_REDIS_REST_URL=http://serverless-redis-http:80
       - UPSTASH_REDIS_REST_TOKEN=example_token
     depends_on:

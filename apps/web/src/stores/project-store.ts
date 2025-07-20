@@ -7,355 +7,355 @@ import { useTimelineStore } from "./timeline-store";
 import { generateUUID } from "@/lib/utils";
 
 interface ProjectStore {
-  activeProject: TProject | null;
-  savedProjects: TProject[];
-  isLoading: boolean;
-  isInitialized: boolean;
+	activeProject: TProject | null;
+	savedProjects: TProject[];
+	isLoading: boolean;
+	isInitialized: boolean;
 
-  // Actions
-  createNewProject: (name: string) => Promise<string>;
-  loadProject: (id: string) => Promise<void>;
-  saveCurrentProject: () => Promise<void>;
-  loadAllProjects: () => Promise<void>;
-  deleteProject: (id: string) => Promise<void>;
-  closeProject: () => void;
-  renameProject: (projectId: string, name: string) => Promise<void>;
-  duplicateProject: (projectId: string) => Promise<string>;
-  updateProjectBackground: (backgroundColor: string) => Promise<void>;
-  updateBackgroundType: (
-    type: "color" | "blur",
-    options?: { backgroundColor?: string; blurIntensity?: number }
-  ) => Promise<void>;
-  updateProjectFps: (fps: number) => Promise<void>;
+	// Actions
+	createNewProject: (name: string) => Promise<string>;
+	loadProject: (id: string) => Promise<void>;
+	saveCurrentProject: () => Promise<void>;
+	loadAllProjects: () => Promise<void>;
+	deleteProject: (id: string) => Promise<void>;
+	closeProject: () => void;
+	renameProject: (projectId: string, name: string) => Promise<void>;
+	duplicateProject: (projectId: string) => Promise<string>;
+	updateProjectBackground: (backgroundColor: string) => Promise<void>;
+	updateBackgroundType: (
+		type: "color" | "blur",
+		options?: { backgroundColor?: string; blurIntensity?: number },
+	) => Promise<void>;
+	updateProjectFps: (fps: number) => Promise<void>;
 
-  getFilteredAndSortedProjects: (
-    searchQuery: string,
-    sortOption: string
-  ) => TProject[];
+	getFilteredAndSortedProjects: (
+		searchQuery: string,
+		sortOption: string,
+	) => TProject[];
 }
 
 export const useProjectStore = create<ProjectStore>((set, get) => ({
-  activeProject: null,
-  savedProjects: [],
-  isLoading: true,
-  isInitialized: false,
+	activeProject: null,
+	savedProjects: [],
+	isLoading: true,
+	isInitialized: false,
 
-  createNewProject: async (name: string) => {
-    const newProject: TProject = {
-      id: generateUUID(),
-      name,
-      thumbnail: "",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      backgroundColor: "#000000",
-      backgroundType: "color",
-      blurIntensity: 8,
-    };
+	createNewProject: async (name: string) => {
+		const newProject: TProject = {
+			id: generateUUID(),
+			name,
+			thumbnail: "",
+			createdAt: new Date(),
+			updatedAt: new Date(),
+			backgroundColor: "#000000",
+			backgroundType: "color",
+			blurIntensity: 8,
+		};
 
-    set({ activeProject: newProject });
+		set({ activeProject: newProject });
 
-    try {
-      await storageService.saveProject(newProject);
-      // Reload all projects to update the list
-      await get().loadAllProjects();
-      return newProject.id;
-    } catch (error) {
-      toast.error("Failed to save new project");
-      throw error;
-    }
-  },
+		try {
+			await storageService.saveProject(newProject);
+			// Reload all projects to update the list
+			await get().loadAllProjects();
+			return newProject.id;
+		} catch (error) {
+			toast.error("Failed to save new project");
+			throw error;
+		}
+	},
 
-  loadProject: async (id: string) => {
-    if (!get().isInitialized) {
-      set({ isLoading: true });
-    }
+	loadProject: async (id: string) => {
+		if (!get().isInitialized) {
+			set({ isLoading: true });
+		}
 
-    // Clear media and timeline immediately to prevent flickering when switching projects
-    const mediaStore = useMediaStore.getState();
-    const timelineStore = useTimelineStore.getState();
-    mediaStore.clearAllMedia();
-    timelineStore.clearTimeline();
+		// Clear media and timeline immediately to prevent flickering when switching projects
+		const mediaStore = useMediaStore.getState();
+		const timelineStore = useTimelineStore.getState();
+		mediaStore.clearAllMedia();
+		timelineStore.clearTimeline();
 
-    try {
-      const project = await storageService.loadProject(id);
-      if (project) {
-        set({ activeProject: project });
+		try {
+			const project = await storageService.loadProject(id);
+			if (project) {
+				set({ activeProject: project });
 
-        // Load project-specific data in parallel
-        await Promise.all([
-          mediaStore.loadProjectMedia(id),
-          timelineStore.loadProjectTimeline(id),
-        ]);
-      } else {
-        throw new Error(`Project with id ${id} not found`);
-      }
-    } catch (error) {
-      console.error("Failed to load project:", error);
-      throw error; // Re-throw so the editor page can handle it
-    } finally {
-      set({ isLoading: false });
-    }
-  },
+				// Load project-specific data in parallel
+				await Promise.all([
+					mediaStore.loadProjectMedia(id),
+					timelineStore.loadProjectTimeline(id),
+				]);
+			} else {
+				throw new Error(`Project with id ${id} not found`);
+			}
+		} catch (error) {
+			console.error("Failed to load project:", error);
+			throw error; // Re-throw so the editor page can handle it
+		} finally {
+			set({ isLoading: false });
+		}
+	},
 
-  saveCurrentProject: async () => {
-    const { activeProject } = get();
-    if (!activeProject) return;
+	saveCurrentProject: async () => {
+		const { activeProject } = get();
+		if (!activeProject) return;
 
-    try {
-      // Save project metadata and timeline data in parallel
-      const timelineStore = useTimelineStore.getState();
-      await Promise.all([
-        storageService.saveProject(activeProject),
-        timelineStore.saveProjectTimeline(activeProject.id),
-      ]);
-      await get().loadAllProjects(); // Refresh the list
-    } catch (error) {
-      console.error("Failed to save project:", error);
-    }
-  },
+		try {
+			// Save project metadata and timeline data in parallel
+			const timelineStore = useTimelineStore.getState();
+			await Promise.all([
+				storageService.saveProject(activeProject),
+				timelineStore.saveProjectTimeline(activeProject.id),
+			]);
+			await get().loadAllProjects(); // Refresh the list
+		} catch (error) {
+			console.error("Failed to save project:", error);
+		}
+	},
 
-  loadAllProjects: async () => {
-    if (!get().isInitialized) {
-      set({ isLoading: true });
-    }
+	loadAllProjects: async () => {
+		if (!get().isInitialized) {
+			set({ isLoading: true });
+		}
 
-    try {
-      const projects = await storageService.loadAllProjects();
-      set({ savedProjects: projects });
-    } catch (error) {
-      console.error("Failed to load projects:", error);
-    } finally {
-      set({ isLoading: false, isInitialized: true });
-    }
-  },
+		try {
+			const projects = await storageService.loadAllProjects();
+			set({ savedProjects: projects });
+		} catch (error) {
+			console.error("Failed to load projects:", error);
+		} finally {
+			set({ isLoading: false, isInitialized: true });
+		}
+	},
 
-  deleteProject: async (id: string) => {
-    try {
-      // Delete project data in parallel
-      await Promise.all([
-        storageService.deleteProjectMedia(id),
-        storageService.deleteProjectTimeline(id),
-        storageService.deleteProject(id),
-      ]);
-      await get().loadAllProjects(); // Refresh the list
+	deleteProject: async (id: string) => {
+		try {
+			// Delete project data in parallel
+			await Promise.all([
+				storageService.deleteProjectMedia(id),
+				storageService.deleteProjectTimeline(id),
+				storageService.deleteProject(id),
+			]);
+			await get().loadAllProjects(); // Refresh the list
 
-      // If we deleted the active project, close it and clear data
-      const { activeProject } = get();
-      if (activeProject?.id === id) {
-        set({ activeProject: null });
-        const mediaStore = useMediaStore.getState();
-        const timelineStore = useTimelineStore.getState();
-        mediaStore.clearAllMedia();
-        timelineStore.clearTimeline();
-      }
-    } catch (error) {
-      console.error("Failed to delete project:", error);
-    }
-  },
+			// If we deleted the active project, close it and clear data
+			const { activeProject } = get();
+			if (activeProject?.id === id) {
+				set({ activeProject: null });
+				const mediaStore = useMediaStore.getState();
+				const timelineStore = useTimelineStore.getState();
+				mediaStore.clearAllMedia();
+				timelineStore.clearTimeline();
+			}
+		} catch (error) {
+			console.error("Failed to delete project:", error);
+		}
+	},
 
-  closeProject: () => {
-    set({ activeProject: null });
+	closeProject: () => {
+		set({ activeProject: null });
 
-    // Clear data from stores when closing project
-    const mediaStore = useMediaStore.getState();
-    const timelineStore = useTimelineStore.getState();
-    mediaStore.clearAllMedia();
-    timelineStore.clearTimeline();
-  },
+		// Clear data from stores when closing project
+		const mediaStore = useMediaStore.getState();
+		const timelineStore = useTimelineStore.getState();
+		mediaStore.clearAllMedia();
+		timelineStore.clearTimeline();
+	},
 
-  renameProject: async (id: string, name: string) => {
-    const { savedProjects } = get();
+	renameProject: async (id: string, name: string) => {
+		const { savedProjects } = get();
 
-    // Find the project to rename
-    const projectToRename = savedProjects.find((p) => p.id === id);
-    if (!projectToRename) {
-      toast.error("Project not found", {
-        description: "Please try again",
-      });
-      return;
-    }
+		// Find the project to rename
+		const projectToRename = savedProjects.find((p) => p.id === id);
+		if (!projectToRename) {
+			toast.error("Project not found", {
+				description: "Please try again",
+			});
+			return;
+		}
 
-    const updatedProject = {
-      ...projectToRename,
-      name,
-      updatedAt: new Date(),
-    };
+		const updatedProject = {
+			...projectToRename,
+			name,
+			updatedAt: new Date(),
+		};
 
-    try {
-      // Save to storage
-      await storageService.saveProject(updatedProject);
+		try {
+			// Save to storage
+			await storageService.saveProject(updatedProject);
 
-      await get().loadAllProjects();
+			await get().loadAllProjects();
 
-      // Update activeProject if it's the same project
-      const { activeProject } = get();
-      if (activeProject?.id === id) {
-        set({ activeProject: updatedProject });
-      }
-    } catch (error) {
-      console.error("Failed to rename project:", error);
-      toast.error("Failed to rename project", {
-        description:
-          error instanceof Error ? error.message : "Please try again",
-      });
-    }
-  },
+			// Update activeProject if it's the same project
+			const { activeProject } = get();
+			if (activeProject?.id === id) {
+				set({ activeProject: updatedProject });
+			}
+		} catch (error) {
+			console.error("Failed to rename project:", error);
+			toast.error("Failed to rename project", {
+				description:
+					error instanceof Error ? error.message : "Please try again",
+			});
+		}
+	},
 
-  duplicateProject: async (projectId: string) => {
-    try {
-      const project = await storageService.loadProject(projectId);
-      if (!project) {
-        toast.error("Project not found", {
-          description: "Please try again",
-        });
-        throw new Error("Project not found");
-      }
+	duplicateProject: async (projectId: string) => {
+		try {
+			const project = await storageService.loadProject(projectId);
+			if (!project) {
+				toast.error("Project not found", {
+					description: "Please try again",
+				});
+				throw new Error("Project not found");
+			}
 
-      const { savedProjects } = get();
+			const { savedProjects } = get();
 
-      // Extract the base name (remove any existing numbering)
-      const numberMatch = project.name.match(/^\((\d+)\)\s+(.+)$/);
-      const baseName = numberMatch ? numberMatch[2] : project.name;
-      const existingNumbers: number[] = [];
+			// Extract the base name (remove any existing numbering)
+			const numberMatch = project.name.match(/^\((\d+)\)\s+(.+)$/);
+			const baseName = numberMatch ? numberMatch[2] : project.name;
+			const existingNumbers: number[] = [];
 
-      // Check for pattern "(number) baseName" in existing projects
-      savedProjects.forEach((p) => {
-        const match = p.name.match(/^\((\d+)\)\s+(.+)$/);
-        if (match && match[2] === baseName) {
-          existingNumbers.push(parseInt(match[1], 10));
-        }
-      });
+			// Check for pattern "(number) baseName" in existing projects
+			savedProjects.forEach((p) => {
+				const match = p.name.match(/^\((\d+)\)\s+(.+)$/);
+				if (match && match[2] === baseName) {
+					existingNumbers.push(parseInt(match[1], 10));
+				}
+			});
 
-      const nextNumber =
-        existingNumbers.length > 0 ? Math.max(...existingNumbers) + 1 : 1;
+			const nextNumber =
+				existingNumbers.length > 0 ? Math.max(...existingNumbers) + 1 : 1;
 
-      const newProject: TProject = {
-        id: generateUUID(),
-        name: `(${nextNumber}) ${baseName}`,
-        thumbnail: project.thumbnail,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+			const newProject: TProject = {
+				id: generateUUID(),
+				name: `(${nextNumber}) ${baseName}`,
+				thumbnail: project.thumbnail,
+				createdAt: new Date(),
+				updatedAt: new Date(),
+			};
 
-      await storageService.saveProject(newProject);
-      await get().loadAllProjects();
-      return newProject.id;
-    } catch (error) {
-      console.error("Failed to duplicate project:", error);
-      toast.error("Failed to duplicate project", {
-        description:
-          error instanceof Error ? error.message : "Please try again",
-      });
-      throw error;
-    }
-  },
+			await storageService.saveProject(newProject);
+			await get().loadAllProjects();
+			return newProject.id;
+		} catch (error) {
+			console.error("Failed to duplicate project:", error);
+			toast.error("Failed to duplicate project", {
+				description:
+					error instanceof Error ? error.message : "Please try again",
+			});
+			throw error;
+		}
+	},
 
-  updateProjectBackground: async (backgroundColor: string) => {
-    const { activeProject } = get();
-    if (!activeProject) return;
+	updateProjectBackground: async (backgroundColor: string) => {
+		const { activeProject } = get();
+		if (!activeProject) return;
 
-    const updatedProject = {
-      ...activeProject,
-      backgroundColor,
-      updatedAt: new Date(),
-    };
+		const updatedProject = {
+			...activeProject,
+			backgroundColor,
+			updatedAt: new Date(),
+		};
 
-    try {
-      await storageService.saveProject(updatedProject);
-      set({ activeProject: updatedProject });
-      await get().loadAllProjects(); // Refresh the list
-    } catch (error) {
-      console.error("Failed to update project background:", error);
-      toast.error("Failed to update background", {
-        description: "Please try again",
-      });
-    }
-  },
+		try {
+			await storageService.saveProject(updatedProject);
+			set({ activeProject: updatedProject });
+			await get().loadAllProjects(); // Refresh the list
+		} catch (error) {
+			console.error("Failed to update project background:", error);
+			toast.error("Failed to update background", {
+				description: "Please try again",
+			});
+		}
+	},
 
-  updateBackgroundType: async (
-    type: "color" | "blur",
-    options?: { backgroundColor?: string; blurIntensity?: number }
-  ) => {
-    const { activeProject } = get();
-    if (!activeProject) return;
+	updateBackgroundType: async (
+		type: "color" | "blur",
+		options?: { backgroundColor?: string; blurIntensity?: number },
+	) => {
+		const { activeProject } = get();
+		if (!activeProject) return;
 
-    const updatedProject = {
-      ...activeProject,
-      backgroundType: type,
-      ...(options?.backgroundColor && {
-        backgroundColor: options.backgroundColor,
-      }),
-      ...(options?.blurIntensity && { blurIntensity: options.blurIntensity }),
-      updatedAt: new Date(),
-    };
+		const updatedProject = {
+			...activeProject,
+			backgroundType: type,
+			...(options?.backgroundColor && {
+				backgroundColor: options.backgroundColor,
+			}),
+			...(options?.blurIntensity && { blurIntensity: options.blurIntensity }),
+			updatedAt: new Date(),
+		};
 
-    try {
-      await storageService.saveProject(updatedProject);
-      set({ activeProject: updatedProject });
-      await get().loadAllProjects(); // Refresh the list
-    } catch (error) {
-      console.error("Failed to update background type:", error);
-      toast.error("Failed to update background", {
-        description: "Please try again",
-      });
-    }
-  },
+		try {
+			await storageService.saveProject(updatedProject);
+			set({ activeProject: updatedProject });
+			await get().loadAllProjects(); // Refresh the list
+		} catch (error) {
+			console.error("Failed to update background type:", error);
+			toast.error("Failed to update background", {
+				description: "Please try again",
+			});
+		}
+	},
 
-  updateProjectFps: async (fps: number) => {
-    const { activeProject } = get();
-    if (!activeProject) return;
+	updateProjectFps: async (fps: number) => {
+		const { activeProject } = get();
+		if (!activeProject) return;
 
-    const updatedProject = {
-      ...activeProject,
-      fps,
-      updatedAt: new Date(),
-    };
+		const updatedProject = {
+			...activeProject,
+			fps,
+			updatedAt: new Date(),
+		};
 
-    try {
-      await storageService.saveProject(updatedProject);
-      set({ activeProject: updatedProject });
-      await get().loadAllProjects(); // Refresh the list
-    } catch (error) {
-      console.error("Failed to update project FPS:", error);
-      toast.error("Failed to update project FPS", {
-        description: "Please try again",
-      });
-    }
-  },
+		try {
+			await storageService.saveProject(updatedProject);
+			set({ activeProject: updatedProject });
+			await get().loadAllProjects(); // Refresh the list
+		} catch (error) {
+			console.error("Failed to update project FPS:", error);
+			toast.error("Failed to update project FPS", {
+				description: "Please try again",
+			});
+		}
+	},
 
-  getFilteredAndSortedProjects: (searchQuery: string, sortOption: string) => {
-    const { savedProjects } = get();
+	getFilteredAndSortedProjects: (searchQuery: string, sortOption: string) => {
+		const { savedProjects } = get();
 
-    // Filter projects by search query
-    const filteredProjects = savedProjects.filter((project) =>
-      project.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+		// Filter projects by search query
+		const filteredProjects = savedProjects.filter((project) =>
+			project.name.toLowerCase().includes(searchQuery.toLowerCase()),
+		);
 
-    // Sort filtered projects
-    const sortedProjects = [...filteredProjects].sort((a, b) => {
-      const [key, order] = sortOption.split("-");
+		// Sort filtered projects
+		const sortedProjects = [...filteredProjects].sort((a, b) => {
+			const [key, order] = sortOption.split("-");
 
-      if (key !== "createdAt" && key !== "name") {
-        console.warn(`Invalid sort key: ${key}`);
-        return 0;
-      }
+			if (key !== "createdAt" && key !== "name") {
+				console.warn(`Invalid sort key: ${key}`);
+				return 0;
+			}
 
-      const aValue = a[key];
-      const bValue = b[key];
+			const aValue = a[key];
+			const bValue = b[key];
 
-      if (aValue === undefined || bValue === undefined) return 0;
+			if (aValue === undefined || bValue === undefined) return 0;
 
-      if (order === "asc") {
-        if (aValue < bValue) return -1;
-        if (aValue > bValue) return 1;
-        return 0;
-      } else {
-        if (aValue > bValue) return -1;
-        if (aValue < bValue) return 1;
-        return 0;
-      }
-    });
+			if (order === "asc") {
+				if (aValue < bValue) return -1;
+				if (aValue > bValue) return 1;
+				return 0;
+			} else {
+				if (aValue > bValue) return -1;
+				if (aValue < bValue) return 1;
+				return 0;
+			}
+		});
 
-    return sortedProjects;
-  },
+		return sortedProjects;
+	},
 }));

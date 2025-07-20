@@ -1,125 +1,157 @@
 import { snapTimeToFrame } from "@/constants/timeline-constants";
 import { useProjectStore } from "@/stores/project-store";
-import { useRef, useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 interface UseTimelinePlayheadProps {
-  currentTime: number;
-  duration: number;
-  zoomLevel: number;
-  seek: (time: number) => void;
-  rulerRef: React.RefObject<HTMLDivElement>;
-  rulerScrollRef: React.RefObject<HTMLDivElement>;
+	currentTime: number;
+	duration: number;
+	zoomLevel: number;
+	seek: (time: number) => void;
+	rulerRef: React.RefObject<HTMLDivElement>;
+	rulerScrollRef: React.RefObject<HTMLDivElement>;
+	tracksScrollRef: React.RefObject<HTMLDivElement>;
+	playheadRef?: React.RefObject<HTMLDivElement>;
 }
 
-/**
- * useTimelinePlayhead
- *
- * Custom hook to manage playhead (scrubbing) logic for a timeline editor.
- * Handles mouse interaction for timeline ruler, calculates time from mouse,
- * and enables smooth scrubbing without unnecessary re-renders.
- */
 export function useTimelinePlayhead({
-  currentTime,
-  duration,
-  zoomLevel,
-  seek,
-  rulerRef,
-  rulerScrollRef,
+	currentTime,
+	duration,
+	zoomLevel,
+	seek,
+	rulerRef,
+	rulerScrollRef,
+	tracksScrollRef,
+	playheadRef,
 }: UseTimelinePlayheadProps) {
-  // Get current project info (especially FPS) from global store
-  const { activeProject } = useProjectStore();
+	// Playhead scrubbing state
+	const [isScrubbing, setIsScrubbing] = useState(false);
+	const [scrubTime, setScrubTime] = useState<number | null>(null);
 
-  // Ref to track if currently scrubbing
-  const isScrubbingRef = useRef(false);
+	// Ruler drag detection state
+	const [isDraggingRuler, setIsDraggingRuler] = useState(false);
+	const [hasDraggedRuler, setHasDraggedRuler] = useState(false);
 
-  // Ref to hold the playhead time while scrubbing (does not trigger re-render)
-  const scrubTimeRef = useRef<number | null>(null);
+	const playheadPosition =
+		isScrubbing && scrubTime !== null ? scrubTime : currentTime;
 
-  // State to force re-render when scrubbing ends
-  const [_, forceRerender] = useState(0);
+	// --- Playhead Scrubbing Handlers ---
+	const handlePlayheadMouseDown = useCallback(
+		(e: React.MouseEvent) => {
+			e.preventDefault();
+			e.stopPropagation(); // Prevent ruler drag from triggering
+			setIsScrubbing(true);
+			handleScrub(e);
+		},
+		[duration, zoomLevel],
+	);
 
-  /**
-   * Determines the actual playhead position:
-   * - If scrubbing, use the value in scrubTimeRef
-   * - Otherwise, use the currentTime (controlled by external state)
-   */
-  const playheadPosition =
-    isScrubbingRef.current && scrubTimeRef.current !== null
-      ? scrubTimeRef.current
-      : currentTime;
+	// Ruler mouse down handler
+	const handleRulerMouseDown = useCallback(
+		(e: React.MouseEvent) => {
+			// Only handle left mouse button
+			if (e.button !== 0) return;
 
-  /**
-   * Calculate timeline time (in seconds) based on mouse X position.
-   * - Gets bounding rect of the ruler
-   * - Adjusts for scroll position if ruler is scrollable
-   * - Converts X pixel offset to seconds using current zoom level
-   * - Snaps to nearest frame using FPS
-   */
-  const getTimeFromMouse = useCallback(
-    (e: MouseEvent | React.MouseEvent) => {
-      const ruler = rulerRef.current;
-      const scrollArea = rulerScrollRef.current?.querySelector(
-        "[data-radix-scroll-area-viewport]"
-      ) as HTMLElement;
+			// Don't interfere if clicking on the playhead itself
+			if (playheadRef?.current?.contains(e.target as Node)) return;
 
-      if (!ruler || !scrollArea) return 0;
+			e.preventDefault();
+			setIsDraggingRuler(true);
+			setHasDraggedRuler(false);
 
-      const rect = ruler.getBoundingClientRect();
-      const scrollLeft = scrollArea.scrollLeft;
-      const x = e.clientX - rect.left + scrollLeft;
+			// Start scrubbing immediately
+			setIsScrubbing(true);
+			handleScrub(e);
+		},
+		[duration, zoomLevel],
+	);
 
-      // Calculate how many pixels represent one second, depending on zoom
-      const pixelsPerSecond = 50 * zoomLevel;
-      const rawTime = Math.max(0, Math.min(duration, x / pixelsPerSecond));
-      const time = snapTimeToFrame(rawTime, activeProject?.fps || 30);
-      return time;
-    },
-    [rulerRef, rulerScrollRef, duration, zoomLevel, activeProject?.fps]
-  );
+	const handleScrub = useCallback(
+		(e: MouseEvent | React.MouseEvent) => {
+			const ruler = rulerRef.current;
+			if (!ruler) return;
+			const rect = ruler.getBoundingClientRect();
+			const x = e.clientX - rect.left;
+			const rawTime = Math.max(0, Math.min(duration, x / (50 * zoomLevel)));
+			// Use frame snapping for playhead scrubbing
+			const projectStore = useProjectStore.getState();
+			const projectFps = projectStore.activeProject?.fps || 30;
+			const time = snapTimeToFrame(rawTime, projectFps);
+			setScrubTime(time);
+			seek(time); // update video preview in real time
+		},
+		[duration, zoomLevel, seek, rulerRef],
+	);
 
-  /**
-   * Handle mouse down event on the ruler:
-   * - Starts scrubbing and updates playhead immediately
-   * - Registers mousemove/mouseup events to allow scrubbing
-   * - Updates time as mouse moves and seeks to new time
-   * - Cleans up listeners and triggers re-render when scrubbing ends
-   */
-  const handleRulerMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      if (e.button !== 0) return;
-      e.preventDefault();
-      const time = getTimeFromMouse(e);
+	// Mouse move/up event handlers
+	useEffect(() => {
+		if (!isScrubbing) return;
+		const onMouseMove = (e: MouseEvent) => {
+			handleScrub(e);
+			// Mark that we've dragged if ruler drag is active
+			if (isDraggingRuler) {
+				setHasDraggedRuler(true);
+			}
+		};
+		const onMouseUp = (e: MouseEvent) => {
+			setIsScrubbing(false);
+			if (scrubTime !== null) seek(scrubTime); // finalize seek
+			setScrubTime(null);
 
-      isScrubbingRef.current = true;
-      scrubTimeRef.current = time;
-      seek(time);
+			// Handle ruler click vs drag
+			if (isDraggingRuler) {
+				setIsDraggingRuler(false);
+				// If we didn't drag, treat it as a click-to-seek
+				if (!hasDraggedRuler) {
+					handleScrub(e);
+				}
+				setHasDraggedRuler(false);
+			}
+		};
+		window.addEventListener("mousemove", onMouseMove);
+		window.addEventListener("mouseup", onMouseUp);
+		return () => {
+			window.removeEventListener("mousemove", onMouseMove);
+			window.removeEventListener("mouseup", onMouseUp);
+		};
+	}, [
+		isScrubbing,
+		scrubTime,
+		seek,
+		handleScrub,
+		isDraggingRuler,
+		hasDraggedRuler,
+	]);
 
-      // Mouse move handler: update playhead and seek to new time
-      const onMouseMove = (e: MouseEvent) => {
-        const t = getTimeFromMouse(e);
-        if (t !== scrubTimeRef.current) {
-          scrubTimeRef.current = t;
-          seek(t);
-        }
-      };
+	// --- Playhead auto-scroll effect ---
+	useEffect(() => {
+		const rulerViewport = rulerScrollRef.current?.querySelector(
+			"[data-radix-scroll-area-viewport]",
+		) as HTMLElement;
+		const tracksViewport = tracksScrollRef.current?.querySelector(
+			"[data-radix-scroll-area-viewport]",
+		) as HTMLElement;
+		if (!rulerViewport || !tracksViewport) return;
+		const playheadPx = playheadPosition * 50 * zoomLevel; // TIMELINE_CONSTANTS.PIXELS_PER_SECOND = 50
+		const viewportWidth = rulerViewport.clientWidth;
+		const scrollMin = 0;
+		const scrollMax = rulerViewport.scrollWidth - viewportWidth;
+		// Center the playhead if it's not visible (100px buffer)
+		const desiredScroll = Math.max(
+			scrollMin,
+			Math.min(scrollMax, playheadPx - viewportWidth / 2),
+		);
+		if (
+			playheadPx < rulerViewport.scrollLeft + 100 ||
+			playheadPx > rulerViewport.scrollLeft + viewportWidth - 100
+		) {
+			rulerViewport.scrollLeft = tracksViewport.scrollLeft = desiredScroll;
+		}
+	}, [playheadPosition, duration, zoomLevel, rulerScrollRef, tracksScrollRef]);
 
-      // Mouse up handler: stop scrubbing, cleanup, and force re-render
-      const onMouseUp = () => {
-        isScrubbingRef.current = false;
-        window.removeEventListener("mousemove", onMouseMove);
-        window.removeEventListener("mouseup", onMouseUp);
-        forceRerender((v) => v + 1);
-      };
-
-      // Attach listeners to window for drag outside the ruler area
-      window.addEventListener("mousemove", onMouseMove);
-      window.addEventListener("mouseup", onMouseUp);
-    },
-    [getTimeFromMouse, seek]
-  );
-
-  return {
-    playheadPosition, // Current playhead position (real-time while scrubbing)
-    handleRulerMouseDown, // Attach to the ruler's onMouseDown
-  };
+	return {
+		playheadPosition,
+		handlePlayheadMouseDown,
+		handleRulerMouseDown,
+		isDraggingRuler,
+	};
 }

@@ -215,7 +215,6 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
 
     try {
       const mediaItems = await storageService.loadAllMediaItems(projectId);
-      set({ initialMediaCount: mediaItems.length });
 
       // Regenerate thumbnails for video items
       const updatedMediaItems = await Promise.all(
