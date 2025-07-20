@@ -33,7 +33,7 @@ interface MediaStore {
   // Actions - now require projectId
   addMediaItem: (
     projectId: string,
-    item: Omit<MediaItem, "id">
+    item: Omit<MediaItem, "id">,
   ) => Promise<void>;
   removeMediaItem: (projectId: string, id: string) => Promise<void>;
   loadProjectMedia: (projectId: string) => Promise<void>;
@@ -60,7 +60,7 @@ export const getFileType = (file: File): MediaType | null => {
 
 // Helper function to get image dimensions
 export const getImageDimensions = (
-  file: File
+  file: File,
 ): Promise<{ width: number; height: number }> => {
   return new Promise((resolve, reject) => {
     const img = new window.Image();
@@ -83,7 +83,7 @@ export const getImageDimensions = (
 
 // Helper function to generate video thumbnail and get dimensions
 export const generateVideoThumbnail = (
-  file: File
+  file: File,
 ): Promise<{ thumbnailUrl: string; width: number; height: number }> => {
   return new Promise((resolve, reject) => {
     const video = document.createElement("video") as HTMLVideoElement;
@@ -131,7 +131,7 @@ export const generateVideoThumbnail = (
 export const getMediaDuration = (file: File): Promise<number> => {
   return new Promise((resolve, reject) => {
     const element = document.createElement(
-      file.type.startsWith("video/") ? "video" : "audio"
+      file.type.startsWith("video/") ? "video" : "audio",
     ) as HTMLVideoElement;
 
     element.addEventListener("loadedmetadata", () => {
@@ -171,7 +171,6 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     // Add to local state immediately for UI responsiveness
     set((state) => ({
       mediaItems: [...state.mediaItems, newItem],
-      mediaCount: state.mediaItems.length + 1,
     }));
 
     // Save to persistent storage in background
@@ -201,7 +200,6 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     // Remove from local state immediately
     set((state) => ({
       mediaItems: state.mediaItems.filter((media) => media.id !== id),
-      mediaCount: state.mediaItems.length - 1,
     }));
 
     // Remove from persistent storage
@@ -224,20 +222,24 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
         mediaItems.map(async (item) => {
           if (item.type === "video" && item.file) {
             try {
-              const { thumbnailUrl, width, height } = await generateVideoThumbnail(item.file);
+              const { thumbnailUrl, width, height } =
+                await generateVideoThumbnail(item.file);
               return {
                 ...item,
                 thumbnailUrl,
                 width: width || item.width,
-                height: height || item.height
+                height: height || item.height,
               };
             } catch (error) {
-              console.error(`Failed to regenerate thumbnail for video ${item.id}:`, error);
+              console.error(
+                `Failed to regenerate thumbnail for video ${item.id}:`,
+                error,
+              );
               return item;
             }
           }
           return item;
-        })
+        }),
       );
 
       set({ mediaItems: updatedMediaItems });
@@ -268,7 +270,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     try {
       const mediaIds = state.mediaItems.map((item) => item.id);
       await Promise.all(
-        mediaIds.map((id) => storageService.deleteMediaItem(projectId, id))
+        mediaIds.map((id) => storageService.deleteMediaItem(projectId, id)),
       );
     } catch (error) {
       console.error("Failed to clear media items from storage:", error);
