@@ -7,6 +7,12 @@ import { Image, Loader2, Music, Plus, Video } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { MediaDragOverlay } from "@/components/editor/media-panel/drag-overlay";
 import {
   ContextMenu,
@@ -96,6 +102,13 @@ export function MediaView() {
     return `${min}:${sec.toString().padStart(2, "0")}`;
   };
 
+  const formatFileSize = (bytes: number) => {
+    const sizes = ["B", "KB", "MB", "GB"];
+    if (bytes === 0) return "0 B";
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
+  };
+
   const [filteredMediaItems, setFilteredMediaItems] = useState(mediaItems);
 
   useEffect(() => {
@@ -118,65 +131,145 @@ export function MediaView() {
   }, [mediaItems, mediaFilter, searchQuery]);
 
   const renderPreview = (item: MediaItem) => {
-    // Render a preview for each media type (image, video, audio, unknown)
+    // Enhanced preview rendering with better error handling and tooltip info display
     if (item.type === "image") {
       return (
-        <div className="w-full h-full flex items-center justify-center">
-          <img
-            src={item.url}
-            alt={item.name}
-            className="max-w-full max-h-full object-contain"
-            loading="lazy"
-          />
-        </div>
+        <Tooltip delayDuration={1000}>
+          <TooltipTrigger asChild>
+            <div className="relative w-full h-full">
+              <img
+                src={item.url}
+                alt={item.name}
+                className="w-full h-full object-contain rounded"
+                loading="lazy"
+                onError={(e) => {
+                  // Handle broken images
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-xs">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Image className="h-4 w-4" />
+                <span className="font-medium">{item.name}</span>
+              </div>
+              <div className="text-xs space-y-1">
+                <div>Size: {formatFileSize(item.file.size)}</div>
+                {item.width && item.height && (
+                  <div>
+                    Dimensions: {item.width} × {item.height}
+                  </div>
+                )}
+                <div>Type: {item.type.toUpperCase()}</div>
+              </div>
+            </div>
+          </TooltipContent>
+        </Tooltip>
       );
     }
 
     if (item.type === "video") {
-      if (item.thumbnailUrl) {
-        return (
-          <div className="relative w-full h-full">
-            <img
-              src={item.thumbnailUrl}
-              alt={item.name}
-              className="w-full h-full object-cover rounded"
-              loading="lazy"
-            />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded">
-              <Video className="h-6 w-6 text-white drop-shadow-md" />
-            </div>
-            {item.duration && (
-              <div className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1 rounded">
-                {formatDuration(item.duration)}
-              </div>
-            )}
-          </div>
-        );
-      }
       return (
-        <div className="w-full h-full bg-muted/30 flex flex-col items-center justify-center text-muted-foreground rounded">
-          <Video className="h-6 w-6 mb-1" />
-          <span className="text-xs">Video</span>
-          {item.duration && (
-            <span className="text-xs opacity-70">
-              {formatDuration(item.duration)}
-            </span>
-          )}
-        </div>
+        <Tooltip delayDuration={1000}>
+          <TooltipTrigger asChild>
+            <div className="relative w-full h-full">
+              {item.thumbnailUrl ? (
+                <>
+                  <img
+                    src={item.thumbnailUrl}
+                    alt={item.name}
+                    className="w-full h-full object-cover rounded"
+                    loading="lazy"
+                    onError={(e) => {
+                      // Fallback to placeholder if thumbnail fails
+                      (e.target as HTMLImageElement).style.display = "none";
+                    }}
+                  />
+                  {/* Video play indicator */}
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded">
+                    <div className="bg-white/90 rounded-full p-2">
+                      <Video className="h-4 w-4 text-black" />
+                    </div>
+                  </div>
+                  {/* Duration badge */}
+                  {item.duration && (
+                    <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-2 py-0.5 rounded font-mono">
+                      {formatDuration(item.duration)}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="w-full h-full bg-muted/30 flex flex-col items-center justify-center text-muted-foreground rounded">
+                  <Video className="h-6 w-6 mb-1" />
+                  <span className="text-xs">Video</span>
+                  {item.duration && (
+                    <span className="text-xs opacity-70">
+                      {formatDuration(item.duration)}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-xs">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Video className="h-4 w-4" />
+                <span className="font-medium">{item.name}</span>
+              </div>
+              <div className="text-xs space-y-1">
+                <div>Size: {formatFileSize(item.file.size)}</div>
+                {item.width && item.height && (
+                  <div>
+                    Dimensions: {item.width} × {item.height}
+                  </div>
+                )}
+                {item.duration && (
+                  <div>Duration: {formatDuration(item.duration)}</div>
+                )}
+                {item.fps && <div>Frame Rate: {item.fps} FPS</div>}
+                <div>Type: {item.type.toUpperCase()}</div>
+              </div>
+            </div>
+          </TooltipContent>
+        </Tooltip>
       );
     }
 
     if (item.type === "audio") {
       return (
-        <div className="w-full h-full bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex flex-col items-center justify-center text-muted-foreground rounded border border-green-500/20">
-          <Music className="h-6 w-6 mb-1" />
-          <span className="text-xs">Audio</span>
-          {item.duration && (
-            <span className="text-xs opacity-70">
-              {formatDuration(item.duration)}
-            </span>
-          )}
-        </div>
+        <Tooltip delayDuration={1000}>
+          <TooltipTrigger asChild>
+            <div className="w-full h-full bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex flex-col items-center justify-center text-muted-foreground rounded border border-green-500/20">
+              <Music className="h-6 w-6 mb-1" />
+              <span className="text-xs text-center px-1 font-medium truncate w-full">
+                {item.name}
+              </span>
+              {item.duration && (
+                <span className="text-xs opacity-70 font-mono">
+                  {formatDuration(item.duration)}
+                </span>
+              )}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-xs">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Music className="h-4 w-4" />
+                <span className="font-medium">{item.name}</span>
+              </div>
+              <div className="text-xs space-y-1">
+                <div>Size: {formatFileSize(item.file.size)}</div>
+                {item.duration && (
+                  <div>Duration: {formatDuration(item.duration)}</div>
+                )}
+                <div>Type: {item.type.toUpperCase()}</div>
+              </div>
+            </div>
+          </TooltipContent>
+        </Tooltip>
       );
     }
 
@@ -189,7 +282,7 @@ export function MediaView() {
   };
 
   return (
-    <>
+    <TooltipProvider>
       {/* Hidden file input for uploading media */}
       <input
         ref={fileInputRef}
@@ -206,7 +299,7 @@ export function MediaView() {
       >
         <div className="p-3 pb-2">
           {/* Search and filter controls */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 mb-3">
             <Select value={mediaFilter} onValueChange={setMediaFilter}>
               <SelectTrigger className="w-[80px] h-9 text-xs">
                 <SelectValue />
@@ -239,6 +332,26 @@ export function MediaView() {
               )}
             </Button>
           </div>
+
+          {/* Media count and info */}
+          {filteredMediaItems.length > 0 && (
+            <div className="text-xs text-muted-foreground mb-3 flex justify-between items-center">
+              <span>
+                {filteredMediaItems.length} item
+                {filteredMediaItems.length !== 1 ? "s" : ""}
+                {mediaFilter !== "all" && ` (${mediaFilter})`}
+              </span>
+              <span className="text-[10px]">
+                {formatFileSize(
+                  filteredMediaItems.reduce(
+                    (total, item) => total + item.file.size,
+                    0
+                  )
+                )}{" "}
+                total
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto p-3 pt-0">
@@ -279,6 +392,23 @@ export function MediaView() {
                     />
                   </ContextMenuTrigger>
                   <ContextMenuContent>
+                    <ContextMenuItem
+                      onClick={() => {
+                        useTimelineStore.getState().addMediaAtTime(item, 0);
+                      }}
+                    >
+                      Add to Timeline
+                    </ContextMenuItem>
+                    <ContextMenuItem
+                      onClick={() => {
+                        // Copy media info to clipboard
+                        const info = `Name: ${item.name}\nType: ${item.type}\nSize: ${formatFileSize(item.file.size)}${item.duration ? `\nDuration: ${formatDuration(item.duration)}` : ""}${item.width && item.height ? `\nDimensions: ${item.width}×${item.height}` : ""}`;
+                        navigator.clipboard.writeText(info);
+                        toast.success("Media info copied to clipboard");
+                      }}
+                    >
+                      Copy Info
+                    </ContextMenuItem>
                     <ContextMenuItem>Export clips</ContextMenuItem>
                     <ContextMenuItem
                       variant="destructive"
@@ -293,6 +423,6 @@ export function MediaView() {
           )}
         </div>
       </div>
-    </>
+    </TooltipProvider>
   );
 }
