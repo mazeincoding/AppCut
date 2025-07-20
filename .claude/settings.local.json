@@ -52,7 +52,8 @@
       "Bash(cross-env:*)",
       "Bash(bunx:*)",
       "Bash(.electron-dev.ps1)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(taskkill:*)"
     ],
     "deny": []
   }

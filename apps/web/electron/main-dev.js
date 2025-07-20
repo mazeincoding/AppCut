@@ -1,4 +1,5 @@
 const { app, BrowserWindow } = require('electron');
+const { spawn } = require('child_process');
 
 let mainWindow;
 
@@ -10,7 +11,8 @@ async function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       webSecurity: false, // Allow localhost connections
-    }
+    },
+    show: false // Don't show until ready
   });
 
   console.log('🚀 Loading OpenCut from localhost...');
@@ -23,11 +25,13 @@ async function createWindow() {
   // Try specific port first, then common ports that Next.js uses
   const ports = specificPort ? [specificPort] : [3000, 3001, 3002, 3003, 3004, 3005];
   
+  let connected = false;
   for (const port of ports) {
     try {
       console.log(`Trying port ${port}...`);
       await mainWindow.loadURL(`http://localhost:${port}`);
       console.log(`✅ Connected to Next.js dev server on port ${port}`);
+      connected = true;
       break;
     } catch (error) {
       console.log(`⚠️ Port ${port} not available - ${error.message}`);
@@ -38,6 +42,10 @@ async function createWindow() {
     }
   }
   
+  if (!connected) {
+    await mainWindow.loadURL(`data:text/html,<h1>OpenCut Dev Server Not Found</h1><p>Start Next.js dev server first: bun run dev</p>`);
+  }
+  
   // Add error handling
   mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
     console.error('❌ Failed to load:', errorDescription);
@@ -46,6 +54,7 @@ async function createWindow() {
   
   mainWindow.webContents.on('did-finish-load', () => {
     console.log('✅ OpenCut loaded successfully from localhost!');
+    mainWindow.show(); // Show window only after content loads
   });
   
   mainWindow.on('closed', () => {
@@ -54,7 +63,12 @@ async function createWindow() {
 }
 
 app.whenReady().then(async () => {
-  await createWindow();
+  try {
+    await createWindow();
+  } catch (error) {
+    console.error('Failed to create window:', error);
+    app.quit();
+  }
 });
 
 app.on('window-all-closed', () => {

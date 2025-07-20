@@ -2,6 +2,13 @@ import type { NextConfig } from "next";
 
 const isElectron = process.env.NEXT_PUBLIC_ELECTRON === "true";
 
+// Debug logging to detect environment variables
+console.log('🔧 [DETECTION]', {
+  isElectron, 
+  envVar: process.env.NEXT_PUBLIC_ELECTRON, 
+  allElectronEnv: Object.keys(process.env).filter(k => k.includes('ELECTRON')).map(k => `${k}=${process.env[k]}`)
+});
+
 const nextConfig: NextConfig = {
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",

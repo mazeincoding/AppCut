@@ -4,67 +4,34 @@
 
 To build and test the Electron version of OpenCut:
 
-### Option 1: Simple Dev Mode (Recommended - No Path Issues!)
+### Option 1: Dev Mode (Recommended)
 ```powershell
-# From the OpenCut root directory - Uses Next.js dev server
-powershell -ExecutionPolicy Bypass -File electron-dev.ps1
-```
-**Benefits**: 
-- No path fixing needed
-- Instant hot-reload
-- All features work perfectly
-- Much faster development
-
-### Option 2: Static Build Mode (Complex)
-```powershell
-# From the OpenCut root directory
-powershell -ExecutionPolicy Bypass -File electron-static-build.ps1
-
-# Additional options:
-powershell -ExecutionPolicy Bypass -File electron-static-build.ps1 -SkipNextBuild  # Skip build, just run existing
-powershell -ExecutionPolicy Bypass -File electron-static-build.ps1 -DebugMode      # Run with debug logging
-powershell -ExecutionPolicy Bypass -File electron-static-build.ps1 -CleanBuild     # Clean and rebuild from scratch
+# Quick start - just run this script
+& 'c:\Users\zdhpe\Desktop\New folder\OpenCut\electron-dev.ps1'
 ```
 
-### Option 3: Manual Build Steps
+### Option 2: Manual Steps
 ```bash
-# Navigate to the web app directory
+# Start dev server first
 cd apps/web
+bun run dev
 
-# Install dependencies
-bun install
-
-# Build for Electron (uses export:electron command)
-bun run export:electron
-
-# Run the Electron app
-bunx electron electron/main-simple.js
+# Then in another terminal, start Electron with correct port
+bunx electron electron/main-dev.js --port=3001
 ```
 
 ## Available Scripts
 
-### In the root directory:
-- `powershell -ExecutionPolicy Bypass -File electron-dev.ps1` - Simple dev mode (recommended)
-- `powershell -ExecutionPolicy Bypass -File electron-static-build.ps1` - Static build mode
+- `electron-dev.ps1` - Dev mode with hot reload
+- `bun run dev` - Start localhost server (auto-detects available port)
+- `bun run export:electron` - Build for production
+- `bun run electron:dist` - Create distributable
 
-### In apps/web/package.json:
-- `bun run export:electron` - Build Next.js for Electron (primary build command)
-- `bun run electron:dev` - Run Electron in development mode
-- `bun run electron:pack` - Create unpacked Electron app
-- `bun run electron:dist` - Create distributable (all platforms)
-- `bun run electron:dist:win` - Create Windows distributable
-- `bun run postexport` - Post-processing scripts (automatically run after export)
+## Testing
 
-## Verification Steps
-
-After building, verify the navigation is working:
-
-1. **Run the app**: `bunx electron electron/main-simple.js`
-2. **Test navigation**:
-   - Click "Projects" button on home page → Should navigate to projects page
-   - Click "OpenCut" logo → Should return to home page
-   - Create/open a project → Should navigate to editor
-3. **Check DevTools**: Press F12 to open DevTools and check for any errors
+1. Run `bunx electron electron/main-simple.js`
+2. Test navigation between pages
+3. Press F12 for DevTools
 
 ## Build Process Scripts
 
