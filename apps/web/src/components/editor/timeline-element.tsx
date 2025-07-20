@@ -307,20 +307,24 @@ export function TimelineElement({
       );
     }
 
-    if (mediaItem.type === "video" && mediaItem.thumbnailUrl) {
+    if (mediaItem.type === "video") {
       return (
-        <div className="w-full h-full flex items-center gap-2">
-          <div className="w-8 h-8 flex-shrink-0">
+        <div className="relative w-full h-full">
+          {/* Video thumbnail background */}
+          {mediaItem.thumbnailUrl && (
             <img
               src={mediaItem.thumbnailUrl}
               alt={mediaItem.name}
-              className="w-full h-full object-cover rounded-sm"
+              className="absolute inset-0 w-full h-full object-cover opacity-50"
               draggable={false}
             />
+          )}
+          {/* Video name overlay */}
+          <div className="absolute inset-0 flex items-center px-2 bg-gradient-to-r from-black/60 to-transparent">
+            <span className="text-xs text-white font-medium truncate drop-shadow-sm">
+              {element.name}
+            </span>
           </div>
-          <span className="text-xs text-foreground/80 truncate flex-1">
-            {element.name}
-          </span>
         </div>
       );
     }
@@ -373,7 +377,7 @@ export function TimelineElement({
           <div
             className={`relative h-full rounded-[0.15rem] cursor-pointer overflow-hidden ${getTrackElementClasses(
               track.type
-            )} ${isSelected ? "border-b-[0.5px] border-t-[0.5px] border-foreground" : ""} ${
+            )} border border-white/20 ${isSelected ? "border-foreground" : ""} ${
               isBeingDragged ? "z-50" : "z-10"
             }`}
             onClick={(e) => onElementClick && onElementClick(e, element)}
