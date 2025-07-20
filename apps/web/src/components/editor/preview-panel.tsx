@@ -338,7 +338,7 @@ export function PreviewPanel() {
   };
 
   return (
-    <div className="h-full w-full flex flex-col min-h-0 min-w-0 bg-panel rounded-sm">
+    <div className="h-full w-full flex flex-col min-h-0 min-w-0 bg-panel border rounded-sm">
       <div
         ref={containerRef}
         className="flex-1 flex flex-col items-center justify-center p-3 min-h-0 min-w-0"

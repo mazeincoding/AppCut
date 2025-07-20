@@ -200,7 +200,7 @@ export function MediaView() {
       />
 
       <div
-        className={`h-full flex flex-col gap-1 transition-colors relative ${isDragOver ? "bg-accent/30" : ""}`}
+        className={`h-full flex flex-col gap-1 transition-colors relative border rounded-sm ${isDragOver ? "bg-accent/30" : ""}`}
         {...dragProps}
       >
         {/* Show overlay when dragging files over the panel */}
@@ -224,7 +224,7 @@ export function MediaView() {
             <Input
               type="text"
               placeholder="Search media..."
-              className="min-w-[60px] flex-1 h-full text-xs"
+              className="min-w-[60px] flex-1 h-full text-xs border"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />

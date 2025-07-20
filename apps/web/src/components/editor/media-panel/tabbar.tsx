@@ -61,7 +61,7 @@ export function TabBar() {
   }, []);
 
   return (
-    <div className="flex">
+    <div className="flex border rounded-sm">
       <ScrollButton
         direction="left"
         onClick={scrollToStart}
