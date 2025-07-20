@@ -5,7 +5,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { SponsorButton } from "../ui/sponsor-button";
 import { VercelIcon } from "../icons";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -174,22 +174,26 @@ export function Hero() {
               className="px-6 h-11 text-base !bg-foreground"
               disabled={isSubmitting || !csrfToken}
             >
-              <span className="relative z-10">
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <ArrowRight className="h-4 w-4" />
+              )}
+              <span className="ml-2">
                 {isSubmitting ? "Joining..." : "Join waitlist"}
               </span>
-              <ArrowRight className="relative z-10 ml-0.5 h-4 w-4 inline-block" />
             </Button>
           </form>
         </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8, duration: 0.6 }}
-            className="mt-8 inline-flex items-center gap-2 text-sm text-muted-foreground justify-center"
-          >
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span>50k+ people already joined</span>
-          </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8, duration: 0.6 }}
+          className="mt-8 inline-flex items-center gap-2 text-sm text-muted-foreground justify-center"
+        >
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+          <span>50k+ people already joined</span>
+        </motion.div>
       </motion.div>
     </div>
   );
