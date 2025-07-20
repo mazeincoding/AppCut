@@ -125,6 +125,11 @@ class StorageService {
       width: mediaItem.width,
       height: mediaItem.height,
       duration: mediaItem.duration,
+      fps: mediaItem.fps,
+      bitrate: mediaItem.bitrate,
+      codecName: mediaItem.codecName,
+      createdAt: mediaItem.createdAt?.toISOString(),
+      tags: mediaItem.tags,
     };
 
     await mediaMetadataAdapter.set(mediaItem.id, metadata);
@@ -156,6 +161,14 @@ class StorageService {
       width: metadata.width,
       height: metadata.height,
       duration: metadata.duration,
+      fps: metadata.fps,
+      bitrate: metadata.bitrate,
+      codecName: metadata.codecName,
+      createdAt: metadata.createdAt ? new Date(metadata.createdAt) : undefined,
+      lastModified: metadata.lastModified
+        ? new Date(metadata.lastModified)
+        : undefined,
+      tags: metadata.tags,
       // thumbnailUrl would need to be regenerated or cached separately
     };
   }
