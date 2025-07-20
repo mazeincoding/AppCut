@@ -1,4 +1,5 @@
 import { ThemeProvider } from "next-themes";
+import { appWithTranslation } from "next-i18next";
 import { Analytics } from "@vercel/analytics/react";
 import Script from "next/script";
 import "./globals.css";
@@ -19,7 +20,6 @@ const protectedRoutes = [
 	},
 ];
 
-export default function RootLayout({
 	children,
 }: Readonly<{
 	children: React.ReactNode;
@@ -53,3 +53,5 @@ export default function RootLayout({
 		</html>
 	);
 }
+
+export default appWithTranslation(RootLayout);
