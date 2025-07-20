@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(request: NextRequest) {
     const { searchTerm, next} = await request.json()
 
+    if (!searchTerm || typeof searchTerm != 'string' || searchTerm.trim() == "") return NextResponse.json({ error: "Missing search term." }, { status: 400 })
+
     const apikey: string = process.env.TENOR_API_KEY || ""
     if (!apikey) return NextResponse.json({ error: "API key is not set." }, { status: 500 })
 

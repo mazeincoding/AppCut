@@ -17,10 +17,10 @@ export async function GET(req: NextRequest) {
 
     try {
         const parsed = new URL(url)
-        if (!ALLOWED_HOSTS.includes(parsed.host)) return makeMsgResponse(`THE HOST: ${parsed.host} IS NOT ALLOWED!`, 403)
+        if (!ALLOWED_HOSTS.includes(parsed.host)) return makeMsgResponse(`Forbidden: Host not allowed`, 403)
 
         const response = await fetch(url)
-        if (!response.ok) return makeMsgResponse("Faild to fetch file", 502)
+        if (!response.ok) return makeMsgResponse("Failed to fetch file", 502)
 
         const contentType = response.headers.get("content-type") || "application/octet-stream";
         const data = await response.arrayBuffer();
@@ -35,6 +35,7 @@ export async function GET(req: NextRequest) {
         });
 
     } catch (err) {
+        console.error("Proxy request failed:", err);
         return new NextResponse("Error fetching file", { status: 500 });
 
     }

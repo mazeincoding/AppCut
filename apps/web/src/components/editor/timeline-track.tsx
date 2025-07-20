@@ -907,9 +907,11 @@ export function TimelineTrackContent({
           // Handle media items
           
           async function addToMedia() { // this will be only used if the media was a gif
-            const projectId = window.location.href.split("/").reverse()[0]
+            const projectStore = useProjectStore.getState();
+            const projectId = projectStore.activeProject?.id;
             if (!projectId) {
-              toast.error("Project not found")
+              toast.error("No active project found");
+              return;
             }
 
             const gifUrl = dragData.content

@@ -44,6 +44,9 @@ interface MediaStore {
 export const getFileType = (file: File): MediaType | null => {
   const { type } = file;
 
+  if (type.startsWith("image/gif")) {
+		return "GIF";
+	}
 	if (type.startsWith("image/")) {
 		return "image";
 	}
@@ -52,9 +55,6 @@ export const getFileType = (file: File): MediaType | null => {
 	}
 	if (type.startsWith("audio/")) {
 		return "audio";
-	}
-	if (type.startsWith("image/gif")) {
-		return "GIF";
 	}
 
   return null;

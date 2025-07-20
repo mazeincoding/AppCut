@@ -52,7 +52,7 @@ export function StickerView() {
     if (searchQuery === "") return;
 
     const delayDebounce = setTimeout(() => {
-      changeMsg("Loading more GIFs...");
+      changeMsg("Loading GIFs...");
       grab_data(searchQuery, setNext, "")
       .then(urls => setGifs(urls))
 
@@ -75,10 +75,11 @@ export function StickerView() {
         isFetching = true;
 
         grab_data(searchQuery, setNext, next).then((urls: string[]) => {
-            urls.forEach((url: string) => {
-                if (!gifs.includes(url)) setGifs(prev => [...prev, url]);
+            const uniqueUrls = urls.filter((url: string) => !gifs.includes(url))
+            if (uniqueUrls.length === 0) {
+              setGifs(prev => [...prev, ...uniqueUrls]);
 
-            });
+            }
 
             isFetching = false;
 
