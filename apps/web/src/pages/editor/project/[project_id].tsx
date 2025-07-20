@@ -1,4 +1,4 @@
-import { useEffect, Suspense } from "react";
+import { useEffect, useCallback, Suspense } from "react";
 import { useRouter } from "next/router";
 
 // Debug render counter
@@ -34,12 +34,28 @@ function EditorContent() {
 
   const { activeProject, loadProject, createNewProject } = useProjectStore();
   const router = useRouter();
+  
+  // Stabilize function references to prevent useEffect loops
+  const stableLoadProject = useCallback(loadProject, []);
+  const stableCreateNewProject = useCallback(createNewProject, []);
   const { project_id } = router.query;
 
   // Support both dynamic route (params) and static route with query param (?project_id=xxx)
   const projectIdParam = Array.isArray(project_id) ? project_id[0] : project_id;
   const projectIdQuery = typeof router.query.project_id === 'string' ? router.query.project_id : null;
   const projectId = (projectIdParam ?? projectIdQuery ?? "") as string;
+  
+  // Debug: Track projectId changes
+  useEffect(() => {
+    console.log('📍 PROJECT ID CHANGED:', {
+      projectIdParam,
+      projectIdQuery,
+      finalProjectId: projectId,
+      routerReady: router.isReady,
+      routerQuery: router.query,
+      timestamp: Date.now()
+    });
+  }, [projectId, router.isReady]);
 
   usePlaybackControls();
 
@@ -50,14 +66,16 @@ function EditorContent() {
       renderCount,
       projectId,
       activeProjectId: activeProject?.id,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      location: window.location.href
     });
     
     return () => {
-      console.log('🔄 EDITOR CLEANUP:', {
+      console.log('🗑️ EDITOR UNMOUNTING:', {
         renderCount,
         projectId,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        reason: 'Component cleanup'
       });
     };
   }, []);
@@ -99,48 +117,72 @@ function EditorContent() {
       hasActiveProject: !!activeProject,
       activeProjectId: activeProject?.id,
       needsLoad: projectId && (!activeProject || activeProject.id !== projectId),
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      renderCount
     });
+    
+    // Only run if we actually need to load a different project
+    if (!projectId) {
+      console.log('❌ NO PROJECT ID - EARLY RETURN');
+      return;
+    }
+    
+    if (activeProject && activeProject.id === projectId) {
+      console.log('✅ PROJECT ALREADY LOADED - EARLY RETURN:', {
+        activeProjectId: activeProject.id,
+        requestedProjectId: projectId
+      });
+      return;
+    }
+    
     const initializeProject = async () => {
-      if (projectId && (!activeProject || activeProject.id !== projectId)) {
-        console.log('🚀 STARTING PROJECT LOAD:', projectId);
-        try {
-          await loadProject(projectId);
-          console.log('✅ PROJECT LOAD SUCCESS:', projectId);
-        } catch (error) {
-          console.error("❌ FAILED TO LOAD PROJECT:", { projectId, error });
-          
-          // Check if it's a fallback project from localStorage
-          const fallbackProject = localStorage.getItem('opencut-fallback-project');
-          if (fallbackProject) {
-            try {
-              const project = JSON.parse(fallbackProject);
-              if (project.id === projectId) {
-                console.log('🔄 USING FALLBACK PROJECT:', project.name);
-                const newProjectId = await createNewProject(project.name);
-                localStorage.removeItem('opencut-fallback-project');
-                console.log('🔄 NAVIGATING TO FALLBACK PROJECT:', newProjectId);
-                router.replace(`/editor/project/${newProjectId}`);
-                return;
-              }
-            } catch (parseError) {
-              console.error('❌ ERROR PARSING FALLBACK PROJECT:', parseError);
+      console.log('🚀 STARTING PROJECT LOAD:', projectId);
+      try {
+        await stableLoadProject(projectId);
+        console.log('✅ PROJECT LOAD SUCCESS:', projectId);
+      } catch (error) {
+        console.error("❌ FAILED TO LOAD PROJECT:", { projectId, error });
+        
+        // Check if it's a fallback project from localStorage
+        const fallbackProject = localStorage.getItem('opencut-fallback-project');
+        if (fallbackProject) {
+          try {
+            const project = JSON.parse(fallbackProject);
+            if (project.id === projectId) {
+              console.log('🔄 USING FALLBACK PROJECT:', project.name);
+              const newProjectId = await stableCreateNewProject(project.name);
+              localStorage.removeItem('opencut-fallback-project');
+              console.log('🔄 NAVIGATING TO FALLBACK PROJECT:', newProjectId);
+              router.replace(`/editor/project/${newProjectId}`);
+              return;
             }
+          } catch (parseError) {
+            console.error('❌ ERROR PARSING FALLBACK PROJECT:', parseError);
           }
-          
-          // If no fallback, create a new project and navigate to it
-          console.log('🔄 CREATING NEW FALLBACK PROJECT');
-          const newProjectId = await createNewProject("New Project");
-          console.log('🔄 NAVIGATING TO NEW PROJECT:', newProjectId);
-          router.replace(`/editor/project/${newProjectId}`);
         }
+        
+        // If no fallback, create a new project and navigate to it
+        console.log('🔄 CREATING NEW FALLBACK PROJECT');
+        const newProjectId = await stableCreateNewProject("New Project");
+        console.log('🔄 NAVIGATING TO NEW PROJECT:', {
+          oldProjectId: projectId,
+          newProjectId,
+          currentLocation: window.location.href
+        });
+        router.replace(`/editor/project/${newProjectId}`);
       }
     };
 
     initializeProject();
-  }, [projectId, activeProject, loadProject, createNewProject, router]);
+  }, [projectId, activeProject?.id]); // Only primitives, no function references
 
   if (!activeProject) {
+    console.log('⏳ RENDERING LOADING SCREEN:', {
+      projectId,
+      hasActiveProject: !!activeProject,
+      timestamp: Date.now(),
+      renderCount
+    });
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -150,6 +192,14 @@ function EditorContent() {
       </div>
     );
   }
+
+  console.log('✅ RENDERING EDITOR INTERFACE:', {
+    projectId,
+    activeProjectId: activeProject?.id,
+    projectName: activeProject?.name,
+    timestamp: Date.now(),
+    renderCount
+  });
 
   return (
     <div className="flex flex-col h-screen">

@@ -15,19 +15,38 @@ at window.fetch (...)
 
 ## 🚨 **Actual Problem:**
 
-**Electron preload script** is blocking **ALL** JSON requests including **Next.js development files**:
+**PRIMARY: useEffect Dependency Loop** + **SECONDARY: Fetch Blocking**
+
+### Primary Issue: useEffect Dependencies
+**React useEffect** with **unstable dependencies** causing infinite re-renders:
+- `router` object in dependency array (recreated on route changes)
+- `loadProject`, `createNewProject` functions (recreated on renders)
+
+### Secondary Issue: Fetch Blocking  
+**Electron preload script** was blocking **Next.js development files**:
 - `_devMiddlewareManifest.json`
 - `page-loader.js`
 - Other Next.js dev middleware files
 
 **Loop Mechanism:**
-1. Next.js tries to fetch development files
-2. Preload script blocks these requests  
-3. Next.js fails to load → triggers Fast Refresh full reload
-4. Page reloads → same fetch attempts → **INFINITE LOOP**
+1. useEffect runs with unstable dependencies
+2. Navigation/state change triggers re-render
+3. Dependencies seen as "changed" → useEffect runs again
+4. **INFINITE LOOP** of renders and navigation attempts
 
 ## 🔧 **THE CULPRIT CODE**
 
+### 1. **useEffect Dependencies** (PRIMARY)
+**File**: `apps/web/src/pages/editor/project/[project_id].tsx` (Line 141)
+
+```javascript
+// PROBLEMATIC: Unstable dependencies cause infinite re-renders
+}, [projectId, activeProject, loadProject, createNewProject, router]);
+```
+
+**Problem**: `router`, `loadProject`, `createNewProject` are recreated on each render
+
+### 2. **Fetch Blocking** (SECONDARY)
 **File**: `apps/web/electron/preload-simplified.js` (Lines 14-20)
 
 ```javascript
@@ -42,11 +61,15 @@ if (url && url.startsWith('file://') && url.includes('.json')) {
 
 ## 🛠️ **THE FIX**
 
-**Strategy**: Make fetch blocking **selective** instead of **blanket blocking all JSON**
-
-### **Option 1: Allow Development Requests** (RECOMMENDED)
+### **Fix 1: Stable useEffect Dependencies** (PRIMARY)
 ```javascript
-// NEW: Only block problematic static file requests, allow dev server
+// FIXED: Only include stable primitive values
+}, [projectId, activeProject?.id]); // Removed: router, loadProject, createNewProject
+```
+
+### **Fix 2: Selective Fetch Blocking** (SECONDARY)
+```javascript
+// FIXED: Only block problematic static file requests, allow dev server
 if (url && url.startsWith('file://') && url.includes('.json') && 
     !url.includes('_devMiddleware') && !url.includes('page-loader')) {
   console.log('🚫 [ELECTRON] Blocking file:// JSON request:', url);
@@ -85,6 +108,7 @@ const shouldBlock = url.startsWith('file://') &&
 - ✅ Confirmed Next.js dev middleware conflict
 
 ### 🚀 **Next Steps** (IMPLEMENTED)
+- [x] **Fix useEffect dependencies** in editor page ✅  
 - [x] **Implement selective fetch blocking** in preload script ✅
 - [ ] **Test fix** with dev server
 - [ ] **Remove debug logging** once confirmed working
