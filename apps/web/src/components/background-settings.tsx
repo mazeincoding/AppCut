@@ -1,4 +1,5 @@
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { useTranslation } from "react-i18next";
 import { Button } from "./ui/button";
 import { BackgroundIcon } from "./icons";
 import { cn } from "@/lib/utils";
@@ -10,6 +11,7 @@ import { PipetteIcon } from "lucide-react";
 type BackgroundTab = "color" | "blur";
 
 export function BackgroundSettings() {
+	const { t } = useTranslation("common");
 	const { activeProject, updateBackgroundType } = useProjectStore();
 
 	// ✅ Good: derive activeTab from activeProject during rendering
@@ -25,11 +27,11 @@ export function BackgroundSettings() {
 
 	const tabs = [
 		{
-			label: "Color",
+			label: t("background_color", "Color"),
 			value: "color",
 		},
 		{
-			label: "Blur",
+			label: t("background_blur", "Blur"),
 			value: "blur",
 		},
 	];
@@ -47,7 +49,7 @@ export function BackgroundSettings() {
 			</PopoverTrigger>
 			<PopoverContent className="flex flex-col items-start w-[20rem] h-[16rem] overflow-hidden p-0">
 				<div className="flex items-center justify-between w-full gap-2 z-10 bg-popover p-3">
-					<h2 className="text-sm">Background</h2>
+					<h2 className="text-sm">{t("background_settings", "Background")}</h2>
 					<div className="flex items-center gap-2 text-sm">
 						{tabs.map((tab) => (
 							<span
@@ -146,10 +148,11 @@ function BlurView({
 	selectedBlur: number;
 	onBlurSelect: (blurIntensity: number) => void;
 }) {
+	const { t } = useTranslation("common");
 	const blurLevels = [
-		{ label: "Light", value: 4 },
-		{ label: "Medium", value: 8 },
-		{ label: "Heavy", value: 18 },
+		{ label: t("blur_light", "Light"), value: 4 },
+		{ label: t("blur_medium", "Medium"), value: 8 },
+		{ label: t("blur_heavy", "Heavy"), value: 18 },
 	];
 	const blurImage =
 		"https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
@@ -167,7 +170,7 @@ function BlurView({
 				>
 					<Image
 						src={blurImage}
-						alt={`Blur preview ${blur.label}`}
+						alt={t("blur_preview", `Blur preview ${blur.label}`)}
 						fill
 						className="object-cover"
 						style={{ filter: `blur(${blur.value}px)` }}

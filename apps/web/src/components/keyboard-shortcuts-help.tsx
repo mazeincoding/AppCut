@@ -1,6 +1,6 @@
 "use client";
 
-import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
+
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import {
