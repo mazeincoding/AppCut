@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "next": "^15.3.4",
+    "react-colorful": "^5.6.1",
     "wavesurfer.js": "^7.9.8"
   }
 }
