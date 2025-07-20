@@ -1,6 +1,6 @@
 "use client";
 
-import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import { useKeyboardShortcutsHelp, KeyboardShortcut } from "@/hooks/use-keyboard-shortcuts-help";
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import {
@@ -13,10 +13,6 @@ import {
 } from "./ui/dialog";
 import { getPlatformSpecialKey } from "@/lib/utils";
 import { Keyboard } from "lucide-react";
-import {
-	useKeyboardShortcutsHelp,
-	KeyboardShortcut,
-} from "@/hooks/use-keyboard-shortcuts-help";
 import { useKeybindingsStore } from "@/stores/keybindings-store";
 import { toast } from "sonner";
 
