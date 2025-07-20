@@ -1,0 +1,3 @@
+$ next dev
+ ⚠ Port 3000 is in use, using available port 3004 instead.
+ ⨯ Middleware cannot be used with "output: export". See more info here: https://nextjs.org/docs/advanced-features/static-html-export

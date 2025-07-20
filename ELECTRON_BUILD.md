@@ -7,7 +7,7 @@ To build and test the Electron version of OpenCut:
 ### Option 1: Simple Dev Mode (Recommended - No Path Issues!)
 ```powershell
 # From the OpenCut root directory - Uses Next.js dev server
-.\electron-dev.ps1
+powershell -ExecutionPolicy Bypass -File electron-dev.ps1
 ```
 **Benefits**: 
 - No path fixing needed
@@ -18,12 +18,12 @@ To build and test the Electron version of OpenCut:
 ### Option 2: Static Build Mode (Complex)
 ```powershell
 # From the OpenCut root directory
-.\electron-static-build.ps1
+powershell -ExecutionPolicy Bypass -File electron-static-build.ps1
 
 # Additional options:
-.\electron-static-build.ps1 -SkipNextBuild  # Skip build, just run existing
-.\electron-static-build.ps1 -DebugMode      # Run with debug logging
-.\electron-static-build.ps1 -CleanBuild     # Clean and rebuild from scratch
+powershell -ExecutionPolicy Bypass -File electron-static-build.ps1 -SkipNextBuild  # Skip build, just run existing
+powershell -ExecutionPolicy Bypass -File electron-static-build.ps1 -DebugMode      # Run with debug logging
+powershell -ExecutionPolicy Bypass -File electron-static-build.ps1 -CleanBuild     # Clean and rebuild from scratch
 ```
 
 ### Option 3: Manual Build Steps
@@ -44,7 +44,8 @@ bunx electron electron/main-simple.js
 ## Available Scripts
 
 ### In the root directory:
-- `test-electron.ps1` - Main build and test script for Windows
+- `powershell -ExecutionPolicy Bypass -File electron-dev.ps1` - Simple dev mode (recommended)
+- `powershell -ExecutionPolicy Bypass -File electron-static-build.ps1` - Static build mode
 
 ### In apps/web/package.json:
 - `bun run export:electron` - Build Next.js for Electron (primary build command)
@@ -86,7 +87,7 @@ Currently, the build scripts are optimized for Windows. For other platforms:
 
 ### "Script not found" error
 Make sure you're running from the correct directory:
-- `test-electron.ps1` should be run from the OpenCut root
+- PowerShell scripts should be run from the OpenCut root using `powershell -ExecutionPolicy Bypass -File script.ps1`
 - npm/bun scripts should be run from `apps/web`
 
 ### Build fails

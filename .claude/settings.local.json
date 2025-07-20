@@ -50,7 +50,8 @@
       "Bash(cat:*)",
       "Bash(bun install:*)",
       "Bash(cross-env:*)",
-      "Bash(bunx:*)"
+      "Bash(bunx:*)",
+      "Bash(.electron-dev.ps1)"
     ],
     "deny": []
   }

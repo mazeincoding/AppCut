@@ -2,7 +2,7 @@ const { app, BrowserWindow } = require('electron');
 
 let mainWindow;
 
-function createWindow() {
+async function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 1000,
@@ -13,10 +13,30 @@ function createWindow() {
     }
   });
 
-  console.log('🚀 Loading OpenCut from localhost:3000...');
+  console.log('🚀 Loading OpenCut from localhost...');
   
-  // Load from localhost - no path issues!
-  mainWindow.loadURL('http://localhost:3000');
+  // Check if a specific port was provided as argument
+  const args = process.argv.slice(2);
+  const portArg = args.find(arg => arg.startsWith('--port='));
+  const specificPort = portArg ? parseInt(portArg.replace('--port=', '')) : null;
+  
+  // Try specific port first, then common ports that Next.js uses
+  const ports = specificPort ? [specificPort] : [3000, 3001, 3002, 3003, 3004, 3005];
+  
+  for (const port of ports) {
+    try {
+      console.log(`Trying port ${port}...`);
+      await mainWindow.loadURL(`http://localhost:${port}`);
+      console.log(`✅ Connected to Next.js dev server on port ${port}`);
+      break;
+    } catch (error) {
+      console.log(`⚠️ Port ${port} not available - ${error.message}`);
+      if (port === ports[ports.length - 1]) {
+        console.error('❌ Could not connect to any Next.js dev server');
+        console.log('💡 Make sure "bun run dev" is running in normal mode (not export mode)');
+      }
+    }
+  }
   
   // Add error handling
   mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
@@ -33,8 +53,8 @@ function createWindow() {
   });
 }
 
-app.whenReady().then(() => {
-  createWindow();
+app.whenReady().then(async () => {
+  await createWindow();
 });
 
 app.on('window-all-closed', () => {
@@ -43,8 +63,8 @@ app.on('window-all-closed', () => {
   }
 });
 
-app.on('activate', () => {
+app.on('activate', async () => {
   if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
+    await createWindow();
   }
 });

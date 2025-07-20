@@ -1,0 +1,40 @@
+   ▲ Next.js 15.3.4
+   - Local:        http://localhost:3004
+   - Network:      http://100.102.106.37:3004
+
+ ✓ Starting...
+ ✓ Ready in 2.7[?25h
+Compiling / ...
+ ✓ Compiled / in 2.5s (953 modules)
+🏗️ StorageService: Initializing storage service...
+🔍 [STORAGE] No Electron environment detected
+🔍 StorageService: Environment check: {
+  isElectron: false,
+  hasElectronAPI: 'window undefined',
+  userAgent: 'Node.js/23',
+  electronEnvVar: undefined
+}
+✅ StorageService: Constructor completed
+🎯 [ERROR-BOUNDARY] ElectronErrorBoundary component loaded
+- React error catching: ENABLED
+- Electron-specific recovery: ENABLED
+- Fallback UI with navigation: ENABLED
+- Development error details: ENABLED
+ ✓ Compiled in 546ms (788 modules)
+🚀 [APP] Loading OpenCut app with Electron error boundary and font fix...
+🎯 [APP] App configuration:
+- Error boundary: ENABLED
+- Electron hydration fix: ENABLED
+- Theme provider: ENABLED
+- Storage provider: ENABLED
+🚀 [APP] All providers and error boundaries configured
+ GET / 200 in 1831ms
+ ✓ Compiled in 609ms (788 modules)
+🚀 StorageProvider: Component rendered
+🏡 HomePage: Component rendered
+🚀 StorageProvider: Component rendered
+🏡 HomePage: Component rendered
+ ✓ Compiled in 297ms (334 modules)
+ ✓ Compiled in 348ms (334 modules)
+ ✓ Compiled in 249ms (334 modules)
+ ✓ Compiled in 285ms (334 modules)
