@@ -6,9 +6,59 @@
     <td align="right">
       <h1>OpenCut <span style="font-size: 0.7em; font-weight: normal;">(prev AppCut)</span></h1>
       <h3 style="margin-top: -10px;">A free, open-source video editor for web, desktop, and mobile.</h3>
+      <h4 style="margin-top: -5px; color: #3b82f6;">🧠 Now with Revolutionary AI-Powered Features!</h4>
     </td>
   </tr>
 </table>
+
+## 🚀 Revolutionary AI Features
+
+OpenCut now includes the most advanced AI-powered video editing capabilities ever built for the web:
+
+### 🧠 AI Content Analyzer
+- **Scene Detection**: Automatically identifies different scenes, lighting conditions, and compositions
+- **Face Recognition**: Detects and tracks faces throughout your video
+- **Audio Analysis**: Identifies speech segments, music, and optimal cut points
+- **Color Grading Suggestions**: AI-powered recommendations for color correction and creative grading
+- **Highlight Detection**: Automatically finds the most engaging moments in your footage
+
+### ⚡ Smart Auto-Cut System
+- **Intelligent Audio Analysis**: Detects silence gaps, speech patterns, and audio peaks
+- **Automatic Cut Suggestions**: Recommends optimal cut points based on content analysis
+- **Timeline Integration**: One-click application of smart cuts directly to your timeline
+- **Time Estimation**: Shows how much time you'll save with each suggestion
+
+### 🎨 Real-Time AI Video Analysis
+- **Live Frame Analysis**: Analyze video content in real-time as you scrub through the timeline
+- **Visual Overlays**: See AI suggestions and detections overlaid on your preview
+- **Performance Metrics**: Live FPS, analysis time, and optimization suggestions
+- **Content-Aware Editing**: AI understands what's in each frame for smarter editing decisions
+
+### 🔮 Neural Video Enhancement
+- **AI Upscaling**: Real-time neural upscaling up to 4x using WebGL shaders
+- **Noise Reduction**: Advanced AI-powered denoising while preserving detail
+- **Smart Sharpening**: Content-aware sharpening that enhances detail without artifacts
+- **Quality Metrics**: Real-time quality analysis and improvement suggestions
+
+### 🎵 Magic AI Timeline
+- **Beat Detection**: Automatically sync cuts to music beats
+- **Content-Aware Arrangement**: Intelligently reorder clips for optimal visual flow
+- **Pacing Optimization**: Analyze and improve edit pacing automatically
+- **Transition Suggestions**: AI recommends the best transitions between clips
+- **Arrangement Scoring**: Get a quality score for your timeline arrangement
+
+### 🤖 AI Workflow Automation
+- **Pattern Learning**: AI learns from your editing patterns and suggests automations
+- **Macro Generation**: Automatically create macros from repetitive tasks
+- **Workflow Optimization**: Get personalized suggestions to improve your editing efficiency
+- **Action Prediction**: AI predicts your next editing action based on context
+
+### 🎯 AI Project Assistant
+- **Contextual Help**: Get intelligent help based on your current editing action
+- **Project Health Monitoring**: Real-time analysis of your project's technical and creative quality
+- **Skill Level Adaptation**: AI adapts suggestions based on your experience level
+- **Learning Goals**: Personalized learning paths to improve your editing skills
+- **Platform Optimization**: Tailored suggestions for YouTube, TikTok, Instagram, and more
 
 ## Why?
 
@@ -18,10 +68,22 @@
 
 ## Features
 
-- Timeline-based editing
-- Multi-track support
-- Real-time preview
+### Core Editing Features
+- Timeline-based editing with multi-track support
+- Real-time preview with live effects
 - No watermarks or subscriptions
+- Privacy-focused (videos stay on your device)
+
+### 🧠 AI-Powered Features
+- **Smart Auto-Cut**: Intelligent audio-based cutting with one-click application
+- **AI Content Analysis**: Real-time scene, face, and audio analysis
+- **Neural Video Enhancement**: AI upscaling, denoising, and quality improvement
+- **Magic Timeline**: Beat detection and intelligent clip arrangement
+- **Workflow Automation**: Learn from editing patterns and automate repetitive tasks
+- **AI Project Assistant**: Contextual help and project optimization suggestions
+- **Real-Time Analysis**: Live video analysis with visual overlays and performance metrics
+
+### Analytics
 - Analytics provided by [Databuddy](https://www.databuddy.cc?utm_source=opencut), 100% Anonymized & Non-invasive.
 
 ## Project Structure
