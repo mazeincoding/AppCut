@@ -36,7 +36,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   isInitialized: false,
 
   createNewProject: async (name: string) => {
-    console.log("🚀 [PROJECT DEBUG] Creating new project:", name);
+    console.log("🚀 CREATE PROJECT START:", { name, timestamp: Date.now() });
     
     const newProject: TProject = {
       id: generateUUID(),
@@ -49,31 +49,33 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       blurIntensity: 8,
     };
 
-    console.log("🚀 [PROJECT DEBUG] Generated project:", newProject);
-
     try {
-      console.log("🚀 [PROJECT DEBUG] Saving project to storage...");
+      console.log("💾 STORAGE SAVE ATTEMPT:", {
+        projectId: newProject.id,
+        timestamp: Date.now()
+      });
       await storageService.saveProject(newProject);
-      console.log("🚀 [PROJECT DEBUG] Project saved successfully, reloading all projects...");
+      console.log("✅ STORAGE SAVE SUCCESS:", newProject.id);
       
       // Reload all projects to update the list
+      console.log("📥 LOAD ALL PROJECTS START");
       await get().loadAllProjects();
+      console.log("✅ LOAD ALL PROJECTS SUCCESS");
       
       // Only set activeProject AFTER storage operations complete successfully
-      console.log("🚀 [PROJECT DEBUG] Setting active project after successful storage...");
       set({ activeProject: newProject });
       
       // Validate state consistency before returning
       const currentState = get();
       if (!currentState.activeProject || currentState.activeProject.id !== newProject.id) {
-        console.error("🚀 [PROJECT DEBUG] State validation failed after project creation");
+        console.error("❌ STATE VALIDATION FAILED after project creation");
         throw new Error("Project state validation failed");
       }
       
-      console.log("🚀 [PROJECT DEBUG] Project creation completed, returning ID:", newProject.id);
+      console.log("✅ CREATE PROJECT SUCCESS:", newProject.id);
       return newProject.id;
     } catch (error) {
-      console.error("🚀 [PROJECT DEBUG] Failed to save project:", error);
+      console.error("❌ CREATE PROJECT FAILED:", error);
       toast.error("Failed to save new project");
       // Ensure activeProject is not set if creation failed
       set({ activeProject: null });
@@ -82,6 +84,8 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   },
 
   loadProject: async (id: string) => {
+    console.log('📥 LOAD PROJECT START:', id);
+    
     if (!get().isInitialized) {
       set({ isLoading: true });
     }
@@ -93,20 +97,25 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     timelineStore.clearTimeline();
 
     try {
+      console.log('💾 STORAGE LOAD ATTEMPT:', id);
       const project = await storageService.loadProject(id);
       if (project) {
+        console.log('✅ STORAGE LOAD SUCCESS:', id);
         set({ activeProject: project });
 
         // Load project-specific data in parallel
+        console.log('📥 LOADING PROJECT MEDIA AND TIMELINE:', id);
         await Promise.all([
           mediaStore.loadProjectMedia(id),
           timelineStore.loadProjectTimeline(id),
         ]);
+        console.log('✅ PROJECT MEDIA AND TIMELINE LOADED:', id);
       } else {
         throw new Error(`Project with id ${id} not found`);
       }
+      console.log('✅ LOAD PROJECT SUCCESS:', id);
     } catch (error) {
-      console.error("Failed to load project:", error);
+      console.error('❌ LOAD PROJECT FAILED:', { id, error });
       throw error; // Re-throw so the editor page can handle it
     } finally {
       set({ isLoading: false });

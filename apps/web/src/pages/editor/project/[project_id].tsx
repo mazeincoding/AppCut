@@ -1,5 +1,8 @@
 import { useEffect, Suspense } from "react";
 import { useRouter } from "next/router";
+
+// Debug render counter
+let renderCount = 0;
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -40,13 +43,72 @@ function EditorContent() {
 
   usePlaybackControls();
 
+  // Debug: Component mount/unmount tracking
   useEffect(() => {
+    renderCount++;
+    console.log('🔄 EDITOR MOUNT/UPDATE:', {
+      renderCount,
+      projectId,
+      activeProjectId: activeProject?.id,
+      timestamp: Date.now()
+    });
+    
+    return () => {
+      console.log('🔄 EDITOR CLEANUP:', {
+        renderCount,
+        projectId,
+        timestamp: Date.now()
+      });
+    };
+  }, []);
+
+  // Debug: Window error listener
+  useEffect(() => {
+    const handleError = (event) => {
+      console.log('🚨 WINDOW ERROR:', {
+        error: event.error?.message,
+        stack: event.error?.stack,
+        filename: event.filename,
+        lineno: event.lineno,
+        timestamp: Date.now()
+      });
+      if (window.electronDebug) {
+        window.electronDebug.logError(event.error);
+      }
+    };
+    
+    const handleUnhandledRejection = (event) => {
+      console.log('🚨 UNHANDLED PROMISE REJECTION:', {
+        reason: event.reason,
+        timestamp: Date.now()
+      });
+    };
+    
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
+  }, []);
+
+  useEffect(() => {
+    console.log('🎯 PROJECT INIT EFFECT:', {
+      projectId,
+      hasActiveProject: !!activeProject,
+      activeProjectId: activeProject?.id,
+      needsLoad: projectId && (!activeProject || activeProject.id !== projectId),
+      timestamp: Date.now()
+    });
     const initializeProject = async () => {
       if (projectId && (!activeProject || activeProject.id !== projectId)) {
+        console.log('🚀 STARTING PROJECT LOAD:', projectId);
         try {
           await loadProject(projectId);
+          console.log('✅ PROJECT LOAD SUCCESS:', projectId);
         } catch (error) {
-          console.error("Failed to load project:", error);
+          console.error("❌ FAILED TO LOAD PROJECT:", { projectId, error });
           
           // Check if it's a fallback project from localStorage
           const fallbackProject = localStorage.getItem('opencut-fallback-project');
@@ -54,25 +116,29 @@ function EditorContent() {
             try {
               const project = JSON.parse(fallbackProject);
               if (project.id === projectId) {
-                console.log('🚀 [EDITOR] Using fallback project from localStorage');
-                await createNewProject(project.name);
+                console.log('🔄 USING FALLBACK PROJECT:', project.name);
+                const newProjectId = await createNewProject(project.name);
                 localStorage.removeItem('opencut-fallback-project');
+                console.log('🔄 NAVIGATING TO FALLBACK PROJECT:', newProjectId);
+                router.replace(`/editor/project/${newProjectId}`);
                 return;
               }
             } catch (parseError) {
-              console.error('Error parsing fallback project:', parseError);
+              console.error('❌ ERROR PARSING FALLBACK PROJECT:', parseError);
             }
           }
           
-          // If no fallback, create a new project
-          console.log('🚀 [EDITOR] Creating new project as fallback');
-          await createNewProject("New Project");
+          // If no fallback, create a new project and navigate to it
+          console.log('🔄 CREATING NEW FALLBACK PROJECT');
+          const newProjectId = await createNewProject("New Project");
+          console.log('🔄 NAVIGATING TO NEW PROJECT:', newProjectId);
+          router.replace(`/editor/project/${newProjectId}`);
         }
       }
     };
 
     initializeProject();
-  }, [projectId, activeProject, loadProject, createNewProject]);
+  }, [projectId, activeProject, loadProject, createNewProject, router]);
 
   if (!activeProject) {
     return (

@@ -37,7 +37,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
   loadProjectData: (projectId) => ipcRenderer.invoke('load-project-data', projectId),
 });
 
+// PHASE 2.5: Set up debug utilities for React app
+contextBridge.exposeInMainWorld('electronDebug', {
+  logError: (error) => {
+    console.log('🚨 ELECTRON ERROR:', error);
+  },
+  logReload: () => {
+    console.log('🔄 ELECTRON RELOAD TRIGGERED');
+  }
+});
+
 console.log('✅ [ELECTRON] IPC bridge established');
+console.log('✅ [ELECTRON] Debug utilities exposed');
 
 // PHASE 3: Intercept <a> / Link clicks, rewrite to app:// paths
 try {

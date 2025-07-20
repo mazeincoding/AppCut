@@ -26,7 +26,13 @@ export class ElectronErrorBoundary extends Component<Props, State> {
 
   public static getDerivedStateFromError(error: Error): State {
     // Update state so the next render will show the fallback UI
-    console.error('🔥 [ERROR-BOUNDARY] React error caught:', error);
+    console.error('🔥 [ERROR-BOUNDARY] React error caught:', {
+      error: error.message,
+      stack: error.stack,
+      name: error.name,
+      timestamp: Date.now(),
+      location: typeof window !== 'undefined' ? window.location.href : 'unknown'
+    });
     return {
       hasError: true,
       error,
@@ -35,7 +41,14 @@ export class ElectronErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('🔥 [ERROR-BOUNDARY] React error details:', error, errorInfo);
+    console.error('🚨 ERROR BOUNDARY TRIGGERED:', {
+      error: error.message,
+      errorInfo: errorInfo,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+      timestamp: Date.now(),
+      location: typeof window !== 'undefined' ? window.location.href : 'unknown'
+    });
     
     // Store error info for display
     this.setState({
@@ -53,7 +66,10 @@ export class ElectronErrorBoundary extends Component<Props, State> {
   }
 
   private handleRetry = () => {
-    console.log('🔄 [ERROR-BOUNDARY] Retrying React render...');
+    console.log('🔄 ERROR BOUNDARY RECOVERY ATTEMPT:', {
+      action: 'retry',
+      timestamp: Date.now()
+    });
     this.setState({
       hasError: false,
       error: null,
@@ -62,7 +78,10 @@ export class ElectronErrorBoundary extends Component<Props, State> {
   };
 
   private handleReload = () => {
-    console.log('🔄 [ERROR-BOUNDARY] Reloading page...');
+    console.log('🔄 ERROR BOUNDARY RECOVERY ATTEMPT:', {
+      action: 'reload',
+      timestamp: Date.now()
+    });
     if (typeof window !== 'undefined') {
       window.location.reload();
     }
