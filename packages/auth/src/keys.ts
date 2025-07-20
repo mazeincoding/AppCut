@@ -4,10 +4,10 @@ import { z } from "zod";
 export const keys = () =>
   createEnv({
     server: {
-      BETTER_AUTH_SECRET: z.string(),
+      BETTER_AUTH_SECRET: z.base64(),
     },
     client: {
-      NEXT_PUBLIC_BETTER_AUTH_URL: z.string().url(),
+      NEXT_PUBLIC_BETTER_AUTH_URL: z.url(),
     },
     runtimeEnv: {
       NEXT_PUBLIC_BETTER_AUTH_URL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL,
