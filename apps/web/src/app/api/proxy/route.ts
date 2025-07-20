@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 const ALLOWED_HOSTS = [
     "media.tenor.com",
+    "tenor.googleapis.com",
+    "api.tenor.com",
 ]
 
 function makeMsgResponse(msg: string, status: number) { return new Response(msg, { status: status }) }
