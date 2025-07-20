@@ -9,6 +9,7 @@ import {
   SlidersHorizontalIcon,
   LucideIcon,
   TypeIcon,
+  FolderIcon,
 } from "lucide-react";
 import { create } from "zustand";
 
@@ -21,7 +22,8 @@ export type Tab =
   | "transitions"
   | "captions"
   | "filters"
-  | "adjustment";
+  | "adjustment"
+  | "project";
 
 export const tabs: { [key in Tab]: { icon: LucideIcon; label: string } } = {
   media: {
@@ -59,6 +61,10 @@ export const tabs: { [key in Tab]: { icon: LucideIcon; label: string } } = {
   adjustment: {
     icon: SlidersHorizontalIcon,
     label: "Adjustment",
+  },
+  project: {
+    icon: FolderIcon,
+    label: "Project",
   },
 };
 
