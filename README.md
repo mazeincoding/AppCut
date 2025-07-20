@@ -118,7 +118,7 @@ Before you begin, ensure you have the following installed on your system:
    ```
 
    **Generate BETTER_AUTH_SECRET:**
-
+    - **Format change**: Previously any string; now **must** be base64-encoded.
    ```bash
    # Unix/Linux/Mac
    openssl rand -base64 32
