@@ -10,8 +10,9 @@ try {
   window.fetch = function(input, init) {
     const url = typeof input === 'string' ? input : (input && input.url) || input.toString();
     
-    // Only block problematic file:// JSON requests
-    if (url && url.startsWith('file://') && url.includes('.json')) {
+    // Only block problematic file:// JSON requests, allow Next.js dev server files
+    if (url && url.startsWith('file://') && url.includes('.json') && 
+        !url.includes('_devMiddleware') && !url.includes('page-loader')) {
       console.log('🚫 [ELECTRON] Blocking file:// JSON request:', url);
       return Promise.reject(new Error('File protocol JSON requests not supported'));
     }
