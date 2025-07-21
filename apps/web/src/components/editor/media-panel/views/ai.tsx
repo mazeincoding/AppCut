@@ -476,6 +476,7 @@ export function AiView() {
         </div>
         {generationHistory.length > 0 && (
           <Button
+            type="button"
             size="sm"
             variant="text"
             onClick={() => setIsHistoryPanelOpen(true)}
@@ -555,6 +556,7 @@ export function AiView() {
                     className="w-full h-40 object-cover rounded-lg border"
                   />
                   <Button
+                    type="button"
                     size="sm"
                     variant="destructive"
                     className="absolute top-2 right-2"
@@ -653,7 +655,8 @@ export function AiView() {
             }}
           >
             <SelectTrigger 
-              id="model" 
+              id="model"
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 debugLogger.log('AIView', 'MODEL_TRIGGER_CLICK', { 
@@ -833,6 +836,7 @@ export function AiView() {
             {/* Action Buttons */}
             <div className="flex gap-2">
               <Button
+                type="button"
                 size="sm"
                 variant="outline"
                 onClick={() => {
@@ -847,6 +851,7 @@ export function AiView() {
                 Download
               </Button>
               <Button
+                type="button"
                 size="sm"
                 variant="text"
                 className="flex-1"
