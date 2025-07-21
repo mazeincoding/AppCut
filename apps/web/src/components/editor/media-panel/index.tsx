@@ -4,6 +4,7 @@ import { TabBar } from "./tabbar";
 import { MediaView } from "./views/media";
 import { useMediaPanelStore, Tab } from "./store";
 import { TextView } from "./views/text";
+import { AIView } from "./views/ai";
 
 export function MediaPanel() {
   const { activeTab } = useMediaPanelStore();
@@ -44,6 +45,7 @@ export function MediaPanel() {
         Adjustment view coming soon...
       </div>
     ),
+    ai: <AIView />,
   };
 
   return (

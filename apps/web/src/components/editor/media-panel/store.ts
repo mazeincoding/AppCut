@@ -21,7 +21,8 @@ export type Tab =
   | "transitions"
   | "captions"
   | "filters"
-  | "adjustment";
+  | "adjustment"
+  | "ai";
 
 export const tabs: { [key in Tab]: { icon: LucideIcon; label: string } } = {
   media: {
@@ -59,6 +60,10 @@ export const tabs: { [key in Tab]: { icon: LucideIcon; label: string } } = {
   adjustment: {
     icon: SlidersHorizontalIcon,
     label: "Adjustment",
+  },
+  ai: {
+    icon: SparklesIcon,
+    label: "AI Analyzer",
   },
 };
 

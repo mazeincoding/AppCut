@@ -18,6 +18,7 @@ import {
   Lock,
   LockOpen,
   Link,
+  Brain,
 } from "lucide-react";
 import {
   Tooltip,
@@ -56,6 +57,7 @@ import {
   TIMELINE_CONSTANTS,
   snapTimeToFrame,
 } from "@/constants/timeline-constants";
+import { smartAutoCut, applySmartCutsToTimeline } from "@/lib/smart-auto-cut";
 
 export function Timeline() {
   // Timeline shows all tracks (video, audio, effects) and their elements.
@@ -551,6 +553,72 @@ export function Timeline() {
     separateAudio(trackId, elementId);
   };
 
+  const handleSmartCut = async () => {
+    if (selectedElements.length === 0) {
+      toast.error("Select at least one media element to apply Smart Cut");
+      return;
+    }
+
+    const mediaElements = selectedElements.filter(({ trackId }) => {
+      const track = tracks.find((t) => t.id === trackId);
+      return track?.type === "media";
+    });
+
+    if (mediaElements.length === 0) {
+      toast.error("Select media elements to apply Smart Cut");
+      return;
+    }
+
+    toast.info("🧠 Analyzing audio for smart cuts...");
+    
+    try {
+      for (const { trackId, elementId } of mediaElements) {
+        const track = tracks.find((t) => t.id === trackId);
+        const element = track?.elements.find((e) => e.id === elementId);
+        
+        if (element && element.type === "media") {
+          // Find the corresponding media item
+          const mediaItem = mediaItems.find((item) => item.id === element.mediaId);
+          
+          if (mediaItem?.file) {
+            // Analyze the audio for smart cuts
+            const result = await smartAutoCut.analyzeAudio(
+              mediaItem.file,
+              (progress) => {
+                // Optional: Show progress
+                console.log(`Analysis progress: ${Math.round(progress * 100)}%`);
+              }
+            );
+            
+            // Apply the smart cuts to the timeline
+            const newElements = applySmartCutsToTimeline(
+              result,
+              element.mediaId,
+              element.duration
+            );
+            
+            if (newElements.length > 1) {
+              // Remove the original element
+              removeElementFromTrack(trackId, elementId);
+              
+              // Add the new cut elements
+              newElements.forEach((newElement) => {
+                addElementToTrack(trackId, newElement);
+              });
+              
+              toast.success(`✨ Applied ${newElements.length - 1} smart cuts! Estimated time saved: ${Math.round(result.summary.estimatedTimeReduction)}s`);
+            } else {
+              toast.info("No beneficial cuts found for this element");
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Smart Cut analysis failed:", error);
+      toast.error("Smart Cut analysis failed. Please try again.");
+    }
+  };
+
   const handleDeleteSelected = () => {
     if (selectedElements.length === 0) {
       toast.error("No elements selected");
@@ -764,6 +832,20 @@ export function Timeline() {
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Separate audio (Ctrl+D)</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="text"
+                  size="icon"
+                  onClick={handleSmartCut}
+                  className="relative"
+                >
+                  <Brain className="h-4 w-4 text-blue-400" />
+                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>🧠 AI Smart Cut - Intelligent audio-based cutting</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
