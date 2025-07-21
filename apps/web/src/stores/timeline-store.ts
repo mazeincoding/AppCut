@@ -22,6 +22,7 @@ import { generateUUID } from "@/lib/utils";
 import { TIMELINE_CONSTANTS } from "@/constants/timeline-constants";
 import { toast } from "sonner";
 import { checkElementOverlaps, resolveElementOverlaps } from "@/lib/timeline";
+import html2canvas from "html2canvas";
 
 // Helper function to manage element naming with suffixes
 const getElementNameWithSuffix = (
@@ -199,11 +200,17 @@ interface TimelineStore {
     duration: number,
     excludeElementId?: string
   ) => boolean;
+  findNextAvailableTime: (
+    trackId: string,
+    duration: number,
+    preferredStartTime?: number
+  ) => number;
   findOrCreateTrack: (trackType: TrackType) => string;
   addMediaAtTime: (item: MediaItem, currentTime?: number) => boolean;
   addTextAtTime: (item: TextElement, currentTime?: number) => boolean;
   addMediaToNewTrack: (item: MediaItem) => boolean;
   addTextToNewTrack: (item: TextElement | DragData) => boolean;
+  createFreezeFrame: () => Promise<void>;
 }
 
 export const useTimelineStore = create<TimelineStore>((set, get) => {
@@ -1315,6 +1322,41 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       return overlap;
     },
 
+    findNextAvailableTime: (trackId, duration, preferredStartTime = 0) => {
+      const track = get()._tracks.find((t) => t.id === trackId);
+      if (!track) return preferredStartTime;
+
+      // Sort elements by start time
+      const sortedElements = [...track.elements].sort((a, b) => a.startTime - b.startTime);
+
+      // Try the preferred start time first
+      let currentTime = preferredStartTime;
+      
+      // Check if we can place at preferred time
+      if (!get().checkElementOverlap(trackId, currentTime, duration)) {
+        return currentTime;
+      }
+
+      // If preferred time doesn't work, find the next available slot
+      currentTime = 0; // Start from beginning if preferred time doesn't work
+
+      for (const element of sortedElements) {
+        const elementEnd = element.startTime + 
+          (element.duration - element.trimStart - element.trimEnd);
+
+        // Check if there's space before this element
+        if (currentTime + duration <= element.startTime) {
+          return currentTime;
+        }
+
+        // Move current time to after this element
+        currentTime = elementEnd;
+      }
+
+      // If no gaps found, place at the end
+      return currentTime;
+    },
+
     findOrCreateTrack: (trackType) => {
       // Always create new text track to allow multiple text elements
       if (trackType === "text") {
@@ -1432,6 +1474,227 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
           "opacity" in item && item.opacity !== undefined ? item.opacity : 1,
       });
       return true;
+    },
+
+    createFreezeFrame: async () => {
+      try {
+        // Get reference to the preview panel
+        const previewElement = document.querySelector('[data-preview-panel]') as HTMLElement;
+        if (!previewElement) {
+          toast.error("Could not find preview panel to capture");
+          return;
+        }
+
+        // Get current time and tracks from state
+        const { _tracks } = get();
+        const playbackStore = require("./playback-store").usePlaybackStore.getState();
+        const currentTime = playbackStore.currentTime;
+
+        // Check if there are any elements at current time
+        const activeElements: Array<{ element: any; track: any }> = [];
+        _tracks.forEach((track) => {
+          track.elements.forEach((element) => {
+            const elementStart = element.startTime;
+            const elementEnd =
+              element.startTime +
+              (element.duration - element.trimStart - element.trimEnd);
+
+            if (currentTime >= elementStart && currentTime < elementEnd) {
+              activeElements.push({ element, track });
+            }
+          });
+        });
+
+        if (activeElements.length === 0) {
+          toast.error("No elements to freeze at current time");
+          return;
+        }
+
+        toast.loading("Capturing freeze frame...", { id: "freeze-frame" });
+
+        // Find the active video element in the preview panel
+        const videoElement = previewElement.querySelector('video') as HTMLVideoElement;
+        
+        let canvas: HTMLCanvasElement;
+        let ctx: CanvasRenderingContext2D;
+
+        if (videoElement && videoElement.videoWidth > 0 && videoElement.videoHeight > 0) {
+          // Capture directly from video element at native resolution
+          canvas = document.createElement('canvas');
+          canvas.width = videoElement.videoWidth;
+          canvas.height = videoElement.videoHeight;
+          ctx = canvas.getContext('2d')!;
+          
+          // Draw the current video frame at full quality
+          ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+        } else {
+          // Fallback to html2canvas for non-video elements (images, text, etc.)
+          const tempCanvas = await html2canvas(previewElement, {
+            backgroundColor: null,
+            scale: 2, // Higher scale for better quality
+            useCORS: true,
+            allowTaint: true,
+            logging: false,
+          });
+          canvas = tempCanvas;
+        }
+
+        // Convert canvas to blob with high quality
+        const blob = await new Promise<Blob>((resolve) => {
+          canvas.toBlob((blob) => {
+            if (blob) resolve(blob);
+          }, 'image/png', 1.0); // Maximum quality
+        });
+
+        if (!blob) {
+          toast.error("Failed to create freeze frame image", { id: "freeze-frame" });
+          return;
+        }
+
+        // Create a file from the blob
+        const timestamp = Date.now();
+        const fileName = `freeze_frame_${timestamp}.png`;
+        const file = new File([blob], fileName, { type: 'image/png' });
+
+        // Add to media store
+        const mediaStore = useMediaStore.getState();
+        const projectStore = useProjectStore.getState();
+        
+        if (!projectStore.activeProject) {
+          toast.error("No active project", { id: "freeze-frame" });
+          return;
+        }
+
+        // Get image dimensions from canvas
+        const width = canvas.width;
+        const height = canvas.height;
+
+        // Add to media store and get the created item directly
+        const newMediaItem = await mediaStore.addMediaItem(projectStore.activeProject.id, {
+          name: fileName,
+          type: "image" as const,
+          file: file,
+          url: URL.createObjectURL(file),
+          width,
+          height,
+        });
+
+        // Find the element that's currently active at the playhead
+        let targetElement = null;
+        let targetTrackId = null;
+        
+        for (const track of _tracks) {
+          for (const element of track.elements) {
+            const elementStart = element.startTime;
+            const elementEnd = element.startTime + (element.duration - element.trimStart - element.trimEnd);
+            
+            if (currentTime >= elementStart && currentTime < elementEnd) {
+              targetElement = element;
+              targetTrackId = track.id;
+              break;
+            }
+          }
+          if (targetElement) break;
+        }
+
+        const freezeFrameDuration = 5; // 5 seconds as specified
+
+        if (targetElement && targetTrackId) {
+          // We're in the middle of an element - split it and insert freeze frame
+          get().pushHistory();
+
+          const elementStart = targetElement.startTime;
+          const elementEnd = targetElement.startTime + (targetElement.duration - targetElement.trimStart - targetElement.trimEnd);
+          const splitTime = currentTime;
+
+          // Calculate durations for the split parts
+          const leftElementDuration = splitTime - elementStart;
+          const rightElementDuration = elementEnd - splitTime;
+          
+          // Calculate how far into the original media we are at the split point
+          const mediaTimeAtSplit = targetElement.trimStart + leftElementDuration;
+          
+          // Create left part (before freeze frame)
+          const leftElement = {
+            ...targetElement,
+            id: generateUUID(),
+            startTime: elementStart,
+            duration: targetElement.duration, // Keep original duration
+            trimStart: targetElement.trimStart, // Keep original trim start
+            trimEnd: targetElement.duration - mediaTimeAtSplit, // Trim from split point to end
+          };
+
+          // Create right part (after freeze frame)  
+          const rightElement = {
+            ...targetElement,
+            id: generateUUID(),
+            startTime: splitTime + freezeFrameDuration,
+            duration: targetElement.duration, // Keep original duration
+            trimStart: mediaTimeAtSplit, // Start from split point in media
+            trimEnd: targetElement.trimEnd, // Keep original trim end
+          };
+
+          // Update the track: remove original, add left part, freeze frame, and right part
+          const updatedTracks = _tracks.map(track => {
+            if (track.id === targetTrackId) {
+              const elementsWithoutOriginal = track.elements.filter(el => el.id !== targetElement.id);
+              
+              const newElements = [...elementsWithoutOriginal];
+              
+              // Add left part if it has meaningful duration
+              if (leftElementDuration > 0.1) {
+                newElements.push(leftElement);
+              }
+              
+              // Add freeze frame
+              newElements.push({
+                type: "media",
+                id: generateUUID(),
+                mediaId: newMediaItem.id,
+                name: `Freeze Frame`,
+                duration: freezeFrameDuration,
+                startTime: splitTime,
+                trimStart: 0,
+                trimEnd: 0,
+              });
+              
+              // Add right part if it has meaningful duration
+              if (rightElementDuration > 0.1) {
+                newElements.push(rightElement);
+              }
+
+              return { ...track, elements: newElements };
+            }
+            return track;
+          });
+
+          updateTracksAndSave(updatedTracks);
+          toast.success("Freeze frame inserted and video split!", { id: "freeze-frame" });
+        } else {
+          // No element at current time - use the original placement logic
+          const targetTrackId = get().findOrCreateTrack("media");
+          const bestStartTime = get().findNextAvailableTime(targetTrackId, freezeFrameDuration, currentTime);
+
+          get().addElementToTrack(targetTrackId, {
+            type: "media",
+            mediaId: newMediaItem.id,
+            name: `Freeze Frame`,
+            duration: freezeFrameDuration,
+            startTime: bestStartTime,
+            trimStart: 0,
+            trimEnd: 0,
+          });
+
+          if (bestStartTime !== currentTime) {
+            toast.success(`Freeze frame created at ${bestStartTime.toFixed(1)}s (next available slot)`, { id: "freeze-frame" });
+          } else {
+            toast.success("Freeze frame created successfully!", { id: "freeze-frame" });
+          }
+        }
+      } catch (error) {
+        console.error("Error creating freeze frame:", error);
+        toast.error("Failed to create freeze frame", { id: "freeze-frame" });
+      }
     },
   };
 });

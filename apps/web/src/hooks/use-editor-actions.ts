@@ -158,4 +158,9 @@ export function useEditorActions() {
   useActionHandler("redo", () => {
     redo();
   });
+
+  useActionHandler("freeze-frame", () => {
+    const timelineStore = useTimelineStore.getState();
+    timelineStore.createFreezeFrame();
+  });
 }

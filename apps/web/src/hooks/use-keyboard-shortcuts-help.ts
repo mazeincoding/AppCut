@@ -60,6 +60,7 @@ const actionDescriptions: Record<
     category: "Selection",
   },
   "toggle-snapping": { description: "Toggle snapping", category: "Editing" },
+  "freeze-frame": { description: "Create freeze frame", category: "Editing" },
   undo: { description: "Undo", category: "History" },
   redo: { description: "Redo", category: "History" },
 };

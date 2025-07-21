@@ -27,6 +27,7 @@ export const defaultKeybindings: KeybindingConfig = {
   "ctrl+y": "redo",
   delete: "delete-selected",
   backspace: "delete-selected",
+  f: "freeze-frame",
 };
 
 export interface KeybindingConflict {
