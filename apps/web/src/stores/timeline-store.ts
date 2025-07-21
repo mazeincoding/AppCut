@@ -206,40 +206,6 @@ interface TimelineStore {
   addTextToNewTrack: (item: TextElement | DragData) => boolean;
 }
 
-// Helper to find the first available non-overlapping slot for a given type and duration (skip main for video)
-const findAvailableSlotForMedia = (tracks: TimelineTrack[], type: TrackType, duration: number, desiredStart: number = 0) => {
-  // For video, skip main track
-  const filteredTracks = tracks.filter(t => t.type === type && (type !== "media" || !t.isMain));
-  for (const track of filteredTracks) {
-    let slot = desiredStart;
-    let found = false;
-    while (slot < 60 * 60 * 24) { // 24 hours max
-      const slotEnd = slot + duration;
-      const overlap = track.elements.some(el => {
-        const elStart = el.startTime;
-        const elEnd = el.startTime + (el.duration - el.trimStart - el.trimEnd);
-        return (slot < elEnd && slotEnd > elStart);
-      });
-      if (!overlap) {
-        found = true;
-        break;
-      }
-      // Move slot to the end of the next element
-      const nextElement = track.elements.find(el => el.startTime + (el.duration - el.trimStart - el.trimEnd) > slot);
-      if (nextElement) {
-        slot = nextElement.startTime + (nextElement.duration - nextElement.trimStart - nextElement.trimEnd);
-      } else {
-        found = true;
-        break;
-      }
-    }
-    if (found) {
-      return { trackId: track.id, startTime: slot };
-    }
-  }
-  return null;
-};
-
 export const useTimelineStore = create<TimelineStore>((set, get) => {
   // Helper to update tracks and maintain ordering
   const updateTracks = (newTracks: TimelineTrack[]) => {
@@ -352,15 +318,18 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       get().pushHistory();
       let trackName: string = type;
       let trackType: TrackType = type;
+      let isMain = false;
       if (type === "media") {
         // If there is no main track, this will be handled by ensureMainTrack
         const mainExists = get()._tracks.some(t => t.type === "media" && t.isMain);
         if (!mainExists) {
           trackName = "Main Track";
           trackType = "media";
+          isMain = true;
         } else {
           trackName = "media";
           trackType = "media";
+          isMain = false;
         }
       }
       const newTrack: TimelineTrack = {
@@ -369,6 +338,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
         type: trackType,
         elements: [],
         muted: false,
+        ...(type === "media" ? { isMain } : {}),
       };
       updateTracksAndSave([...get()._tracks, newTrack]);
       return newTrack.id;
@@ -378,14 +348,17 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       get().pushHistory();
       let trackName: string = type;
       let trackType: TrackType = type;
+      let isMain = false;
       if (type === "media") {
         const mainExists = get()._tracks.some(t => t.type === "media" && t.isMain);
         if (!mainExists) {
           trackName = "Main Track";
           trackType = "media";
+          isMain = true;
         } else {
           trackName = "media";
           trackType = "media";
+          isMain = false;
         }
       }
       const newTrack: TimelineTrack = {
@@ -394,6 +367,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
         type: trackType,
         elements: [],
         muted: false,
+        ...(type === "media" ? { isMain } : {}),
       };
       const newTracks = [...get()._tracks];
       newTracks.splice(index, 0, newTrack);
