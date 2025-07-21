@@ -204,8 +204,8 @@ function EditorContent() {
   return (
     <div className="flex flex-col h-screen">
       <EditorHeader />
-      <div className="flex-1 overflow-hidden">
-        <ResizablePanelGroup direction="horizontal" className="w-full h-full">
+      <div className="flex-1 overflow-hidden p-2">
+        <ResizablePanelGroup direction="horizontal" className="w-full h-full gap-2">
           <ResizablePanel 
             defaultSize={toolsPanel} 
             minSize={15} 
