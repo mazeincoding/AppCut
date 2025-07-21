@@ -17,6 +17,8 @@ import { usePanelStore } from "@/stores/panel-store";
 import { useProjectStore } from "@/stores/project-store";
 import { EditorProvider } from "@/components/editor-provider";
 import { usePlaybackControls } from "@/hooks/use-playback-controls";
+import { ExportDialog } from "@/components/export-dialog";
+import { useExportStore } from "@/stores/export-store";
 
 function EditorContent() {
   const {
@@ -33,6 +35,7 @@ function EditorContent() {
   } = usePanelStore();
 
   const { activeProject, loadProject, createNewProject } = useProjectStore();
+  const { isDialogOpen } = useExportStore();
   const router = useRouter();
   
   // Stabilize function references to prevent useEffect loops
@@ -230,7 +233,7 @@ function EditorContent() {
               maxSize={35}
               onResize={(size) => setPropertiesPanel(size)}
             >
-              <PropertiesPanel />
+              {isDialogOpen ? <ExportDialog /> : <PropertiesPanel />}
             </ResizablePanel>
           </ResizablePanelGroup>
         </div>

@@ -19,12 +19,11 @@ import { ExportEngine } from "@/lib/export-engine";
 import { memoryMonitor, getMemoryRecommendation, estimateVideoMemoryUsage } from "@/lib/memory-monitor";
 
 interface ExportDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  // No props needed - uses global state
 }
 
-export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
-  const { settings, progress, updateSettings, updateProgress, resetExport } = useExportStore();
+export function ExportDialog(): JSX.Element {
+  const { settings, progress, updateSettings, updateProgress, resetExport, isDialogOpen, setDialogOpen } = useExportStore();
   const { tracks, getTotalDuration } = useTimelineStore();
   const { activeProject } = useProjectStore();
   const { mediaItems } = useMediaStore();
@@ -154,7 +153,7 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
       ExportEngine.createDownloadLink(videoBlob, fullFilename);
       
       updateProgress({ isExporting: false, progress: 100, status: "Export complete!" });
-      setTimeout(() => onOpenChange(false), 1000);
+      setTimeout(() => setDialogOpen(false), 1000);
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
@@ -164,24 +163,18 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
 
   const handleCancel = () => {
     if (!isExporting) {
-      onOpenChange(false);
+      setDialogOpen(false);
     }
   };
 
-  const handleOpenChange = (newOpen: boolean) => {
-    if (!newOpen && isExporting) {
-      return;
+  const handleClose = () => {
+    if (!isExporting) {
+      setDialogOpen(false);
     }
-    onOpenChange(newOpen);
   };
-
-  // Panel classes
-  const panelClasses = `fixed top-0 right-0 h-full w-96 bg-background border-l border-border shadow-lg transform transition-transform duration-300 ease-in-out z-50 ${
-    open ? 'translate-x-0' : 'translate-x-full'
-  }`;
 
   return (
-    <div className={panelClasses}>
+    <div className="h-full bg-background border-l border-border rounded-sm">
       <div className="flex flex-col h-full">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
@@ -192,7 +185,7 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => handleOpenChange(false)}
+            onClick={handleClose}
             className="h-8 w-8"
           >
             <X className="h-4 w-4" />
