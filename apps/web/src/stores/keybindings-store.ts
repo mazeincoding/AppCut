@@ -12,6 +12,7 @@ export const defaultKeybindings: KeybindingConfig = {
   j: "seek-backward",
   k: "toggle-play",
   l: "seek-forward",
+  m: "toggle-mute",
   left: "frame-step-backward",
   right: "frame-step-forward",
   "shift+left": "jump-backward",

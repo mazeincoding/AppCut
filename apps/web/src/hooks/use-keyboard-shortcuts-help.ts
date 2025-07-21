@@ -20,6 +20,7 @@ const actionDescriptions: Record<
 > = {
   "toggle-play": { description: "Play/Pause", category: "Playback" },
   "stop-playback": { description: "Stop playback", category: "Playback" },
+  "toggle-mute": { description: "Mute/Unmute", category: "Playback" },
   "seek-forward": {
     description: "Seek forward 1 second",
     category: "Playback",

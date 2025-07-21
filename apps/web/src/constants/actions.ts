@@ -31,6 +31,7 @@ const actionEmitter = new ActionEmitter();
 export type Action =
   | "toggle-play" // Toggle play/pause state
   | "stop-playback" // Stop playback
+  | "toggle-mute" // Toggle mute/unmute state
   | "seek-forward" // Seek forward in playback
   | "seek-backward" // Seek backward in playback
   | "frame-step-forward" // Step forward by one frame
