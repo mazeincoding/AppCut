@@ -1028,7 +1028,7 @@ export function Timeline() {
               containerRef={tracksContainerRef}
               isActive={selectionBox?.isActive || false}
             />
-            <ScrollArea className="w-full h-full" ref={tracksScrollRef} type="scroll">
+            <ScrollArea className="w-full h-full" ref={tracksScrollRef}>
               <div
                 className="relative flex-1"
                 style={{
