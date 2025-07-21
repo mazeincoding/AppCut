@@ -1608,10 +1608,10 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
           get().pushHistory();
 
           const elementStart = targetElement.startTime;
+          const elementEnd = targetElement.startTime + (targetElement.duration - targetElement.trimStart - targetElement.trimEnd);
           const splitTime = currentTime;
 
           // Calculate durations for the split parts  
-          const elementEnd = targetElement.startTime + (targetElement.duration - targetElement.trimStart - targetElement.trimEnd);
           const leftElementDuration = splitTime - elementStart;
           const rightElementDuration = elementEnd - splitTime;
           
