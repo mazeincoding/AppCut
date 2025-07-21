@@ -159,8 +159,14 @@ export function useEditorActions() {
     redo();
   });
 
-  useActionHandler("freeze-frame", () => {
+  useActionHandler("freeze-frame", async () => {
     const timelineStore = useTimelineStore.getState();
-    timelineStore.createFreezeFrame();
+    try {
+      await timelineStore.createFreezeFrame();
+      toast.success("Freeze frame created successfully!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to create freeze frame");
+    }
   });
 }

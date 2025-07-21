@@ -881,7 +881,13 @@ export function Timeline() {
           {/* Timeline Ruler */}
           <div
             className="flex-1 relative overflow-hidden h-4"
-            onWheel={handleWheel}
+            onWheel={(e) => {
+              // Check if this is horizontal scrolling - if so, don't handle it here
+              if (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+                return; // Let ScrollArea handle horizontal scrolling
+              }
+              handleWheel(e);
+            }}
             onMouseDown={handleSelectionMouseDown}
             onClick={handleTimelineContentClick}
             data-ruler-area
@@ -1002,7 +1008,13 @@ export function Timeline() {
           {/* Timeline Tracks Content */}
           <div
             className="flex-1 relative overflow-hidden"
-            onWheel={handleWheel}
+            onWheel={(e) => {
+              // Check if this is horizontal scrolling - if so, don't handle it here
+              if (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+                return; // Let ScrollArea handle horizontal scrolling
+              }
+              handleWheel(e);
+            }}
             onMouseDown={(e) => {
               handleTimelineMouseDown(e);
               handleSelectionMouseDown(e);
@@ -1016,7 +1028,7 @@ export function Timeline() {
               containerRef={tracksContainerRef}
               isActive={selectionBox?.isActive || false}
             />
-            <ScrollArea className="w-full h-full" ref={tracksScrollRef}>
+            <ScrollArea className="w-full h-full" ref={tracksScrollRef} type="scroll">
               <div
                 className="relative flex-1"
                 style={{

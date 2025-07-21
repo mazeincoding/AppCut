@@ -23,6 +23,7 @@ import { TIMELINE_CONSTANTS } from "@/constants/timeline-constants";
 import { toast } from "sonner";
 import { checkElementOverlaps, resolveElementOverlaps } from "@/lib/timeline";
 import html2canvas from "html2canvas";
+import { usePlaybackStore } from "./playback-store";
 
 // Helper function to manage element naming with suffixes
 const getElementNameWithSuffix = (
@@ -1487,8 +1488,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
 
         // Get current time and tracks from state
         const { _tracks } = get();
-        const playbackStore = require("./playback-store").usePlaybackStore.getState();
-        const currentTime = playbackStore.currentTime;
+        const currentTime = usePlaybackStore.getState().currentTime;
 
         // Check if there are any elements at current time
         const activeElements: Array<{ element: any; track: any }> = [];
@@ -1570,14 +1570,19 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
         const height = canvas.height;
 
         // Add to media store and get the created item directly
+        const tempUrl = URL.createObjectURL(file);
+
         const newMediaItem = await mediaStore.addMediaItem(projectStore.activeProject.id, {
           name: fileName,
           type: "image" as const,
           file: file,
-          url: URL.createObjectURL(file),
+          url: tempUrl,
           width,
           height,
         });
+
+        // Revoke the temporary object URL as the media store now manages its own
+        URL.revokeObjectURL(tempUrl);
 
         // Find the element that's currently active at the playhead
         let targetElement = null;
