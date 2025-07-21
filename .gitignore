@@ -17,6 +17,20 @@
 /apps/web/.env*
 !/apps/web/.env.example
 
+# Environment variables - comprehensive coverage
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.staging
+**/.env
+**/.env.local
+**/.env.development
+**/.env.test
+**/.env.production
+**/.env.staging
+
 # typescript
 /apps/web/next-env.d.ts
 /apps/web/yarn.lock
