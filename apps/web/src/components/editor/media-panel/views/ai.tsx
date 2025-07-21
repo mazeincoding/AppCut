@@ -74,60 +74,11 @@ export function AiView() {
     currentProjectId: activeProject?.id,
     isFallbackProject,
     currentUrl: window.location.href,
-    renderCount: Math.random()
+    renderCount: Math.random(),
+    codeVersion: '2025-07-21-12:45-SIMPLIFIED'
   });
 
-  // Window/Document Event Monitoring
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      debugLogger.log('Window', 'BEFORE_UNLOAD', {
-        currentUrl: window.location.href,
-        activeTab,
-        selectedModel,
-        projectId: activeProject?.id,
-        hasSelectedImage: !!selectedImage
-      });
-    };
-    
-    const handleFocus = () => {
-      debugLogger.log('Window', 'FOCUS_CHANGE', {
-        focused: true,
-        currentUrl: window.location.href,
-        activeTab,
-        selectedModel
-      });
-    };
-    
-    const handleBlur = () => {
-      debugLogger.log('Window', 'FOCUS_CHANGE', {
-        focused: false,
-        currentUrl: window.location.href,
-        activeTab,
-        selectedModel
-      });
-    };
-
-    const handleVisibilityChange = () => {
-      debugLogger.log('Window', 'VISIBILITY_CHANGE', {
-        visible: !document.hidden,
-        visibilityState: document.visibilityState,
-        activeTab,
-        selectedModel
-      });
-    };
-    
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('blur', handleBlur);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('blur', handleBlur);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [activeTab, selectedModel, activeProject?.id, selectedImage]);
+  // Temporarily disabled all window/document event monitoring for debugging
   
   // Progress tracking
   const [generationProgress, setGenerationProgress] = useState<number>(0);
@@ -612,65 +563,11 @@ export function AiView() {
           <Select 
             key={`model-select-${activeTab}`}
             value={selectedModel}
-            onValueChange={(value) => {
-              debugLogger.log('AIView', 'MODEL_SELECTION_START', { 
-                selectedModel: value, 
-                previousModel: selectedModel,
-                activeTab,
-                currentProjectId: activeProject?.id,
-                currentUrl: window.location.href
-              });
-              
-              // Prevent any default behaviors
-              if (window.event) {
-                window.event.preventDefault?.();
-                window.event.stopPropagation?.();
-              }
-              
-              setSelectedModel(value);
-              debugLogger.log('AIView', 'MODEL_SELECTION_COMPLETE', { 
-                newModel: value,
-                currentProjectId: activeProject?.id 
-              });
-            }}
-            onOpenChange={(open) => {
-              debugLogger.log('AIView', 'MODEL_DROPDOWN_TOGGLE', { 
-                isOpen: open, 
-                activeTab, 
-                selectedModel,
-                currentProjectId: activeProject?.id
-              });
-              
-              // If opening the dropdown, check for potential navigation triggers
-              if (open) {
-                debugLogger.log('AIView', 'DROPDOWN_OPENING_DEBUG', {
-                  windowLocation: window.location.href,
-                  activeProject: activeProject?.id,
-                  documentState: document.readyState,
-                  hasUnloadListeners: 'onbeforeunload' in window
-                });
-                
-                // Add a small delay to see if navigation happens immediately
-                setTimeout(() => {
-                  debugLogger.log('AIView', 'DROPDOWN_OPENED_CHECK', {
-                    stillOnSamePage: window.location.href.includes(activeProject?.id || ''),
-                    currentUrl: window.location.href
-                  });
-                }, 50);
-              }
-            }}
+            onValueChange={setSelectedModel}
           >
             <SelectTrigger 
               id="model"
               type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                debugLogger.log('AIView', 'MODEL_TRIGGER_CLICK', { 
-                  activeTab, 
-                  selectedModel,
-                  currentProjectId: activeProject?.id
-                });
-              }}
             >
               <SelectValue placeholder="Select AI model" />
             </SelectTrigger>
@@ -679,13 +576,6 @@ export function AiView() {
                 <SelectItem 
                   key={model.id} 
                   value={model.id}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    debugLogger.log('AIView', 'MODEL_ITEM_CLICK', { 
-                      modelId: model.id, 
-                      modelName: model.name
-                    });
-                  }}
                 >
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2">

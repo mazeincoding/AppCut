@@ -27,6 +27,7 @@ class DebugLogger {
   }
 
   private loadLogs() {
+    if (typeof window === 'undefined') return; // Skip in SSR
     try {
       const stored = localStorage.getItem(this.storageKey);
       if (stored) {
@@ -38,6 +39,7 @@ class DebugLogger {
   }
 
   private saveLogs() {
+    if (typeof window === 'undefined') return; // Skip in SSR
     try {
       // Keep only last N logs to prevent storage overflow
       if (this.logs.length > this.maxLogs) {
@@ -66,7 +68,9 @@ class DebugLogger {
 
   clearLogs() {
     this.logs = [];
-    localStorage.removeItem(this.storageKey);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(this.storageKey);
+    }
   }
 
   getLogs(): LogEntry[] {
@@ -126,5 +130,5 @@ export const debugLogger = DebugLogger.getInstance();
 // Add window export for easy access in console
 if (typeof window !== 'undefined') {
   (window as any).debugLogger = debugLogger;
-  console.log('✅ Debug logger attached to window.debugLogger');
+  console.log('🔥 DebugLogger v13:15');
 }
