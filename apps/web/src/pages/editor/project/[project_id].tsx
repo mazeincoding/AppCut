@@ -208,8 +208,8 @@ function EditorContent() {
     <div className="flex flex-col h-screen">
       <EditorHeader />
       <div className="flex-1 overflow-hidden flex flex-col">
-        <div className="flex-1 p-2">
-          <ResizablePanelGroup direction="horizontal" className="w-full h-full gap-4">
+        <div className="flex-1 p-4">
+          <ResizablePanelGroup direction="horizontal" className="w-full h-full gap-6">
             <ResizablePanel 
               defaultSize={toolsPanel} 
               minSize={15} 
@@ -243,7 +243,7 @@ function EditorContent() {
             </ResizablePanel>
           </ResizablePanelGroup>
         </div>
-        <div className="p-2 pt-0">
+        <div className="p-4 pt-2">
           <div className="border-4 border-border rounded-xl overflow-hidden">
             <Timeline />
           </div>

@@ -32,7 +32,7 @@ export function PropertiesPanel() {
   };
 
   const emptyView = (
-    <div className="space-y-4 p-6 pt-8">
+    <div className="space-y-6 p-6 pt-8">
       {/* Media Properties */}
       <div className="flex flex-col gap-3">
         <PropertyItem label="Name:" value={activeProject?.name || ""} />

@@ -341,7 +341,7 @@ export function PreviewPanel() {
     <div className="h-full w-full flex flex-col min-h-0 min-w-0 bg-panel rounded-xl">
       <div
         ref={containerRef}
-        className="flex-1 flex flex-col items-center justify-center p-3 min-h-0 min-w-0"
+        className="flex-1 flex flex-col items-center justify-center p-6 min-h-0 min-w-0"
         style={{
           backgroundColor: "transparent",
           backgroundImage: "none",

@@ -63,38 +63,28 @@ export function TabBar() {
   }, []);
 
   return (
-    <div className="flex border-timeline rounded-sm mb-1">
-      <ScrollButton
-        direction="left"
-        onClick={scrollToStart}
-        isVisible={!isAtStart}
-      />
+    <div className="border-timeline rounded-sm mb-8 mt-4">
       <div
         ref={scrollContainerRef}
-        className="h-12 bg-panel-accent px-8 flex justify-start items-center gap-16 overflow-x-auto scrollbar-x-hidden relative"
+        className="h-18 bg-panel-accent px-6 py-2 flex justify-start items-center gap-12 overflow-x-auto scrollbar-x-hidden relative"
       >
         {(Object.keys(tabs) as Tab[]).map((tabKey) => {
           const tab = tabs[tabKey];
           return (
             <div
               className={cn(
-                "flex flex-col gap-1 items-center cursor-pointer px-1.5 py-1.5 mx-2 rounded-md transition-colors hover:bg-white/10 flex-shrink-0 min-w-[48px]",
+                "flex flex-col gap-2 items-center cursor-pointer px-3 py-2 mx-1 rounded-lg transition-colors hover:bg-white/10 flex-shrink-0 min-w-[52px]",
                 activeTab === tabKey ? "text-primary bg-primary/10" : "text-muted-foreground bg-white/5"
               )}
               onClick={() => setActiveTab(tabKey)}
               key={tabKey}
             >
-              <tab.icon className="!size-[1.1rem]" />
-              <span className="text-[0.65rem] tracking-wide">{tab.label}</span>
+              <tab.icon className="!size-[1.3rem]" />
+              <span className="text-[0.65rem] tracking-wide mt-1 leading-none">{tab.label}<br /><span className="text-[0.2rem] leading-none">&nbsp;</span></span>
             </div>
           );
         })}
       </div>
-      <ScrollButton
-        direction="right"
-        onClick={scrollToEnd}
-        isVisible={!isAtEnd}
-      />
     </div>
   );
 }
