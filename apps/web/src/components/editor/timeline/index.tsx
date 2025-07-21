@@ -1,7 +1,7 @@
 "use client";
 
-import { ScrollArea } from "../ui/scroll-area";
-import { Button } from "../ui/button";
+import { ScrollArea } from "../../ui/scroll-area";
+import { Button } from "../../ui/button";
 import {
   Scissors,
   ArrowLeftToLine,
@@ -24,13 +24,13 @@ import {
   TooltipContent,
   TooltipTrigger,
   TooltipProvider,
-} from "../ui/tooltip";
+} from "../../ui/tooltip";
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
-} from "../ui/context-menu";
+} from "../../ui/context-menu";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { useMediaStore } from "@/stores/media-store";
 import { usePlaybackStore } from "@/stores/playback-store";
@@ -44,9 +44,9 @@ import {
   TimelinePlayhead,
   useTimelinePlayheadRuler,
 } from "./timeline-playhead";
-import { SelectionBox } from "./selection-box";
+import { SelectionBox } from "../selection-box";
 import { useSelectionBox } from "@/hooks/use-selection-box";
-import { SnapIndicator } from "./snap-indicator";
+import { SnapIndicator } from "../snap-indicator";
 import { SnapPoint } from "@/hooks/use-timeline-snapping";
 import type { DragData, TimelineTrack } from "@/types/timeline";
 import {
@@ -433,7 +433,6 @@ export function Timeline() {
   // Action handlers for toolbar
   const handleSplitSelected = () => {
     if (selectedElements.length === 0) {
-      toast.error("No elements selected");
       return;
     }
     let splitCount = 0;
@@ -459,7 +458,6 @@ export function Timeline() {
 
   const handleDuplicateSelected = () => {
     if (selectedElements.length === 0) {
-      toast.error("No elements selected");
       return;
     }
     const canDuplicate = selectedElements.length === 1;
@@ -553,7 +551,6 @@ export function Timeline() {
 
   const handleDeleteSelected = () => {
     if (selectedElements.length === 0) {
-      toast.error("No elements selected");
       return;
     }
     selectedElements.forEach(({ trackId, elementId }) => {

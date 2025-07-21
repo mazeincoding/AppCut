@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "../ui/button";
+import { Button } from "../../ui/button";
 import {
   MoreVertical,
   Scissors,
@@ -17,7 +17,7 @@ import {
 import { useMediaStore } from "@/stores/media-store";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { usePlaybackStore } from "@/stores/playback-store";
-import AudioWaveform from "./audio-waveform";
+import AudioWaveform from "../audio-waveform";
 import { toast } from "sonner";
 import { TimelineElementProps, TrackType } from "@/types/timeline";
 import { useTimelineElementResize } from "@/hooks/use-timeline-element-resize";
@@ -35,14 +35,14 @@ import {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-} from "../ui/dropdown-menu";
+} from "../../ui/dropdown-menu";
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
   ContextMenuTrigger,
-} from "../ui/context-menu";
+} from "../../ui/context-menu";
 
 export function TimelineElement({
   element,

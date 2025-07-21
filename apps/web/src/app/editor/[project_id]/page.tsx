@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ResizablePanelGroup,
@@ -37,7 +37,6 @@ export default function Editor() {
   const router = useRouter();
   const projectId = params.project_id as string;
   const handledProjectIds = useRef<Set<string>>(new Set());
-  const [isOnboardingOpen, setIsOnboardingOpen] = useState(true);
 
   usePlaybackControls();
 
@@ -139,6 +138,7 @@ export default function Editor() {
             </ResizablePanel>
           </ResizablePanelGroup>
         </div>
+        <Onboarding />
       </div>
     </EditorProvider>
   );
