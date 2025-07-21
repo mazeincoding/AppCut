@@ -120,7 +120,7 @@ export function TimelineElement({
     isBeingDragged && dragState.isDragging
       ? dragState.currentTime
       : element.startTime;
-  const elementLeft = elementStartTime * 50 * zoomLevel;
+  const elementLeft = elementStartTime * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel;
 
   const handleDeleteElement = () => {
     removeElementFromTrack(track.id, element.id);

@@ -416,7 +416,7 @@ export function AiView() {
                 className="min-h-[80px] resize-none"
               />
               <div className="flex justify-between items-center">
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[0.65rem] text-muted-foreground">
                   Be specific about scenes, actions, and style
                 </p>
                 <span className={`text-xs ${remainingChars < 50 ? 'text-destructive' : 'text-muted-foreground'}`}>

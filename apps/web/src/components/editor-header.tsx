@@ -51,8 +51,8 @@ export function EditorHeader() {
         className="h-7 text-xs bg-blue-600 hover:bg-blue-700 text-white"
         onClick={handleExport}
       >
-        <Download className="h-4 w-4 mr-1" />
-        <span className="text-sm">Export</span>
+        <Download className="h-3 w-3 mr-1 align-text-bottom" />
+        Export
       </Button>
     </nav>
   );

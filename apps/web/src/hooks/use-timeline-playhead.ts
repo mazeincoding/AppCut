@@ -1,4 +1,4 @@
-import { snapTimeToFrame } from "@/constants/timeline-constants";
+import { snapTimeToFrame, TIMELINE_CONSTANTS } from "@/constants/timeline-constants";
 import { useProjectStore } from "@/stores/project-store";
 import { useState, useEffect, useCallback } from "react";
 
@@ -71,7 +71,7 @@ export function useTimelinePlayhead({
       if (!ruler) return;
       const rect = ruler.getBoundingClientRect();
       const x = e.clientX - rect.left;
-      const rawTime = Math.max(0, Math.min(duration, x / (50 * zoomLevel)));
+      const rawTime = Math.max(0, Math.min(duration, x / (TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel)));
       // Use frame snapping for playhead scrubbing
       const projectStore = useProjectStore.getState();
       const projectFps = projectStore.activeProject?.fps || 30;
@@ -131,7 +131,7 @@ export function useTimelinePlayhead({
       "[data-radix-scroll-area-viewport]"
     ) as HTMLElement;
     if (!rulerViewport || !tracksViewport) return;
-    const playheadPx = playheadPosition * 50 * zoomLevel; // TIMELINE_CONSTANTS.PIXELS_PER_SECOND = 50
+    const playheadPx = playheadPosition * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel;
     const viewportWidth = rulerViewport.clientWidth;
     const scrollMin = 0;
     const scrollMax = rulerViewport.scrollWidth - viewportWidth;

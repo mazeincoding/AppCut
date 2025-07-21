@@ -34,9 +34,9 @@ export function getTrackElementClasses(type: TrackType) {
 
 // Track height definitions
 export const TRACK_HEIGHTS: Record<TrackType, number> = {
-  media: 65,
-  text: 25,
-  audio: 50,
+  media: 85,
+  text: 35,
+  audio: 65,
 } as const;
 
 // Utility function for track heights
@@ -71,7 +71,7 @@ export function getTotalTracksHeight(
 // Other timeline constants
 export const TIMELINE_CONSTANTS = {
   ELEMENT_MIN_WIDTH: 80,
-  PIXELS_PER_SECOND: 50,
+  PIXELS_PER_SECOND: 80,
   TRACK_HEIGHT: 60, // Default fallback
   DEFAULT_TEXT_DURATION: 5,
   ZOOM_LEVELS: [0.25, 0.5, 1, 1.5, 2, 3, 4],

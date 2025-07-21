@@ -151,7 +151,21 @@ export default function ProjectsPage() {
               )}
             </div>
           ) : (
-            <CreateButton onClick={handleCreateProject} />
+            <div className="flex flex-col items-end gap-2">
+              <CreateButton onClick={handleCreateProject} />
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => {
+                  setSelectedProjects(new Set(savedProjects.map(p => p.id)));
+                  setIsBulkDeleteDialogOpen(true);
+                }}
+                disabled={savedProjects.length === 0}
+              >
+                <Trash2 className="!size-3 mr-1" />
+                Delete All
+              </Button>
+            </div>
           )}
         </div>
       </div>
