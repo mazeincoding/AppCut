@@ -206,7 +206,7 @@ export function MediaView() {
         {/* Show overlay when dragging files over the panel */}
         <DragOverlay isVisible={isDragOver} />
 
-        <div className="p-3 pb-2">
+        <div className="px-3 pt-1 pb-2">
           {/* Button to add/upload media */}
           <div className="flex gap-2">
             {/* Search and filter controls */}

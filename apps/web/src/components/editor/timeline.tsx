@@ -697,7 +697,7 @@ export function Timeline() {
 
   return (
     <div
-      className={`h-full flex flex-col transition-colors duration-200 relative bg-panel rounded-sm overflow-hidden`}
+      className={`h-full flex flex-col transition-colors duration-200 relative bg-panel rounded-sm overflow-hidden m-2`}
       {...dragProps}
       onMouseEnter={() => setIsInTimeline(true)}
       onMouseLeave={() => setIsInTimeline(false)}

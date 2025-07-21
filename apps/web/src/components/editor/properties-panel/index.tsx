@@ -32,7 +32,7 @@ export function PropertiesPanel() {
   };
 
   const emptyView = (
-    <div className="space-y-4 p-5">
+    <div className="space-y-4 p-6 pt-8">
       {/* Media Properties */}
       <div className="flex flex-col gap-3">
         <PropertyItem label="Name:" value={activeProject?.name || ""} />
@@ -64,7 +64,7 @@ export function PropertiesPanel() {
   );
 
   return (
-    <ScrollArea className="h-full bg-panel border-panel-primary rounded-sm">
+    <ScrollArea className="h-full bg-panel border-panel-primary rounded-sm m-2">
       {selectedElements.length > 0
         ? selectedElements.map(({ trackId, elementId }) => {
             const track = tracks.find((t) => t.id === trackId);
@@ -72,7 +72,7 @@ export function PropertiesPanel() {
 
             if (element?.type === "text") {
               return (
-                <div key={elementId}>
+                <div key={elementId} className="p-6 pt-8">
                   <TextProperties element={element} trackId={trackId} />
                 </div>
               );
@@ -83,11 +83,15 @@ export function PropertiesPanel() {
               );
 
               if (mediaItem?.type === "audio") {
-                return <AudioProperties element={element} />;
+                return (
+                  <div key={elementId} className="p-6 pt-8">
+                    <AudioProperties element={element} />
+                  </div>
+                );
               }
 
               return (
-                <div key={elementId}>
+                <div key={elementId} className="p-6 pt-8">
                   <MediaProperties element={element} />
                 </div>
               );

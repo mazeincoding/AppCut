@@ -63,7 +63,7 @@ export function TabBar() {
   }, []);
 
   return (
-    <div className="flex border-timeline rounded-sm">
+    <div className="flex border-timeline rounded-sm mb-1">
       <ScrollButton
         direction="left"
         onClick={scrollToStart}
@@ -78,8 +78,8 @@ export function TabBar() {
           return (
             <div
               className={cn(
-                "flex flex-col gap-1 items-center cursor-pointer px-1.5 py-1.5 mx-2 rounded-md transition-colors hover:bg-white/5 flex-shrink-0 min-w-[48px]",
-                activeTab === tabKey ? "text-primary" : "text-muted-foreground"
+                "flex flex-col gap-1 items-center cursor-pointer px-1.5 py-1.5 mx-2 rounded-md transition-colors hover:bg-white/10 flex-shrink-0 min-w-[48px]",
+                activeTab === tabKey ? "text-primary bg-primary/10" : "text-muted-foreground bg-white/5"
               )}
               onClick={() => setActiveTab(tabKey)}
               key={tabKey}
@@ -116,7 +116,7 @@ function ScrollButton({
     <div className="bg-panel-accent w-12 h-full flex items-center justify-center">
       <Button
         size="icon"
-        className="rounded-[0.4rem] w-4 h-7 !bg-foreground/10"
+        className="rounded-[0.4rem] w-4 h-7 !bg-white/20 hover:!bg-white/30"
         onClick={onClick}
       >
         <Icon className="!size-4 text-foreground" />

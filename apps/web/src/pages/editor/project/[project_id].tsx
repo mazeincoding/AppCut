@@ -204,51 +204,39 @@ function EditorContent() {
   return (
     <div className="flex flex-col h-screen">
       <EditorHeader />
-      <div className="flex-1 overflow-hidden p-2">
-        <ResizablePanelGroup direction="horizontal" className="w-full h-full gap-2">
-          <ResizablePanel 
-            defaultSize={toolsPanel} 
-            minSize={15} 
-            maxSize={35}
-            onResize={(size) => setToolsPanel(size)}
-          >
-            <MediaPanel />
-          </ResizablePanel>
-          <ResizableHandle withHandle />
-          <ResizablePanel 
-            defaultSize={mainContent} 
-            minSize={30}
-            onResize={(size) => setMainContent(size)}
-          >
-            <ResizablePanelGroup direction="vertical">
-              <ResizablePanel 
-                defaultSize={previewPanel} 
-                minSize={25}
-                onResize={(size) => setPreviewPanel(size)}
-              >
-                <PreviewPanel />
-              </ResizablePanel>
-              <ResizableHandle withHandle />
-              <ResizablePanel 
-                defaultSize={timeline} 
-                minSize={15} 
-                maxSize={50}
-                onResize={(size) => setTimeline(size)}
-              >
-                <Timeline />
-              </ResizablePanel>
-            </ResizablePanelGroup>
-          </ResizablePanel>
-          <ResizableHandle withHandle />
-          <ResizablePanel 
-            defaultSize={propertiesPanel} 
-            minSize={15} 
-            maxSize={35}
-            onResize={(size) => setPropertiesPanel(size)}
-          >
-            <PropertiesPanel />
-          </ResizablePanel>
-        </ResizablePanelGroup>
+      <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="flex-1 p-2">
+          <ResizablePanelGroup direction="horizontal" className="w-full h-full gap-2">
+            <ResizablePanel 
+              defaultSize={toolsPanel} 
+              minSize={15} 
+              maxSize={35}
+              onResize={(size) => setToolsPanel(size)}
+            >
+              <MediaPanel />
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel 
+              defaultSize={mainContent} 
+              minSize={30}
+              onResize={(size) => setMainContent(size)}
+            >
+              <PreviewPanel />
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel 
+              defaultSize={propertiesPanel} 
+              minSize={15} 
+              maxSize={35}
+              onResize={(size) => setPropertiesPanel(size)}
+            >
+              <PropertiesPanel />
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        </div>
+        <div className="border-t">
+          <Timeline />
+        </div>
       </div>
     </div>
   );
