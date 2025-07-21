@@ -25,7 +25,6 @@
         "@opencut/db": "workspace:*",
         "@t3-oss/env-core": "^0.13.8",
         "@t3-oss/env-nextjs": "^0.13.8",
-        "@types/node": "^24.0.15",
         "@upstash/ratelimit": "^2.0.5",
         "@upstash/redis": "^1.35.0",
         "@vercel/analytics": "^1.4.1",
@@ -64,6 +63,7 @@
       },
       "devDependencies": {
         "@types/bun": "latest",
+        "@types/node": "^24.0.15",
         "@types/pg": "^8.15.4",
         "@types/react": "^18.2.48",
         "@types/react-dom": "^18.2.18",
