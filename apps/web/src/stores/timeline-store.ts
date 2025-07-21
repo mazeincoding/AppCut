@@ -316,50 +316,59 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
 
     addTrack: (type) => {
       get().pushHistory();
-
-      // Generate proper track name based on type
-      const trackName =
-        type === "media"
-          ? "Media Track"
-          : type === "text"
-            ? "Text Track"
-            : type === "audio"
-              ? "Audio Track"
-              : "Track";
-
+      let trackName: string = type;
+      let trackType: TrackType = type;
+      let isMain = false;
+      if (type === "media") {
+        // If there is no main track, this will be handled by ensureMainTrack
+        const mainExists = get()._tracks.some(t => t.type === "media" && t.isMain);
+        if (!mainExists) {
+          trackName = "Main Track";
+          trackType = "media";
+          isMain = true;
+        } else {
+          trackName = "media";
+          trackType = "media";
+          isMain = false;
+        }
+      }
       const newTrack: TimelineTrack = {
         id: generateUUID(),
         name: trackName,
-        type,
+        type: trackType,
         elements: [],
         muted: false,
+        ...(type === "media" ? { isMain } : {}),
       };
-
       updateTracksAndSave([...get()._tracks, newTrack]);
       return newTrack.id;
     },
 
     insertTrackAt: (type, index) => {
       get().pushHistory();
-
-      // Generate proper track name based on type
-      const trackName =
-        type === "media"
-          ? "Media Track"
-          : type === "text"
-            ? "Text Track"
-            : type === "audio"
-              ? "Audio Track"
-              : "Track";
-
+      let trackName: string = type;
+      let trackType: TrackType = type;
+      let isMain = false;
+      if (type === "media") {
+        const mainExists = get()._tracks.some(t => t.type === "media" && t.isMain);
+        if (!mainExists) {
+          trackName = "Main Track";
+          trackType = "media";
+          isMain = true;
+        } else {
+          trackName = "media";
+          trackType = "media";
+          isMain = false;
+        }
+      }
       const newTrack: TimelineTrack = {
         id: generateUUID(),
         name: trackName,
-        type,
+        type: trackType,
         elements: [],
         muted: false,
+        ...(type === "media" ? { isMain } : {}),
       };
-
       const newTracks = [...get()._tracks];
       newTracks.splice(index, 0, newTrack);
       updateTracksAndSave(newTracks);
@@ -1017,15 +1026,13 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
 
       get().pushHistory();
 
-      // Find existing audio track or prepare to create one
-      const existingAudioTrack = _tracks.find((t) => t.type === "audio");
+      // Use first empty audio track if available
+      const emptyAudioTrack = _tracks.find(t => t.type === "audio" && t.elements.length === 0);
       const audioElementId = generateUUID();
-
-      if (existingAudioTrack) {
-        // Add audio element to existing audio track
+      if (emptyAudioTrack) {
         updateTracksAndSave(
           get()._tracks.map((track) =>
-            track.id === existingAudioTrack.id
+            track.id === emptyAudioTrack.id
               ? {
                   ...track,
                   elements: [
@@ -1044,7 +1051,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
         // Create new audio track with the audio element in a single atomic update
         const newAudioTrack: TimelineTrack = {
           id: generateUUID(),
-          name: "Audio Track",
+          name: "audio",
           type: "audio",
           elements: [
             {
@@ -1055,10 +1062,8 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
           ],
           muted: false,
         };
-
         updateTracksAndSave([...get()._tracks, newAudioTrack]);
       }
-
       return audioElementId;
     },
 
@@ -1331,28 +1336,78 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
 
     addMediaAtTime: (item, currentTime = 0) => {
       const trackType = item.type === "audio" ? "audio" : "media";
-      const targetTrackId = get().findOrCreateTrack(trackType);
-
-      const duration =
-        item.duration || TIMELINE_CONSTANTS.DEFAULT_IMAGE_DURATION;
-
-      if (get().checkElementOverlap(targetTrackId, currentTime, duration)) {
-        toast.error(
-          "Cannot place element here - it would overlap with existing elements"
-        );
-        return false;
+      const duration = item.duration || TIMELINE_CONSTANTS.DEFAULT_IMAGE_DURATION;
+      const _tracks = get()._tracks;
+      // For video, use main track only if it's empty
+      if (trackType === "media") {
+        const mainTrack = _tracks.find(t => t.type === "media" && t.isMain);
+        if (mainTrack && mainTrack.elements.length === 0) {
+          get().addElementToTrack(mainTrack.id, {
+            type: "media",
+            mediaId: item.id,
+            name: item.name,
+            duration,
+            startTime: currentTime,
+            trimStart: 0,
+            trimEnd: 0,
+          });
+          return true;
+        }
+        // Use first empty non-main video track if available
+        const emptyVideoTrack = _tracks.find(t => t.type === "media" && !t.isMain && t.elements.length === 0);
+        if (emptyVideoTrack) {
+          get().addElementToTrack(emptyVideoTrack.id, {
+            type: "media",
+            mediaId: item.id,
+            name: item.name,
+            duration,
+            startTime: currentTime,
+            trimStart: 0,
+            trimEnd: 0,
+          });
+          return true;
+        }
+        // Otherwise, create a new video track
+        const newTrackId = get().addTrack("media");
+        get().addElementToTrack(newTrackId, {
+          type: "media",
+          mediaId: item.id,
+          name: item.name,
+          duration,
+          startTime: currentTime,
+          trimStart: 0,
+          trimEnd: 0,
+        });
+        return true;
+      } else if (trackType === "audio") {
+        // Use first empty audio track if available
+        const emptyAudioTrack = _tracks.find(t => t.type === "audio" && t.elements.length === 0);
+        if (emptyAudioTrack) {
+          get().addElementToTrack(emptyAudioTrack.id, {
+            type: "media",
+            mediaId: item.id,
+            name: item.name,
+            duration,
+            startTime: currentTime,
+            trimStart: 0,
+            trimEnd: 0,
+          });
+          return true;
+        }
+        // Otherwise, create a new audio track
+        const newTrackId = get().addTrack("audio");
+        get().addElementToTrack(newTrackId, {
+          type: "media",
+          mediaId: item.id,
+          name: item.name,
+          duration,
+          startTime: currentTime,
+          trimStart: 0,
+          trimEnd: 0,
+        });
+        return true;
       }
-
-      get().addElementToTrack(targetTrackId, {
-        type: "media",
-        mediaId: item.id,
-        name: item.name,
-        duration,
-        startTime: currentTime,
-        trimStart: 0,
-        trimEnd: 0,
-      });
-      return true;
+      return false;
     },
 
     addTextAtTime: (item, currentTime = 0) => {
@@ -1384,18 +1439,73 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
 
     addMediaToNewTrack: (item) => {
       const trackType = item.type === "audio" ? "audio" : "media";
-      const targetTrackId = get().findOrCreateTrack(trackType);
-
-      get().addElementToTrack(targetTrackId, {
-        type: "media",
-        mediaId: item.id,
-        name: item.name,
-        duration: item.duration || TIMELINE_CONSTANTS.DEFAULT_IMAGE_DURATION,
-        startTime: 0,
-        trimStart: 0,
-        trimEnd: 0,
-      });
-      return true;
+      const duration = item.duration || TIMELINE_CONSTANTS.DEFAULT_IMAGE_DURATION;
+      const _tracks = get()._tracks;
+      if (trackType === "media") {
+        const mainTrack = _tracks.find(t => t.type === "media" && t.isMain);
+        if (mainTrack && mainTrack.elements.length === 0) {
+          get().addElementToTrack(mainTrack.id, {
+            type: "media",
+            mediaId: item.id,
+            name: item.name,
+            duration,
+            startTime: 0,
+            trimStart: 0,
+            trimEnd: 0,
+          });
+          return true;
+        }
+        const emptyVideoTrack = _tracks.find(t => t.type === "media" && !t.isMain && t.elements.length === 0);
+        if (emptyVideoTrack) {
+          get().addElementToTrack(emptyVideoTrack.id, {
+            type: "media",
+            mediaId: item.id,
+            name: item.name,
+            duration,
+            startTime: 0,
+            trimStart: 0,
+            trimEnd: 0,
+          });
+          return true;
+        }
+        const newTrackId = get().addTrack("media");
+        get().addElementToTrack(newTrackId, {
+          type: "media",
+          mediaId: item.id,
+          name: item.name,
+          duration,
+          startTime: 0,
+          trimStart: 0,
+          trimEnd: 0,
+        });
+        return true;
+      } else if (trackType === "audio") {
+        const emptyAudioTrack = _tracks.find(t => t.type === "audio" && t.elements.length === 0);
+        if (emptyAudioTrack) {
+          get().addElementToTrack(emptyAudioTrack.id, {
+            type: "media",
+            mediaId: item.id,
+            name: item.name,
+            duration,
+            startTime: 0,
+            trimStart: 0,
+            trimEnd: 0,
+          });
+          return true;
+        }
+        const newTrackId = get().addTrack("audio");
+        get().addElementToTrack(newTrackId, {
+          type: "media",
+          mediaId: item.id,
+          name: item.name,
+          duration,
+          startTime: 0,
+          trimStart: 0,
+          trimEnd: 0,
+        });
+        return true;
+      }
+      return false;
     },
 
     addTextToNewTrack: (item) => {

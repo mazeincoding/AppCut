@@ -89,14 +89,18 @@ export interface TimelineTrack {
 
 export function sortTracksByOrder(tracks: TimelineTrack[]): TimelineTrack[] {
   return [...tracks].sort((a, b) => {
-    // Audio tracks always go to bottom
+    // Main track always at the top
+    if (a.isMain) return -1;
+    if (b.isMain) return 1;
+    // Video tracks (media, not main) next
+    if (a.type === "media" && b.type !== "media") return -1;
+    if (b.type === "media" && a.type !== "media") return 1;
+    // Text tracks after video
+    if (a.type === "text" && b.type !== "text") return -1;
+    if (b.type === "text" && a.type !== "text") return 1;
+    // Audio tracks always at the bottom
     if (a.type === "audio" && b.type !== "audio") return 1;
     if (b.type === "audio" && a.type !== "audio") return -1;
-
-    // Main track goes above audio but below other tracks
-    if (a.isMain && !b.isMain && b.type !== "audio") return 1;
-    if (b.isMain && !a.isMain && a.type !== "audio") return -1;
-
     // Within same category, maintain creation order
     return 0;
   });

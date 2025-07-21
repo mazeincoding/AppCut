@@ -975,22 +975,42 @@ export function Timeline() {
             >
               <ScrollArea className="w-full h-full" ref={trackLabelsScrollRef}>
                 <div className="flex flex-col gap-1">
-                  {tracks.map((track) => (
-                    <div
-                      key={track.id}
-                      className="flex items-center px-3 border-b border-muted/30 group bg-foreground/5"
-                      style={{ height: `${getTrackHeight(track.type)}px` }}
-                    >
-                      <div className="flex items-center flex-1 min-w-0">
-                        <TrackIcon track={track} />
+                  {tracks.map((track, idx) => {
+                    let label = track.name;
+                    if (track.isMain) {
+                      label = "Main Track";
+                    } else if (track.type === "media") {
+                      // Number among non-main media tracks
+                      const videoTracks = tracks.filter(t => t.type === "media" && !t.isMain);
+                      const n = videoTracks.indexOf(track) + 1;
+                      label = `Video Track ${n}`;
+                    } else if (track.type === "audio") {
+                      const audioTracks = tracks.filter(t => t.type === "audio");
+                      const n = audioTracks.indexOf(track) + 1;
+                      label = `Audio Track ${n}`;
+                    } else if (track.type === "text") {
+                      const textTracks = tracks.filter(t => t.type === "text");
+                      const n = textTracks.indexOf(track) + 1;
+                      label = `Text Track ${n}`;
+                    }
+                    return (
+                      <div
+                        key={track.id}
+                        className="flex items-center px-3 border-b border-muted/30 group bg-foreground/5"
+                        style={{ height: `${getTrackHeight(track.type)}px` }}
+                      >
+                        <div className="flex items-center flex-1 min-w-0">
+                          <TrackIcon track={track} />
+                          <span className="ml-2 text-xs font-medium truncate" title={label}>{label}</span>
+                        </div>
+                        {track.muted && (
+                          <span className="ml-2 text-xs text-red-500 font-semibold flex-shrink-0">
+                            Muted
+                          </span>
+                        )}
                       </div>
-                      {track.muted && (
-                        <span className="ml-2 text-xs text-red-500 font-semibold flex-shrink-0">
-                          Muted
-                        </span>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </ScrollArea>
             </div>
