@@ -181,6 +181,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   },
 
   deleteProject: async (id: string) => {
+    console.log("🗑️ [DELETE] Starting project deletion:", id);
     try {
       // Delete project data in parallel
       await Promise.all([
@@ -188,7 +189,10 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         storageService.deleteProjectTimeline(id),
         storageService.deleteProject(id),
       ]);
+      console.log("✅ [DELETE] Project data deleted successfully");
+      
       await get().loadAllProjects(); // Refresh the list
+      console.log("✅ [DELETE] Project list refreshed");
 
       // If we deleted the active project, close it and clear data
       const { activeProject } = get();
@@ -199,8 +203,13 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         mediaStore.clearAllMedia();
         timelineStore.clearTimeline();
       }
+      
+      toast.success("Project deleted successfully");
     } catch (error) {
-      console.error("Failed to delete project:", error);
+      console.error("❌ [DELETE] Failed to delete project:", error);
+      toast.error("Failed to delete project", {
+        description: error instanceof Error ? error.message : "Please try again",
+      });
     }
   },
 

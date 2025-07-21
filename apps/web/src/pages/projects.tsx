@@ -214,16 +214,70 @@ export default function ProjectsPage() {
         ) : savedProjects.length === 0 ? (
           <NoProjects onCreateProject={handleCreateProject} />
         ) : (
-          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-            {savedProjects.map((project) => (
-              <ProjectCard
-                key={project.id}
-                project={project}
-                isSelectionMode={isSelectionMode}
-                isSelected={selectedProjects.has(project.id)}
-                onSelect={handleSelectProject}
-              />
-            ))}
+          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 min-h-[300px]">
+            {console.log("🎨 [RENDER] Rendering project cards:", savedProjects.length, savedProjects)}
+            {/* Debug: Add a test card to check if grid is working */}
+            <div className="bg-red-500 text-white p-8 rounded-lg min-h-[200px] flex flex-col justify-center">
+              <h3 className="text-xl font-bold">Debug Test Card</h3>
+              <p className="text-lg">If you see this, the grid is working</p>
+              <p>Projects count: {savedProjects.length}</p>
+            </div>
+            {savedProjects.map((project) => {
+              console.log("🎨 [RENDER] Rendering project:", project.id, project.name);
+              const isSelected = selectedProjects.has(project.id);
+              return (
+                <div 
+                  key={project.id} 
+                  className={`bg-white border-2 hover:border-blue-400 text-gray-800 p-4 rounded-lg min-h-[200px] transition-colors relative ${
+                    isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+                  }`}
+                >
+                  {/* Selection checkbox */}
+                  <div className="absolute top-3 left-3">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        handleSelectProject(project.id, e.target.checked);
+                      }}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                  </div>
+
+                  {/* Delete button */}
+                  <div className="absolute top-3 right-3">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log("🗑️ [DELETE] Delete clicked for:", project.id);
+                        if (confirm(`Delete project "${project.name}"?`)) {
+                          deleteProject(project.id);
+                        }
+                      }}
+                      className="w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-sm font-bold transition-colors"
+                      title="Delete project"
+                    >
+                      ×
+                    </button>
+                  </div>
+
+                  {/* Project content - clickable area */}
+                  <div 
+                    className="pt-8 pb-2 cursor-pointer"
+                    onClick={() => {
+                      console.log("🔗 [CLICK DEBUG] Click: DIV Project:", project.id);
+                      window.location.href = `/editor/project/${encodeURIComponent(project.id)}`;
+                    }}
+                  >
+                    <h3 className="text-lg font-bold mb-2 text-gray-900">Project: {project.name}</h3>
+                    <p className="text-sm text-gray-600 mb-1">ID: {project.id.substring(0, 20)}...</p>
+                    <p className="text-sm text-gray-600">Created: {project.createdAt.toDateString()}</p>
+                    <div className="mt-4 text-xs text-gray-500">Click to open project</div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </main>
@@ -251,6 +305,7 @@ function ProjectCard({
   isSelected = false,
   onSelect,
 }: ProjectCardProps) {
+  console.log("🎨 [CARD] ProjectCard rendering for:", project.id, project.name);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
@@ -291,12 +346,12 @@ function ProjectCard({
       {isSelectionMode ? (
         <div onClick={handleCardClick} className="block group cursor-pointer">
           <Card
-            className={`overflow-hidden bg-background border-none p-0 transition-all ${
+            className={`overflow-hidden bg-card border border-border shadow-sm hover:shadow-md transition-all ${
               isSelectionMode && isSelected ? "ring-2 ring-primary" : ""
             }`}
           >
             <div
-              className={`relative aspect-square bg-muted transition-opacity ${
+              className={`relative aspect-square bg-muted transition-opacity min-h-[200px] ${
                 isDropdownOpen
                   ? "opacity-65"
                   : "opacity-100 group-hover:opacity-65"
@@ -321,23 +376,22 @@ function ProjectCard({
               {/* Thumbnail preview or placeholder */}
               <div className="absolute inset-0">
                 {project.thumbnail ? (
-                  <Image
+                  <img
                     src={project.thumbnail}
                     alt="Project thumbnail"
-                    fill
-                    className="object-cover"
+                    className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full bg-muted/50 flex items-center justify-center">
-                    <Video className="h-12 w-12 flex-shrink-0 text-muted-foreground" />
+                  <div className="w-full h-full bg-slate-200 flex items-center justify-center">
+                    <Video className="h-12 w-12 flex-shrink-0 text-slate-600" />
                   </div>
                 )}
               </div>
             </div>
 
-            <CardContent className="px-0 pt-5 flex flex-col gap-1">
+            <CardContent className="p-4 flex flex-col gap-1">
               <div className="flex items-start justify-between">
-                <h3 className="font-medium text-sm leading-snug group-hover:text-foreground/90 transition-colors line-clamp-2">
+                <h3 className="font-medium text-sm text-foreground leading-snug group-hover:text-foreground/90 transition-colors line-clamp-2">
                   {project.name}
                 </h3>
                 {!isSelectionMode && (
@@ -414,12 +468,12 @@ function ProjectCard({
       ) : (
         <Link href={`/editor/project/${encodeURIComponent(project.id)}`} className="block group" prefetch={false}>
           <Card
-            className={`overflow-hidden bg-background border-none p-0 transition-all ${
+            className={`overflow-hidden bg-card border border-border shadow-sm hover:shadow-md transition-all ${
               isSelectionMode && isSelected ? "ring-2 ring-primary" : ""
             }`}
           >
             <div
-              className={`relative aspect-square bg-muted transition-opacity ${
+              className={`relative aspect-square bg-muted transition-opacity min-h-[200px] ${
                 isDropdownOpen
                   ? "opacity-65"
                   : "opacity-100 group-hover:opacity-65"
@@ -428,23 +482,22 @@ function ProjectCard({
               {/* Thumbnail preview or placeholder */}
               <div className="absolute inset-0">
                 {project.thumbnail ? (
-                  <Image
+                  <img
                     src={project.thumbnail}
                     alt="Project thumbnail"
-                    fill
-                    className="object-cover"
+                    className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full bg-muted/50 flex items-center justify-center">
-                    <Video className="h-12 w-12 flex-shrink-0 text-muted-foreground" />
+                  <div className="w-full h-full bg-slate-200 flex items-center justify-center">
+                    <Video className="h-12 w-12 flex-shrink-0 text-slate-600" />
                   </div>
                 )}
               </div>
             </div>
 
-            <CardContent className="px-0 pt-5 flex flex-col gap-1">
+            <CardContent className="p-4 flex flex-col gap-1">
               <div className="flex items-start justify-between">
-                <h3 className="font-medium text-sm leading-snug group-hover:text-foreground/90 transition-colors line-clamp-2">
+                <h3 className="font-medium text-sm text-foreground leading-snug group-hover:text-foreground/90 transition-colors line-clamp-2">
                   {project.name}
                 </h3>
                 <DropdownMenu
