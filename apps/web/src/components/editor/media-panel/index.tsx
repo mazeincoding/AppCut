@@ -5,12 +5,13 @@ import { MediaView } from "./views/media";
 import { useMediaPanelStore, Tab } from "./store";
 import { TextView } from "./views/text";
 import { AiView } from "./views/ai";
+import { debugLogger } from "@/lib/debug-logger";
 
 export function MediaPanel() {
   const { activeTab } = useMediaPanelStore();
 
   // DEBUG: Media panel tab tracking
-  console.log('📱 MEDIA_PANEL_RENDER:', { 
+  debugLogger.log('MediaPanel', 'RENDER', { 
     activeTab, 
     timestamp: Date.now(),
     aiViewWillRender: activeTab === 'ai'

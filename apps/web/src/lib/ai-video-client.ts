@@ -197,6 +197,23 @@ export async function generateVideoFromImage(request: ImageToVideoRequest): Prom
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      
+      // Handle specific error cases with user-friendly messages
+      if (errorData.detail && errorData.detail.includes('User is locked')) {
+        if (errorData.detail.includes('Exhausted balance')) {
+          throw new Error('Your FAL.ai account balance has been exhausted. Please top up your balance at fal.ai/dashboard/billing to continue generating videos.');
+        }
+        throw new Error('Your FAL.ai account is temporarily locked. Please check your account status at fal.ai/dashboard.');
+      }
+      
+      if (response.status === 401) {
+        throw new Error('Invalid FAL.ai API key. Please check your API key configuration.');
+      }
+      
+      if (response.status === 429) {
+        throw new Error('Rate limit exceeded. Please wait a moment before trying again.');
+      }
+      
       throw new Error(`FAL API error: ${errorData.detail || response.statusText}`);
     }
 

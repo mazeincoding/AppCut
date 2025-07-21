@@ -70,7 +70,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       debugLogger.log('ProjectStore', 'STORAGE_SAVE_SUCCESS', { projectId: newProject.id });
       
       // Reload all projects to update the list
-      debugLogger.log('ProjectStore', 'LOAD_ALL_PROJECTS_START', {});
+      debugLogger.log('ProjectStore', 'LOAD_ALL_PROJECTS_START', { caller: 'createNewProject' });
       await get().loadAllProjects();
       debugLogger.log('ProjectStore', 'LOAD_ALL_PROJECTS_SUCCESS', {});
       
@@ -174,6 +174,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         storageService.saveProject(activeProject),
         timelineStore.saveProjectTimeline(activeProject.id),
       ]);
+      debugLogger.log('ProjectStore', 'LOAD_ALL_PROJECTS_START', { caller: 'saveCurrentProject' });
       await get().loadAllProjects(); // Refresh the list
     } catch (error) {
       debugLogger.log('ProjectStore', 'SAVE_CURRENT_PROJECT_FAILED', { 
@@ -184,7 +185,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   },
 
   loadAllProjects: async () => {
-    debugLogger.log('ProjectStore', 'LOAD_ALL_PROJECTS_START', {});
+    debugLogger.log('ProjectStore', 'LOAD_ALL_PROJECTS_START', { caller: 'loadAllProjects_direct' });
     if (!get().isInitialized) {
       set({ isLoading: true });
     }

@@ -54,7 +54,9 @@
       "Bash(.electron-dev.ps1)",
       "Bash(echo:*)",
       "Bash(taskkill:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(curl:*)",
+      "Bash(npx:*)"
     ],
     "deny": []
   }

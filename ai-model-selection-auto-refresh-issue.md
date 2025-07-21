@@ -3,6 +3,38 @@
 ## Problem Description
 When user navigates to AI tab → switches to "Image to Video" tab → tries to select an AI model from the dropdown, the interface auto-refreshes and resets, preventing model selection.
 
+## ✅ **ROOT CAUSE FOUND AND FIXED**
+
+### **🎯 ACTUAL ROOT CAUSE: StorageProvider useEffect Dependency**
+
+**Issue**: The `useEffect` in `StorageProvider` had `loadAllProjects` in its dependency array, causing it to re-run when the Zustand store function reference changed during dropdown interactions.
+
+**Evidence from Debug Logs**:
+```
+[2025-07-21T11:22:20.629Z] ProjectStore - LOAD_ALL_PROJECTS_START: {}
+[2025-07-21T11:22:20.674Z] EditorPage - RENDERING_LOADING_SCREEN: { "projectId": "", "hasActiveProject": false }
+[2025-07-21T11:22:20.682Z] EditorPage - PROJECT_INIT_EFFECT: { "projectId": "", "hasActiveProject": false }
+```
+
+**Sequence Analysis**:
+1. **User clicks AI model dropdown**
+2. **Zustand store function reference changes** during dropdown interaction
+3. **StorageProvider useEffect re-runs** due to `loadAllProjects` dependency
+4. **`LOAD_ALL_PROJECTS_START` is triggered**
+5. **Component re-mounts** with empty project state
+6. **Fresh project load cycle begins**
+
+**Technical Explanation**: 
+- Zustand store function references can change during component interactions
+- The `useEffect` in `StorageProvider` was tracking `loadAllProjects` as a dependency
+- When dropdown interactions caused store updates, the function reference changed
+- This triggered the storage initialization effect to re-run
+- The re-initialization cleared the active project state, causing component re-mount
+
+**Solution Applied**: Removed `loadAllProjects` from the useEffect dependency array in `StorageProvider`
+
+---
+
 ## ❌ INCORRECT FIX ATTEMPTS
 
 ### ~~1. Missing `type="button"` Theory~~ 
@@ -11,6 +43,13 @@ When user navigates to AI tab → switches to "Image to Video" tab → tries to 
 - **Fix Applied**: Added `type="button"` to SelectTrigger and other buttons
 - **Result**: Fix did not resolve the issue
 - **Evidence**: User confirmed "this fix does not help"
+
+### ~~2. TypeScript Compilation Errors Theory~~
+**Status: HELPFUL BUT NOT ROOT CAUSE**
+- **Theory**: TypeScript errors in export-dialog.tsx causing runtime errors and page refreshes
+- **Fix Applied**: Fixed all TypeScript compilation errors in export dialog and related components
+- **Result**: Eliminated potential runtime errors but didn't resolve dropdown issue
+- **Evidence**: Logs still showed beforeunload pattern after TypeScript fixes
 
 ## 🔍 ACTUAL ANALYSIS FROM DEBUG LOGS
 

@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DragOverlay } from "@/components/ui/drag-overlay";
+import { debugLogger } from "@/lib/debug-logger";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -54,7 +55,9 @@ export function MediaView() {
       }
     } catch (error) {
       // Show error toast if processing fails
-      console.error("Error processing files:", error);
+      debugLogger.log('MediaView', 'FILE_PROCESSING_ERROR', { 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
       toast.error("Failed to process files");
     } finally {
       setIsProcessing(false);
