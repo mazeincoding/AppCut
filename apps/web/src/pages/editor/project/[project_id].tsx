@@ -51,13 +51,12 @@ function EditorContent() {
   
   // Debug: Track projectId changes
   useEffect(() => {
-    console.log('📍 PROJECT ID CHANGED:', {
+    debugLogger.log('EditorPage', 'PROJECT_ID_CHANGED', {
       projectIdParam,
       projectIdQuery,
       finalProjectId: projectId,
       routerReady: router.isReady,
-      routerQuery: router.query,
-      timestamp: Date.now()
+      routerQuery: router.query
     });
   }, [projectId, router.isReady]);
 
@@ -66,33 +65,71 @@ function EditorContent() {
   // Debug: Component mount/unmount tracking
   useEffect(() => {
     renderCount++;
-    console.log('🔄 EDITOR MOUNT/UPDATE:', {
+    debugLogger.log('EditorPage', 'COMPONENT_MOUNT_UPDATE', {
       renderCount,
       projectId,
       activeProjectId: activeProject?.id,
-      timestamp: Date.now(),
       location: window.location.href
     });
     
     return () => {
-      console.log('🗑️ EDITOR UNMOUNTING:', {
+      debugLogger.log('EditorPage', 'COMPONENT_UNMOUNT', {
         renderCount,
         projectId,
-        timestamp: Date.now(),
         reason: 'Component cleanup'
       });
     };
   }, []);
 
+  // Router Events Monitoring - HIGH PRIORITY
+  useEffect(() => {
+    const handleRouteChangeStart = (url) => {
+      const stack = new Error().stack;
+      debugLogger.log('Router', 'ROUTE_CHANGE_START', {
+        newUrl: url,
+        currentUrl: router.asPath,
+        currentProjectId: activeProject?.id,
+        callStack: stack,
+        trigger: 'navigation_detected'
+      });
+    };
+    
+    const handleRouteChangeComplete = (url) => {
+      debugLogger.log('Router', 'ROUTE_CHANGE_COMPLETE', {
+        newUrl: url,
+        previousUrl: router.asPath,
+        currentProjectId: activeProject?.id
+      });
+    };
+
+    const handleRouteChangeError = (err, url) => {
+      debugLogger.log('Router', 'ROUTE_CHANGE_ERROR', {
+        error: err.message,
+        targetUrl: url,
+        currentUrl: router.asPath,
+        currentProjectId: activeProject?.id
+      });
+    };
+    
+    router.events.on('routeChangeStart', handleRouteChangeStart);
+    router.events.on('routeChangeComplete', handleRouteChangeComplete);
+    router.events.on('routeChangeError', handleRouteChangeError);
+    
+    return () => {
+      router.events.off('routeChangeStart', handleRouteChangeStart);
+      router.events.off('routeChangeComplete', handleRouteChangeComplete);
+      router.events.off('routeChangeError', handleRouteChangeError);
+    };
+  }, [router, activeProject?.id]);
+
   // Debug: Window error listener
   useEffect(() => {
     const handleError = (event) => {
-      console.log('🚨 WINDOW ERROR:', {
+      debugLogger.log('Window', 'ERROR', {
         error: event.error?.message,
         stack: event.error?.stack,
         filename: event.filename,
-        lineno: event.lineno,
-        timestamp: Date.now()
+        lineno: event.lineno
       });
       if (window.electronDebug) {
         window.electronDebug.logError(event.error);
@@ -100,9 +137,8 @@ function EditorContent() {
     };
     
     const handleUnhandledRejection = (event) => {
-      console.log('🚨 UNHANDLED PROMISE REJECTION:', {
-        reason: event.reason,
-        timestamp: Date.now()
+      debugLogger.log('Window', 'UNHANDLED_PROMISE_REJECTION', {
+        reason: event.reason
       });
     };
     
@@ -181,9 +217,9 @@ function EditorContent() {
       
       try {
         await stableLoadProject(projectId);
-        console.log('✅ PROJECT LOAD SUCCESS:', projectId);
+        debugLogger.log('EditorPage', 'PROJECT_LOAD_SUCCESS', { projectId });
       } catch (error) {
-        console.error("❌ FAILED TO LOAD PROJECT:", { projectId, error });
+        debugLogger.log('EditorPage', 'PROJECT_LOAD_FAILED', { projectId, error: error.message });
         
         // Check if it's a fallback project from localStorage
         const fallbackProject = localStorage.getItem('opencut-fallback-project');
@@ -191,23 +227,23 @@ function EditorContent() {
           try {
             const project = JSON.parse(fallbackProject);
             if (project.id === projectId) {
-              console.log('🔄 USING FALLBACK PROJECT:', project.name);
+              debugLogger.log('EditorPage', 'USING_FALLBACK_PROJECT', { projectName: project.name });
               const newProjectId = await stableCreateNewProject(project.name);
               localStorage.removeItem('opencut-fallback-project');
-              console.log('🔄 NAVIGATING TO FALLBACK PROJECT:', newProjectId);
+              debugLogger.log('EditorPage', 'NAVIGATING_TO_FALLBACK_PROJECT', { newProjectId });
               // Use setTimeout to prevent mid-render navigation that could cause AI component re-mount
               setTimeout(() => router.replace(`/editor/project/${newProjectId}`), 100);
               return;
             }
           } catch (parseError) {
-            console.error('❌ ERROR PARSING FALLBACK PROJECT:', parseError);
+            debugLogger.log('EditorPage', 'FALLBACK_PROJECT_PARSE_ERROR', { error: parseError.message });
           }
         }
         
         // If no fallback, create a new project and navigate to it
-        console.log('🔄 CREATING NEW FALLBACK PROJECT');
+        debugLogger.log('EditorPage', 'CREATING_NEW_FALLBACK_PROJECT', {});
         const newProjectId = await stableCreateNewProject("New Project");
-        console.log('🔄 NAVIGATING TO NEW PROJECT:', {
+        debugLogger.log('EditorPage', 'NAVIGATING_TO_NEW_PROJECT', {
           oldProjectId: projectId,
           newProjectId,
           currentLocation: window.location.href
@@ -221,10 +257,9 @@ function EditorContent() {
   }, [projectId]); // Only run when projectId changes, not on every activeProject update
 
   if (!activeProject) {
-    console.log('⏳ RENDERING LOADING SCREEN:', {
+    debugLogger.log('EditorPage', 'RENDERING_LOADING_SCREEN', {
       projectId,
       hasActiveProject: !!activeProject,
-      timestamp: Date.now(),
       renderCount
     });
     return (
@@ -237,11 +272,10 @@ function EditorContent() {
     );
   }
 
-  console.log('✅ RENDERING EDITOR INTERFACE:', {
+  debugLogger.log('EditorPage', 'RENDERING_EDITOR_INTERFACE', {
     projectId,
     activeProjectId: activeProject?.id,
     projectName: activeProject?.name,
-    timestamp: Date.now(),
     renderCount
   });
 

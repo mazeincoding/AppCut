@@ -77,7 +77,57 @@ export function AiView() {
     renderCount: Math.random()
   });
 
-  // DEBUG: Navigation monitoring - REMOVED BEFOREUNLOAD LISTENER (was causing the navigation issue)
+  // Window/Document Event Monitoring
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      debugLogger.log('Window', 'BEFORE_UNLOAD', {
+        currentUrl: window.location.href,
+        activeTab,
+        selectedModel,
+        projectId: activeProject?.id,
+        hasSelectedImage: !!selectedImage
+      });
+    };
+    
+    const handleFocus = () => {
+      debugLogger.log('Window', 'FOCUS_CHANGE', {
+        focused: true,
+        currentUrl: window.location.href,
+        activeTab,
+        selectedModel
+      });
+    };
+    
+    const handleBlur = () => {
+      debugLogger.log('Window', 'FOCUS_CHANGE', {
+        focused: false,
+        currentUrl: window.location.href,
+        activeTab,
+        selectedModel
+      });
+    };
+
+    const handleVisibilityChange = () => {
+      debugLogger.log('Window', 'VISIBILITY_CHANGE', {
+        visible: !document.hidden,
+        visibilityState: document.visibilityState,
+        activeTab,
+        selectedModel
+      });
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('blur', handleBlur);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('blur', handleBlur);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [activeTab, selectedModel, activeProject?.id, selectedImage]);
   
   // Progress tracking
   const [generationProgress, setGenerationProgress] = useState<number>(0);
@@ -101,7 +151,7 @@ export function AiView() {
         const parsedHistory = JSON.parse(savedHistory);
         setGenerationHistory(parsedHistory);
       } catch (error) {
-        console.error('Failed to parse generation history:', error);
+        debugLogger.log('AIView', 'PARSE_HISTORY_ERROR', { error: error.message });
       }
     }
   }, []);
@@ -111,7 +161,7 @@ export function AiView() {
     try {
       localStorage.setItem('ai-generation-history', JSON.stringify(history));
     } catch (error) {
-      console.error('Failed to save generation history:', error);
+      debugLogger.log('AIView', 'SAVE_HISTORY_ERROR', { error: error.message });
     }
   };
 
@@ -223,9 +273,15 @@ export function AiView() {
                 height: 1080,
               });
               
-              console.log("✅ Video automatically added to media store!");
+              debugLogger.log('AIView', 'VIDEO_ADDED_TO_MEDIA_STORE', { 
+                videoUrl: newVideo.videoUrl,
+                projectId: activeProject.id 
+              });
             } catch (error) {
-              console.error("Failed to auto-add video to media store:", error);
+              debugLogger.log('AIView', 'VIDEO_ADD_TO_MEDIA_STORE_FAILED', { 
+                error: error.message,
+                projectId: activeProject.id 
+              });
             }
           }
           
@@ -241,7 +297,10 @@ export function AiView() {
           setIsGenerating(false);
         }
       } catch (error) {
-        console.error("Error polling status:", error);
+        debugLogger.log('AIView', 'STATUS_POLLING_ERROR', { 
+          error: error.message,
+          jobId 
+        });
         setGenerationProgress(prev => Math.min(prev + 5, 90)); // Slowly increment until we get real status
       }
     };
@@ -277,7 +336,7 @@ export function AiView() {
       let response;
       
       if (activeTab === "text") {
-        console.log("Generating video with:", { prompt, selectedModel });
+        debugLogger.log('AIView', 'GENERATING_VIDEO', { prompt, selectedModel });
         response = await generateVideo({
           prompt: prompt.trim(),
           model: selectedModel,
@@ -285,7 +344,11 @@ export function AiView() {
           duration: 5
         });
       } else {
-        console.log("Generating video from image with:", { selectedImage: selectedImage?.name, prompt, selectedModel });
+        debugLogger.log('AIView', 'GENERATING_VIDEO_FROM_IMAGE', { 
+          imageName: selectedImage?.name, 
+          prompt, 
+          selectedModel 
+        });
         response = await generateVideoFromImage({
           image: selectedImage!,
           model: selectedModel,
@@ -295,7 +358,10 @@ export function AiView() {
         });
       }
       
-      console.log("Video generation completed:", response);
+      debugLogger.log('AIView', 'VIDEO_GENERATION_COMPLETED', { 
+        jobId: response.job_id,
+        status: response.status 
+      });
       setJobId(response.job_id);
       
       // With direct FAL AI, generation is immediate
@@ -335,9 +401,15 @@ export function AiView() {
               height: 1080,
             });
             
-            console.log("✅ Video automatically added to media store!");
+            debugLogger.log('AIView', 'VIDEO_ADDED_TO_MEDIA_STORE', { 
+              videoUrl: newVideo.videoUrl,
+              projectId: activeProject.id 
+            });
           } catch (error) {
-            console.error("Failed to auto-add video to media store:", error);
+            debugLogger.log('AIView', 'VIDEO_ADD_TO_MEDIA_STORE_FAILED', { 
+              error: error.message,
+              projectId: activeProject.id 
+            });
           }
         }
         
@@ -347,13 +419,15 @@ export function AiView() {
         setIsGenerating(false);
       }
       
-      console.log("Job ID:", response.job_id);
-      console.log("Status:", response.status);
-      console.log("Message:", response.message);
-      console.log("Estimated time:", response.estimated_time, "seconds");
+      debugLogger.log('AIView', 'GENERATION_DETAILS', {
+        jobId: response.job_id,
+        status: response.status,
+        message: response.message,
+        estimatedTime: response.estimated_time
+      });
       
     } catch (error) {
-      console.error("Generation failed:", error);
+      debugLogger.log('AIView', 'GENERATION_FAILED', { error: error.message });
       setError(handleApiError(error));
       
       // Clear polling on error
@@ -416,7 +490,11 @@ export function AiView() {
       <div className="flex-1 flex flex-col gap-4">
         {/* Generation Mode Tabs */}
         <Tabs value={activeTab} onValueChange={(value) => {
-          console.log('🔄 TAB_CHANGE:', { from: activeTab, to: value, timestamp: Date.now() });
+          debugLogger.log('AIView', 'TAB_CHANGE', { 
+            from: activeTab, 
+            to: value,
+            currentProjectId: activeProject?.id 
+          });
           setActiveTab(value as "text" | "image");
         }}>
           <TabsList className="grid w-full grid-cols-2">
@@ -594,10 +672,9 @@ export function AiView() {
                   value={model.id}
                   onClick={(e) => {
                     e.stopPropagation();
-                    console.log('🎲 MODEL_ITEM_CLICK:', { 
+                    debugLogger.log('AIView', 'MODEL_ITEM_CLICK', { 
                       modelId: model.id, 
-                      modelName: model.name,
-                      timestamp: Date.now() 
+                      modelName: model.name
                     });
                   }}
                 >

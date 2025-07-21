@@ -497,6 +497,154 @@ setTimeout(() => router.replace(`/editor/project/${newProjectId}`), 100);
   - useEffect dependency fixes
 - User reports: "I do not what happen it goes back to new project after I select AI model why?"
 
+### 🚨 **POTENTIAL MISSING LOGGING GAPS**
+
+Based on the persistent issue, we may need **additional logging** to catch these potential triggers:
+
+#### **1. Project Store State Changes**
+```tsx
+// File: apps/web/src/stores/project-store.ts
+// Add logging to every project store action that could trigger navigation:
+
+const useProjectStore = create<ProjectStore>((set, get) => ({
+  // Add logging to setActiveProject
+  setActiveProject: (project) => {
+    debugLogger.log('ProjectStore', 'SET_ACTIVE_PROJECT', {
+      oldProject: get().activeProject?.id,
+      newProject: project?.id,
+      projectName: project?.name,
+      source: 'manual_set'
+    });
+    set({ activeProject: project });
+  },
+  
+  // Add logging to any project operations that might clear/reset the project
+  loadProject: async (projectId) => {
+    debugLogger.log('ProjectStore', 'LOAD_PROJECT_START', { projectId });
+    // existing implementation
+    debugLogger.log('ProjectStore', 'LOAD_PROJECT_COMPLETE', { projectId, success: true });
+  }
+}));
+```
+
+#### **2. Router Events Monitoring**
+```tsx
+// File: apps/web/src/pages/editor/project/[project_id].tsx
+// Add router event listeners to catch all navigation attempts:
+
+useEffect(() => {
+  const handleRouteChangeStart = (url) => {
+    debugLogger.log('Router', 'ROUTE_CHANGE_START', {
+      newUrl: url,
+      currentUrl: router.asPath,
+      trigger: 'unknown'
+    });
+  };
+  
+  const handleRouteChangeComplete = (url) => {
+    debugLogger.log('Router', 'ROUTE_CHANGE_COMPLETE', {
+      newUrl: url,
+      previousUrl: router.asPath
+    });
+  };
+  
+  router.events.on('routeChangeStart', handleRouteChangeStart);
+  router.events.on('routeChangeComplete', handleRouteChangeComplete);
+  
+  return () => {
+    router.events.off('routeChangeStart', handleRouteChangeStart);
+    router.events.off('routeChangeComplete', handleRouteChangeComplete);
+  };
+}, [router]);
+```
+
+#### **3. Error Boundary Logging**
+```tsx
+// File: apps/web/src/components/error-boundary.tsx (if exists)
+// Or add to AI component:
+
+class AIErrorBoundary extends React.Component {
+  componentDidCatch(error, errorInfo) {
+    debugLogger.log('ErrorBoundary', 'COMPONENT_ERROR', {
+      error: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+      trigger: 'ai_component_crash'
+    });
+  }
+}
+```
+
+#### **4. Window/Document Event Listeners**
+```tsx
+// File: apps/web/src/components/editor/media-panel/views/ai.tsx
+// Add inside useEffect:
+
+useEffect(() => {
+  const handleBeforeUnload = (e) => {
+    debugLogger.log('Window', 'BEFORE_UNLOAD', {
+      currentUrl: window.location.href,
+      activeTab,
+      selectedModel,
+      projectId: activeProject?.id
+    });
+  };
+  
+  const handleFocus = () => {
+    debugLogger.log('Window', 'FOCUS_CHANGE', {
+      focused: true,
+      currentUrl: window.location.href
+    });
+  };
+  
+  const handleBlur = () => {
+    debugLogger.log('Window', 'FOCUS_CHANGE', {
+      focused: false,
+      currentUrl: window.location.href
+    });
+  };
+  
+  window.addEventListener('beforeunload', handleBeforeUnload);
+  window.addEventListener('focus', handleFocus);
+  window.addEventListener('blur', handleBlur);
+  
+  return () => {
+    window.removeEventListener('beforeunload', handleBeforeUnload);
+    window.removeEventListener('focus', handleFocus);
+    window.removeEventListener('blur', handleBlur);
+  };
+}, [activeTab, selectedModel, activeProject?.id]);
+```
+
+#### **5. Form/Input Event Monitoring**
+```tsx
+// File: apps/web/src/components/editor/media-panel/views/ai.tsx
+// Add to Select component:
+
+<Select 
+  // existing props...
+  onValueChange={(value) => {
+    debugLogger.log('AIView', 'MODEL_SELECTION_START', { /* existing data */ });
+    
+    // NEW: Check if any forms are being submitted
+    const forms = document.querySelectorAll('form');
+    debugLogger.log('AIView', 'FORM_CHECK', {
+      formsCount: forms.length,
+      hasSubmitButtons: document.querySelectorAll('button[type="submit"]').length
+    });
+    
+    // NEW: Check for any event listeners that might interfere
+    debugLogger.log('AIView', 'EVENT_LISTENERS_CHECK', {
+      documentListeners: Object.keys(document._events || {}),
+      windowListeners: Object.keys(window._events || {})
+    });
+    
+    setSelectedModel(value);
+    debugLogger.log('AIView', 'MODEL_SELECTION_COMPLETE', { /* existing data */ });
+  }}
+>
+```
+
 ### **NEW: Comprehensive File Logging Added**
 - Created `apps/web/src/lib/debug-logger.ts` - persistent logging to localStorage
 - Added detailed logging to both AI component and Editor page
@@ -514,7 +662,43 @@ setTimeout(() => router.replace(`/editor/project/${newProjectId}`), 100);
 - There may be another navigation trigger we haven't identified
 - Project store state changes might be causing re-navigation
 
-### **NEW TESTING PROTOCOL - File Logging**
+### **RECOMMENDED LOGGING PRIORITY**
+
+**HIGH PRIORITY** (Most likely to reveal the issue):
+1. **Router Events Monitoring** - Will catch the exact navigation trigger
+2. **Project Store State Changes** - May reveal unexpected project resets
+3. **Window/Document Events** - Could catch focus/blur issues
+
+**MEDIUM PRIORITY**:
+4. **Form/Input Event Monitoring** - May catch form submission conflicts
+5. **Error Boundary Logging** - Will catch component crashes
+
+### **IMPLEMENTATION RECOMMENDATION**
+
+Since the issue persists despite extensive debugging, I recommend implementing **Router Events Monitoring** first:
+
+```tsx
+// Add this to apps/web/src/pages/editor/project/[project_id].tsx
+// This will catch the EXACT moment navigation starts and what triggers it
+
+useEffect(() => {
+  const handleRouteChangeStart = (url) => {
+    const stack = new Error().stack;
+    debugLogger.log('Router', 'ROUTE_CHANGE_START', {
+      newUrl: url,
+      currentUrl: router.asPath,
+      currentProjectId: activeProject?.id,
+      callStack: stack, // This will show what code triggered the navigation
+      timestamp: Date.now()
+    });
+  };
+  
+  router.events.on('routeChangeStart', handleRouteChangeStart);
+  return () => router.events.off('routeChangeStart', handleRouteChangeStart);
+}, [router, activeProject?.id]);
+```
+
+### **CURRENT TESTING PROTOCOL**
 
 #### **Immediate Steps**
 1. **Clear existing logs**: Open browser console → `window.debugLogger.clearLogs()`
@@ -526,15 +710,17 @@ setTimeout(() => router.replace(`/editor/project/${newProjectId}`), 100);
 - `AIView - RENDER` - Component render cycles
 - `AIView - MODEL_SELECTION_START` - When dropdown selection begins
 - `AIView - MODEL_SELECTION_COMPLETE` - When selection finishes
-- `AIView - NAVIGATION_DETECTED` - If navigation is triggered
+- `Router - ROUTE_CHANGE_START` - **NEW: Navigation trigger detection**
+- `ProjectStore - SET_ACTIVE_PROJECT` - **NEW: Project state changes**
 - `EditorPage - FALLBACK_DETECTION` - If fallback logic runs
 - `EditorPage - NAVIGATING_TO_PROJECTS` - If redirect happens
 
-#### **Analysis Questions**
+#### **Enhanced Analysis Questions**
 1. Does `MODEL_SELECTION_START` complete without `MODEL_SELECTION_COMPLETE`?
-2. Is `FALLBACK_DETECTION` running after model selection?
-3. What's the time gap between model selection and navigation?
-4. Is the current project ID changing during selection?
+2. Is `ROUTE_CHANGE_START` logged immediately after model selection?
+3. What does the `callStack` in `ROUTE_CHANGE_START` reveal about the trigger?
+4. Is there a `SET_ACTIVE_PROJECT` call that changes the project unexpectedly?
+5. What's the exact time gap between model selection and navigation?
 
 ### **Files Modified for Logging**
 - ✅ `apps/web/src/lib/debug-logger.ts:1-50+` (new file - persistent logging system)
