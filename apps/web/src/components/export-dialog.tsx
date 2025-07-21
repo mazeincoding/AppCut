@@ -177,37 +177,37 @@ export function ExportDialog(): JSX.Element {
     <div className="h-full bg-background rounded-xl">
       <div className="flex flex-col h-full">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border">
+        <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
-            <h2 className="text-lg font-semibold">Export Video</h2>
-            <p className="text-sm text-muted-foreground">Configure your export settings and render your video.</p>
+            <h2 className="text-xl font-semibold">Export Video</h2>
+            <p className="text-sm text-muted-foreground mt-1">Configure your export settings and render your video.</p>
           </div>
           <Button
             variant="ghost"
             size="icon"
             onClick={handleClose}
-            className="h-8 w-8"
+            className="h-9 w-9 rounded-lg"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </Button>
         </div>
         
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Format Selection */}
           <div className="space-y-3">
             <Label className="text-sm font-medium">Format</Label>
             <RadioGroup value={format} onValueChange={(value) => setFormat(value as ExportFormat)}>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value={ExportFormat.MP4} id="mp4" />
+                <RadioGroupItem value={ExportFormat.MP4} id="mp4" className="!h-3 !w-3" />
                 <Label htmlFor="mp4">MP4 (Recommended)</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value={ExportFormat.WEBM} id="webm" />
+                <RadioGroupItem value={ExportFormat.WEBM} id="webm" className="!h-3 !w-3" />
                 <Label htmlFor="webm">WebM</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value={ExportFormat.MOV} id="mov" />
+                <RadioGroupItem value={ExportFormat.MOV} id="mov" className="!h-3 !w-3" />
                 <Label htmlFor="mov">MOV</Label>
               </div>
             </RadioGroup>
@@ -218,15 +218,15 @@ export function ExportDialog(): JSX.Element {
             <Label className="text-sm font-medium">Quality</Label>
             <RadioGroup value={quality} onValueChange={(value) => setQuality(value as ExportQuality)}>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value={ExportQuality.HIGH} id="1080p" />
+                <RadioGroupItem value={ExportQuality.HIGH} id="1080p" className="!h-3 !w-3" />
                 <Label htmlFor="1080p">1080p (High Quality)</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value={ExportQuality.MEDIUM} id="720p" />
+                <RadioGroupItem value={ExportQuality.MEDIUM} id="720p" className="!h-3 !w-3" />
                 <Label htmlFor="720p">720p (Medium Quality)</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value={ExportQuality.LOW} id="480p" />
+                <RadioGroupItem value={ExportQuality.LOW} id="480p" className="!h-3 !w-3" />
                 <Label htmlFor="480p">480p (Low Quality)</Label>
               </div>
             </RadioGroup>
@@ -340,23 +340,23 @@ export function ExportDialog(): JSX.Element {
         </div>
         
         {/* Footer */}
-        <div className="border-t border-border p-4">
-          <div className="flex flex-col gap-2">
+        <div className="border-t border-border p-6">
+          <div className="flex flex-col gap-3">
             <Button
               onClick={handleExport}
               disabled={isExporting || !isValidFilename(filename) || memoryLevel === 'error' || timelineDuration === 0}
-              className="bg-blue-600 hover:bg-blue-700 w-full"
+              className="bg-blue-600 hover:bg-blue-700 w-full h-11 text-sm font-medium"
             >
-              <Download className="h-4 w-4 mr-2" />
+              <Download className="h-4 w-4 mr-2.5" />
               {isExporting ? "Exporting..." : "Export Video"}
             </Button>
             <Button
               variant="outline"
               onClick={handleCancel}
               disabled={isExporting}
-              className="w-full"
+              className="w-full h-11 text-sm font-medium"
             >
-              <X className="h-4 w-4 mr-2" />
+              <X className="h-4 w-4 mr-2.5" />
               Cancel
             </Button>
           </div>
