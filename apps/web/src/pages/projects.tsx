@@ -29,16 +29,16 @@ import { DeleteProjectDialog } from "@/components/delete-project-dialog";
 import { RenameProjectDialog } from "@/components/rename-project-dialog";
 import { ProjectCreationErrorBoundary } from "@/components/project-creation-error-boundary";
 
-function CreateButton({ onClick }: { onClick: () => void }) {
+function CreateButton({ onClick, disabled = false }: { onClick: () => void; disabled?: boolean }) {
   return (
-    <Button className="gap-2" onClick={onClick}>
+    <Button className="gap-2" onClick={onClick} disabled={disabled}>
       <Plus className="!size-4" />
-      New project
+      {disabled ? "Creating..." : "New project"}
     </Button>
   );
 }
 
-function NoProjects({ onCreateProject }: { onCreateProject: () => void }) {
+function NoProjects({ onCreateProject, disabled = false }: { onCreateProject: () => void; disabled?: boolean }) {
   return (
     <div className="flex flex-col items-center justify-center py-24 text-center">
       <Video className="h-16 w-16 text-muted-foreground mb-4" />
@@ -46,7 +46,7 @@ function NoProjects({ onCreateProject }: { onCreateProject: () => void }) {
       <p className="text-muted-foreground mb-6 max-w-md">
         Get started by creating your first video editing project.
       </p>
-      <CreateButton onClick={onCreateProject} />
+      <CreateButton onClick={onCreateProject} disabled={disabled} />
     </div>
   );
 }
@@ -65,17 +65,30 @@ export default function ProjectsPage() {
     new Set()
   );
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
 
   const handleCreateProject = async () => {
+    if (isCreatingProject) {
+      console.log('🚫 [PROJECT] Creation already in progress, ignoring duplicate click');
+      return;
+    }
+    
+    setIsCreatingProject(true);
+    console.log('🚀 [PROJECT] Starting project creation...');
+    
     try {
       const projectId = await createNewProject("New Project");
+      console.log('✅ [PROJECT] Project created, navigating to:', projectId);
       
       // Add small delay to ensure state has stabilized before navigation
       await new Promise(resolve => setTimeout(resolve, 100));
       
       router.push(`/editor/project/${encodeURIComponent(projectId)}`);
     } catch (error) {
+      console.error('❌ [PROJECT] Creation failed:', error);
       throw error; // Re-throw to trigger error boundary
+    } finally {
+      setIsCreatingProject(false);
     }
   };
 
@@ -152,7 +165,7 @@ export default function ProjectsPage() {
             </div>
           ) : (
             <div className="flex flex-col items-end gap-2">
-              <CreateButton onClick={handleCreateProject} />
+              <CreateButton onClick={handleCreateProject} disabled={isCreatingProject} />
               <Button
                 variant="destructive"
                 size="sm"
@@ -211,7 +224,7 @@ export default function ProjectsPage() {
                 >
                   Select Projects
                 </Button>
-                <CreateButton onClick={handleCreateProject} />
+                <CreateButton onClick={handleCreateProject} disabled={isCreatingProject} />
               </div>
             )}
           </div>
@@ -249,7 +262,7 @@ export default function ProjectsPage() {
             <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
           </div>
         ) : savedProjects.length === 0 ? (
-          <NoProjects onCreateProject={handleCreateProject} />
+          <NoProjects onCreateProject={handleCreateProject} disabled={isCreatingProject} />
         ) : (
           <div className="grid grid-cols-4 gap-4">
             {console.log("🎨 [RENDER] Rendering project cards:", savedProjects.length, savedProjects)}

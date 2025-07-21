@@ -14,6 +14,7 @@ import { ElectronRouterWrapper } from '@/components/electron-router-wrapper'
 import { ElectronReactProvider } from '@/components/electron-react-provider'
 import '../styles/globals.css'
 import '@/lib/electron-font-fix'
+import '@/lib/debug-logger'
 
 // ROOT CAUSE FIX: Disable all Next.js router behavior for Electron
 const isElectron = typeof window !== 'undefined' && (window as any).electronAPI;

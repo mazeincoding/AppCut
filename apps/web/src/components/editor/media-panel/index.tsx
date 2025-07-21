@@ -9,6 +9,13 @@ import { AiView } from "./views/ai";
 export function MediaPanel() {
   const { activeTab } = useMediaPanelStore();
 
+  // DEBUG: Media panel tab tracking
+  console.log('📱 MEDIA_PANEL_RENDER:', { 
+    activeTab, 
+    timestamp: Date.now(),
+    aiViewWillRender: activeTab === 'ai'
+  });
+
   const viewMap: Record<Tab, React.ReactNode> = {
     media: <MediaView />,
     audio: (

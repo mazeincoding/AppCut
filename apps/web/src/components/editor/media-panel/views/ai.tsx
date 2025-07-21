@@ -11,7 +11,9 @@ import { generateVideo, generateVideoFromImage, handleApiError, getGenerationSta
 import { useTimelineStore } from "@/stores/timeline-store";
 import { useMediaStore } from "@/stores/media-store";
 import { useProjectStore } from "@/stores/project-store";
+import { useMediaPanelStore } from "../store";
 import { AIHistoryPanel } from "./ai-history-panel";
+import { debugLogger } from "@/lib/debug-logger";
 
 interface AIModel {
   id: string;
@@ -52,8 +54,30 @@ export function AiView() {
   // Image-to-video state
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"text" | "image">("text");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Use global AI tab state instead of local state
+  const { aiActiveTab: activeTab, setAiActiveTab: setActiveTab } = useMediaPanelStore();
+  
+  // Get project store early for debugging
+  const { activeProject } = useProjectStore();
+
+  // Check if current project is a fallback project
+  const isFallbackProject = activeProject?.id?.startsWith('project-') && 
+    /^project-\d{13}$/.test(activeProject?.id || '');
+
+  // DEBUG: Component lifecycle tracking
+  debugLogger.log('AIView', 'RENDER', {
+    activeTab,
+    selectedModel,
+    selectedImageExists: !!selectedImage,
+    currentProjectId: activeProject?.id,
+    isFallbackProject,
+    currentUrl: window.location.href,
+    renderCount: Math.random()
+  });
+
+  // DEBUG: Navigation monitoring - REMOVED BEFOREUNLOAD LISTENER (was causing the navigation issue)
   
   // Progress tracking
   const [generationProgress, setGenerationProgress] = useState<number>(0);
@@ -65,7 +89,6 @@ export function AiView() {
   
   // Store hooks
   const { addMediaItem } = useMediaStore();
-  const { activeProject } = useProjectStore();
 
   const maxChars = 500;
   const remainingChars = maxChars - prompt.length;
@@ -392,7 +415,10 @@ export function AiView() {
       
       <div className="flex-1 flex flex-col gap-4">
         {/* Generation Mode Tabs */}
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "text" | "image")}>
+        <Tabs value={activeTab} onValueChange={(value) => {
+          console.log('🔄 TAB_CHANGE:', { from: activeTab, to: value, timestamp: Date.now() });
+          setActiveTab(value as "text" | "image");
+        }}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="text" className="flex items-center gap-2">
               <TypeIcon className="size-4" />
@@ -404,7 +430,7 @@ export function AiView() {
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="text" className="space-y-4">
+          <TabsContent key="text-tab-content" value="text" className="space-y-4">
             {/* Text Prompt Input */}
             <div className="space-y-2">
               <Label htmlFor="prompt">Describe your video</Label>
@@ -426,7 +452,7 @@ export function AiView() {
             </div>
           </TabsContent>
           
-          <TabsContent value="image" className="space-y-4">
+          <TabsContent key="image-tab-content" value="image" className="space-y-4">
             {/* Image Upload */}
             <div className="space-y-2">
               <Label>Upload Image</Label>
@@ -497,13 +523,84 @@ export function AiView() {
         {/* Model Selection */}
         <div className="space-y-2">
           <Label htmlFor="model">AI Model</Label>
-          <Select value={selectedModel} onValueChange={setSelectedModel}>
-            <SelectTrigger id="model">
+          <Select 
+            key={`model-select-${activeTab}`}
+            value={selectedModel}
+            onValueChange={(value) => {
+              debugLogger.log('AIView', 'MODEL_SELECTION_START', { 
+                selectedModel: value, 
+                previousModel: selectedModel,
+                activeTab,
+                currentProjectId: activeProject?.id,
+                currentUrl: window.location.href
+              });
+              
+              // Prevent any default behaviors
+              if (window.event) {
+                window.event.preventDefault?.();
+                window.event.stopPropagation?.();
+              }
+              
+              setSelectedModel(value);
+              debugLogger.log('AIView', 'MODEL_SELECTION_COMPLETE', { 
+                newModel: value,
+                currentProjectId: activeProject?.id 
+              });
+            }}
+            onOpenChange={(open) => {
+              debugLogger.log('AIView', 'MODEL_DROPDOWN_TOGGLE', { 
+                isOpen: open, 
+                activeTab, 
+                selectedModel,
+                currentProjectId: activeProject?.id
+              });
+              
+              // If opening the dropdown, check for potential navigation triggers
+              if (open) {
+                debugLogger.log('AIView', 'DROPDOWN_OPENING_DEBUG', {
+                  windowLocation: window.location.href,
+                  activeProject: activeProject?.id,
+                  documentState: document.readyState,
+                  hasUnloadListeners: 'onbeforeunload' in window
+                });
+                
+                // Add a small delay to see if navigation happens immediately
+                setTimeout(() => {
+                  debugLogger.log('AIView', 'DROPDOWN_OPENED_CHECK', {
+                    stillOnSamePage: window.location.href.includes(activeProject?.id || ''),
+                    currentUrl: window.location.href
+                  });
+                }, 50);
+              }
+            }}
+          >
+            <SelectTrigger 
+              id="model" 
+              onClick={(e) => {
+                e.stopPropagation();
+                debugLogger.log('AIView', 'MODEL_TRIGGER_CLICK', { 
+                  activeTab, 
+                  selectedModel,
+                  currentProjectId: activeProject?.id
+                });
+              }}
+            >
               <SelectValue placeholder="Select AI model" />
             </SelectTrigger>
             <SelectContent>
               {AI_MODELS.map((model) => (
-                <SelectItem key={model.id} value={model.id}>
+                <SelectItem 
+                  key={model.id} 
+                  value={model.id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    console.log('🎲 MODEL_ITEM_CLICK:', { 
+                      modelId: model.id, 
+                      modelName: model.name,
+                      timestamp: Date.now() 
+                    });
+                  }}
+                >
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{model.name}</span>

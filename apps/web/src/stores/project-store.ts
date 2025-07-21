@@ -36,7 +36,14 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   isInitialized: false,
 
   createNewProject: async (name: string) => {
+    const { isLoading } = get();
+    if (isLoading) {
+      console.log("🚫 CREATE PROJECT BLOCKED: Already creating a project");
+      throw new Error("Project creation already in progress");
+    }
+    
     console.log("🚀 CREATE PROJECT START:", { name, timestamp: Date.now() });
+    set({ isLoading: true });
     
     const newProject: TProject = {
       id: generateUUID(),
@@ -80,6 +87,8 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       // Ensure activeProject is not set if creation failed
       set({ activeProject: null });
       throw error;
+    } finally {
+      set({ isLoading: false });
     }
   },
 

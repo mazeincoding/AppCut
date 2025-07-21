@@ -1,4 +1,4 @@
-import { useEffect, useCallback, Suspense } from "react";
+import { useEffect, useCallback, useRef, Suspense } from "react";
 import { useRouter } from "next/router";
 
 // Debug render counter
@@ -19,6 +19,7 @@ import { EditorProvider } from "@/components/editor-provider";
 import { usePlaybackControls } from "@/hooks/use-playback-controls";
 import { ExportDialog } from "@/components/export-dialog";
 import { useExportStore } from "@/stores/export-store";
+import { debugLogger } from "@/lib/debug-logger";
 
 function EditorContent() {
   const {
@@ -114,24 +115,26 @@ function EditorContent() {
     };
   }, []);
 
+  // Track if fallback check has been done to prevent repeated checks
+  const fallbackCheckDone = useRef(false);
+
   useEffect(() => {
-    console.log('🎯 PROJECT INIT EFFECT:', {
+    debugLogger.log('EditorPage', 'PROJECT_INIT_EFFECT', {
       projectId,
       hasActiveProject: !!activeProject,
       activeProjectId: activeProject?.id,
       needsLoad: projectId && (!activeProject || activeProject.id !== projectId),
-      timestamp: Date.now(),
       renderCount
     });
     
     // Only run if we actually need to load a different project
     if (!projectId) {
-      console.log('❌ NO PROJECT ID - EARLY RETURN');
+      debugLogger.log('EditorPage', 'NO_PROJECT_ID');
       return;
     }
     
     if (activeProject && activeProject.id === projectId) {
-      console.log('✅ PROJECT ALREADY LOADED - EARLY RETURN:', {
+      debugLogger.log('EditorPage', 'PROJECT_ALREADY_LOADED', {
         activeProjectId: activeProject.id,
         requestedProjectId: projectId
       });
@@ -139,7 +142,43 @@ function EditorContent() {
     }
     
     const initializeProject = async () => {
-      console.log('🚀 STARTING PROJECT LOAD:', projectId);
+      debugLogger.log('EditorPage', 'STARTING_PROJECT_LOAD', { projectId });
+      
+      // Check if this is a fallback project ID only once
+      if (!fallbackCheckDone.current) {
+        const isFallbackProjectId = projectId.startsWith('project-') && 
+          (/^project-\d{13}$/.test(projectId) || projectId === 'project-1753087892498');
+        
+        debugLogger.log('EditorPage', 'FALLBACK_DETECTION', {
+          projectId,
+          startsWithProject: projectId.startsWith('project-'),
+          regexTest: /^project-\d{13}$/.test(projectId),
+          isFallbackProjectId,
+          projectIdLength: projectId.length,
+          fallbackCheckAlreadyDone: fallbackCheckDone.current
+        });
+        
+        fallbackCheckDone.current = true;
+        
+        if (isFallbackProjectId) {
+          debugLogger.log('EditorPage', 'FALLBACK_PROJECT_DETECTED', { 
+            projectId,
+            redirectAction: 'projects'
+          });
+          
+          // Clean up any fallback project data from localStorage
+          localStorage.removeItem('opencut-fallback-project');
+          
+          debugLogger.log('EditorPage', 'NAVIGATING_TO_PROJECTS', { 
+            reason: 'fallback_project',
+            projectId 
+          });
+          
+          setTimeout(() => router.replace('/projects'), 100);
+          return;
+        }
+      }
+      
       try {
         await stableLoadProject(projectId);
         console.log('✅ PROJECT LOAD SUCCESS:', projectId);
@@ -156,7 +195,8 @@ function EditorContent() {
               const newProjectId = await stableCreateNewProject(project.name);
               localStorage.removeItem('opencut-fallback-project');
               console.log('🔄 NAVIGATING TO FALLBACK PROJECT:', newProjectId);
-              router.replace(`/editor/project/${newProjectId}`);
+              // Use setTimeout to prevent mid-render navigation that could cause AI component re-mount
+              setTimeout(() => router.replace(`/editor/project/${newProjectId}`), 100);
               return;
             }
           } catch (parseError) {
@@ -172,12 +212,13 @@ function EditorContent() {
           newProjectId,
           currentLocation: window.location.href
         });
-        router.replace(`/editor/project/${newProjectId}`);
+        // Use setTimeout to prevent mid-render navigation that could cause AI component re-mount
+        setTimeout(() => router.replace(`/editor/project/${newProjectId}`), 100);
       }
     };
 
     initializeProject();
-  }, [projectId, activeProject?.id]); // Only primitives, no function references
+  }, [projectId]); // Only run when projectId changes, not on every activeProject update
 
   if (!activeProject) {
     console.log('⏳ RENDERING LOADING SCREEN:', {

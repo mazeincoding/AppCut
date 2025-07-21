@@ -71,9 +71,14 @@ export const tabs: { [key in Tab]: { icon: LucideIcon; label: string } } = {
 interface MediaPanelStore {
   activeTab: Tab;
   setActiveTab: (tab: Tab) => void;
+  // AI-specific tab state (separate from main tabs)
+  aiActiveTab: "text" | "image";
+  setAiActiveTab: (tab: "text" | "image") => void;
 }
 
 export const useMediaPanelStore = create<MediaPanelStore>((set) => ({
   activeTab: "media",
   setActiveTab: (tab) => set({ activeTab: tab }),
+  aiActiveTab: "text",
+  setAiActiveTab: (tab) => set({ aiActiveTab: tab }),
 }));

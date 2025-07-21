@@ -45,33 +45,13 @@ export default function RootLayout({
                 // Fallback handler for New Project button when React fails to hydrate
                 if (e.target.textContent && e.target.textContent.includes('New project')) {
                   console.log('🚀 [FALLBACK] New project button clicked - React fallback handler');
+                  console.log('🔄 [FALLBACK] Redirecting to projects page instead of creating fallback project');
                   
-                  // Create a simple project and navigate to editor
-                  const projectId = 'project-' + Date.now();
-                  const projectName = 'New Project';
-                  
-                  // Save basic project data to localStorage as fallback
+                  // Navigate to projects page where user can create proper project
                   try {
-                    const project = {
-                      id: projectId,
-                      name: projectName,
-                      createdAt: new Date().toISOString(),
-                      updatedAt: new Date().toISOString(),
-                      backgroundColor: '#000000',
-                      backgroundType: 'color',
-                      blurIntensity: 8,
-                      thumbnail: ''
-                    };
-                    
-                    localStorage.setItem('opencut-fallback-project', JSON.stringify(project));
-                    console.log('🚀 [FALLBACK] Project saved to localStorage:', project);
-                    
-                    // Navigate to editor
-                    const editorUrl = 'app://editor/project/index.html?project_id=' + encodeURIComponent(projectId);
-                    console.log('🚀 [FALLBACK] Navigating to:', editorUrl);
-                    window.location.href = editorUrl;
+                    window.location.href = '/projects';
                   } catch (error) {
-                    console.error('🚀 [FALLBACK] Error creating project:', error);
+                    console.error('🚀 [FALLBACK] Error navigating to projects:', error);
                   }
                   
                   e.preventDefault();
