@@ -311,16 +311,28 @@ export function TimelineElement({
       return (
         <div className="relative w-full h-full">
           {/* Video thumbnail background */}
-          {mediaItem.thumbnailUrl && (
+          {mediaItem.thumbnailUrl ? (
             <img
               src={mediaItem.thumbnailUrl}
               alt={mediaItem.name}
-              className="absolute inset-0 w-full h-full object-cover opacity-50"
+              className="absolute inset-0 w-full h-full object-cover opacity-75"
               draggable={false}
             />
+          ) : mediaItem.url ? (
+            /* Fallback: Use video element to show first frame */
+            <video
+              src={mediaItem.url}
+              className="absolute inset-0 w-full h-full object-cover opacity-75"
+              muted
+              playsInline
+              draggable={false}
+            />
+          ) : (
+            /* Fallback: Solid color background */
+            <div className="absolute inset-0 bg-blue-500/20" />
           )}
           {/* Video name overlay */}
-          <div className="absolute inset-0 flex items-center px-2 bg-gradient-to-r from-black/60 to-transparent">
+          <div className="absolute inset-0 flex items-center px-2 bg-gradient-to-r from-black/40 via-transparent to-transparent">
             <span className="text-xs text-white font-medium truncate drop-shadow-sm">
               {element.name}
             </span>
@@ -364,6 +376,7 @@ export function TimelineElement({
           className={`absolute top-0 h-full select-none timeline-element ${
             isBeingDragged ? "z-50" : "z-10"
           }`}
+          data-testid="timeline-element"
           style={{
             left: `${elementLeft}px`,
             width: `${elementWidth}px`,

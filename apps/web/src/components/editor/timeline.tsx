@@ -865,18 +865,29 @@ export function Timeline() {
 
           {/* Timeline Ruler */}
           <div
-            className="flex-1 relative overflow-hidden h-6"
+            className="flex-1 relative overflow-hidden"
+            style={{ height: '28px' }}
             onWheel={handleWheel}
             onMouseDown={handleSelectionMouseDown}
             onClick={handleTimelineContentClick}
             data-ruler-area
+            ref={(el) => {
+              if (el) {
+                console.log("Ruler Container:", {
+                  height: el.offsetHeight,
+                  width: el.offsetWidth,
+                  className: el.className,
+                });
+              }
+            }}
           >
             <ScrollArea className="w-full" ref={rulerScrollRef}>
               <div
                 ref={rulerRef}
-                className="relative h-6 select-none cursor-default"
+                className="relative select-none cursor-default"
                 style={{
                   width: `${dynamicTimelineWidth}px`,
+                  height: '28px',
                 }}
                 onMouseDown={handleRulerMouseDown}
               >
@@ -898,12 +909,31 @@ export function Timeline() {
                   const interval = getTimeInterval(zoomLevel);
                   const markerCount = Math.ceil(duration / interval) + 1;
 
+                  // Debug logging
+                  console.log("Timeline Ruler Debug:", {
+                    zoomLevel,
+                    duration,
+                    interval,
+                    markerCount,
+                    pixelsPerSecond: TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel,
+                    rulerWidth: dynamicTimelineWidth,
+                  });
+
                   return Array.from({ length: markerCount }, (_, i) => {
                     const time = i * interval;
                     if (time > duration) return null;
 
                     const isMainMarker =
                       time % (interval >= 1 ? Math.max(1, interval) : 1) === 0;
+
+                    // Debug each marker
+                    if (i < 5) { // Log first 5 markers
+                      console.log(`Marker ${i}:`, {
+                        time,
+                        leftPosition: time * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel,
+                        isMainMarker,
+                      });
+                    }
 
                     return (
                       <div
