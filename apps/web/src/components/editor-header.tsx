@@ -49,10 +49,10 @@ export function EditorHeader() {
       <Button
         size="sm"
         variant="primary"
-        className="h-7 text-xs"
+        className="h-7 text-xs bg-blue-600 hover:bg-blue-700 text-white"
         onClick={handleExport}
       >
-        <Download className="h-4 w-4" />
+        <Download className="h-4 w-4 mr-1" />
         <span className="text-sm">Export</span>
       </Button>
     </nav>

@@ -1,12 +1,13 @@
 "use client";
 
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { useState, useEffect, useRef } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Download, X, AlertTriangle, Info } from "lucide-react";
 import { ExportFormat, ExportQuality } from "@/types/export";
 import { TimelineElement } from "@/types/timeline";
 import { useExportStore } from "@/stores/export-store";
@@ -16,8 +17,6 @@ import { useMediaStore } from "@/stores/media-store";
 import { ExportCanvas, ExportCanvasRef } from "@/components/export-canvas";
 import { ExportEngine } from "@/lib/export-engine";
 import { memoryMonitor, getMemoryRecommendation, estimateVideoMemoryUsage } from "@/lib/memory-monitor";
-import { useState, useEffect, useRef } from "react";
-import { Download, X, AlertTriangle, Info } from "lucide-react";
 
 interface ExportDialogProps {
   open: boolean;
@@ -31,76 +30,29 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
   const { mediaItems } = useMediaStore();
   const canvasRef = useRef<ExportCanvasRef>(null);
   
-  // Initialize local state from store
+  // Local state
   const [format, setFormat] = useState<ExportFormat>(settings.format);
   const [quality, setQuality] = useState<ExportQuality>(settings.quality);
   const [filename, setFilename] = useState(settings.filename);
   const [memoryWarning, setMemoryWarning] = useState<string | null>(null);
   const [memoryLevel, setMemoryLevel] = useState<'info' | 'warning' | 'critical' | 'error'>('info');
   
-  // Use store state for export progress
+  // Export state
   const isExporting = progress.isExporting;
   const exportProgress = progress.progress;
   const exportStatus = progress.status;
-  
-  // Update store when local state changes
-  useEffect(() => {
-    updateSettings({
-      format,
-      quality,
-      filename,
-      width: getResolution(quality).width,
-      height: getResolution(quality).height,
-    });
-  }, [format, quality, filename, updateSettings]);
 
-  // Check memory usage when quality changes
-  useEffect(() => {
-    const checkMemoryUsage = () => {
-      const resolution = getResolution(quality);
-      const duration = getTotalDuration();
-      const fps = activeProject?.fps || 30;
-      
-      // Estimate memory usage for this export
-      const estimatedMemoryBytes = estimateVideoMemoryUsage(
-        resolution.width,
-        resolution.height,
-        duration,
-        fps
-      );
-      
-      // Check file safety
-      const fileSafetyWarning = memoryMonitor.checkFileSafety(estimatedMemoryBytes);
-      
-      if (fileSafetyWarning) {
-        setMemoryWarning(fileSafetyWarning.message);
-        setMemoryLevel(fileSafetyWarning.level);
-      } else {
-        // Get general recommendation
-        const recommendation = getMemoryRecommendation(estimatedMemoryBytes);
-        if (recommendation !== 'File size is optimal for browser processing') {
-          setMemoryWarning(recommendation);
-          setMemoryLevel('info');
-        } else {
-          setMemoryWarning(null);
-          setMemoryLevel('info');
-        }
-      }
-    };
-    
-    checkMemoryUsage();
-  }, [quality, getTotalDuration, activeProject?.fps]);
-
+  // Helper functions
   const getResolution = (quality: ExportQuality) => {
     switch (quality) {
       case ExportQuality.HIGH:
-        return { width: 1920, height: 1080, label: "1920x1080" };
+        return { width: 1920, height: 1080, label: "1920×1080" };
       case ExportQuality.MEDIUM:
-        return { width: 1280, height: 720, label: "1280x720" };
+        return { width: 1280, height: 720, label: "1280×720" };
       case ExportQuality.LOW:
-        return { width: 854, height: 480, label: "854x480" };
+        return { width: 854, height: 480, label: "854×480" };
       default:
-        return { width: 1920, height: 1080, label: "1920x1080" };
+        return { width: 1920, height: 1080, label: "1920×1080" };
     }
   };
 
@@ -117,68 +69,76 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
     }
   };
 
-  const resolution = getResolution(quality);
-  const estimatedSize = getEstimatedSize(quality);
-
-  // Duration analysis for warnings
-  const timelineDuration = getTotalDuration();
-  const timelineElements = tracks.flatMap(track => track.elements);
-  
-  const getDurationAnalysis = () => {
-    const videoElements = timelineElements.filter(el => el.type === 'media' && 'mediaId' in el) as Array<TimelineElement & { mediaId: string }>;
-    const sourceDurations = videoElements.map(el => {
-      const mediaItem = mediaItems.find(item => item.id === el.mediaId);
-      return {
-        elementDuration: el.duration,
-        sourceDuration: mediaItem?.duration || 0,
-        trimStart: el.trimStart || 0,
-        trimEnd: el.trimEnd || 0,
-        elementId: el.id
-      };
-    });
-    
-    const maxSourceDuration = Math.max(...sourceDurations.map(s => s.sourceDuration), 0);
-    const hasSignificantTrimming = sourceDurations.some(s => 
-      (s.trimStart + s.trimEnd) > 0.5 || 
-      Math.abs(s.elementDuration - s.sourceDuration) > 0.5
-    );
-    
-    return {
-      timelineDuration,
-      maxSourceDuration,
-      hasSignificantTrimming,
-      durationDifference: maxSourceDuration - timelineDuration,
-      sourceDurations
-    };
+  const isValidFilename = (name: string) => {
+    return name.trim().length > 0 && !/[<>:"/\\|?*]/.test(name);
   };
 
-  const durationAnalysis = getDurationAnalysis();
+  // Computed values
+  const resolution = getResolution(quality);
+  const estimatedSize = getEstimatedSize(quality);
+  const timelineDuration = getTotalDuration();
 
-  const handleExport = async () => {
-    const canvas = canvasRef.current?.getCanvas();
-    if (!canvas) {
-      updateProgress({ isExporting: false });
-      return;
-    }
+  // Update store when local state changes
+  useEffect(() => {
+    updateSettings({
+      format,
+      quality,
+      filename,
+      width: resolution.width,
+      height: resolution.height,
+    });
+  }, [format, quality, filename, resolution.width, resolution.height, updateSettings]);
 
-    updateProgress({ isExporting: true, progress: 0, status: "Initializing export..." });
-    
-    try {
-      // Get all timeline elements from all tracks
-      const timelineElements = tracks.flatMap(track => track.elements);
+  // Memory check effect
+  useEffect(() => {
+    const checkMemoryUsage = () => {
+      const duration = getTotalDuration();
+      const fps = activeProject?.fps || 30;
       
-      // Create export engine
-      const exportEngine = new ExportEngine({
-        canvas,
-        settings,
-        timelineElements,
+      const estimatedMemoryBytes = estimateVideoMemoryUsage(
+        resolution.width,
+        resolution.height,
+        duration,
+        fps
+      );
+      
+      const fileSafetyWarning = memoryMonitor.checkFileSafety(estimatedMemoryBytes);
+      
+      if (fileSafetyWarning) {
+        setMemoryWarning(fileSafetyWarning.message);
+        setMemoryLevel(fileSafetyWarning.level);
+      } else {
+        const recommendation = getMemoryRecommendation(estimatedMemoryBytes);
+        setMemoryWarning(recommendation.message);
+        setMemoryLevel(recommendation.level);
+      }
+    };
+    
+    checkMemoryUsage();
+  }, [quality, getTotalDuration, activeProject?.fps, resolution.width, resolution.height]);
+
+  // Event handlers
+  const handleExport = async () => {
+    if (!canvasRef.current || isExporting) return;
+
+    try {
+      updateProgress({ isExporting: true, progress: 0, status: "Initializing export..." });
+      
+      const exportEngine = new ExportEngine(canvasRef.current);
+      await exportEngine.initialize({
+        tracks,
         mediaItems,
-        duration: getTotalDuration(),
-        fps: activeProject?.fps || 30,
+        settings: {
+          ...settings,
+          format,
+          quality,
+          filename,
+          width: resolution.width,
+          height: resolution.height,
+        },
         onProgress: (progress, status) => {
-          updateProgress({ progress, status });
+          updateProgress({ isExporting: true, progress, status });
           
-          // Check for memory warnings in status
           if (status.includes('💾') || status.includes('⚠️')) {
             setMemoryWarning(status);
             setMemoryLevel('warning');
@@ -189,10 +149,7 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
         },
       });
 
-      // Start export
       const videoBlob = await exportEngine.startExport();
-      
-      // Create download
       const fullFilename = `${filename}.${format}`;
       ExportEngine.createDownloadLink(videoBlob, fullFilename);
       
@@ -211,42 +168,42 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
     }
   };
 
-  const handleOpenChange = (open: boolean) => {
-    // Prevent closing dialog during export
-    if (!open && isExporting) {
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen && isExporting) {
       return;
     }
-    onOpenChange(open);
+    onOpenChange(newOpen);
   };
 
-  const isValidFilename = (name: string) => {
-    return name.trim().length > 0 && !/[<>:"/\\|?*]/.test(name);
-  };
-
-  // Debug logging
-  console.log('Export button debug:', {
-    timelineDuration,
-    timelineElements: timelineElements.length,
-    tracks: tracks.length,
-    isValidFilename: isValidFilename(filename),
-    memoryLevel,
-    isExporting,
-    filename
-  });
+  // Panel classes
+  const panelClasses = `fixed top-0 right-0 h-full w-96 bg-background border-l border-border shadow-lg transform transition-transform duration-300 ease-in-out z-50 ${
+    open ? 'translate-x-0' : 'translate-x-full'
+  }`;
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Export Video</DialogTitle>
-          <DialogDescription>
-            Configure your export settings and render your video.
-          </DialogDescription>
-        </DialogHeader>
+    <div className={panelClasses}>
+      <div className="flex flex-col h-full">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-border">
+          <div>
+            <h2 className="text-lg font-semibold">Export Video</h2>
+            <p className="text-sm text-muted-foreground">Configure your export settings and render your video.</p>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => handleOpenChange(false)}
+            className="h-8 w-8"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
         
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Format</Label>
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+          {/* Format Selection */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Format</Label>
             <RadioGroup value={format} onValueChange={(value) => setFormat(value as ExportFormat)}>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value={ExportFormat.MP4} id="mp4" />
@@ -263,8 +220,9 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
             </RadioGroup>
           </div>
           
-          <div className="space-y-2">
-            <Label>Quality</Label>
+          {/* Quality Selection */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Quality</Label>
             <RadioGroup value={quality} onValueChange={(value) => setQuality(value as ExportQuality)}>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value={ExportQuality.HIGH} id="1080p" />
@@ -280,69 +238,56 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
               </div>
             </RadioGroup>
           </div>
-          
-          <div className="space-y-2">
-            <Label>Resolution & Size</Label>
-            <div className="p-3 bg-muted rounded-lg">
+
+          {/* Resolution & Size Info */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Resolution & Size</Label>
+            <div className="p-3 bg-muted rounded-lg space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Resolution:</span>
-                <span className="text-sm">{resolution.label}</span>
+                <span className="text-xs font-medium">Resolution:</span>
+                <span className="text-xs">{resolution.label}</span>
               </div>
-              <div className="flex justify-between items-center mt-1">
-                <span className="text-sm font-medium">Est. size:</span>
-                <span className="text-sm text-muted-foreground">{estimatedSize}</span>
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-medium">Est. size:</span>
+                <span className="text-xs text-muted-foreground">{estimatedSize}</span>
               </div>
-              <div className="flex justify-between items-center mt-1">
-                <span className="text-sm font-medium">Memory:</span>
-                <span className="text-sm text-muted-foreground">{memoryMonitor.getMemorySummary()}</span>
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-medium">Memory:</span>
+                <span className="text-xs text-muted-foreground">{memoryMonitor.getMemorySummary()}</span>
               </div>
             </div>
           </div>
+          
+          {/* Filename Input */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium" htmlFor="filename">Filename</Label>
+            <div className="flex items-center space-x-2">
+              <Input
+                id="filename"
+                value={filename}
+                onChange={(e) => setFilename(e.target.value)}
+                placeholder="Enter filename"
+                className={!isValidFilename(filename) ? "border-red-500" : ""}
+              />
+              <span className="text-xs text-muted-foreground">.{format}</span>
+            </div>
+            {!isValidFilename(filename) && (
+              <p className="text-xs text-red-500">
+                Invalid filename. Avoid special characters: &lt; &gt; : " / \ | ? *
+              </p>
+            )}
+          </div>
 
-          {/* Duration Analysis Section */}
-          <div className="space-y-2">
-            <Label>Export Duration</Label>
+          {/* Duration Info */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Export Duration</Label>
             <div className="p-3 bg-muted rounded-lg">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Timeline duration:</span>
-                <span className="text-sm">{timelineDuration.toFixed(2)}s</span>
+                <span className="text-xs font-medium">Timeline duration:</span>
+                <span className="text-xs">{timelineDuration.toFixed(2)}s</span>
               </div>
-              {durationAnalysis.maxSourceDuration > 0 && (
-                <div className="flex justify-between items-center mt-1">
-                  <span className="text-sm font-medium">Source video duration:</span>
-                  <span className="text-sm text-muted-foreground">{durationAnalysis.maxSourceDuration.toFixed(2)}s</span>
-                </div>
-              )}
-              
-              {/* Warning for significant duration mismatch */}
-              {durationAnalysis.durationDifference > 1 && (
-                <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm">
-                  <div className="flex items-start space-x-2">
-                    <span className="text-yellow-600">⚠️</span>
-                    <div className="text-yellow-800">
-                      <div className="font-medium">Duration Notice</div>
-                      <div>Your timeline ({timelineDuration.toFixed(1)}s) is shorter than your source video ({durationAnalysis.maxSourceDuration.toFixed(1)}s). Only the timeline content will be exported.</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {/* Warning for trimming */}
-              {durationAnalysis.hasSignificantTrimming && (
-                <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
-                  <div className="flex items-start space-x-2">
-                    <span className="text-blue-600">ℹ️</span>
-                    <div className="text-blue-800">
-                      <div className="font-medium">Trimming Applied</div>
-                      <div>Some video clips have been trimmed or shortened on the timeline.</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {/* No content warning */}
               {timelineDuration === 0 && (
-                <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-sm">
+                <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs">
                   <div className="flex items-start space-x-2">
                     <span className="text-red-600">❌</span>
                     <div className="text-red-800">
@@ -355,6 +300,7 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
             </div>
           </div>
           
+          {/* Memory Warning */}
           {memoryWarning && (
             <Alert className={`${
               memoryLevel === 'error' ? 'border-red-500 bg-red-50 dark:bg-red-950' :
@@ -384,65 +330,52 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
               </div>
             </Alert>
           )}
-          
-          <div className="space-y-2">
-            <Label htmlFor="filename">Filename</Label>
-            <div className="flex items-center space-x-2">
-              <Input
-                id="filename"
-                value={filename}
-                onChange={(e) => setFilename(e.target.value)}
-                placeholder="Enter filename"
-                className={!isValidFilename(filename) ? "border-red-500" : ""}
-              />
-              <span className="text-sm text-muted-foreground">.{format}</span>
+
+          {/* Export Progress */}
+          {isExporting && (
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label className="text-sm font-medium">Export Progress</Label>
+                  <span className="text-xs text-muted-foreground">{exportProgress.toFixed(0)}%</span>
+                </div>
+                <Progress value={exportProgress} className="w-full" />
+                <p className="text-xs text-muted-foreground">{exportStatus}</p>
+              </div>
             </div>
-            {!isValidFilename(filename) && (
-              <p className="text-sm text-red-500">
-                Invalid filename. Avoid special characters: &lt; &gt; : " / \ | ? *
-              </p>
-            )}
-          </div>
+          )}
         </div>
         
-        {isExporting && (
-          <div className="space-y-3">
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <Label>Export Progress</Label>
-                <span className="text-sm text-muted-foreground">{exportProgress}%</span>
-              </div>
-              <Progress value={exportProgress} className="w-full" />
-              <p className="text-sm text-muted-foreground">{exportStatus}</p>
-            </div>
+        {/* Footer */}
+        <div className="border-t border-border p-4">
+          <div className="flex flex-col gap-2">
+            <Button
+              onClick={handleExport}
+              disabled={isExporting || !isValidFilename(filename) || memoryLevel === 'error' || timelineDuration === 0}
+              className="bg-blue-600 hover:bg-blue-700 w-full"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              {isExporting ? "Exporting..." : "Export Video"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleCancel}
+              disabled={isExporting}
+              className="w-full"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Cancel
+            </Button>
           </div>
-        )}
-        
-        <ExportCanvas
-          ref={canvasRef}
-          settings={settings}
-          className="export-canvas"
-        />
-        
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={handleCancel}
-            disabled={isExporting}
-          >
-            <X className="h-4 w-4 mr-2" />
-            Cancel
-          </Button>
-          <Button
-            onClick={handleExport}
-            disabled={isExporting || !isValidFilename(filename) || memoryLevel === 'error' || timelineDuration === 0}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            <Download className="h-4 w-4 mr-2" />
-            {isExporting ? "Exporting..." : "Export Video"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </div>
+      
+      {/* Hidden Export Canvas */}
+      <ExportCanvas
+        ref={canvasRef}
+        settings={settings}
+        className="export-canvas"
+      />
+    </div>
   );
 }
