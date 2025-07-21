@@ -214,39 +214,36 @@ export default function ProjectsPage() {
         ) : savedProjects.length === 0 ? (
           <NoProjects onCreateProject={handleCreateProject} />
         ) : (
-          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 min-h-[300px]">
+          <div className="grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {console.log("🎨 [RENDER] Rendering project cards:", savedProjects.length, savedProjects)}
-            {/* Debug: Add a test card to check if grid is working */}
-            <div className="bg-red-500 text-white p-8 rounded-lg min-h-[200px] flex flex-col justify-center">
-              <h3 className="text-xl font-bold">Debug Test Card</h3>
-              <p className="text-lg">If you see this, the grid is working</p>
-              <p>Projects count: {savedProjects.length}</p>
-            </div>
             {savedProjects.map((project) => {
               console.log("🎨 [RENDER] Rendering project:", project.id, project.name);
               const isSelected = selectedProjects.has(project.id);
               return (
                 <div 
                   key={project.id} 
-                  className={`bg-white border-2 hover:border-blue-400 text-gray-800 p-4 rounded-lg min-h-[200px] transition-colors relative ${
-                    isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+                  className={`group bg-white border rounded-xl overflow-hidden transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${
+                    isSelected 
+                      ? 'border-blue-500 ring-2 ring-blue-200 shadow-md' 
+                      : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  {/* Selection checkbox */}
-                  <div className="absolute top-3 left-3">
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        handleSelectProject(project.id, e.target.checked);
-                      }}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                  </div>
-
-                  {/* Delete button */}
-                  <div className="absolute top-3 right-3">
+                  {/* Thumbnail Preview Area - Compact */}
+                  <div className="relative h-24 bg-gray-100 flex items-center justify-center">
+                    {project.thumbnail ? (
+                      <img
+                        src={project.thumbnail}
+                        alt="Project thumbnail"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center text-gray-400">
+                        <Video className="h-6 w-6 mr-2" />
+                        <span className="text-xs">No preview</span>
+                      </div>
+                    )}
+                    
+                    {/* Delete button overlay */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -255,25 +252,55 @@ export default function ProjectsPage() {
                           deleteProject(project.id);
                         }
                       }}
-                      className="w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-sm font-bold transition-colors"
+                      className="absolute top-2 right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold transition-colors opacity-0 hover:opacity-100 group-hover:opacity-100"
                       title="Delete project"
                     >
                       ×
                     </button>
                   </div>
 
-                  {/* Project content - clickable area */}
-                  <div 
-                    className="pt-8 pb-2 cursor-pointer"
-                    onClick={() => {
-                      console.log("🔗 [CLICK DEBUG] Click: DIV Project:", project.id);
-                      window.location.href = `/editor/project/${encodeURIComponent(project.id)}`;
-                    }}
-                  >
-                    <h3 className="text-lg font-bold mb-2 text-gray-900">Project: {project.name}</h3>
-                    <p className="text-sm text-gray-600 mb-1">ID: {project.id.substring(0, 20)}...</p>
-                    <p className="text-sm text-gray-600">Created: {project.createdAt.toDateString()}</p>
-                    <div className="mt-4 text-xs text-gray-500">Click to open project</div>
+                  {/* Project Info Section - Compact */}
+                  <div className="p-3">
+                    <div className="mb-2">
+                      <h3 className="font-semibold text-gray-900 text-sm mb-1 line-clamp-1">
+                        {project.name}
+                      </h3>
+                      <div className="space-y-0.5">
+                        <p className="text-xs text-gray-500">
+                          Created: {project.createdAt.toLocaleDateString()}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Last edited: {Math.floor((Date.now() - project.updatedAt.getTime()) / (1000 * 60 * 60 * 24))} days ago
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            handleSelectProject(project.id, e.target.checked);
+                          }}
+                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                        <span className="text-xs text-gray-600">Select</span>
+                      </label>
+                      
+                      <button
+                        onClick={() => {
+                          console.log("🔗 [CLICK DEBUG] Click: Open Project:", project.id);
+                          window.location.href = `/editor/project/${encodeURIComponent(project.id)}`;
+                        }}
+                        className="flex items-center space-x-1 px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded-md transition-colors"
+                      >
+                        <span>▶</span>
+                        <span>Open</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
