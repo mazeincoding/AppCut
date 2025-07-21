@@ -78,7 +78,7 @@ export function TabBar() {
           return (
             <div
               className={cn(
-                "flex flex-col gap-2 items-center cursor-pointer px-2 py-2 mx-4 rounded-md transition-colors hover:bg-white/5 flex-shrink-0 min-w-[60px]",
+                "flex flex-col gap-1 items-center cursor-pointer px-1.5 py-1.5 mx-2 rounded-md transition-colors hover:bg-white/5 flex-shrink-0 min-w-[48px]",
                 activeTab === tabKey ? "text-primary" : "text-muted-foreground"
               )}
               onClick={() => setActiveTab(tabKey)}

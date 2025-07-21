@@ -865,7 +865,7 @@ export function Timeline() {
 
           {/* Timeline Ruler */}
           <div
-            className="flex-1 relative overflow-hidden h-4"
+            className="flex-1 relative overflow-hidden h-6"
             onWheel={handleWheel}
             onMouseDown={handleSelectionMouseDown}
             onClick={handleTimelineContentClick}
@@ -874,7 +874,7 @@ export function Timeline() {
             <ScrollArea className="w-full" ref={rulerScrollRef}>
               <div
                 ref={rulerRef}
-                className="relative h-4 select-none cursor-default"
+                className="relative h-6 select-none cursor-default"
                 style={{
                   width: `${dynamicTimelineWidth}px`,
                 }}
@@ -918,7 +918,7 @@ export function Timeline() {
                         }}
                       >
                         <span
-                          className={`absolute top-1 left-1 text-[0.6rem] ${
+                          className={`absolute top-0 left-1.5 text-[0.65rem] ${
                             isMainMarker
                               ? "text-muted-foreground font-medium"
                               : "text-muted-foreground/70"

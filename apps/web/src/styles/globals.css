@@ -37,6 +37,8 @@
     --sidebar-accent-foreground: 0 0% 9%;
     --sidebar-border: 0 0% 89.8%;
     --sidebar-ring: 0 0% 3.9%;
+    --panel-background: 0 0% 98%;
+    --panel-accent: 0 0% 95%;
   }
   .dark {
     --background: 0 0% 4%;
