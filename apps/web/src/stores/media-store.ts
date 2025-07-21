@@ -33,7 +33,7 @@ interface MediaStore {
   addMediaItem: (
     projectId: string,
     item: Omit<MediaItem, "id">
-  ) => Promise<void>;
+  ) => Promise<MediaItem>;
   removeMediaItem: (projectId: string, id: string) => Promise<void>;
   loadProjectMedia: (projectId: string) => Promise<void>;
   clearProjectMedia: (projectId: string) => Promise<void>;
@@ -180,7 +180,10 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
       set((state) => ({
         mediaItems: state.mediaItems.filter((media) => media.id !== newItem.id),
       }));
+      throw error; // Re-throw to indicate failure
     }
+
+    return newItem; // Return the created item
   },
 
   removeMediaItem: async (projectId, id: string) => {

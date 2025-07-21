@@ -158,4 +158,15 @@ export function useEditorActions() {
   useActionHandler("redo", () => {
     redo();
   });
+
+  useActionHandler("freeze-frame", async () => {
+    const timelineStore = useTimelineStore.getState();
+    try {
+      await timelineStore.createFreezeFrame();
+      toast.success("Freeze frame created successfully!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to create freeze frame");
+    }
+  });
 }

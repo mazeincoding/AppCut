@@ -82,6 +82,9 @@ export function Timeline() {
     rippleEditingEnabled,
     toggleRippleEditing,
     dragState,
+    findOrCreateTrack,
+    checkElementOverlap,
+    createFreezeFrame,
   } = useTimelineStore();
   const { mediaItems, addMediaItem } = useMediaStore();
   const { activeProject } = useProjectStore();
@@ -491,8 +494,8 @@ export function Timeline() {
     clearSelectedElements();
   };
 
-  const handleFreezeSelected = () => {
-    toast.info("Freeze frame functionality coming soon!");
+  const handleFreezeSelected = async () => {
+    await createFreezeFrame();
   };
 
   const handleSplitAndKeepLeft = () => {
@@ -878,7 +881,13 @@ export function Timeline() {
           {/* Timeline Ruler */}
           <div
             className="flex-1 relative overflow-hidden h-4"
-            onWheel={handleWheel}
+            onWheel={(e) => {
+              // Check if this is horizontal scrolling - if so, don't handle it here
+              if (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+                return; // Let ScrollArea handle horizontal scrolling
+              }
+              handleWheel(e);
+            }}
             onMouseDown={handleSelectionMouseDown}
             onClick={handleTimelineContentClick}
             data-ruler-area
@@ -999,7 +1008,13 @@ export function Timeline() {
           {/* Timeline Tracks Content */}
           <div
             className="flex-1 relative overflow-hidden"
-            onWheel={handleWheel}
+            onWheel={(e) => {
+              // Check if this is horizontal scrolling - if so, don't handle it here
+              if (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+                return; // Let ScrollArea handle horizontal scrolling
+              }
+              handleWheel(e);
+            }}
             onMouseDown={(e) => {
               handleTimelineMouseDown(e);
               handleSelectionMouseDown(e);
