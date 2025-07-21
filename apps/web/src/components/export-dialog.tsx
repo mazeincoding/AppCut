@@ -199,7 +199,7 @@ export function ExportDialog(): JSX.Element {
             <Label className="text-sm font-medium">Format</Label>
             <RadioGroup value={format} onValueChange={(value) => setFormat(value as ExportFormat)}>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value={ExportFormat.MP4} id="mp4" className="!h-3 !w-3" />
+                <RadioGroupItem value={ExportFormat.MP4} id="mp4" style={{ width: '12px', height: '12px' }} />
                 <Label htmlFor="mp4">MP4 (Recommended)</Label>
               </div>
               <div className="flex items-center space-x-2">
