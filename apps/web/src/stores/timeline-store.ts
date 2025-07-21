@@ -1338,8 +1338,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
         return currentTime;
       }
 
-      // If preferred time doesn't work, find the next available slot
-      currentTime = 0; // Start from beginning if preferred time doesn't work
+      // If preferred time doesn't work, find the next available slot starting from preferred time
 
       for (const element of sortedElements) {
         const elementEnd = element.startTime + 
@@ -1609,10 +1608,10 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
           get().pushHistory();
 
           const elementStart = targetElement.startTime;
-          const elementEnd = targetElement.startTime + (targetElement.duration - targetElement.trimStart - targetElement.trimEnd);
           const splitTime = currentTime;
 
-          // Calculate durations for the split parts
+          // Calculate durations for the split parts  
+          const elementEnd = targetElement.startTime + (targetElement.duration - targetElement.trimStart - targetElement.trimEnd);
           const leftElementDuration = splitTime - elementStart;
           const rightElementDuration = elementEnd - splitTime;
           
