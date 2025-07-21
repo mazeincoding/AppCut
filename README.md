@@ -23,6 +23,7 @@
 - Real-time preview
 - No watermarks or subscriptions
 - Analytics provided by [Databuddy](https://www.databuddy.cc?utm_source=opencut), 100% Anonymized & Non-invasive.
+- Blog powered by [Marble](https://marblecms.com?utm_source=opencut), Headless CMS.
 
 ## Project Structure
 
@@ -112,6 +113,10 @@ Before you begin, ensure you have the following installed on your system:
    # Redis (matches docker-compose.yaml)
    UPSTASH_REDIS_REST_URL="http://localhost:8079"
    UPSTASH_REDIS_REST_TOKEN="example_token"
+
+   # Marble Blog
+  MARBLE_WORKSPACE_KEY=cm6ytuq9x0000i803v0isidst # example organization key
+  MARBLE_API_URL=https://api.marblecms.com
 
    # Development
    NODE_ENV="development"
