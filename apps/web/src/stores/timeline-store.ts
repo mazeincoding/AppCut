@@ -350,7 +350,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
 
     addTrack: (type) => {
       get().pushHistory();
-      let trackName = type;
+      let trackName: string = type;
       let trackType: TrackType = type;
       if (type === "media") {
         // If there is no main track, this will be handled by ensureMainTrack
@@ -376,19 +376,22 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
 
     insertTrackAt: (type, index) => {
       get().pushHistory();
-      let trackName = type;
+      let trackName: string = type;
+      let trackType: TrackType = type;
       if (type === "media") {
         const mainExists = get()._tracks.some(t => t.type === "media" && t.isMain);
         if (!mainExists) {
           trackName = "Main Track";
+          trackType = "media";
         } else {
           trackName = "media";
+          trackType = "media";
         }
       }
       const newTrack: TimelineTrack = {
         id: generateUUID(),
         name: trackName,
-        type,
+        type: trackType,
         elements: [],
         muted: false,
       };
