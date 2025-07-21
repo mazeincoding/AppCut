@@ -347,6 +347,7 @@ export function PreviewPanel() {
         {hasAnyElements ? (
           <div
             ref={previewRef}
+            data-preview-panel
             className="relative overflow-hidden border"
             style={{
               width: previewDimensions.width,

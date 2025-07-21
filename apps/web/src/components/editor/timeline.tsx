@@ -82,6 +82,9 @@ export function Timeline() {
     rippleEditingEnabled,
     toggleRippleEditing,
     dragState,
+    findOrCreateTrack,
+    checkElementOverlap,
+    createFreezeFrame,
   } = useTimelineStore();
   const { mediaItems, addMediaItem } = useMediaStore();
   const { activeProject } = useProjectStore();
@@ -491,8 +494,8 @@ export function Timeline() {
     clearSelectedElements();
   };
 
-  const handleFreezeSelected = () => {
-    toast.info("Freeze frame functionality coming soon!");
+  const handleFreezeSelected = async () => {
+    await createFreezeFrame();
   };
 
   const handleSplitAndKeepLeft = () => {
