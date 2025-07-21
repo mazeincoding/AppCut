@@ -174,7 +174,7 @@ export function ExportDialog(): JSX.Element {
   };
 
   return (
-    <div className="h-full bg-background border-l border-border rounded-sm">
+    <div className="h-full bg-background rounded-xl">
       <div className="flex flex-col h-full">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">

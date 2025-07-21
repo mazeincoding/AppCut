@@ -209,14 +209,16 @@ function EditorContent() {
       <EditorHeader />
       <div className="flex-1 overflow-hidden flex flex-col">
         <div className="flex-1 p-2">
-          <ResizablePanelGroup direction="horizontal" className="w-full h-full gap-2">
+          <ResizablePanelGroup direction="horizontal" className="w-full h-full gap-4">
             <ResizablePanel 
               defaultSize={toolsPanel} 
               minSize={15} 
               maxSize={35}
               onResize={(size) => setToolsPanel(size)}
             >
-              <MediaPanel />
+              <div className="h-full border-4 border-border rounded-xl overflow-hidden">
+                <MediaPanel />
+              </div>
             </ResizablePanel>
             <ResizableHandle withHandle />
             <ResizablePanel 
@@ -224,7 +226,9 @@ function EditorContent() {
               minSize={30}
               onResize={(size) => setMainContent(size)}
             >
-              <PreviewPanel />
+              <div className="h-full border-4 border-border rounded-xl overflow-hidden">
+                <PreviewPanel />
+              </div>
             </ResizablePanel>
             <ResizableHandle withHandle />
             <ResizablePanel 
@@ -233,12 +237,16 @@ function EditorContent() {
               maxSize={35}
               onResize={(size) => setPropertiesPanel(size)}
             >
-              {isDialogOpen ? <ExportDialog /> : <PropertiesPanel />}
+              <div className="h-full border-4 border-border rounded-xl overflow-hidden">
+                {isDialogOpen ? <ExportDialog /> : <PropertiesPanel />}
+              </div>
             </ResizablePanel>
           </ResizablePanelGroup>
         </div>
-        <div className="border-t">
-          <Timeline />
+        <div className="p-2 pt-0">
+          <div className="border-4 border-border rounded-xl overflow-hidden">
+            <Timeline />
+          </div>
         </div>
       </div>
     </div>
