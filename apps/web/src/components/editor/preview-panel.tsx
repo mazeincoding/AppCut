@@ -43,6 +43,18 @@ export function PreviewPanel() {
   });
   const { activeProject } = useProjectStore();
 
+  //handle fullScreen
+  const handleFullScreen = () => {
+    // Only attempt fullscreen if ref is available
+    if (previewRef.current && previewRef.current.requestFullscreen) {
+      previewRef.current.requestFullscreen().catch(() => {
+        alert(
+          "Failed to enter fullscreen. Your browser may block this operation."
+        );
+      });
+    }
+  };
+
   // Calculate optimal preview size that fits in container while maintaining aspect ratio
   useEffect(() => {
     const updatePreviewSize = () => {
@@ -380,13 +392,24 @@ export function PreviewPanel() {
 
         <div className="flex-1"></div>
 
-        <PreviewToolbar hasAnyElements={hasAnyElements} />
+        <PreviewToolbar
+          hasAnyElements={hasAnyElements}
+          onExpand={handleFullScreen}
+        />
       </div>
     </div>
   );
 }
 
-function PreviewToolbar({ hasAnyElements }: { hasAnyElements: boolean }) {
+function PreviewToolbar({
+  hasAnyElements,
+
+  //for fullScreen function
+  onExpand,
+}: {
+  hasAnyElements: boolean;
+  onExpand: () => void;
+}) {
   const { isPlaying, toggle, currentTime } = usePlaybackStore();
   const { setCanvasSize, setCanvasSizeToOriginal } = useEditorStore();
   const { getTotalDuration } = useTimelineStore();
@@ -488,6 +511,7 @@ function PreviewToolbar({ hasAnyElements }: { hasAnyElements: boolean }) {
           variant="text"
           size="icon"
           className="!size-4 text-muted-foreground"
+          onClick={onExpand}
         >
           <Expand className="!size-4" />
         </Button>
