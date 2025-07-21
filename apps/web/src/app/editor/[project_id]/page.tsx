@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ResizablePanelGroup,
@@ -16,7 +16,6 @@ import { usePanelStore } from "@/stores/panel-store";
 import { useProjectStore } from "@/stores/project-store";
 import { EditorProvider } from "@/components/editor-provider";
 import { usePlaybackControls } from "@/hooks/use-playback-controls";
-import { useDisableBrowserZoom } from "@/hooks/use-disable-browser-zoom";
 import { Onboarding } from "@/components/onboarding";
 import { usePanelLayoutStore } from "@/stores/panel-layout-store";
 
@@ -40,9 +39,7 @@ export default function Editor() {
   const router = useRouter();
   const projectId = params.project_id as string;
   const handledProjectIds = useRef<Set<string>>(new Set());
-  const [isOnboardingOpen, setIsOnboardingOpen] = useState(true);
 
-  useDisableBrowserZoom();
   usePlaybackControls();
 
   const isInitialMount = useRef(true);
@@ -244,6 +241,7 @@ export default function Editor() {
         <div className="flex-1 min-h-0 min-w-0" key={activeLayout}>
           {renderLayout()}
         </div>
+        <Onboarding />
       </div>
     </EditorProvider>
   );

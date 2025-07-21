@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -10,44 +10,48 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "./ui/dialog";
-import { Badge } from "./ui/badge";
+import { getPlatformSpecialKey } from "@/lib/utils";
 import { Keyboard } from "lucide-react";
-import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import {
+  useKeyboardShortcutsHelp,
+  KeyboardShortcut,
+} from "@/hooks/use-keyboard-shortcuts-help";
+import { useKeybindingsStore } from "@/stores/keybindings-store";
+import { toast } from "sonner";
 
-const KeyBadge = ({ keyName }: { keyName: string }) => {
-  // Replace common key names with symbols or friendly names
-  const displayKey = keyName
-    .replace("Cmd", "⌘")
-    .replace("Shift", "Shift")
-    .replace("ArrowLeft", "Arrow Left")
-    .replace("ArrowRight", "Arrow Right")
-    .replace("ArrowUp", "Arrow Up")
-    .replace("ArrowDown", "Arrow Down")
-    .replace("←", "◀")
-    .replace("→", "▶")
-    .replace("Space", "Space");
-
-  return (
-    <Badge variant="secondary" className="font-mono text-xs px-1 py-1">
-      {displayKey}
-    </Badge>
-  );
+const modifier: {
+  [key: string]: string;
+} = {
+  Shift: "Shift",
+  Alt: "Alt",
+  ArrowLeft: "←",
+  ArrowRight: "→",
+  ArrowUp: "↑",
+  ArrowDown: "↓",
+  Space: "Space",
 };
 
-const ShortcutItem = ({ shortcut }: { shortcut: any }) => {
+function getKeyWithModifier(key: string) {
+  if (key === "Ctrl") return getPlatformSpecialKey();
+  return modifier[key] || key;
+}
+
+const ShortcutItem = ({
+  shortcut,
+  recordingKey,
+  onStartRecording,
+}: {
+  shortcut: KeyboardShortcut;
+  recordingKey: string | null;
+  onStartRecording: (keyId: string, shortcut: KeyboardShortcut) => void;
+}) => {
   // Filter out lowercase duplicates for display - if both "j" and "J" exist, only show "J"
   const displayKeys = shortcut.keys.filter((key: string) => {
-    const lowerKey = key.toLowerCase();
-    const upperKey = key.toUpperCase();
-
-    // If this is a lowercase letter and the uppercase version exists, skip it
     if (
-      key === lowerKey &&
-      key !== upperKey &&
-      shortcut.keys.includes(upperKey)
-    ) {
+      key.includes("Cmd") &&
+      shortcut.keys.includes(key.replace("Cmd", "Ctrl"))
+    )
       return false;
-    }
 
     return true;
   });
@@ -64,14 +68,21 @@ const ShortcutItem = ({ shortcut }: { shortcut: any }) => {
         {displayKeys.map((key: string, index: number) => (
           <div key={index} className="flex items-center gap-1">
             <div className="flex items-center">
-              {key.split("+").map((keyPart: string, partIndex: number) => (
-                <div key={partIndex} className="flex items-center gap-1">
-                  <KeyBadge keyName={keyPart} />
-                  {partIndex < key.split("+").length - 1 && (
-                    <span className="text-xs text-muted-foreground">+</span>
-                  )}
-                </div>
-              ))}
+              {key.split("+").map((keyPart: string, partIndex: number) => {
+                const keyId = `${shortcut.id}-${index}-${partIndex}`;
+                return (
+                  <EditableShortcutKey
+                    key={partIndex}
+                    keyId={keyId}
+                    originalKey={key}
+                    shortcut={shortcut}
+                    isRecording={recordingKey === keyId}
+                    onStartRecording={() => onStartRecording(keyId, shortcut)}
+                  >
+                    {getKeyWithModifier(keyPart)}
+                  </EditableShortcutKey>
+                );
+              })}
             </div>
             {index < displayKeys.length - 1 && (
               <span className="text-xs text-muted-foreground">or</span>
@@ -83,13 +94,124 @@ const ShortcutItem = ({ shortcut }: { shortcut: any }) => {
   );
 };
 
+const EditableShortcutKey = ({
+  children,
+  keyId,
+  originalKey,
+  shortcut,
+  isRecording,
+  onStartRecording,
+}: {
+  children: React.ReactNode;
+  keyId: string;
+  originalKey: string;
+  shortcut: KeyboardShortcut;
+  isRecording: boolean;
+  onStartRecording: () => void;
+}) => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onStartRecording();
+  };
+
+  return (
+    <kbd
+      className={`inline-flex font-sans text-xs rounded px-2 min-w-[1.5rem] min-h-[1.5rem] leading-none items-center justify-center shadow-sm border mr-1 cursor-pointer hover:bg-opacity-80 ${
+        isRecording
+          ? "border-primary bg-primary/10"
+          : "border-white/10 bg-black/20"
+      }`}
+      onClick={handleClick}
+      title={
+        isRecording ? "Press any key combination..." : "Click to edit shortcut"
+      }
+    >
+      {children}
+    </kbd>
+  );
+};
+
 export const KeyboardShortcutsHelp = () => {
   const [open, setOpen] = useState(false);
+  const [recordingKey, setRecordingKey] = useState<string | null>(null);
+  const [recordingShortcut, setRecordingShortcut] =
+    useState<KeyboardShortcut | null>(null);
 
-  // Get shortcuts from centralized hook (disabled so it doesn't add event listeners)
-  const { shortcuts } = useKeyboardShortcuts({ enabled: false });
+  const {
+    updateKeybinding,
+    removeKeybinding,
+    getKeybindingString,
+    validateKeybinding,
+    getKeybindingsForAction,
+  } = useKeybindingsStore();
+
+  // Get shortcuts from centralized hook
+  const { shortcuts } = useKeyboardShortcutsHelp();
 
   const categories = Array.from(new Set(shortcuts.map((s) => s.category)));
+
+  useEffect(() => {
+    if (!recordingKey || !recordingShortcut) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const keyString = getKeybindingString(e);
+      if (keyString) {
+        // Auto-save the new keybinding
+        const conflict = validateKeybinding(
+          keyString,
+          recordingShortcut.action
+        );
+        if (conflict) {
+          toast.error(
+            `Key "${keyString}" is already bound to "${conflict.existingAction}"`
+          );
+          setRecordingKey(null);
+          setRecordingShortcut(null);
+          return;
+        }
+
+        // Remove old keybindings for this action
+        const oldKeys = getKeybindingsForAction(recordingShortcut.action);
+        oldKeys.forEach((key) => removeKeybinding(key));
+
+        // Add new keybinding
+        updateKeybinding(keyString, recordingShortcut.action);
+
+        setRecordingKey(null);
+        setRecordingShortcut(null);
+      }
+    };
+
+    const handleClickOutside = (e: MouseEvent) => {
+      setRecordingKey(null);
+      setRecordingShortcut(null);
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("click", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [
+    recordingKey,
+    recordingShortcut,
+    getKeybindingString,
+    updateKeybinding,
+    removeKeybinding,
+    validateKeybinding,
+    getKeybindingsForAction,
+  ]);
+
+  const handleStartRecording = (keyId: string, shortcut: KeyboardShortcut) => {
+    setRecordingKey(keyId);
+    setRecordingShortcut(shortcut);
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -99,7 +221,7 @@ export const KeyboardShortcutsHelp = () => {
           Shortcuts
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-hidden flex">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Keyboard className="w-5 h-5" />
@@ -107,7 +229,7 @@ export const KeyboardShortcutsHelp = () => {
           </DialogTitle>
           <DialogDescription>
             Speed up your video editing workflow with these keyboard shortcuts.
-            Most shortcuts work when the timeline is focused.
+            Click any shortcut key to edit it.
           </DialogDescription>
         </DialogHeader>
 
@@ -121,7 +243,12 @@ export const KeyboardShortcutsHelp = () => {
                 {shortcuts
                   .filter((shortcut) => shortcut.category === category)
                   .map((shortcut, index) => (
-                    <ShortcutItem key={index} shortcut={shortcut} />
+                    <ShortcutItem
+                      key={index}
+                      shortcut={shortcut}
+                      recordingKey={recordingKey}
+                      onStartRecording={handleStartRecording}
+                    />
                   ))}
               </div>
             </div>

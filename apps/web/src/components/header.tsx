@@ -4,28 +4,9 @@ import Link from "next/link";
 import { Button } from "./ui/button";
 import { ArrowRight } from "lucide-react";
 import { HeaderBase } from "./header-base";
-import { useSession } from "@opencut/auth/client";
-import { getStars } from "@/lib/fetch-github-stars";
-import { useEffect, useState } from "react";
 import Image from "next/image";
 
 export function Header() {
-  const { data: session } = useSession();
-  const [star, setStar] = useState<string>("");
-
-  useEffect(() => {
-    const fetchStars = async () => {
-      try {
-        const data = await getStars();
-        setStar(data);
-      } catch (err) {
-        console.error("Failed to fetch GitHub stars", err);
-      }
-    };
-
-    fetchStars();
-  }, []);
-
   const leftContent = (
     <Link href="/" className="flex items-center gap-3">
       <Image src="/logo.svg" alt="OpenCut Logo" width={32} height={32} />
@@ -40,21 +21,12 @@ export function Header() {
           Contributors
         </Button>
       </Link>
-      {process.env.NODE_ENV === "development" ? (
-        <Link href="/projects">
-          <Button size="sm" className="text-sm ml-4">
-            Projects
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </Link>
-      ) : (
-        <Link href="https://github.com/OpenCut-app/OpenCut" target="_blank">
-          <Button size="sm" className="text-sm ml-4">
-            GitHub {star}+
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </Link>
-      )}
+      <Link href="/projects">
+        <Button size="sm" className="text-sm ml-4">
+          Projects
+          <ArrowRight className="h-4 w-4" />
+        </Button>
+      </Link>
     </nav>
   );
 

@@ -21,6 +21,7 @@ import { useProjectStore } from "./project-store";
 import { generateUUID } from "@/lib/utils";
 import { TIMELINE_CONSTANTS } from "@/constants/timeline-constants";
 import { toast } from "sonner";
+import { checkElementOverlaps, resolveElementOverlaps } from "@/lib/timeline";
 
 // Helper function to manage element naming with suffixes
 const getElementNameWithSuffix = (
@@ -54,6 +55,10 @@ interface TimelineStore {
 
   // Snapping actions
   toggleSnapping: () => void;
+
+  // Ripple editing mode
+  rippleEditingEnabled: boolean;
+  toggleRippleEditing: () => void;
 
   // Multi-selection
   selectedElements: { trackId: string; elementId: string }[];
@@ -89,6 +94,7 @@ interface TimelineStore {
   addTrack: (type: TrackType) => string;
   insertTrackAt: (type: TrackType, index: number) => string;
   removeTrack: (trackId: string) => void;
+  removeTrackWithRipple: (trackId: string) => void;
   addElementToTrack: (trackId: string, element: CreateTimelineElement) => void;
   removeElementFromTrack: (trackId: string, elementId: string) => void;
   moveElementToTrack: (
@@ -138,6 +144,17 @@ interface TimelineStore {
     elementId: string,
     newFile: File
   ) => Promise<boolean>;
+
+  // Ripple editing functions
+  updateElementStartTimeWithRipple: (
+    trackId: string,
+    elementId: string,
+    newStartTime: number
+  ) => void;
+  removeElementFromTrackWithRipple: (
+    trackId: string,
+    elementId: string
+  ) => void;
 
   // Computed values
   getTotalDuration: () => number;
@@ -226,6 +243,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
     history: [],
     redoStack: [],
     selectedElements: [],
+    rippleEditingEnabled: false,
 
     // Snapping settings defaults
     snappingEnabled: true,
@@ -346,10 +364,107 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
     },
 
     removeTrack: (trackId) => {
+      const { rippleEditingEnabled } = get();
+
+      if (rippleEditingEnabled) {
+        get().removeTrackWithRipple(trackId);
+      } else {
+        get().pushHistory();
+        updateTracksAndSave(
+          get()._tracks.filter((track) => track.id !== trackId)
+        );
+      }
+    },
+
+    removeTrackWithRipple: (trackId) => {
+      const { _tracks } = get();
+      const trackToRemove = _tracks.find((t) => t.id === trackId);
+
+      if (!trackToRemove) return;
+
       get().pushHistory();
-      updateTracksAndSave(
-        get()._tracks.filter((track) => track.id !== trackId)
-      );
+
+      // If track has no elements, just remove it normally
+      if (trackToRemove.elements.length === 0) {
+        updateTracksAndSave(_tracks.filter((track) => track.id !== trackId));
+        return;
+      }
+
+      // Find all the time ranges occupied by elements in the track being removed
+      const occupiedRanges = trackToRemove.elements.map((element) => ({
+        startTime: element.startTime,
+        endTime:
+          element.startTime +
+          (element.duration - element.trimStart - element.trimEnd),
+      }));
+
+      // Sort ranges by start time
+      occupiedRanges.sort((a, b) => a.startTime - b.startTime);
+
+      // Merge overlapping ranges to get consolidated gaps
+      const mergedRanges: Array<{
+        startTime: number;
+        endTime: number;
+        duration: number;
+      }> = [];
+
+      for (const range of occupiedRanges) {
+        if (mergedRanges.length === 0) {
+          mergedRanges.push({
+            startTime: range.startTime,
+            endTime: range.endTime,
+            duration: range.endTime - range.startTime,
+          });
+        } else {
+          const lastRange = mergedRanges[mergedRanges.length - 1];
+          if (range.startTime <= lastRange.endTime) {
+            // Overlapping or adjacent ranges, merge them
+            lastRange.endTime = Math.max(lastRange.endTime, range.endTime);
+            lastRange.duration = lastRange.endTime - lastRange.startTime;
+          } else {
+            // Non-overlapping range, add as new
+            mergedRanges.push({
+              startTime: range.startTime,
+              endTime: range.endTime,
+              duration: range.endTime - range.startTime,
+            });
+          }
+        }
+      }
+
+      // Remove the track and apply ripple effects to remaining tracks
+      const updatedTracks = _tracks
+        .filter((track) => track.id !== trackId)
+        .map((track) => {
+          const updatedElements = track.elements.map((element) => {
+            let newStartTime = element.startTime;
+
+            // Process gaps from right to left (latest to earliest) to avoid cumulative shifts
+            for (let i = mergedRanges.length - 1; i >= 0; i--) {
+              const gap = mergedRanges[i];
+              // If this element starts after the gap, shift it left by the gap duration
+              if (newStartTime >= gap.endTime) {
+                newStartTime -= gap.duration;
+              }
+            }
+
+            return {
+              ...element,
+              startTime: Math.max(0, newStartTime),
+            };
+          });
+
+          // Check for overlaps and resolve them if necessary
+          const hasOverlaps = checkElementOverlaps(updatedElements);
+          if (hasOverlaps) {
+            const resolvedElements = resolveElementOverlaps(updatedElements);
+            return { ...track, elements: resolvedElements };
+          }
+
+          return { ...track, elements: updatedElements };
+        });
+
+      updateTracksAndSave(updatedTracks);
     },
 
     addElementToTrack: (trackId, elementData) => {
@@ -434,21 +549,99 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
     },
 
     removeElementFromTrack: (trackId, elementId) => {
+      const { rippleEditingEnabled } = get();
+
+      if (rippleEditingEnabled) {
+        get().removeElementFromTrackWithRipple(trackId, elementId);
+      } else {
+        get().pushHistory();
+        updateTracksAndSave(
+          get()
+            ._tracks.map((track) =>
+              track.id === trackId
+                ? {
+                    ...track,
+                    elements: track.elements.filter(
+                      (element) => element.id !== elementId
+                    ),
+                  }
+                : track
+            )
+            .filter((track) => track.elements.length > 0)
+        );
+      }
+    },
+
+    removeElementFromTrackWithRipple: (trackId, elementId) => {
+      const { _tracks, rippleEditingEnabled } = get();
+
+      if (!rippleEditingEnabled) {
+        // If ripple editing is disabled, use regular removal
+        get().removeElementFromTrack(trackId, elementId);
+        return;
+      }
+
+      const track = _tracks.find((t) => t.id === trackId);
+      const element = track?.elements.find((e) => e.id === elementId);
+
+      if (!element || !track) return;
+
       get().pushHistory();
-      updateTracksAndSave(
-        get()
-          ._tracks.map((track) =>
-            track.id === trackId
-              ? {
-                  ...track,
-                  elements: track.elements.filter(
-                    (element) => element.id !== elementId
+
+      const elementStartTime = element.startTime;
+      const elementDuration =
+        element.duration - element.trimStart - element.trimEnd;
+      const elementEndTime = elementStartTime + elementDuration;
+
+      // Remove the element and shift all elements that come after it
+      const updatedTracks = _tracks
+        .map((currentTrack) => {
+          // Only apply ripple effects to the same track unless multi-track ripple is enabled
+          const shouldApplyRipple = currentTrack.id === trackId;
+
+          const updatedElements = currentTrack.elements
+            .filter((currentElement) => {
+              // Remove the target element
+              if (
+                currentElement.id === elementId &&
+                currentTrack.id === trackId
+              ) {
+                return false;
+              }
+              return true;
+            })
+            .map((currentElement) => {
+              // Only apply ripple effects if we should process this track
+              if (!shouldApplyRipple) {
+                return currentElement;
+              }
+
+              // Shift elements that start after the removed element
+              if (currentElement.startTime >= elementEndTime) {
+                return {
+                  ...currentElement,
+                  startTime: Math.max(
+                    0,
+                    currentElement.startTime - elementDuration
                   ),
-                }
-              : track
-          )
-          .filter((track) => track.elements.length > 0)
-      );
+                };
+              }
+              return currentElement;
+            });
+
+          // Check for overlaps and resolve them if necessary
+          const hasOverlaps = checkElementOverlaps(updatedElements);
+          if (hasOverlaps) {
+            // Resolve overlaps by adjusting element positions
+            const resolvedElements = resolveElementOverlaps(updatedElements);
+            return { ...currentTrack, elements: resolvedElements };
+          }
+
+          return { ...currentTrack, elements: updatedElements };
+        })
+        .filter((track) => track.elements.length > 0 || track.isMain);
+
+      updateTracksAndSave(updatedTracks);
     },
 
     moveElementToTrack: (fromTrackId, toTrackId, elementId) => {
@@ -542,6 +735,95 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
             : track
         )
       );
+    },
+
+    updateElementStartTimeWithRipple: (trackId, elementId, newStartTime) => {
+      const { _tracks, rippleEditingEnabled } = get();
+
+      if (!rippleEditingEnabled) {
+        // If ripple editing is disabled, use regular update
+        get().updateElementStartTime(trackId, elementId, newStartTime);
+        return;
+      }
+
+      const track = _tracks.find((t) => t.id === trackId);
+      const element = track?.elements.find((e) => e.id === elementId);
+
+      if (!element || !track) return;
+
+      get().pushHistory();
+
+      const oldStartTime = element.startTime;
+      const oldEndTime =
+        element.startTime +
+        (element.duration - element.trimStart - element.trimEnd);
+      const newEndTime =
+        newStartTime + (element.duration - element.trimStart - element.trimEnd);
+      const timeDelta = newStartTime - oldStartTime;
+
+      // Update tracks based on multi-track ripple setting
+      const updatedTracks = _tracks.map((currentTrack) => {
+        // Only apply ripple effects to the same track unless multi-track ripple is enabled
+        const shouldApplyRipple = currentTrack.id === trackId;
+
+        const updatedElements = currentTrack.elements.map((currentElement) => {
+          if (currentElement.id === elementId && currentTrack.id === trackId) {
+            // Update the moved element
+            return { ...currentElement, startTime: newStartTime };
+          }
+
+          // Only apply ripple effects if we should process this track
+          if (!shouldApplyRipple) {
+            return currentElement;
+          }
+
+          // For ripple editing, we need to move elements that come after the moved element
+          const currentElementStart = currentElement.startTime;
+          const currentElementEnd =
+            currentElement.startTime +
+            (currentElement.duration -
+              currentElement.trimStart -
+              currentElement.trimEnd);
+
+          // If moving element to the right (positive delta)
+          if (timeDelta > 0) {
+            // Move elements that start after the original position of the moved element
+            if (currentElementStart >= oldEndTime) {
+              return {
+                ...currentElement,
+                startTime: currentElementStart + timeDelta,
+              };
+            }
+          }
+          // If moving element to the left (negative delta)
+          else if (timeDelta < 0) {
+            // Move elements that start after the new position of the moved element
+            if (
+              currentElementStart >= newEndTime &&
+              currentElementStart >= oldStartTime
+            ) {
+              return {
+                ...currentElement,
+                startTime: Math.max(0, currentElementStart + timeDelta),
+              };
+            }
+          }
+
+          return currentElement;
+        });
+
+        // Check for overlaps and resolve them if necessary
+        const hasOverlaps = checkElementOverlaps(updatedElements);
+        if (hasOverlaps) {
+          // Resolve overlaps by adjusting element positions
+          const resolvedElements = resolveElementOverlaps(updatedElements);
+          return { ...currentTrack, elements: resolvedElements };
+        }
+
+        return { ...currentTrack, elements: updatedElements };
+      });
+
+      updateTracksAndSave(updatedTracks);
     },
 
     toggleTrackMute: (trackId) => {
@@ -980,6 +1262,13 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
     // Snapping actions
     toggleSnapping: () => {
       set((state) => ({ snappingEnabled: !state.snappingEnabled }));
+    },
+
+    // Ripple editing functions
+    toggleRippleEditing: () => {
+      set((state) => ({
+        rippleEditingEnabled: !state.rippleEditingEnabled,
+      }));
     },
 
     checkElementOverlap: (trackId, startTime, duration, excludeElementId) => {

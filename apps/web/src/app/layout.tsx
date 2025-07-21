@@ -8,6 +8,7 @@ import { StorageProvider } from "../components/storage-provider";
 import { baseMetaData } from "./metadata";
 import { defaultFont } from "../lib/font-config";
 import { BotIdClient } from "botid/client";
+import { env } from "@/env";
 
 export const metadata = baseMetaData;
 
@@ -39,6 +40,7 @@ export default function RootLayout({
               strategy="afterInteractive"
               async
               data-client-id="UP-Wcoy5arxFeK7oyjMMZ"
+              data-disabled={env.NODE_ENV === "development"}
               data-track-attributes={false}
               data-track-errors={true}
               data-track-outgoing-links={false}

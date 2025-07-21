@@ -3,7 +3,11 @@
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { useEditorStore } from "@/stores/editor-store";
-import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import {
+  useKeybindingsListener,
+  useKeybindingDisabler,
+} from "@/hooks/use-keybindings";
+import { useEditorActions } from "@/hooks/use-editor-actions";
 
 interface EditorProviderProps {
   children: React.ReactNode;
@@ -11,11 +15,22 @@ interface EditorProviderProps {
 
 export function EditorProvider({ children }: EditorProviderProps) {
   const { isInitializing, isPanelsReady, initializeApp } = useEditorStore();
+  const { disableKeybindings, enableKeybindings } = useKeybindingDisabler();
 
-  useKeyboardShortcuts({
-    enabled: !isInitializing && isPanelsReady,
-    context: "editor",
-  });
+  // Set up action handlers
+  useEditorActions();
+
+  // Set up keybinding listener
+  useKeybindingsListener();
+
+  // Disable keybindings when initializing
+  useEffect(() => {
+    if (isInitializing || !isPanelsReady) {
+      disableKeybindings();
+    } else {
+      enableKeybindings();
+    }
+  }, [isInitializing, isPanelsReady, disableKeybindings, enableKeybindings]);
 
   useEffect(() => {
     initializeApp();

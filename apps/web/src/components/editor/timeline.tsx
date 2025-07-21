@@ -16,9 +16,8 @@ import {
   Music,
   TypeIcon,
   Lock,
-  ZoomIn,
-  ZoomOut,
   LockOpen,
+  Link,
 } from "lucide-react";
 import {
   Tooltip,
@@ -57,9 +56,6 @@ import {
   TIMELINE_CONSTANTS,
   snapTimeToFrame,
 } from "@/constants/timeline-constants";
-import { Slider } from "../ui/slider";
-import TimelineCanvasRuler from "./timeline-canvas/timeline-canvas-ruler";
-import TimelineCanvasRulerWrapper from "./timeline-canvas/timeline-canvas-ruler-wrapper";
 
 export function Timeline() {
   // Timeline shows all tracks (video, audio, effects) and their elements.
@@ -71,6 +67,7 @@ export function Timeline() {
     addTrack,
     addElementToTrack,
     removeElementFromTrack,
+    removeElementFromTrackWithRipple,
     getTotalDuration,
     selectedElements,
     clearSelectedElements,
@@ -80,10 +77,10 @@ export function Timeline() {
     splitAndKeepRight,
     toggleTrackMute,
     separateAudio,
-    undo,
-    redo,
     snappingEnabled,
     toggleSnapping,
+    rippleEditingEnabled,
+    toggleRippleEditing,
     dragState,
   } = useTimelineStore();
   const { mediaItems, addMediaItem } = useMediaStore();
@@ -98,14 +95,19 @@ export function Timeline() {
   const rulerRef = useRef<HTMLDivElement>(null);
   const [isInTimeline, setIsInTimeline] = useState(false);
 
+  // Track mouse down/up for distinguishing clicks from drag/resize ends
+  const mouseTrackingRef = useRef({
+    isMouseDown: false,
+    downX: 0,
+    downY: 0,
+    downTime: 0,
+  });
+
   // Timeline zoom functionality
-  const {
-    zoomLevel,
-    zoomStep,
-    handleChangeZoomLevel,
-    handleChangeZoomStep,
-    handleWheel,
-  } = useTimelineZoom();
+  const { zoomLevel, setZoomLevel, handleWheel } = useTimelineZoom({
+    containerRef: timelineRef,
+    isInTimeline,
+  });
 
   // Old marquee selection removed - using new SelectionBox component instead
 
@@ -118,6 +120,7 @@ export function Timeline() {
 
   // Scroll synchronization and auto-scroll to playhead
   const rulerScrollRef = useRef<HTMLDivElement>(null);
+  const tracksScrollRef = useRef<HTMLDivElement>(null);
   const trackLabelsRef = useRef<HTMLDivElement>(null);
   const playheadRef = useRef<HTMLDivElement>(null);
   const trackLabelsScrollRef = useRef<HTMLDivElement>(null);
@@ -134,6 +137,8 @@ export function Timeline() {
     seek,
     rulerRef,
     rulerScrollRef,
+    tracksScrollRef,
+    playheadRef,
   });
 
   // Selection box functionality
@@ -164,18 +169,66 @@ export function Timeline() {
     setCurrentSnapPoint(snapPoint);
   }, []);
 
+  // Track mouse down to distinguish real clicks from drag/resize ends
+  const handleTimelineMouseDown = useCallback((e: React.MouseEvent) => {
+    // Only track mouse down on timeline background areas (not elements)
+    const target = e.target as HTMLElement;
+    const isTimelineBackground =
+      !target.closest(".timeline-element") &&
+      !playheadRef.current?.contains(target) &&
+      !target.closest("[data-track-labels]");
+
+    if (isTimelineBackground) {
+      mouseTrackingRef.current = {
+        isMouseDown: true,
+        downX: e.clientX,
+        downY: e.clientY,
+        downTime: e.timeStamp,
+      };
+    }
+  }, []);
+
   // Timeline content click to seek handler
   const handleTimelineContentClick = useCallback(
     (e: React.MouseEvent) => {
-      console.log(
-        JSON.stringify({
-          timelineClick: {
-            isSelecting,
-            justFinishedSelecting,
-            willReturn: isSelecting || justFinishedSelecting,
-          },
-        })
-      );
+      const { isMouseDown, downX, downY, downTime } = mouseTrackingRef.current;
+
+      // Reset mouse tracking
+      mouseTrackingRef.current = {
+        isMouseDown: false,
+        downX: 0,
+        downY: 0,
+        downTime: 0,
+      };
+
+      // Only process as click if we tracked a mouse down on timeline background
+      if (!isMouseDown) {
+        console.log(
+          JSON.stringify({
+            ignoredClickWithoutMouseDown: true,
+            timeStamp: e.timeStamp,
+          })
+        );
+        return;
+      }
+
+      // Check if mouse moved significantly (indicates drag, not click)
+      const deltaX = Math.abs(e.clientX - downX);
+      const deltaY = Math.abs(e.clientY - downY);
+      const deltaTime = e.timeStamp - downTime;
+
+      if (deltaX > 5 || deltaY > 5 || deltaTime > 500) {
+        console.log(
+          JSON.stringify({
+            ignoredDragNotClick: true,
+            deltaX,
+            deltaY,
+            deltaTime,
+            timeStamp: e.timeStamp,
+          })
+        );
+        return;
+      }
 
       // Don't seek if this was a selection box operation
       if (isSelecting || justFinishedSelecting) {
@@ -203,14 +256,14 @@ export function Timeline() {
       clearSelectedElements();
 
       // Determine if we're clicking in ruler or tracks area
-      const isTracksAreaClick = (e.target as HTMLElement).closest(
-        "[data-tracks-area]"
+      const isRulerClick = (e.target as HTMLElement).closest(
+        "[data-ruler-area]"
       );
 
       let mouseX: number;
       let scrollLeft = 0;
 
-      if (isTracksAreaClick) {
+      if (isRulerClick) {
         // Calculate based on ruler position
         const rulerContent = rulerScrollRef.current?.querySelector(
           "[data-radix-scroll-area-viewport]"
@@ -220,7 +273,14 @@ export function Timeline() {
         mouseX = e.clientX - rect.left;
         scrollLeft = rulerContent.scrollLeft;
       } else {
-        return;
+        // Calculate based on tracks content position
+        const tracksContent = tracksScrollRef.current?.querySelector(
+          "[data-radix-scroll-area-viewport]"
+        ) as HTMLElement;
+        if (!tracksContent) return;
+        const rect = tracksContent.getBoundingClientRect();
+        mouseX = e.clientX - rect.left;
+        scrollLeft = tracksContent.scrollLeft;
       }
 
       const rawTime = Math.max(
@@ -243,6 +303,7 @@ export function Timeline() {
       zoomLevel,
       seek,
       rulerScrollRef,
+      tracksScrollRef,
       clearSelectedElements,
       isSelecting,
       justFinishedSelecting,
@@ -496,7 +557,11 @@ export function Timeline() {
       return;
     }
     selectedElements.forEach(({ trackId, elementId }) => {
-      removeElementFromTrack(trackId, elementId);
+      if (rippleEditingEnabled) {
+        removeElementFromTrackWithRipple(trackId, elementId);
+      } else {
+        removeElementFromTrack(trackId, elementId);
+      }
     });
     clearSelectedElements();
   };
@@ -506,11 +571,14 @@ export function Timeline() {
     const rulerViewport = rulerScrollRef.current?.querySelector(
       "[data-radix-scroll-area-viewport]"
     ) as HTMLElement;
+    const tracksViewport = tracksScrollRef.current?.querySelector(
+      "[data-radix-scroll-area-viewport]"
+    ) as HTMLElement;
     const trackLabelsViewport = trackLabelsScrollRef.current?.querySelector(
       "[data-radix-scroll-area-viewport]"
     ) as HTMLElement;
 
-    if (!rulerViewport) return;
+    if (!rulerViewport || !tracksViewport) return;
 
     // Horizontal scroll synchronization between ruler and tracks
     const handleRulerScroll = () => {
@@ -518,6 +586,7 @@ export function Timeline() {
       if (isUpdatingRef.current || now - lastRulerSync.current < 16) return;
       lastRulerSync.current = now;
       isUpdatingRef.current = true;
+      tracksViewport.scrollLeft = rulerViewport.scrollLeft;
       isUpdatingRef.current = false;
     };
     const handleTracksScroll = () => {
@@ -525,10 +594,12 @@ export function Timeline() {
       if (isUpdatingRef.current || now - lastTracksSync.current < 16) return;
       lastTracksSync.current = now;
       isUpdatingRef.current = true;
+      rulerViewport.scrollLeft = tracksViewport.scrollLeft;
       isUpdatingRef.current = false;
     };
 
     rulerViewport.addEventListener("scroll", handleRulerScroll);
+    tracksViewport.addEventListener("scroll", handleTracksScroll);
 
     // Vertical scroll synchronization between track labels and tracks content
     if (trackLabelsViewport) {
@@ -538,6 +609,7 @@ export function Timeline() {
           return;
         lastVerticalSync.current = now;
         isUpdatingRef.current = true;
+        tracksViewport.scrollTop = trackLabelsViewport.scrollTop;
         isUpdatingRef.current = false;
       };
       const handleTracksVerticalScroll = () => {
@@ -546,22 +618,30 @@ export function Timeline() {
           return;
         lastVerticalSync.current = now;
         isUpdatingRef.current = true;
+        trackLabelsViewport.scrollTop = tracksViewport.scrollTop;
         isUpdatingRef.current = false;
       };
 
       trackLabelsViewport.addEventListener("scroll", handleTrackLabelsScroll);
+      tracksViewport.addEventListener("scroll", handleTracksVerticalScroll);
 
       return () => {
         rulerViewport.removeEventListener("scroll", handleRulerScroll);
+        tracksViewport.removeEventListener("scroll", handleTracksScroll);
         trackLabelsViewport.removeEventListener(
           "scroll",
           handleTrackLabelsScroll
+        );
+        tracksViewport.removeEventListener(
+          "scroll",
+          handleTracksVerticalScroll
         );
       };
     }
 
     return () => {
       rulerViewport.removeEventListener("scroll", handleRulerScroll);
+      tracksViewport.removeEventListener("scroll", handleTracksScroll);
     };
   }, []);
 
@@ -721,39 +801,6 @@ export function Timeline() {
               </TooltipTrigger>
               <TooltipContent>Delete element (Delete)</TooltipContent>
             </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  className="ml-auto"
-                  variant="text"
-                  size="icon"
-                  onClick={() => handleChangeZoomLevel(zoomLevel - 0.15)}
-                >
-                  <ZoomOut className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Zoom Out</TooltipContent>
-            </Tooltip>
-            <Slider
-              className="max-w-24"
-              max={TIMELINE_CONSTANTS.MAX_ZOOM_STEP}
-              min={0}
-              step={1}
-              value={[zoomStep]}
-              onValueChange={(value) => handleChangeZoomStep(value[0])}
-            />
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="text"
-                  size="icon"
-                  onClick={() => handleChangeZoomLevel(zoomLevel + 0.15)}
-                >
-                  <ZoomIn className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Zoom In</TooltipContent>
-            </Tooltip>
           </TooltipProvider>
         </div>
         <div className="flex items-center gap-1">
@@ -762,13 +809,31 @@ export function Timeline() {
               <TooltipTrigger asChild>
                 <Button variant="text" size="icon" onClick={toggleSnapping}>
                   {snappingEnabled ? (
-                    <Lock className="h-4 w-4" />
-                  ) : (
                     <LockOpen className="h-4 w-4 text-primary" />
+                  ) : (
+                    <Lock className="h-4 w-4" />
                   )}
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Auto snapping</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="text"
+                  size="icon"
+                  onClick={toggleRippleEditing}
+                >
+                  <Link
+                    className={`h-4 w-4 ${rippleEditingEnabled ? "text-primary" : ""}`}
+                  />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {rippleEditingEnabled
+                  ? "Disable Ripple Editing"
+                  : "Enable Ripple Editing"}
+              </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
@@ -787,6 +852,7 @@ export function Timeline() {
           seek={seek}
           rulerRef={rulerRef}
           rulerScrollRef={rulerScrollRef}
+          tracksScrollRef={tracksScrollRef}
           trackLabelsRef={trackLabelsRef}
           timelineRef={timelineRef}
           playheadRef={playheadRef}
@@ -804,38 +870,114 @@ export function Timeline() {
         />
         {/* Timeline Header with Ruler */}
         <div className="flex bg-panel sticky top-0 z-10">
-          <div className="w-48 flex-shrink-0 bg-muted/30 border-r h-5 px-3" />
+          {/* Track Labels Header */}
+          <div className="w-48 flex-shrink-0 bg-muted/30 border-r flex items-center justify-between px-3 py-2">
+            {/* Empty space */}
+            <span className="text-sm font-medium text-muted-foreground opacity-0">
+              .
+            </span>
+          </div>
 
-          <div className="flex-1 overflow-hidden h-5">
+          {/* Timeline Ruler */}
+          <div
+            className="flex-1 relative overflow-hidden h-4"
+            onWheel={handleWheel}
+            onMouseDown={handleSelectionMouseDown}
+            onClick={handleTimelineContentClick}
+            data-ruler-area
+          >
             <ScrollArea className="w-full" ref={rulerScrollRef}>
-              <TimelineCanvasRulerWrapper
+              <div
                 ref={rulerRef}
+                className="relative h-4 select-none cursor-default"
+                style={{
+                  width: `${dynamicTimelineWidth}px`,
+                }}
                 onMouseDown={handleRulerMouseDown}
               >
-                <TimelineCanvasRuler
-                  zoomLevel={zoomLevel}
-                  duration={duration}
-                  width={dynamicTimelineWidth}
-                />
-              </TimelineCanvasRulerWrapper>
+                {/* Time markers */}
+                {(() => {
+                  // Calculate appropriate time interval based on zoom level
+                  const getTimeInterval = (zoom: number) => {
+                    const pixelsPerSecond =
+                      TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoom;
+                    if (pixelsPerSecond >= 200) return 0.1; // Every 0.1s when very zoomed in
+                    if (pixelsPerSecond >= 100) return 0.5; // Every 0.5s when zoomed in
+                    if (pixelsPerSecond >= 50) return 1; // Every 1s at normal zoom
+                    if (pixelsPerSecond >= 25) return 2; // Every 2s when zoomed out
+                    if (pixelsPerSecond >= 12) return 5; // Every 5s when more zoomed out
+                    if (pixelsPerSecond >= 6) return 10; // Every 10s when very zoomed out
+                    return 30; // Every 30s when extremely zoomed out
+                  };
+
+                  const interval = getTimeInterval(zoomLevel);
+                  const markerCount = Math.ceil(duration / interval) + 1;
+
+                  return Array.from({ length: markerCount }, (_, i) => {
+                    const time = i * interval;
+                    if (time > duration) return null;
+
+                    const isMainMarker =
+                      time % (interval >= 1 ? Math.max(1, interval) : 1) === 0;
+
+                    return (
+                      <div
+                        key={i}
+                        className={`absolute top-0 bottom-0 ${
+                          isMainMarker
+                            ? "border-l border-muted-foreground/40"
+                            : "border-l border-muted-foreground/20"
+                        }`}
+                        style={{
+                          left: `${time * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel}px`,
+                        }}
+                      >
+                        <span
+                          className={`absolute top-1 left-1 text-[0.6rem] ${
+                            isMainMarker
+                              ? "text-muted-foreground font-medium"
+                              : "text-muted-foreground/70"
+                          }`}
+                        >
+                          {(() => {
+                            const formatTime = (seconds: number) => {
+                              const hours = Math.floor(seconds / 3600);
+                              const minutes = Math.floor((seconds % 3600) / 60);
+                              const secs = seconds % 60;
+
+                              if (hours > 0) {
+                                return `${hours}:${minutes.toString().padStart(2, "0")}:${Math.floor(secs).toString().padStart(2, "0")}`;
+                              } else if (minutes > 0) {
+                                return `${minutes}:${Math.floor(secs).toString().padStart(2, "0")}`;
+                              } else if (interval >= 1) {
+                                return `${Math.floor(secs)}s`;
+                              } else {
+                                return `${secs.toFixed(1)}s`;
+                              }
+                            };
+                            return formatTime(time);
+                          })()}
+                        </span>
+                      </div>
+                    );
+                  }).filter(Boolean);
+                })()}
+              </div>
             </ScrollArea>
           </div>
         </div>
 
         {/* Tracks Area */}
-        <ScrollArea className="w-full h-full">
-          <div
-            className="flex-1 flex overflow-hidden overflow-y-auto"
-            data-tracks-area
-          >
-            {/* Track Labels */}
-            {tracks.length > 0 && (
-              <div
-                ref={trackLabelsRef}
-                className="w-48 flex-shrink-0 border-r bg-panel-accent "
-                data-track-labels
-              >
-                <div className="flex flex-col gap-1" ref={trackLabelsScrollRef}>
+        <div className="flex-1 flex overflow-hidden">
+          {/* Track Labels */}
+          {tracks.length > 0 && (
+            <div
+              ref={trackLabelsRef}
+              className="w-48 flex-shrink-0 border-r border-black overflow-y-auto"
+              data-track-labels
+            >
+              <ScrollArea className="w-full h-full" ref={trackLabelsScrollRef}>
+                <div className="flex flex-col gap-1">
                   {tracks.map((track) => (
                     <div
                       key={track.id}
@@ -853,23 +995,28 @@ export function Timeline() {
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              </ScrollArea>
+            </div>
+          )}
 
-            {/* Timeline Tracks Content */}
-            <div
-              className="flex-1 relative overflow-hidden"
-              onWheel={handleWheel}
-              onMouseDown={handleSelectionMouseDown}
-              onClick={handleTimelineContentClick}
-              ref={tracksContainerRef}
-            >
-              <SelectionBox
-                startPos={selectionBox?.startPos || null}
-                currentPos={selectionBox?.currentPos || null}
-                containerRef={tracksContainerRef}
-                isActive={selectionBox?.isActive || false}
-              />
+          {/* Timeline Tracks Content */}
+          <div
+            className="flex-1 relative overflow-hidden"
+            onWheel={handleWheel}
+            onMouseDown={(e) => {
+              handleTimelineMouseDown(e);
+              handleSelectionMouseDown(e);
+            }}
+            onClick={handleTimelineContentClick}
+            ref={tracksContainerRef}
+          >
+            <SelectionBox
+              startPos={selectionBox?.startPos || null}
+              currentPos={selectionBox?.currentPos || null}
+              containerRef={tracksContainerRef}
+              isActive={selectionBox?.isActive || false}
+            />
+            <ScrollArea className="w-full h-full" ref={tracksScrollRef}>
               <div
                 className="relative flex-1"
                 style={{
@@ -923,9 +1070,9 @@ export function Timeline() {
                   </>
                 )}
               </div>
-            </div>
+            </ScrollArea>
           </div>
-        </ScrollArea>
+        </div>
       </div>
     </div>
   );

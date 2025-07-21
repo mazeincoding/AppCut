@@ -2,7 +2,10 @@
 
 import { useRef } from "react";
 import { TimelineTrack } from "@/types/timeline";
-import { TIMELINE_CONSTANTS } from "@/constants/timeline-constants";
+import {
+  TIMELINE_CONSTANTS,
+  getTotalTracksHeight,
+} from "@/constants/timeline-constants";
 import { useTimelinePlayhead } from "@/hooks/use-timeline-playhead";
 
 interface TimelinePlayheadProps {
@@ -13,6 +16,7 @@ interface TimelinePlayheadProps {
   seek: (time: number) => void;
   rulerRef: React.RefObject<HTMLDivElement>;
   rulerScrollRef: React.RefObject<HTMLDivElement>;
+  tracksScrollRef: React.RefObject<HTMLDivElement>;
   trackLabelsRef?: React.RefObject<HTMLDivElement>;
   timelineRef: React.RefObject<HTMLDivElement>;
   playheadRef?: React.RefObject<HTMLDivElement>;
@@ -27,6 +31,7 @@ export function TimelinePlayhead({
   seek,
   rulerRef,
   rulerScrollRef,
+  tracksScrollRef,
   trackLabelsRef,
   timelineRef,
   playheadRef: externalPlayheadRef,
@@ -34,13 +39,15 @@ export function TimelinePlayhead({
 }: TimelinePlayheadProps) {
   const internalPlayheadRef = useRef<HTMLDivElement>(null);
   const playheadRef = externalPlayheadRef || internalPlayheadRef;
-  const { playheadPosition, handleRulerMouseDown } = useTimelinePlayhead({
+  const { playheadPosition, handlePlayheadMouseDown } = useTimelinePlayhead({
     currentTime,
     duration,
     zoomLevel,
     seek,
     rulerRef,
     rulerScrollRef,
+    tracksScrollRef,
+    playheadRef,
   });
 
   // Use timeline container height minus a few pixels for breathing room
@@ -59,14 +66,14 @@ export function TimelinePlayhead({
   return (
     <div
       ref={playheadRef}
-      className="absolute pointer-events-auto z-[50]"
+      className="absolute pointer-events-auto z-[150]"
       style={{
         left: `${leftPosition}px`,
         top: 0,
         height: `${totalHeight}px`,
         width: "2px", // Slightly wider for better click target
       }}
-      onMouseDown={handleRulerMouseDown}
+      onMouseDown={handlePlayheadMouseDown}
     >
       {/* The playhead line spanning full height */}
       <div
@@ -89,24 +96,21 @@ export function useTimelinePlayheadRuler({
   seek,
   rulerRef,
   rulerScrollRef,
-}: Omit<
-  TimelinePlayheadProps,
-  | "tracks"
-  | "trackLabelsRef"
-  | "timelineRef"
-  | "tracksScrollRef"
-  | "playheadRef"
->) {
-  const { handleRulerMouseDown } = useTimelinePlayhead({
+  tracksScrollRef,
+  playheadRef,
+}: Omit<TimelinePlayheadProps, "tracks" | "trackLabelsRef" | "timelineRef">) {
+  const { handleRulerMouseDown, isDraggingRuler } = useTimelinePlayhead({
     currentTime,
     duration,
     zoomLevel,
     seek,
     rulerRef,
     rulerScrollRef,
+    tracksScrollRef,
+    playheadRef,
   });
 
-  return { handleRulerMouseDown };
+  return { handleRulerMouseDown, isDraggingRuler };
 }
 
 export { TimelinePlayhead as default };

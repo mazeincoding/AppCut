@@ -57,6 +57,7 @@ export function TimelineElement({
     updateElementTrim,
     updateElementDuration,
     removeElementFromTrack,
+    removeElementFromTrackWithRipple,
     dragState,
     splitElement,
     splitAndKeepLeft,
@@ -64,6 +65,7 @@ export function TimelineElement({
     separateAudio,
     addElementToTrack,
     replaceElementMedia,
+    rippleEditingEnabled,
   } = useTimelineStore();
   const { currentTime } = usePlaybackStore();
 
@@ -96,93 +98,9 @@ export function TimelineElement({
     isBeingDragged && dragState.isDragging
       ? dragState.currentTime
       : element.startTime;
+
+  // Element should always be positioned at startTime - trimStart only affects content, not position
   const elementLeft = elementStartTime * 50 * zoomLevel;
-
-  const handleDeleteElement = () => {
-    removeElementFromTrack(track.id, element.id);
-    setElementMenuOpen(false);
-  };
-
-  const handleSplitElement = () => {
-    const effectiveStart = element.startTime;
-    const effectiveEnd =
-      element.startTime +
-      (element.duration - element.trimStart - element.trimEnd);
-
-    if (currentTime <= effectiveStart || currentTime >= effectiveEnd) {
-      toast.error("Playhead must be within element to split");
-      return;
-    }
-
-    const secondElementId = splitElement(track.id, element.id, currentTime);
-    if (!secondElementId) {
-      toast.error("Failed to split element");
-    }
-    setElementMenuOpen(false);
-  };
-
-  const handleSplitAndKeepLeft = () => {
-    const effectiveStart = element.startTime;
-    const effectiveEnd =
-      element.startTime +
-      (element.duration - element.trimStart - element.trimEnd);
-
-    if (currentTime <= effectiveStart || currentTime >= effectiveEnd) {
-      toast.error("Playhead must be within element");
-      return;
-    }
-
-    splitAndKeepLeft(track.id, element.id, currentTime);
-    setElementMenuOpen(false);
-  };
-
-  const handleSplitAndKeepRight = () => {
-    const effectiveStart = element.startTime;
-    const effectiveEnd =
-      element.startTime +
-      (element.duration - element.trimStart - element.trimEnd);
-
-    if (currentTime <= effectiveStart || currentTime >= effectiveEnd) {
-      toast.error("Playhead must be within element");
-      return;
-    }
-
-    splitAndKeepRight(track.id, element.id, currentTime);
-    setElementMenuOpen(false);
-  };
-
-  const handleSeparateAudio = () => {
-    if (element.type !== "media") {
-      toast.error("Audio separation only available for media elements");
-      return;
-    }
-
-    const mediaItem = mediaItems.find((item) => item.id === element.mediaId);
-    if (!mediaItem || mediaItem.type !== "video") {
-      toast.error("Audio separation only available for video elements");
-      return;
-    }
-
-    const audioElementId = separateAudio(track.id, element.id);
-    if (!audioElementId) {
-      toast.error("Failed to separate audio");
-    }
-    setElementMenuOpen(false);
-  };
-
-  const canSplitAtPlayhead = () => {
-    const effectiveStart = element.startTime;
-    const effectiveEnd =
-      element.startTime +
-      (element.duration - element.trimStart - element.trimEnd);
-    return currentTime > effectiveStart && currentTime < effectiveEnd;
-  };
-
-  const canSeparateAudio = () => {
-    if (element.type !== "media") return false;
-    const mediaItem = mediaItems.find((item) => item.id === element.mediaId);
-    return mediaItem?.type === "video" && track.type === "media";
-  };
 
   const handleElementSplitContext = () => {
     const effectiveStart = element.startTime;
@@ -213,7 +131,11 @@ export function TimelineElement({
   };
 
   const handleElementDeleteContext = () => {
-    removeElementFromTrack(track.id, element.id);
+    if (rippleEditingEnabled) {
+      removeElementFromTrackWithRipple(track.id, element.id);
+    } else {
+      removeElementFromTrack(track.id, element.id);
+    }
   };
 
   const handleReplaceClip = () => {
