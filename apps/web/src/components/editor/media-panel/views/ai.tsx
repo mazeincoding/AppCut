@@ -79,7 +79,7 @@ export function AiView() {
 
   // Window/Document Event Monitoring
   useEffect(() => {
-    const handleBeforeUnload = (e) => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       debugLogger.log('Window', 'BEFORE_UNLOAD', {
         currentUrl: window.location.href,
         activeTab,
@@ -151,7 +151,9 @@ export function AiView() {
         const parsedHistory = JSON.parse(savedHistory);
         setGenerationHistory(parsedHistory);
       } catch (error) {
-        debugLogger.log('AIView', 'PARSE_HISTORY_ERROR', { error: error.message });
+        debugLogger.log('AIView', 'PARSE_HISTORY_ERROR', { 
+          error: error instanceof Error ? error.message : 'Unknown error' 
+        });
       }
     }
   }, []);
@@ -161,7 +163,9 @@ export function AiView() {
     try {
       localStorage.setItem('ai-generation-history', JSON.stringify(history));
     } catch (error) {
-      debugLogger.log('AIView', 'SAVE_HISTORY_ERROR', { error: error.message });
+      debugLogger.log('AIView', 'SAVE_HISTORY_ERROR', { 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
     }
   };
 
@@ -279,7 +283,7 @@ export function AiView() {
               });
             } catch (error) {
               debugLogger.log('AIView', 'VIDEO_ADD_TO_MEDIA_STORE_FAILED', { 
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 projectId: activeProject.id 
               });
             }
@@ -298,7 +302,7 @@ export function AiView() {
         }
       } catch (error) {
         debugLogger.log('AIView', 'STATUS_POLLING_ERROR', { 
-          error: error.message,
+          error: error instanceof Error ? error.message : 'Unknown error',
           jobId 
         });
         setGenerationProgress(prev => Math.min(prev + 5, 90)); // Slowly increment until we get real status
@@ -407,7 +411,7 @@ export function AiView() {
             });
           } catch (error) {
             debugLogger.log('AIView', 'VIDEO_ADD_TO_MEDIA_STORE_FAILED', { 
-              error: error.message,
+              error: error instanceof Error ? error.message : 'Unknown error',
               projectId: activeProject.id 
             });
           }
@@ -427,7 +431,9 @@ export function AiView() {
       });
       
     } catch (error) {
-      debugLogger.log('AIView', 'GENERATION_FAILED', { error: error.message });
+      debugLogger.log('AIView', 'GENERATION_FAILED', { 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
       setError(handleApiError(error));
       
       // Clear polling on error

@@ -83,7 +83,7 @@ function EditorContent() {
 
   // Router Events Monitoring - HIGH PRIORITY
   useEffect(() => {
-    const handleRouteChangeStart = (url) => {
+    const handleRouteChangeStart = (url: string) => {
       const stack = new Error().stack;
       debugLogger.log('Router', 'ROUTE_CHANGE_START', {
         newUrl: url,
@@ -94,7 +94,7 @@ function EditorContent() {
       });
     };
     
-    const handleRouteChangeComplete = (url) => {
+    const handleRouteChangeComplete = (url: string) => {
       debugLogger.log('Router', 'ROUTE_CHANGE_COMPLETE', {
         newUrl: url,
         previousUrl: router.asPath,
@@ -102,7 +102,7 @@ function EditorContent() {
       });
     };
 
-    const handleRouteChangeError = (err, url) => {
+    const handleRouteChangeError = (err: Error, url: string) => {
       debugLogger.log('Router', 'ROUTE_CHANGE_ERROR', {
         error: err.message,
         targetUrl: url,
@@ -124,19 +124,19 @@ function EditorContent() {
 
   // Debug: Window error listener
   useEffect(() => {
-    const handleError = (event) => {
+    const handleError = (event: ErrorEvent) => {
       debugLogger.log('Window', 'ERROR', {
         error: event.error?.message,
         stack: event.error?.stack,
         filename: event.filename,
         lineno: event.lineno
       });
-      if (window.electronDebug) {
-        window.electronDebug.logError(event.error);
+      if ('electronDebug' in window && window.electronDebug) {
+        (window as any).electronDebug.logError(event.error);
       }
     };
     
-    const handleUnhandledRejection = (event) => {
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       debugLogger.log('Window', 'UNHANDLED_PROMISE_REJECTION', {
         reason: event.reason
       });
@@ -219,7 +219,10 @@ function EditorContent() {
         await stableLoadProject(projectId);
         debugLogger.log('EditorPage', 'PROJECT_LOAD_SUCCESS', { projectId });
       } catch (error) {
-        debugLogger.log('EditorPage', 'PROJECT_LOAD_FAILED', { projectId, error: error.message });
+        debugLogger.log('EditorPage', 'PROJECT_LOAD_FAILED', { 
+          projectId, 
+          error: error instanceof Error ? error.message : 'Unknown error' 
+        });
         
         // Check if it's a fallback project from localStorage
         const fallbackProject = localStorage.getItem('opencut-fallback-project');
@@ -236,7 +239,9 @@ function EditorContent() {
               return;
             }
           } catch (parseError) {
-            debugLogger.log('EditorPage', 'FALLBACK_PROJECT_PARSE_ERROR', { error: parseError.message });
+            debugLogger.log('EditorPage', 'FALLBACK_PROJECT_PARSE_ERROR', { 
+              error: parseError instanceof Error ? parseError.message : 'Unknown parse error' 
+            });
           }
         }
         

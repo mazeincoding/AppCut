@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ interface ExportDialogProps {
   // No props needed - uses global state
 }
 
-export function ExportDialog(): JSX.Element {
+export function ExportDialog() {
   const { settings, progress, updateSettings, updateProgress, resetExport, isDialogOpen, setDialogOpen } = useExportStore();
   const { tracks, getTotalDuration } = useTimelineStore();
   const { activeProject } = useProjectStore();
@@ -108,8 +108,17 @@ export function ExportDialog(): JSX.Element {
         setMemoryLevel(fileSafetyWarning.level);
       } else {
         const recommendation = getMemoryRecommendation(estimatedMemoryBytes);
-        setMemoryWarning(recommendation.message);
-        setMemoryLevel(recommendation.level);
+        setMemoryWarning(recommendation);
+        // Set level based on message content
+        if (recommendation.includes('Consider using FFmpeg')) {
+          setMemoryLevel('error');
+        } else if (recommendation.includes('Monitor memory')) {
+          setMemoryLevel('warning');
+        } else if (recommendation.includes('acceptable')) {
+          setMemoryLevel('info');
+        } else {
+          setMemoryLevel('info');
+        }
       }
     };
     
@@ -118,15 +127,18 @@ export function ExportDialog(): JSX.Element {
 
   // Event handlers
   const handleExport = async () => {
-    if (!canvasRef.current || isExporting) return;
+    if (!canvasRef.current?.getCanvas() || isExporting) return;
 
     try {
       updateProgress({ isExporting: true, progress: 0, status: "Initializing export..." });
       
-      const exportEngine = new ExportEngine(canvasRef.current);
-      await exportEngine.initialize({
-        tracks,
-        mediaItems,
+      const canvas = canvasRef.current?.getCanvas();
+      if (!canvas) {
+        throw new Error("Canvas not available");
+      }
+      
+      const exportEngine = new ExportEngine({
+        canvas: canvas,
         settings: {
           ...settings,
           format,
@@ -135,6 +147,10 @@ export function ExportDialog(): JSX.Element {
           width: resolution.width,
           height: resolution.height,
         },
+        timelineElements: tracks.flatMap(track => track.elements),
+        mediaItems,
+        duration: getTotalDuration(),
+        fps: activeProject?.fps || 30,
         onProgress: (progress, status) => {
           updateProgress({ isExporting: true, progress, status });
           
@@ -183,7 +199,7 @@ export function ExportDialog(): JSX.Element {
             <p className="text-sm text-muted-foreground mt-1">Configure your export settings and render your video.</p>
           </div>
           <Button
-            variant="ghost"
+            variant="text"
             size="icon"
             onClick={handleClose}
             className="h-9 w-9 rounded-lg"
@@ -258,7 +274,7 @@ export function ExportDialog(): JSX.Element {
               <Input
                 id="filename"
                 value={filename}
-                onChange={(e) => setFilename(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilename(e.target.value)}
                 placeholder="Enter filename"
                 className={!isValidFilename(filename) ? "border-red-500" : ""}
               />
