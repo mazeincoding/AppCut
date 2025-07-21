@@ -34,7 +34,7 @@ test.describe('AI Model Selection Bug Reproduction', () => {
       console.log(`[BROWSER ${msg.type().toUpperCase()}] ${text}`);
 
       // Track StorageProvider instances
-      if (text.includes('StorageProvider v14:15')) {
+      if (text.includes('StorageProvider v14:15') || text.includes('StorageProvider v')) {
         storageProviderInstances.push({
           timestamp: Date.now(),
           text: text

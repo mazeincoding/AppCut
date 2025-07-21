@@ -75,7 +75,7 @@ export function AiView() {
     isFallbackProject,
     currentUrl: window.location.href,
     renderCount: Math.random(),
-    codeVersion: '2025-07-21-12:45-SIMPLIFIED'
+    codeVersion: '2025-07-21-15:30-CLICK-PREVENTION-FIX'
   });
 
   // Temporarily disabled all window/document event monitoring for debugging
@@ -564,18 +564,45 @@ export function AiView() {
             key={`model-select-${activeTab}`}
             value={selectedModel}
             onValueChange={setSelectedModel}
+            onOpenChange={(open) => {
+              // Prevent any event bubbling that might trigger navigation
+              debugLogger.log('AIView', 'MODEL_DROPDOWN_OPEN_CHANGE', { 
+                isOpen: open, 
+                activeTab, 
+                selectedModel,
+                timestamp: Date.now()
+              });
+            }}
           >
             <SelectTrigger 
               id="model"
               type="button"
+              onClick={(e) => {
+                // Prevent event bubbling to document handlers
+                e.stopPropagation();
+                debugLogger.log('AIView', 'MODEL_TRIGGER_CLICK', { 
+                  activeTab, 
+                  selectedModel,
+                  timestamp: Date.now()
+                });
+              }}
             >
               <SelectValue placeholder="Select AI model" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent onClick={(e) => e.stopPropagation()}>
               {AI_MODELS.map((model) => (
                 <SelectItem 
                   key={model.id} 
                   value={model.id}
+                  onClick={(e) => {
+                    // Prevent event bubbling to document handlers
+                    e.stopPropagation();
+                    debugLogger.log('AIView', 'MODEL_ITEM_CLICK', { 
+                      modelId: model.id, 
+                      modelName: model.name,
+                      timestamp: Date.now()
+                    });
+                  }}
                 >
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2">

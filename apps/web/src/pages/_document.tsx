@@ -196,7 +196,13 @@ export default function Document() {
                 console.log('🚀 [CLICK DEBUG] Click:', e.target.tagName, e.target.textContent?.slice(0, 30));
                 
                 // Fallback handler for New Project button when React fails to hydrate
-                if (e.target.textContent && e.target.textContent.includes('New project')) {
+                // Only trigger for actual "New project" buttons, not project titles or other elements
+                if (e.target.tagName === 'BUTTON' && 
+                    e.target.textContent && 
+                    e.target.textContent.trim() === 'New project' &&
+                    !e.target.closest('[role="combobox"]') &&  // Exclude dropdown triggers
+                    !e.target.closest('.select-trigger') &&   // Exclude select components
+                    !e.target.closest('[data-testid="model-select"]')) { // Exclude model selectors
                   console.log('🚀 [FALLBACK] New project button clicked - React fallback handler');
                   console.log('🔄 [FALLBACK] Redirecting to projects page instead of creating fallback project');
                   
