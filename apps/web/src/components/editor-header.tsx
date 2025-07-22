@@ -22,10 +22,24 @@ export function EditorHeader() {
     <div className="flex items-center gap-2">
       <Link
         href="/projects"
-        className="font-medium tracking-tight flex items-center gap-2 hover:opacity-80 transition-opacity"
+        className="font-medium tracking-tight flex items-center gap-2 hover:opacity-80 transition-opacity relative shadow-lg hover:shadow-xl before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent no-underline"
+        style={{
+          backgroundColor: '#3b82f6', 
+          color: 'white',
+          height: '32px',
+          borderRadius: '9999px',
+          fontSize: '13px',
+          position: 'relative',
+          overflow: 'hidden',
+          border: 'none',
+          outline: 'none',
+          boxShadow: 'none',
+          paddingLeft: '16px',
+          paddingRight: '16px'
+        }}
         prefetch={false}
       >
-        <ChevronLeft className="h-4 w-4" />
+        <ChevronLeft className="h-4 w-4" style={{ width: '12px', height: '12px', marginRight: '8px' }} />
         <span className="text-sm">{activeProject?.name}</span>
       </Link>
     </div>
