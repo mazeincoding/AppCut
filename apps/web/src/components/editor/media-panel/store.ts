@@ -34,6 +34,10 @@ export const tabs: { [key in Tab]: { icon: LucideIcon; label: string } } = {
     icon: VideoIcon,
     label: "Media",
   },
+  adjustment: {
+    icon: SlidersHorizontalIcon,
+    label: "Adjustment",
+  },
   audio: {
     icon: MusicIcon,
     label: "Audio",
@@ -61,10 +65,6 @@ export const tabs: { [key in Tab]: { icon: LucideIcon; label: string } } = {
   filters: {
     icon: BlendIcon,
     label: "Filters",
-  },
-  adjustment: {
-    icon: SlidersHorizontalIcon,
-    label: "Adjustment",
   },
 };
 
