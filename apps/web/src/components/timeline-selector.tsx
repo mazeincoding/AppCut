@@ -142,6 +142,11 @@ export function TimelineSelector() {
       setDialogOpen(false);
     } catch (error) {
       console.error("Dialog action failed:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to perform timeline operation"
+      );
     }
   };
 
