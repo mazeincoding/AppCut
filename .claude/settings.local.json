@@ -61,7 +61,8 @@
       "Bash(claude mcp add:*)",
       "Bash(claude mcp:*)",
       "Bash(cmd /c:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "WebFetch(domain:fal.ai)"
     ],
     "deny": []
   }

@@ -767,7 +767,8 @@ window.__REACT_DEVTOOLS_GLOBAL_HOOK__.renderers.forEach(r => {
 const testCost = (modelIds) => {
   const AI_MODELS = [
     { id: "veo3", price: "3.00" },
-    { id: "hailuo", price: "0.08" },
+    { id: "hailuo", price: "0.27" },
+    { id: "hailuo_pro", price: "0.48" },
     { id: "kling", price: "0.10" }
   ];
   const total = modelIds.reduce((sum, id) => {
