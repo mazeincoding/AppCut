@@ -703,7 +703,7 @@ export function Timeline() {
       onMouseLeave={() => setIsInTimeline(false)}
     >
       {/* Toolbar */}
-      <div className="border-b flex items-center px-2 py-1 gap-1">
+      <div className="border-b flex items-center px-2 py-1 pb-3 gap-1">
         <TooltipProvider delayDuration={500}>
           {/* Play/Pause Button */}
           <Tooltip>

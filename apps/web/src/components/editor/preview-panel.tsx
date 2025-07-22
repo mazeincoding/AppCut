@@ -467,18 +467,19 @@ function PreviewToolbar({ hasAnyElements }: { hasAnyElements: boolean }) {
           backgroundColor: 'transparent',
           border: 'none',
           outline: 'none',
-          boxShadow: 'none'
+          boxShadow: 'none',
+          transform: 'translateY(-4px)'
         }}
         onMouseEnter={(e) => {
           if (!e.currentTarget.disabled) {
             e.currentTarget.style.color = 'rgba(59, 130, 246, 1)';
-            e.currentTarget.style.transform = 'scale(1.1)';
+            e.currentTarget.style.transform = 'translateY(-4px) scale(1.1)';
           }
         }}
         onMouseLeave={(e) => {
           if (!e.currentTarget.disabled) {
             e.currentTarget.style.color = '';
-            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.transform = 'translateY(-4px) scale(1)';
           }
         }}
       >
