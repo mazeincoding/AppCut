@@ -208,10 +208,10 @@ export function MediaView() {
           {/* Search and filter controls */}
           <div className="flex gap-2">
             <Select value={mediaFilter} onValueChange={setMediaFilter}>
-              <SelectTrigger className="w-[80px] h-full text-xs">
+              <SelectTrigger className="w-[80px] h-9 text-xs">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="">
+              <SelectContent>
                 <SelectItem value="all">All</SelectItem>
                 <SelectItem value="video">Video</SelectItem>
                 <SelectItem value="audio">Audio</SelectItem>
@@ -221,7 +221,7 @@ export function MediaView() {
             <Input
               type="text"
               placeholder="Search media..."
-              className="min-w-[60px] flex-1 h-full text-xs"
+              className="min-w-[60px] flex-1 h-9 text-xs"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -230,7 +230,7 @@ export function MediaView() {
               size="lg"
               onClick={handleFileSelect}
               disabled={isProcessing}
-              className="flex-none bg-transparent min-w-[30px] whitespace-nowrap overflow-hidden px-2 justify-center items-center"
+              className="flex-none bg-transparent min-w-[30px] whitespace-nowrap overflow-hidden px-2 justify-center items-center h-9"
             >
               {isProcessing ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

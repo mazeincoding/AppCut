@@ -33,6 +33,9 @@ export const baseMetaData: Metadata = {
     creator: "@opencutapp",
     images: [twitterImageUrl],
   },
+  pinterest: {
+    richPin: false,
+  },
   robots: {
     index: true,
     follow: true,

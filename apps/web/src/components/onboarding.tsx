@@ -32,7 +32,7 @@ export function Onboarding() {
         return (
           <div className="space-y-5">
             <div className="space-y-3">
-              <Title title="Welcome to OpenCut Beta! 🎉" />
+              <Title title="Welcome to OpenCut alpha! 🎉" />
               <Description description="You're among the first to try OpenCut - the fully open source CapCut alternative." />
             </div>
             <NextButton onClick={handleNext}>Next</NextButton>
@@ -42,7 +42,7 @@ export function Onboarding() {
         return (
           <div className="space-y-5">
             <div className="space-y-3">
-              <Title title="⚠️ This is a super early beta!" />
+              <Title title="⚠️ This is a super early alpha!" />
               <Description description="OpenCut started just one month ago. There's still a ton of things to do to make this editor amazing." />
               <Description description="If you're curious, check out our roadmap [here](https://opencut.app/roadmap)" />
             </div>

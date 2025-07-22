@@ -33,7 +33,7 @@ export function Hero() {
           className="mb-8 flex justify-center"
         >
           <SponsorButton
-            href="https://vercel.com/?utm_source=opencut"
+            href="https://vercel.com/home?utm_source=opencut"
             logo={VercelIcon}
             companyName="Vercel"
           />
@@ -70,7 +70,7 @@ export function Hero() {
               size="lg"
               className="px-6 h-11 text-base bg-foreground"
             >
-              Try early beta
+              Try early alpha
               <ArrowRight className="relative z-10 ml-0.5 h-4 w-4 inline-block" />
             </Button>
           </Link>
