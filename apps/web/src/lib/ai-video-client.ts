@@ -88,6 +88,7 @@ export async function generateVideo(
 
     // Map our model names to FAL endpoints
     const modelEndpoints: { [key: string]: string } = {
+      'seedance': 'fal-ai/bytedance/seedance/v1/lite/text-to-video',
       'veo3': 'fal-ai/google/veo3',
       'veo3_fast': 'fal-ai/google/veo3/fast',
       'hailuo': 'fal-ai/minimax/hailuo-02/standard/text-to-video',
@@ -106,15 +107,21 @@ export async function generateVideo(
       prompt: request.prompt
     };
     
-    // Hailuo models have specific parameter requirements
+    // Model-specific parameter requirements
     if (request.model === 'hailuo' || request.model === 'hailuo_pro') {
       // Hailuo only accepts '6' or '10' as string values for duration
       // Standard supports 6s, Pro supports both 6s and 10s (but 10s not at 1080p)
       const requestedDuration = request.duration || 6;
       payload.duration = requestedDuration >= 10 ? '10' : '6';
       // Hailuo doesn't use resolution parameter directly
+    } else if (request.model === 'seedance') {
+      // Seedance supports 5s or 10s duration, 720p default
+      payload.duration = request.duration || 5;
+      payload.resolution = request.resolution || '720p';
+      // Optional parameters for Seedance
+      payload.aspect_ratio = '16:9'; // Default aspect ratio
     } else {
-      // Other models
+      // Other models (Veo, Kling)
       payload.duration = request.duration || 5;
       payload.resolution = request.resolution || '1080p';
     }
@@ -617,6 +624,14 @@ export async function getAvailableModels(): Promise<ModelsResponse> {
   return {
     models: [
       {
+        id: "seedance",
+        name: "Seedance v1 Lite",
+        description: "Fast and efficient text-to-video generation",
+        price: "$0.18",
+        resolution: "720p",
+        max_duration: 10
+      },
+      {
         id: "veo3",
         name: "Veo3",
         description: "Highest quality, slower generation",
@@ -665,6 +680,7 @@ export async function getAvailableModels(): Promise<ModelsResponse> {
  */
 export async function estimateCost(request: VideoGenerationRequest): Promise<CostEstimate> {
   const modelCosts: { [key: string]: { base_cost: number; max_duration: number } } = {
+    "seedance": { base_cost: 0.18, max_duration: 10 },
     "veo3": { base_cost: 3.00, max_duration: 30 },
     "veo3_fast": { base_cost: 2.00, max_duration: 30 },
     "hailuo": { base_cost: 0.27, max_duration: 6 },
