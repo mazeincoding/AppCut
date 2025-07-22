@@ -458,14 +458,14 @@ export function AiView() {
           <TabsList className="grid w-full grid-cols-2 bg-transparent">
             <TabsTrigger 
               value="text" 
-              className="flex items-center gap-2 bg-transparent text-white data-[state=active]:bg-transparent data-[state=active]:text-white"
+              className="flex items-center gap-2 bg-transparent text-white data-[state=active]:bg-transparent data-[state=active]:text-white border-0 shadow-none hover:text-blue-400 transition-colors duration-200"
             >
               <TypeIcon className="size-4" />
               Text to Video
             </TabsTrigger>
             <TabsTrigger 
               value="image" 
-              className="flex items-center gap-2 bg-transparent text-white data-[state=active]:bg-transparent data-[state=active]:text-white"
+              className="flex items-center gap-2 bg-transparent text-white data-[state=active]:bg-transparent data-[state=active]:text-white border-0 shadow-none hover:text-blue-400 transition-colors duration-200"
             >
               <ImageIcon className="size-4" />
               Image to Video
