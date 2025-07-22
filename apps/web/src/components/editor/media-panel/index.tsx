@@ -5,6 +5,7 @@ import { MediaView } from "./views/media";
 import { useMediaPanelStore, Tab } from "./store";
 import { TextView } from "./views/text";
 import { AiView } from "./views/ai";
+import { AdjustmentView } from "./views/adjustment";
 import { debugLogger } from "@/lib/debug-logger";
 
 export function MediaPanel() {
@@ -48,11 +49,7 @@ export function MediaPanel() {
         Filters view coming soon...
       </div>
     ),
-    adjustment: (
-      <div className="p-4 text-muted-foreground">
-        Adjustment view coming soon...
-      </div>
-    ),
+    adjustment: <AdjustmentView />,
     ai: <AiView />,
   };
 
