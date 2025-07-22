@@ -24,12 +24,12 @@ interface AIModel {
 }
 
 const AI_MODELS: AIModel[] = [
-  { id: "veo3", name: "Veo3", description: "Highest quality, slower generation", price: "$3.00", resolution: "1080p" },
-  { id: "veo3_fast", name: "Veo3 Fast", description: "High quality, faster generation", price: "$2.00", resolution: "1080p" },
-  { id: "veo2", name: "Veo2", description: "Good quality, balanced speed", price: "$2.50", resolution: "1080p" },
-  { id: "hailuo", name: "Hailuo", description: "Fast generation, good quality", price: "$0.08", resolution: "720p" },
-  { id: "kling", name: "Kling v1.5", description: "Fast generation, cost-effective", price: "$0.10", resolution: "720p" },
-  { id: "kling_v2", name: "Kling v2.1", description: "Premium model with unparalleled motion fluidity", price: "$0.15", resolution: "1080p" },
+  { id: "veo3", name: "Veo3", description: "Highest quality, slower generation", price: "3.00", resolution: "1080p" },
+  { id: "veo3_fast", name: "Veo3 Fast", description: "High quality, faster generation", price: "2.00", resolution: "1080p" },
+  { id: "veo2", name: "Veo2", description: "Good quality, balanced speed", price: "2.50", resolution: "1080p" },
+  { id: "hailuo", name: "Hailuo", description: "Fast generation, good quality", price: "0.08", resolution: "720p" },
+  { id: "kling", name: "Kling v1.5", description: "Fast generation, cost-effective", price: "0.10", resolution: "720p" },
+  { id: "kling_v2", name: "Kling v2.1", description: "Premium model with unparalleled motion fluidity", price: "0.15", resolution: "1080p" },
 ];
 
 interface GeneratedVideo {
@@ -595,13 +595,13 @@ export function AiView() {
             </SelectTrigger>
             <SelectContent 
               onClick={(e) => e.stopPropagation()}
-              className="bg-background border border-border/50 shadow-lg rounded-lg min-w-[280px]"
+              className="bg-background border border-border/50 shadow-lg rounded-lg min-w-[280px] font-mono"
             >
               {AI_MODELS.map((model, index) => (
                 <Fragment key={model.id}>
                   <SelectItem 
                     value={model.id}
-                    className="px-3 py-4 rounded-md hover:bg-accent/50 focus:bg-accent/50 cursor-pointer transition-colors duration-150 border-0 focus:text-foreground my-1"
+                    className="px-3 py-2 rounded-md hover:bg-accent/50 focus:bg-accent/50 cursor-pointer transition-colors duration-150 border-0 focus:text-foreground"
                     onClick={(e) => {
                       // Prevent event bubbling to document handlers
                       e.stopPropagation();
@@ -612,20 +612,15 @@ export function AiView() {
                       });
                     }}
                   >
-                    <div className="flex flex-col space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm text-foreground">{model.name}</span>
-                        <span className="text-xs text-muted-foreground font-normal">
-                          {model.price} • {model.resolution}
-                        </span>
-                      </div>
-                      <span className="text-xs text-muted-foreground/80 leading-relaxed">
-                        {model.description}
+                    <div className="flex items-center justify-between w-full px-2">
+                      <span className="font-medium text-sm text-foreground">{model.name}</span>
+                      <span className="text-xs text-muted-foreground font-normal ml-6">
+                        USD {model.price} • {model.resolution}
                       </span>
                     </div>
                   </SelectItem>
                   {index < AI_MODELS.length - 1 && (
-                    <div className="mx-2 h-px bg-border/30 my-1" />
+                    <div className="mx-2 h-px bg-border my-1" />
                   )}
                 </Fragment>
               ))}
@@ -715,7 +710,7 @@ export function AiView() {
           {selectedModel && !generatedVideo && (
             <div className="mt-2 text-center">
               <span className="text-xs text-muted-foreground">
-                Cost: {selectedModelInfo?.price} • {selectedModelInfo?.resolution}
+                Cost: USD {selectedModelInfo?.price} • {selectedModelInfo?.resolution}
               </span>
             </div>
           )}
