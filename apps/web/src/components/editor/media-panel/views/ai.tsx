@@ -455,12 +455,18 @@ export function AiView() {
           });
           setActiveTab(value as "text" | "image");
         }}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="text" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-2 bg-transparent">
+            <TabsTrigger 
+              value="text" 
+              className="flex items-center gap-2 bg-transparent text-white data-[state=active]:bg-transparent data-[state=active]:text-white"
+            >
               <TypeIcon className="size-4" />
               Text to Video
             </TabsTrigger>
-            <TabsTrigger value="image" className="flex items-center gap-2">
+            <TabsTrigger 
+              value="image" 
+              className="flex items-center gap-2 bg-transparent text-white data-[state=active]:bg-transparent data-[state=active]:text-white"
+            >
               <ImageIcon className="size-4" />
               Image to Video
             </TabsTrigger>
