@@ -1,0 +1,8 @@
+{
+  "typescript.suggest.autoImports": true,
+  "typescript.suggest.includePackageJsonAutoImports": "on",
+  "typescript.preferences.includePackageJsonAutoImports": "on",
+  "typescript.suggest.completeFunctionCalls": true,
+  "editor.suggestSelection": "first",
+  "editor.acceptSuggestionOnCommitCharacter": true
+}
