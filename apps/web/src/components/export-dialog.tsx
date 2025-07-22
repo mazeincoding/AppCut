@@ -359,11 +359,13 @@ export function ExportDialog() {
         <div className="border-t border-border p-6">
           <div className="flex flex-col gap-3">
             <Button
+              variant="shimmer"
+              size="lg"
               onClick={handleExport}
               disabled={isExporting || !isValidFilename(filename) || memoryLevel === 'error' || timelineDuration === 0}
-              className="bg-blue-600 hover:bg-blue-700 w-full h-11 text-sm font-medium"
+              className="w-full"
             >
-              <Download className="h-4 w-4 mr-2.5" />
+              <Download className="h-4 w-4" />
               {isExporting ? "Exporting..." : "Export Video"}
             </Button>
             <Button

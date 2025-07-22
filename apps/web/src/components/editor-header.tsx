@@ -46,12 +46,24 @@ export function EditorHeader() {
   const rightContent = (
     <nav className="flex items-center gap-2">
       <Button
+        variant="text"
         size="sm"
-        variant="primary"
-        className="h-7 text-xs bg-blue-600 hover:bg-blue-700 text-white"
+        style={{ 
+          backgroundColor: '#3b82f6', 
+          color: 'white',
+          height: '28px',
+          borderRadius: '9999px',
+          fontSize: '12px',
+          position: 'relative',
+          overflow: 'hidden',
+          border: 'none',
+          outline: 'none',
+          boxShadow: 'none'
+        }}
+        className="relative shadow-lg hover:shadow-xl before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent"
         onClick={handleExport}
       >
-        <Download className="h-3 w-3 mr-1 align-text-bottom" />
+        <Download className="mr-1 align-text-bottom" style={{ width: '12px', height: '12px' }} />
         Export
       </Button>
     </nav>

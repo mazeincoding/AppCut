@@ -21,6 +21,7 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
         text: "bg-transparent p-0 rounded-none hover:text-muted-foreground", // Instead of ghost (matches app better)
         link: "text-primary underline-offset-4 hover:underline",
+        shimmer: "relative overflow-hidden rounded-full bg-black text-white shadow-lg hover:shadow-xl before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent",
       },
       size: {
         default: "h-9 px-4 py-2",

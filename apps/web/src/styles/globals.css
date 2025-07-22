@@ -189,3 +189,13 @@
     transition-delay: 0s !important;
   }
 }
+
+/* Shimmer animation for button */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
