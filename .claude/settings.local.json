@@ -56,7 +56,12 @@
       "Bash(taskkill:*)",
       "Bash(pkill:*)",
       "Bash(curl:*)",
-      "Bash(npx:*)"
+      "Bash(npx:*)",
+      "WebFetch(domain:docs.anthropic.com)",
+      "Bash(claude mcp add:*)",
+      "Bash(claude mcp:*)",
+      "Bash(cmd /c:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": []
   }
