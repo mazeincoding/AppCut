@@ -312,11 +312,9 @@ export function PropertiesPanel() {
 
 function PropertyItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between">
-      <Label className="text-xs text-muted-foreground">{label}</Label>
-      <span className="text-xs text-right truncate w-40" title={value}>
-        {value}
-      </span>
+    <div className="flex justify-between items-center">
+      <Label className="text-xs text-muted-foreground">{label}:</Label>
+      <span className="text-xs font-mono text-right">{value}</span>
     </div>
   );
 }
