@@ -387,21 +387,11 @@ function ProjectCard({ project, isSelected, onSelect }: ProjectCardProps) {
             e.currentTarget.style.backgroundImage = 'linear-gradient(hsl(var(--background)), hsl(var(--background))), linear-gradient(45deg, #3b82f6, #8b5cf6, #ec4899)';
             e.currentTarget.style.boxShadow = '0 0 20px rgba(59, 130, 246, 0.3), 0 0 40px rgba(139, 92, 246, 0.15)';
           }
-          // Show delete button
-          const deleteButton = e.currentTarget.querySelector('button[title="Delete project"]');
-          if (deleteButton) {
-            deleteButton.style.opacity = '1';
-          }
         }}
         onMouseLeave={(e) => {
           if (!isSelected) {
             e.currentTarget.style.backgroundImage = 'linear-gradient(hsl(var(--background)), hsl(var(--background))), linear-gradient(45deg, #e5e7eb, #d1d5db)';
             e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
-          }
-          // Hide delete button
-          const deleteButton = e.currentTarget.querySelector('button[title="Delete project"]');
-          if (deleteButton) {
-            deleteButton.style.opacity = '0';
           }
         }}
       >
@@ -415,9 +405,7 @@ function ProjectCard({ project, isSelected, onSelect }: ProjectCardProps) {
             }
           }}
           className="absolute top-3 right-3 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-all duration-200 z-30"
-          style={{ opacity: 0 }}
-          onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
-          onMouseLeave={(e) => e.currentTarget.style.opacity = '0'}
+          style={{ opacity: 1 }}
           title="Delete project"
         >
           <Trash2 className="h-3 w-3" />
