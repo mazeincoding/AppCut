@@ -1,4 +1,4 @@
-import { TProject } from "@/types/project";
+import { TProject, TTimeline } from "@/types/project";
 import { TimelineTrack } from "@/types/timeline";
 
 export interface StorageAdapter<T> {
@@ -34,9 +34,18 @@ export interface StorageConfig {
 }
 
 // Helper type for serialization - converts Date objects to strings
-export type SerializedProject = Omit<TProject, "createdAt" | "updatedAt"> & {
+export type SerializedProject = Omit<
+  TProject,
+  "createdAt" | "updatedAt" | "timelines"
+> & {
   createdAt: string;
   updatedAt: string;
+  timelines?: Array<
+    Omit<TTimeline, "createdAt" | "updatedAt"> & {
+      createdAt: string;
+      updatedAt: string;
+    }
+  >;
 };
 
 // Extend FileSystemDirectoryHandle with missing async iterator methods
