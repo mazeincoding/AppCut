@@ -38,7 +38,7 @@ const getGlobalState = () => {
 
 const setGlobalState = (updates: Partial<{ isGloballyInitializing: boolean; hasGloballyInitialized: boolean; instanceCount: number }>) => {
   if (typeof window === 'undefined') return;
-  Object.assign(window.__OPENCUT_STORAGE_STATE__, updates);
+  Object.assign(window.__OPENCUT_STORAGE_STATE__ || {}, updates);
 };
 
 interface StorageContextType {
@@ -65,12 +65,12 @@ interface StorageProviderProps {
 export function StorageProvider({ children }: StorageProviderProps) {
   const globalState = getGlobalState();
   const instanceId = Math.random().toString(36).substr(2, 9);
-  setGlobalState({ instanceCount: globalState.instanceCount + 1 });
+  setGlobalState({ instanceCount: (globalState?.instanceCount || 0) + 1 });
   
-  console.log(`🔥 StorageProvider v14:15 - Instance #${globalState.instanceCount + 1} - hasGloballyInitialized: ${globalState.hasGloballyInitialized}`);
+  console.log(`🔥 StorageProvider v14:15 - Instance #${(globalState?.instanceCount || 0) + 1} - hasGloballyInitialized: ${globalState?.hasGloballyInitialized}`);
   
   // EMERGENCY: If we've already initialized globally, just return a minimal provider
-  if (globalState.hasGloballyInitialized) {
+  if (globalState?.hasGloballyInitialized) {
     console.log(`🛑 EMERGENCY SKIP`);
     return (
       <StorageContext.Provider value={{
@@ -103,12 +103,12 @@ export function StorageProvider({ children }: StorageProviderProps) {
       isInitialized: projectStore.isInitialized,
       isLoading: projectStore.isLoading,
       hasProjects: projectStore.savedProjects.length > 0,
-      hasGloballyInitialized: currentGlobalState.hasGloballyInitialized,
-      isGloballyInitializing: currentGlobalState.isGloballyInitializing
+      hasGloballyInitialized: currentGlobalState?.hasGloballyInitialized,
+      isGloballyInitializing: currentGlobalState?.isGloballyInitializing
     });
     
     // Check global flag first - most aggressive guard
-    if (currentGlobalState.hasGloballyInitialized) {
+    if (currentGlobalState?.hasGloballyInitialized) {
       console.log(`🚫 StorageProvider ${instanceId}: Global initialization already completed, skipping`);
       debugLogger.log('StorageProvider', 'SKIP_GLOBAL_ALREADY_INITIALIZED', { instanceId });
       setStatus({
@@ -133,7 +133,7 @@ export function StorageProvider({ children }: StorageProviderProps) {
       return;
     }
     
-    if (currentGlobalState.isGloballyInitializing) {
+    if (currentGlobalState?.isGloballyInitializing) {
       console.log(`⏳ StorageProvider ${instanceId}: Initialization already in progress, skipping`);
       debugLogger.log('StorageProvider', 'SKIP_INITIALIZATION_IN_PROGRESS', { instanceId });
       return;

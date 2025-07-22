@@ -313,9 +313,7 @@ export default function ProjectsPage() {
           <NoProjects onCreateProject={handleCreateProject} disabled={isCreatingProject} />
         ) : (
           <div className="grid grid-cols-4" style={{ gap: '20px' }}>
-            {console.log("🎨 [RENDER] Rendering project cards:", savedProjects.length, savedProjects)}
             {savedProjects.map((project) => {
-              console.log("🎨 [RENDER] Rendering project:", project.id, project.name);
               return (
                 <ProjectCard
                   key={project.id}

@@ -220,7 +220,7 @@ export function AiView() {
             fileSize: undefined, // Not available in GenerationStatus
             duration: undefined, // Not available in GenerationStatus
             prompt: prompt.trim(),
-            model: selectedModel
+            model: selectedModels[0] || 'unknown' // Use first selected model for legacy support
           };
           
           setGeneratedVideo(newVideo);

@@ -97,7 +97,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     } catch (error) {
       debugLogger.log('ProjectStore', 'CREATE_PROJECT_FAILED', { 
         projectId: newProject.id,
-        error: error.message 
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
       toast.error("Failed to save new project");
       // Ensure activeProject is not set if creation failed
@@ -155,7 +155,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     } catch (error) {
       debugLogger.log('ProjectStore', 'LOAD_PROJECT_FAILED', { 
         projectId: id, 
-        error: error.message 
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
       throw error; // Re-throw so the editor page can handle it
     } finally {
@@ -179,7 +179,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     } catch (error) {
       debugLogger.log('ProjectStore', 'SAVE_CURRENT_PROJECT_FAILED', { 
         projectId: activeProject.id,
-        error: error.message 
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   },
@@ -218,7 +218,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       
       debugLogger.log('ProjectStore', 'PROJECTS_SET_IN_STORE', {});
     } catch (error) {
-      debugLogger.log('ProjectStore', 'LOAD_ALL_PROJECTS_FAILED', { error: error.message });
+      debugLogger.log('ProjectStore', 'LOAD_ALL_PROJECTS_FAILED', { error: error instanceof Error ? error.message : 'Unknown error' });
     } finally {
       set({ isLoading: false, isInitialized: true });
       debugLogger.log('ProjectStore', 'STORE_INITIALIZED', {});
@@ -258,7 +258,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     } catch (error) {
       debugLogger.log('ProjectStore', 'DELETE_PROJECT_FAILED', { 
         projectId: id,
-        error: error.message 
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
       toast.error("Failed to delete project", {
         description: error instanceof Error ? error.message : "Please try again",
