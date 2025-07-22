@@ -66,8 +66,12 @@ export interface CostEstimate {
 export async function generateVideo(request: VideoGenerationRequest): Promise<VideoGenerationResponse> {
   try {
     if (!FAL_API_KEY) {
-      throw new Error('FAL API key not configured');
+      console.error('❌ FAL API Key Missing!');
+      console.error('Please set NEXT_PUBLIC_FAL_API_KEY in your .env.local file');
+      throw new Error('FAL API key not configured. Please set NEXT_PUBLIC_FAL_API_KEY in your environment variables.');
     }
+    
+    console.log(`🔑 FAL API Key present: ${FAL_API_KEY ? 'Yes (length: ' + FAL_API_KEY.length + ')' : 'No'}`);
 
     // Map our model names to FAL endpoints
     const modelEndpoints: { [key: string]: string } = {
@@ -86,22 +90,69 @@ export async function generateVideo(request: VideoGenerationRequest): Promise<Vi
     console.log(`🎬 Generating video with FAL AI: ${endpoint}`);
     console.log(`📝 Prompt: ${request.prompt}`);
 
+    // Build request payload based on model requirements
+    let payload: any = {
+      prompt: request.prompt
+    };
+    
+    // Hailuo models have specific parameter requirements
+    if (request.model === 'hailuo' || request.model === 'hailuo_pro') {
+      // Hailuo uses duration as seconds (6s max)
+      payload.duration = Math.min(request.duration || 6, 6);
+      // Hailuo doesn't use resolution parameter directly
+    } else {
+      // Other models
+      payload.duration = request.duration || 5;
+      payload.resolution = request.resolution || '1080p';
+    }
+    
+    console.log(`📤 Sending request to ${endpoint} with payload:`, payload);
+    
     const response = await fetch(`${FAL_API_BASE}/${endpoint}`, {
       method: 'POST',
       headers: {
         'Authorization': `Key ${FAL_API_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        prompt: request.prompt,
-        duration: request.duration || 5,
-        resolution: request.resolution || '1080p'
-      }),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `FAL API error! status: ${response.status}`);
+      console.error('❌ FAL API Error Response:', {
+        status: response.status,
+        statusText: response.statusText,
+        errorData: errorData,
+        endpoint: endpoint
+      });
+      
+      // Handle different error structures from FAL.ai
+      let errorMessage = `FAL API error! status: ${response.status}`;
+      
+      if (errorData.detail) {
+        errorMessage = errorData.detail;
+      } else if (errorData.error) {
+        errorMessage = errorData.error;
+      } else if (errorData.message) {
+        errorMessage = errorData.message;
+      } else if (typeof errorData === 'string') {
+        errorMessage = errorData;
+      } else if (errorData.errors && Array.isArray(errorData.errors)) {
+        errorMessage = errorData.errors.join(', ');
+      }
+      
+      // Check for specific FAL.ai error patterns
+      if (response.status === 422) {
+        errorMessage = `Invalid request parameters: ${JSON.stringify(errorData)}`;
+      } else if (response.status === 401) {
+        errorMessage = 'Invalid FAL API key. Please check your NEXT_PUBLIC_FAL_API_KEY environment variable.';
+      } else if (response.status === 429) {
+        errorMessage = 'Rate limit exceeded. Please wait a moment before trying again.';
+      } else if (response.status === 404) {
+        errorMessage = `Model endpoint not found: ${endpoint}. The model may have been updated or moved.`;
+      }
+      
+      throw new Error(errorMessage);
     }
 
     const result = await response.json();
