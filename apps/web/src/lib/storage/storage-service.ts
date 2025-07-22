@@ -63,6 +63,12 @@ class StorageService {
       backgroundColor: project.backgroundColor,
       backgroundType: project.backgroundType,
       blurIntensity: project.blurIntensity,
+      timelines: (project.timelines || []).map((timeline) => ({
+        ...timeline,
+        createdAt: timeline.createdAt.toISOString(),
+        updatedAt: timeline.updatedAt.toISOString(),
+      })),
+      activeTimelineId: project.activeTimelineId,
     };
 
     await this.projectsAdapter.set(project.id, serializedProject);
@@ -83,6 +89,12 @@ class StorageService {
       backgroundColor: serializedProject.backgroundColor,
       backgroundType: serializedProject.backgroundType,
       blurIntensity: serializedProject.blurIntensity,
+      timelines: (serializedProject.timelines || []).map((timeline) => ({
+        ...timeline,
+        createdAt: new Date(timeline.createdAt),
+        updatedAt: new Date(timeline.updatedAt),
+      })),
+      activeTimelineId: serializedProject.activeTimelineId,
     };
   }
 
@@ -213,6 +225,13 @@ class StorageService {
     const timelineAdapter = this.getProjectTimelineAdapter(projectId);
     const timelineData = await timelineAdapter.get("timeline");
     return timelineData ? timelineData.tracks : null;
+  }
+
+  async deleteTimeline(timelineId: string): Promise<void> {
+    // For timeline-specific deletion, we use the timeline ID as project ID
+    // since each timeline is stored as a separate "project" in the timeline adapter
+    const timelineAdapter = this.getProjectTimelineAdapter(timelineId);
+    await timelineAdapter.remove("timeline");
   }
 
   async deleteProjectTimeline(projectId: string): Promise<void> {
