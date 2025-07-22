@@ -16,6 +16,7 @@ import {
   getMediaAspectRatio,
   type MediaItem,
 } from "./media-store";
+import { usePlaybackStore } from "./playback-store";
 import { storageService } from "@/lib/storage/storage-service";
 import { useProjectStore } from "./project-store";
 import { generateUUID } from "@/lib/utils";
@@ -1487,7 +1488,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
 
         // Get current time and tracks from state
         const { _tracks } = get();
-        const playbackStore = require("./playback-store").usePlaybackStore.getState();
+        const playbackStore = usePlaybackStore.getState();
         const currentTime = playbackStore.currentTime;
 
         // Check if there are any elements at current time
