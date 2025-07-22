@@ -76,8 +76,16 @@ export function EditorHeader() {
           paddingLeft: '16px',
           paddingRight: '16px'
         }}
-        className="relative shadow-lg hover:shadow-xl before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent"
+        className="relative shadow-lg hover:shadow-xl before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent transition-all duration-200"
         onClick={handleExport}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'scale(1.05)';
+          e.currentTarget.style.backgroundColor = '#2563eb';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'scale(1)';
+          e.currentTarget.style.backgroundColor = '#3b82f6';
+        }}
       >
         <Download className="align-text-bottom" style={{ width: '12px', height: '12px', marginRight: '8px' }} />
         Export

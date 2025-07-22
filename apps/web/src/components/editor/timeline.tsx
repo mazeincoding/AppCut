@@ -798,7 +798,26 @@ export function Timeline() {
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="text" size="icon" onClick={handleSeparateAudio}>
+              <Button 
+                variant="text" 
+                size="icon" 
+                onClick={handleSeparateAudio}
+                className="transition-all duration-200"
+                style={{
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  boxShadow: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'rgba(59, 130, 246, 1)';
+                  e.currentTarget.style.transform = 'scale(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              >
                 <SplitSquareHorizontal className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
@@ -810,6 +829,21 @@ export function Timeline() {
                 variant="text"
                 size="icon"
                 onClick={handleDuplicateSelected}
+                className="transition-all duration-200"
+                style={{
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  boxShadow: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'rgba(59, 130, 246, 1)';
+                  e.currentTarget.style.transform = 'scale(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
               >
                 <Copy className="h-4 w-4" />
               </Button>
@@ -818,7 +852,26 @@ export function Timeline() {
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="text" size="icon" onClick={handleFreezeSelected}>
+              <Button 
+                variant="text" 
+                size="icon" 
+                onClick={handleFreezeSelected}
+                className="transition-all duration-200"
+                style={{
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  boxShadow: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'rgba(59, 130, 246, 1)';
+                  e.currentTarget.style.transform = 'scale(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              >
                 <Snowflake className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
@@ -826,7 +879,26 @@ export function Timeline() {
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="text" size="icon" onClick={handleDeleteSelected}>
+              <Button 
+                variant="text" 
+                size="icon" 
+                onClick={handleDeleteSelected}
+                className="transition-all duration-200"
+                style={{
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  boxShadow: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'rgba(220, 38, 38, 1)';
+                  e.currentTarget.style.transform = 'scale(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              >
                 <Trash2 className="h-4 w-4" />
               </Button>
             </TooltipTrigger>

@@ -454,7 +454,25 @@ function PreviewToolbar({ hasAnyElements }: { hasAnyElements: boolean }) {
         size="icon"
         onClick={toggle}
         disabled={!hasAnyElements}
-        className="h-auto p-0"
+        className="h-auto p-0 transition-all duration-200"
+        style={{
+          backgroundColor: 'transparent',
+          border: 'none',
+          outline: 'none',
+          boxShadow: 'none'
+        }}
+        onMouseEnter={(e) => {
+          if (!e.currentTarget.disabled) {
+            e.currentTarget.style.color = 'rgba(59, 130, 246, 1)';
+            e.currentTarget.style.transform = 'scale(1.1)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!e.currentTarget.disabled) {
+            e.currentTarget.style.color = '';
+            e.currentTarget.style.transform = 'scale(1)';
+          }
+        }}
       >
         {isPlaying ? (
           <Pause className="h-3 w-3" />
@@ -499,7 +517,21 @@ function PreviewToolbar({ hasAnyElements }: { hasAnyElements: boolean }) {
         <Button
           variant="text"
           size="icon"
-          className="!size-4 text-muted-foreground"
+          className="!size-4 text-muted-foreground transition-all duration-200"
+          style={{
+            backgroundColor: 'transparent',
+            border: 'none',
+            outline: 'none',
+            boxShadow: 'none'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = 'rgba(59, 130, 246, 1)';
+            e.currentTarget.style.transform = 'scale(1.1)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = '';
+            e.currentTarget.style.transform = 'scale(1)';
+          }}
         >
           <Expand className="!size-4" />
         </Button>
