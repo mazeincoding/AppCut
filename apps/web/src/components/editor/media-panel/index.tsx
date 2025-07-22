@@ -5,7 +5,6 @@ import { MediaView } from "./views/media";
 import { useMediaPanelStore, Tab } from "./store";
 import { TextView } from "./views/text";
 import { AudioView } from "./views/audio";
-import { ProjectPanel } from "../project-panel";
 
 export function MediaPanel() {
   const { activeTab } = useMediaPanelStore();
@@ -44,7 +43,6 @@ export function MediaPanel() {
         Adjustment view coming soon...
       </div>
     ),
-    project: <ProjectPanel />,
   };
 
   return (
