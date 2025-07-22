@@ -64,7 +64,15 @@ export function PropertiesPanel() {
   );
 
   return (
-    <ScrollArea className="h-full bg-panel rounded-xl">
+    <ScrollArea 
+      className="h-full bg-panel rounded-xl"
+      style={{
+        borderTop: '2px solid #ff6b6b',
+        borderRight: '2px solid #4ecdc4', 
+        borderBottom: '2px solid #45b7d1',
+        borderLeft: '2px solid #96ceb4'
+      }}
+    >
       {selectedElements.length > 0
         ? selectedElements.map(({ trackId, elementId }) => {
             const track = tracks.find((t) => t.id === trackId);

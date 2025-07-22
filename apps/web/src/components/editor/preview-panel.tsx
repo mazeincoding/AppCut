@@ -338,7 +338,15 @@ export function PreviewPanel() {
   };
 
   return (
-    <div className="h-full w-full flex flex-col min-h-0 min-w-0 bg-panel rounded-xl">
+    <div 
+      className="h-full w-full flex flex-col min-h-0 min-w-0 bg-panel rounded-xl relative"
+      style={{
+        borderTop: '2px solid #ff6b6b',
+        borderRight: '2px solid #4ecdc4', 
+        borderBottom: '2px solid #45b7d1',
+        borderLeft: '2px solid #96ceb4'
+      }}
+    >
       <div
         ref={containerRef}
         className="flex-1 flex flex-col items-center justify-center p-6 min-h-0 min-w-0"

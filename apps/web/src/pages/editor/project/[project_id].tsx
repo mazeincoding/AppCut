@@ -296,7 +296,15 @@ function EditorContent() {
               maxSize={35}
               onResize={(size) => setToolsPanel(size)}
             >
-              <div className="h-full border-4 border-border rounded-xl overflow-hidden">
+              <div 
+                className="h-full rounded-xl overflow-hidden"
+                style={{
+                  borderTop: '2px solid #ff6b6b',
+                  borderRight: '2px solid #4ecdc4', 
+                  borderBottom: '2px solid #45b7d1',
+                  borderLeft: '2px solid #96ceb4'
+                }}
+              >
                 <MediaPanel />
               </div>
             </ResizablePanel>
@@ -306,7 +314,7 @@ function EditorContent() {
               minSize={30}
               onResize={(size) => setMainContent(size)}
             >
-              <div className="h-full border-4 border-border rounded-xl overflow-hidden">
+              <div className="h-full rounded-xl overflow-hidden">
                 <PreviewPanel />
               </div>
             </ResizablePanel>
@@ -324,7 +332,15 @@ function EditorContent() {
           </ResizablePanelGroup>
         </div>
         <div className="p-4 pt-2">
-          <div className="border-4 border-border rounded-xl overflow-hidden">
+          <div 
+            className="rounded-xl overflow-hidden"
+            style={{
+              borderTop: '2px solid #ff6b6b',
+              borderRight: '2px solid #4ecdc4', 
+              borderBottom: '2px solid #45b7d1',
+              borderLeft: '2px solid #96ceb4'
+            }}
+          >
             <Timeline />
           </div>
         </div>
