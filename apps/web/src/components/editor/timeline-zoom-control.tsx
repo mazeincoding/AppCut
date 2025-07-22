@@ -7,7 +7,7 @@ import {
   TooltipTrigger,
 } from "../ui/tooltip";
 import { ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
-import { MIN_ZOOM, MAX_ZOOM } from "@/constants/timeline-constants";
+import { MIN_ZOOM, MAX_ZOOM, ZOOM_STEP } from "@/constants/timeline-constants";
 
 interface TimelineZoomControlProps {
   zoomLevel: number;
@@ -26,11 +26,11 @@ export function TimelineZoomControl({
   const zoomPercentage = Math.round(zoomLevel * 100);
 
   const handleZoomIn = () => {
-    onZoomChange(Math.min(MAX_ZOOM, zoomLevel + 0.2));
+    onZoomChange(Math.min(MAX_ZOOM, zoomLevel + ZOOM_STEP));
   };
 
   const handleZoomOut = () => {
-    onZoomChange(Math.max(MIN_ZOOM, zoomLevel - 0.2));
+    onZoomChange(Math.max(MIN_ZOOM, zoomLevel - ZOOM_STEP));
   };
 
   const handleReset = () => {

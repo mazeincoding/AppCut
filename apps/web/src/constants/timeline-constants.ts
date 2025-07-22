@@ -78,10 +78,12 @@ export const TIMELINE_CONSTANTS = {
   ZOOM_LEVELS: [0.3, 0.5, 1, 1.5, 2, 3, 4, 5],
   MIN_ZOOM: 0.3,
   MAX_ZOOM: 5,
+  ZOOM_STEP: 0.2,
+  WHEEL_ZOOM_STEP: 0.15, // Zoom step for wheel events
 } as const;
 
 // Export individual constants for easier importing
-export const { MIN_ZOOM, MAX_ZOOM, ZOOM_LEVELS } = TIMELINE_CONSTANTS;
+export const { MIN_ZOOM, MAX_ZOOM, ZOOM_LEVELS, ZOOM_STEP, WHEEL_ZOOM_STEP } = TIMELINE_CONSTANTS;
 
 // FPS presets for project settings
 export const FPS_PRESETS = [

@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionHandler } from "@/constants/actions";
-import { MIN_ZOOM, MAX_ZOOM /*, ZOOM_STEP */ } from "../constants/timeline-constants";
+import { MIN_ZOOM, MAX_ZOOM, ZOOM_STEP } from "../constants/timeline-constants";
 
 interface UseTimelineZoomActionsProps {
   zoomLevel: number;
@@ -16,12 +16,12 @@ export function useTimelineZoomActions({
 }: UseTimelineZoomActionsProps) {
   // Zoom in action
   useActionHandler("zoom-in", () => {
-    setZoomLevel((prev) => Math.min(MAX_ZOOM, prev + /*ZOOM_STEP*/ 0.2));
+    setZoomLevel((prev) => Math.min(MAX_ZOOM, prev + ZOOM_STEP));
   });
 
   // Zoom out action
   useActionHandler("zoom-out", () => {
-    setZoomLevel((prev) => Math.max(MIN_ZOOM, prev - /*ZOOM_STEP*/ 0.2));
+    setZoomLevel((prev) => Math.max(MIN_ZOOM, prev - ZOOM_STEP));
   });
 
   // Reset zoom action

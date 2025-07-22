@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, RefObject } from "react";
-import { MIN_ZOOM, MAX_ZOOM } from "@/constants/timeline-constants";
+import { MIN_ZOOM, MAX_ZOOM, ZOOM_STEP, WHEEL_ZOOM_STEP } from "@/constants/timeline-constants";
+
 
 interface UseTimelineZoomProps {
   containerRef: RefObject<HTMLDivElement>;
@@ -45,7 +46,7 @@ export function useTimelineZoom({
     // Only zoom if user is using pinch gesture (ctrlKey or metaKey is true)
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
-      const delta = e.deltaY > 0 ? -0.15 : 0.15;
+      const delta = e.deltaY > 0 ? -WHEEL_ZOOM_STEP : WHEEL_ZOOM_STEP;
       setZoomLevel((prev) => Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, prev + delta)));
     }
     // Otherwise, allow normal scrolling
@@ -62,11 +63,11 @@ export function useTimelineZoom({
           case '=':
           case '+':
             e.preventDefault();
-            setZoomLevel((prev) => Math.min(MAX_ZOOM, prev + 0.2));
+            setZoomLevel((prev) => Math.min(MAX_ZOOM, prev + ZOOM_STEP));
             break;
           case '-':
             e.preventDefault();
-            setZoomLevel((prev) => Math.max(MIN_ZOOM, prev - 0.2));
+            setZoomLevel((prev) => Math.max(MIN_ZOOM, prev - ZOOM_STEP));
             break;
           case '0':
             e.preventDefault();
