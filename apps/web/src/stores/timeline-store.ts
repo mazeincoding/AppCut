@@ -1517,14 +1517,20 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
         const videoElement = previewElement.querySelector('video') as HTMLVideoElement;
         
         let canvas: HTMLCanvasElement;
-        let ctx: CanvasRenderingContext2D;
+        let ctx: CanvasRenderingContext2D | null;
 
         if (videoElement && videoElement.videoWidth > 0 && videoElement.videoHeight > 0) {
           // Capture directly from video element at native resolution
           canvas = document.createElement('canvas');
           canvas.width = videoElement.videoWidth;
           canvas.height = videoElement.videoHeight;
-          ctx = canvas.getContext('2d')!;
+          ctx = canvas.getContext('2d');
+          
+          if (!ctx) {
+            console.error('Failed to get 2D canvas context for freeze frame');
+            toast.error('Failed to create freeze frame - canvas context unavailable');
+            return;
+          }
           
           // Draw the current video frame at full quality
           ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
