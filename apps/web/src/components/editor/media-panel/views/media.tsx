@@ -27,12 +27,12 @@ import { useProjectStore } from "@/stores/project-store";
 import { useTimelineStore } from "@/stores/timeline-store";
 
 export function MediaView() {
-  const { mediaItems, addMediaItem, removeMediaItem } = useMediaStore();
+  const { mediaItems, addMediaItem, removeMediaItem, searchQuery, setSearchQuery } =
+    useMediaStore();
   const { activeProject } = useProjectStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [searchQuery, setSearchQuery] = useState("");
   const [mediaFilter, setMediaFilter] = useState("all");
 
   const processFiles = async (files: FileList | File[]) => {
