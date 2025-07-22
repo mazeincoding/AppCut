@@ -70,10 +70,10 @@
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.16",
     "@types/bun": "latest",
+    "@types/html2canvas": "^1.0.0",
     "@types/pg": "^8.15.4",
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
-    "@types/html2canvas": "^1.0.0",
     "cross-env": "^7.0.3",
     "drizzle-kit": "^0.31.4",
     "postcss": "^8",
