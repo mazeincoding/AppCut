@@ -41,16 +41,34 @@ export function Header() {
   );
 
   const rightContent = (
-    <nav className="flex items-center gap-3">
+    <nav className="flex items-center gap-8">
       <Link 
         href="/contributors"
         onClick={(e) => handleClick(e, "/contributors")}
         prefetch={false}
       >
-        <Button variant="text" className="text-sm p-0">
+        <Button 
+          variant="text" 
+          className="text-sm p-0 relative shadow-lg hover:shadow-xl before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent no-underline"
+          style={{
+            backgroundColor: '#3b82f6', 
+            color: 'white',
+            height: '32px',
+            borderRadius: '6px',
+            fontSize: '12px',
+            position: 'relative',
+            overflow: 'hidden',
+            border: 'none',
+            outline: 'none',
+            boxShadow: 'none',
+            paddingLeft: '12px',
+            paddingRight: '12px'
+          }}
+        >
           Contributors
         </Button>
       </Link>
+      <div className="w-px h-6 bg-gray-300"></div>
       <Link 
         href="/projects"
         onClick={(e) => handleClick(e, "/projects")}

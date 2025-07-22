@@ -77,7 +77,7 @@ export function Footer() {
                 <li>
                   <Link
                     href="/privacy"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-muted-foreground hover:text-foreground transition-colors no-underline"
                     prefetch={false}
                   >
                     Privacy policy
@@ -102,7 +102,7 @@ export function Footer() {
                 <li>
                   <Link
                     href="/contributors"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-muted-foreground hover:text-foreground transition-colors no-underline"
                     prefetch={false}
                   >
                     Contributors
@@ -111,7 +111,7 @@ export function Footer() {
                 <li>
                   <Link
                     href="https://github.com/OpenCut-app/OpenCut/blob/main/README.md"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-muted-foreground hover:text-foreground transition-colors no-underline"
                     target="_blank"
                     rel="noopener noreferrer"
                   >

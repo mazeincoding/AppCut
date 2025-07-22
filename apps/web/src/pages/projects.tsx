@@ -312,7 +312,7 @@ export default function ProjectsPage() {
         ) : savedProjects.length === 0 ? (
           <NoProjects onCreateProject={handleCreateProject} disabled={isCreatingProject} />
         ) : (
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-4 gap-10">
             {console.log("🎨 [RENDER] Rendering project cards:", savedProjects.length, savedProjects)}
             {savedProjects.map((project) => {
               console.log("🎨 [RENDER] Rendering project:", project.id, project.name);
@@ -366,12 +366,63 @@ function ProjectCard({ project, isSelected, onSelect }: ProjectCardProps) {
   return (
     <>
       <div 
-        className={`group bg-white border rounded-xl overflow-hidden transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${
+        className={`group bg-background rounded-2xl overflow-hidden transition-all duration-200 hover:scale-[1.02] relative ${
           isSelected 
-            ? 'border-blue-500 ring-2 ring-blue-200 shadow-md' 
-            : 'border-gray-200 hover:border-gray-300'
+            ? 'shadow-lg' 
+            : 'hover:shadow-lg'
         }`}
+        style={{
+          border: '2px solid transparent',
+          backgroundImage: isSelected 
+            ? 'linear-gradient(hsl(var(--background)), hsl(var(--background))), linear-gradient(45deg, #3b82f6, #8b5cf6, #ec4899)'
+            : 'linear-gradient(hsl(var(--background)), hsl(var(--background))), linear-gradient(45deg, #e5e7eb, #d1d5db)',
+          backgroundOrigin: 'border-box',
+          backgroundClip: 'padding-box, border-box',
+          boxShadow: isSelected 
+            ? '0 0 25px rgba(59, 130, 246, 0.4), 0 0 50px rgba(139, 92, 246, 0.2)' 
+            : '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+        }}
+        onMouseEnter={(e) => {
+          if (!isSelected) {
+            e.currentTarget.style.backgroundImage = 'linear-gradient(hsl(var(--background)), hsl(var(--background))), linear-gradient(45deg, #3b82f6, #8b5cf6, #ec4899)';
+            e.currentTarget.style.boxShadow = '0 0 20px rgba(59, 130, 246, 0.3), 0 0 40px rgba(139, 92, 246, 0.15)';
+          }
+          // Show delete button
+          const deleteButton = e.currentTarget.querySelector('button[title="Delete project"]');
+          if (deleteButton) {
+            deleteButton.style.opacity = '1';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isSelected) {
+            e.currentTarget.style.backgroundImage = 'linear-gradient(hsl(var(--background)), hsl(var(--background))), linear-gradient(45deg, #e5e7eb, #d1d5db)';
+            e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
+          }
+          // Hide delete button
+          const deleteButton = e.currentTarget.querySelector('button[title="Delete project"]');
+          if (deleteButton) {
+            deleteButton.style.opacity = '0';
+          }
+        }}
       >
+        {/* Delete button overlay - positioned at top-right of entire card */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            console.log("🗑️ [DELETE] Delete clicked for:", project.id);
+            if (confirm(`Delete project "${project.name}"?`)) {
+              deleteProject(project.id);
+            }
+          }}
+          className="absolute top-3 right-3 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-all duration-200 z-30"
+          style={{ opacity: 0 }}
+          onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+          onMouseLeave={(e) => e.currentTarget.style.opacity = '0'}
+          title="Delete project"
+        >
+          <Trash2 className="h-3 w-3" />
+        </button>
+
         {/* Thumbnail Preview Area - Compact */}
         <div className="relative h-24 bg-gray-100 w-full">
           <div className="flex items-center justify-center h-full">
@@ -384,25 +435,11 @@ function ProjectCard({ project, isSelected, onSelect }: ProjectCardProps) {
             ) : (
               <div className="flex items-center justify-center text-gray-400">
                 <Video className="h-6 w-6 mr-2" />
-                <span className="text-xs">No preview</span>
+                <span className="text-xs">&nbsp;&nbsp;No preview</span>
               </div>
             )}
           </div>
           
-          {/* Delete button overlay - positioned relative to the main container */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              console.log("🗑️ [DELETE] Delete clicked for:", project.id);
-              if (confirm(`Delete project "${project.name}"?`)) {
-                deleteProject(project.id);
-              }
-            }}
-            className="absolute top-2 right-2 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded flex items-center justify-center transition-colors opacity-0 hover:opacity-100 group-hover:opacity-100 z-10"
-            title="Delete project"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
         </div>
 
         {/* Project Info Section - Compact */}
