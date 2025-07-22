@@ -31,7 +31,25 @@ import { ProjectCreationErrorBoundary } from "@/components/project-creation-erro
 
 function CreateButton({ onClick, disabled = false }: { onClick: () => void; disabled?: boolean }) {
   return (
-    <Button className="gap-2" onClick={onClick} disabled={disabled}>
+    <Button 
+      className="gap-2 relative shadow-lg hover:shadow-xl before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent no-underline"
+      style={{
+        backgroundColor: '#3b82f6', 
+        color: 'white',
+        height: '36px',
+        borderRadius: '6px',
+        fontSize: '14px',
+        position: 'relative',
+        overflow: 'hidden',
+        border: 'none',
+        outline: 'none',
+        boxShadow: 'none',
+        paddingLeft: '16px',
+        paddingRight: '16px'
+      }}
+      onClick={onClick} 
+      disabled={disabled}
+    >
       <Plus className="!size-4" />
       {disabled ? "Creating..." : "New project"}
     </Button>
