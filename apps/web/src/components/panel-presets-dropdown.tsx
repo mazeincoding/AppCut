@@ -5,14 +5,17 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { LayoutGrid, Check } from "lucide-react";
 import { usePanelLayoutStore, PanelLayout } from "@/stores/panel-layout-store";
+import { usePanelStore } from "@/stores/panel-store";
 import { cn } from "@/lib/utils";
 
 export function PanelPresetsDropdown() {
   const { activeLayout, setActiveLayout } = usePanelLayoutStore();
+  const { resetLayout } = usePanelStore();
 
   const menuItems: { label: string; layout: PanelLayout }[] = [
     { label: "Default", layout: "default" },
@@ -39,6 +42,10 @@ export function PanelPresetsDropdown() {
             {activeLayout === layout && <Check className="h-4 w-4" />}
           </DropdownMenuItem>
         ))}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => resetLayout(activeLayout)}>
+          Reset Preset
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
