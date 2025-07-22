@@ -332,7 +332,7 @@ export function TimelineElement({
             <div className="absolute inset-0 bg-blue-500/20" />
           )}
           {/* Video name overlay */}
-          <div className="absolute inset-0 flex items-center px-2 bg-gradient-to-r from-black/40 via-transparent to-transparent">
+          <div className="absolute inset-0 flex items-center px-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500">
             <span className="text-xs text-white font-medium truncate drop-shadow-sm">
               {element.name}
             </span>

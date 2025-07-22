@@ -242,7 +242,7 @@ export function Timeline() {
   // Update timeline duration when tracks change
   useEffect(() => {
     const totalDuration = getTotalDuration();
-    setDuration(Math.max(totalDuration, 10)); // Minimum 10 seconds for empty timeline
+    setDuration(Math.max(totalDuration, 20)); // Minimum 20 seconds for empty timeline
   }, [tracks, setDuration, getTotalDuration]);
 
   // Keyboard event for deleting selected elements
@@ -898,12 +898,12 @@ export function Timeline() {
                     const pixelsPerSecond =
                       TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoom;
                     if (pixelsPerSecond >= 200) return 0.1; // Every 0.1s when very zoomed in
-                    if (pixelsPerSecond >= 100) return 0.5; // Every 0.5s when zoomed in
-                    if (pixelsPerSecond >= 50) return 1; // Every 1s at normal zoom
-                    if (pixelsPerSecond >= 25) return 2; // Every 2s when zoomed out
-                    if (pixelsPerSecond >= 12) return 5; // Every 5s when more zoomed out
-                    if (pixelsPerSecond >= 6) return 10; // Every 10s when very zoomed out
-                    return 30; // Every 30s when extremely zoomed out
+                    if (pixelsPerSecond >= 100) return 0.2; // Every 0.2s when zoomed in (1.0, 1.2, 1.4, 1.6, 1.8)
+                    if (pixelsPerSecond >= 50) return 0.5; // Every 0.5s at normal zoom
+                    if (pixelsPerSecond >= 25) return 1; // Every 1s when zoomed out
+                    if (pixelsPerSecond >= 12) return 2; // Every 2s when more zoomed out
+                    if (pixelsPerSecond >= 6) return 5; // Every 5s when very zoomed out
+                    return 10; // Every 10s when extremely zoomed out
                   };
 
                   const interval = getTimeInterval(zoomLevel);
@@ -938,13 +938,16 @@ export function Timeline() {
                     return (
                       <div
                         key={i}
-                        className={`absolute top-0 bottom-0 ${
+                        className={`absolute ${
                           isMainMarker
-                            ? "border-l border-muted-foreground/40"
-                            : "border-l border-muted-foreground/20"
+                            ? "border-l-2 border-muted-foreground/60"
+                            : "border-l border-muted-foreground/40"
                         }`}
                         style={{
                           left: `${time * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel}px`,
+                          top: '0px',
+                          height: '500px',
+                          zIndex: 1
                         }}
                       >
                         <span

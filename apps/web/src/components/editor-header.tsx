@@ -51,19 +51,21 @@ export function EditorHeader() {
         style={{ 
           backgroundColor: '#3b82f6', 
           color: 'white',
-          height: '28px',
+          height: '32px',
           borderRadius: '9999px',
-          fontSize: '12px',
+          fontSize: '13px',
           position: 'relative',
           overflow: 'hidden',
           border: 'none',
           outline: 'none',
-          boxShadow: 'none'
+          boxShadow: 'none',
+          paddingLeft: '16px',
+          paddingRight: '16px'
         }}
         className="relative shadow-lg hover:shadow-xl before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent"
         onClick={handleExport}
       >
-        <Download className="mr-1 align-text-bottom" style={{ width: '12px', height: '12px' }} />
+        <Download className="align-text-bottom" style={{ width: '12px', height: '12px', marginRight: '8px' }} />
         Export
       </Button>
     </nav>

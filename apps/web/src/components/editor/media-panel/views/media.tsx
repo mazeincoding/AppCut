@@ -144,23 +144,27 @@ export function MediaView() {
               className="w-full h-full object-cover rounded"
               loading="lazy"
             />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded">
-              <Video className="h-6 w-6 text-white drop-shadow-md" />
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-transparent rounded"></div>
+            <div className="absolute top-1 right-1">
+              <Video className="h-4 w-4 text-white drop-shadow-md bg-black/50 rounded p-0.5" />
             </div>
             {item.duration && (
-              <div className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1 rounded">
+              <div className="absolute bottom-1 right-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs px-1.5 py-0.5 rounded font-medium">
                 {formatDuration(item.duration)}
               </div>
             )}
+            <div className="absolute bottom-1 left-1 text-white text-xs font-medium drop-shadow-sm bg-black/50 px-1.5 py-0.5 rounded truncate max-w-[80%]">
+              {item.name.replace(/\.[^/.]+$/, '')}
+            </div>
           </div>
         );
       }
       return (
-        <div className="w-full h-full bg-muted/30 flex flex-col items-center justify-center text-muted-foreground rounded">
-          <Video className="h-6 w-6 mb-1" />
-          <span className="text-xs">Video</span>
+        <div className="w-full h-full bg-gradient-to-br from-blue-500/30 to-purple-500/30 flex flex-col items-center justify-center text-white rounded border border-blue-500/20">
+          <Video className="h-8 w-8 mb-1 drop-shadow-sm" />
+          <span className="text-xs font-medium">Video</span>
           {item.duration && (
-            <span className="text-xs opacity-70">
+            <span className="text-xs opacity-80 bg-black/30 px-1 rounded mt-1">
               {formatDuration(item.duration)}
             </span>
           )}
