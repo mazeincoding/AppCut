@@ -1,5 +1,90 @@
 # Multi-Select AI Models Feature Plan
 
+## Architecture Diagram
+
+```mermaid
+graph TB
+    %% Main Component
+    AIView["AiView Component<br/>apps/web/src/components/editor/media-panel/views/ai.tsx"]
+    
+    %% State Management
+    State["State Management"]
+    SelectedModels["selectedModels: string[]"]
+    GeneratedVideos["generatedVideos: Array<{modelId, video}>"]
+    
+    %% UI Components
+    ToggleGrid["Toggle Buttons Grid UI"]
+    MultiResults["Multi-Video Results Display"]
+    
+    %% Core Functions
+    ToggleModel["toggleModel(modelId: string)"]
+    HandleGenerate["handleGenerate()"]
+    AddToHistory["addToHistory(video)"]
+    
+    %% External Dependencies
+    AIClient["AI Video Client<br/>apps/web/src/lib/ai-video-client.ts"]
+    MediaStore["useMediaStore<br/>apps/web/src/stores/media-store.ts"]
+    ProjectStore["useProjectStore<br/>apps/web/src/stores/project-store.ts"]
+    
+    %% API Functions
+    GenerateVideo["generateVideo({prompt, model, resolution, duration})"]
+    GenerateVideoFromImage["generateVideoFromImage({image, model, prompt, resolution, duration})"]
+    
+    %% Relationships
+    AIView --> State
+    State --> SelectedModels
+    State --> GeneratedVideos
+    
+    AIView --> ToggleGrid
+    AIView --> MultiResults
+    AIView --> ToggleModel
+    AIView --> HandleGenerate
+    AIView --> AddToHistory
+    
+    ToggleGrid --> ToggleModel
+    HandleGenerate --> GenerateVideo
+    HandleGenerate --> GenerateVideoFromImage
+    HandleGenerate --> MediaStore
+    HandleGenerate --> ProjectStore
+    
+    AIView --> AIClient
+    AIClient --> GenerateVideo
+    AIClient --> GenerateVideoFromImage
+    
+    MultiResults --> AddToHistory
+    
+    %% Data Flow
+    ToggleModel -.-> SelectedModels
+    HandleGenerate -.-> GeneratedVideos
+    AddToHistory -.-> GeneratedVideos
+    
+    classDef component fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
+    classDef state fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef function fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef external fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    
+    class AIView component
+    class State,SelectedModels,GeneratedVideos state
+    class ToggleModel,HandleGenerate,AddToHistory,GenerateVideo,GenerateVideoFromImage function
+    class AIClient,MediaStore,ProjectStore external
+    class ToggleGrid,MultiResults component
+```
+
+## Function and File Relationships
+
+### Core Files Modified
+- `apps/web/src/components/editor/media-panel/views/ai.tsx:47` - Change `selectedModel` to `selectedModels`
+- `apps/web/src/components/editor/media-panel/views/ai.tsx:569-634` - Replace Select dropdown with toggle grid
+- `apps/web/src/components/editor/media-panel/views/ai.tsx:278-400` - Update `handleGenerate` for multiple models
+- `apps/web/src/components/editor/media-panel/views/ai.tsx:737-800` - Replace single video success with multi-video results
+
+### Key Functions Flow
+1. **toggleModel()** → Updates selectedModels array → Triggers UI re-render
+2. **handleGenerate()** → Loops through selectedModels → Calls generateVideo() for each → Updates generatedVideos
+3. **addToHistory()** → Adds each generated video to localStorage history
+4. **Media Integration** → Each video auto-added to MediaStore via addMediaItem()
+
+
 ## Overview
 Implement functionality to allow users to select multiple AI models simultaneously for video generation, giving them the option to generate videos with different models in parallel or compare results.
 
@@ -219,16 +304,18 @@ const handleGenerate = async () => {
         // Add each video to history as it's generated
         addToHistory(newVideo);
         
-        // Automatically add to media store
+        // Automatically add to media panel and download to Downloads folder
         if (activeProject) {
           try {
             const videoResponse = await fetch(newVideo.videoUrl);
             const blob = await videoResponse.blob();
             const modelName = AI_MODELS.find(m => m.id === modelId)?.name || modelId;
-            const file = new File([blob], `ai-${modelName.toLowerCase()}-${newVideo.jobId.substring(0, 8)}.mp4`, {
+            const fileName = `ai-${modelName.toLowerCase()}-${newVideo.jobId.substring(0, 8)}.mp4`;
+            const file = new File([blob], fileName, {
               type: 'video/mp4',
             });
             
+            // Add to media panel
             await addMediaItem(activeProject.id, {
               name: `AI (${modelName}): ${newVideo.prompt.substring(0, 20)}...`,
               type: "video",
@@ -238,8 +325,28 @@ const handleGenerate = async () => {
               width: 1920,
               height: 1080,
             });
+            
+            // Automatically download to Downloads folder
+            const downloadLink = document.createElement('a');
+            downloadLink.href = URL.createObjectURL(blob);
+            downloadLink.download = fileName;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+            URL.revokeObjectURL(downloadLink.href);
+            
+            debugLogger.log('AIView', 'VIDEO_ADDED_TO_MEDIA_PANEL_AND_DOWNLOADED', { 
+              videoUrl: newVideo.videoUrl,
+              modelName,
+              fileName,
+              projectId: activeProject.id 
+            });
           } catch (addError) {
-            console.error('Failed to add video to media store:', addError);
+            debugLogger.log('AIView', 'VIDEO_ADD_TO_MEDIA_PANEL_FAILED', { 
+              error: addError instanceof Error ? addError.message : 'Unknown error',
+              modelName: AI_MODELS.find(m => m.id === modelId)?.name,
+              projectId: activeProject.id 
+            });
           }
         }
       }
@@ -268,39 +375,96 @@ const [generatedVideos, setGeneratedVideos] = useState<Array<{
   video: GeneratedVideo;
 }>>([]);
 
-// Results display component
-const MultiModelResults = () => (
-  <div className="space-y-3">
-    <h4 className="font-medium text-sm">Generated Videos</h4>
-    {generatedVideos.map(({ modelId, video }) => {
-      const model = AI_MODELS.find(m => m.id === modelId);
-      return (
-        <div key={modelId} className="border rounded-lg p-3 space-y-2">
-          <div className="flex justify-between items-center">
-            <span className="font-medium text-sm">{model?.name}</span>
-            <span className="text-xs text-muted-foreground">
-              USD {model?.price}
-            </span>
+// Replace the existing single video success display with multi-video results
+{generatedVideos.length > 0 && (
+  <div className="mt-4 space-y-3">
+    <div className="flex items-center gap-2 mb-3">
+      <Play className="size-4 text-green-600" />
+      <span className="text-sm font-medium text-green-700">
+        {generatedVideos.length} Video{generatedVideos.length > 1 ? 's' : ''} Generated Successfully!
+      </span>
+    </div>
+    
+    <div className="text-sm text-green-700 mb-3">
+      ✅ All videos automatically added to Media panel<br/>
+      📁 Videos downloaded to your Downloads folder
+    </div>
+    
+    {/* Individual video results */}
+    <div className="space-y-2">
+      {generatedVideos.map(({ modelId, video }) => {
+        const model = AI_MODELS.find(m => m.id === modelId);
+        return (
+          <div key={modelId} className="bg-green-500/5 border border-green-500/20 rounded-lg p-3">
+            <div className="flex justify-between items-center mb-2">
+              <span className="font-medium text-sm text-green-700">
+                {model?.name}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                USD {model?.price} • {model?.resolution}
+              </span>
+            </div>
+            
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  const link = document.createElement('a');
+                  link.href = video.videoUrl;
+                  link.download = `ai-${model?.name.toLowerCase()}-${video.jobId.substring(0, 8)}.mp4`;
+                  link.click();
+                }}
+                className="flex-1"
+              >
+                <Download className="mr-1 size-3" />
+                Download
+              </Button>
+            </div>
           </div>
-          <video 
-            src={video.videoUrl} 
-            className="w-full h-24 object-cover rounded"
-            controls
-          />
-          <div className="flex gap-2">
-            <Button size="sm" variant="outline">
-              <Download className="w-3 h-3 mr-1" />
-              Download
-            </Button>
-            <Button size="sm" variant="outline">
-              Add to Timeline
-            </Button>
-          </div>
-        </div>
-      );
-    })}
+        );
+      })}
+    </div>
+    
+    {/* Actions for all videos */}
+    <div className="flex gap-2 pt-2">
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        onClick={() => {
+          // Download all videos
+          generatedVideos.forEach(({ modelId, video }) => {
+            const model = AI_MODELS.find(m => m.id === modelId);
+            const link = document.createElement('a');
+            link.href = video.videoUrl;
+            link.download = `ai-${model?.name.toLowerCase()}-${video.jobId.substring(0, 8)}.mp4`;
+            link.click();
+          });
+        }}
+        className="flex-1"
+      >
+        <Download className="mr-1 size-3" />
+        Download All ({generatedVideos.length})
+      </Button>
+      <Button
+        type="button"
+        size="sm"
+        variant="text"
+        onClick={() => {
+          setGeneratedVideos([]);
+          setError(null);
+          setStatusMessage("");
+          setGenerationProgress(0);
+        }}
+        className="flex-1"
+      >
+        Generate Again
+      </Button>
+    </div>
   </div>
-);
+)}
 ```
 
 ### Step 5: Update Validation and Cost Display
@@ -353,10 +517,13 @@ const totalCost = selectedModels.reduce((total, modelId) => {
 - **Progress Tracking**: Need to track progress for multiple concurrent generations
 
 ### User Experience
-- **Clear Selection State**: Visual indication of selected models
+- **Clear Selection State**: Visual indication of selected models with checkboxes
 - **Cost Transparency**: Show total cost for multiple models
 - **Result Organization**: Clear labeling of which video came from which model
 - **Quick Actions**: Easy way to select/deselect all models
+- **Media Panel Integration**: All generated videos automatically appear in Media panel for easy access
+- **Automatic Downloads**: Videos automatically download to user's Downloads folder for offline access
+- **Workflow Integration**: Videos are immediately available for dragging to timeline
 
 ### Error Handling
 - **Partial Failures**: Some models succeed, others fail
