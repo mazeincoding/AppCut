@@ -102,7 +102,6 @@ export function useEditorActions() {
 
   useActionHandler("delete-selected", () => {
     if (selectedElements.length === 0) {
-      toast.error("No elements selected");
       return;
     }
     selectedElements.forEach(

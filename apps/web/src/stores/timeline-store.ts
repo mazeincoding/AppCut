@@ -106,17 +106,20 @@ interface TimelineStore {
     trackId: string,
     elementId: string,
     trimStart: number,
-    trimEnd: number
+    trimEnd: number,
+    pushHistory?: boolean
   ) => void;
   updateElementDuration: (
     trackId: string,
     elementId: string,
-    duration: number
+    duration: number,
+    pushHistory?: boolean
   ) => void;
   updateElementStartTime: (
     trackId: string,
     elementId: string,
-    startTime: number
+    startTime: number,
+    pushHistory?: boolean
   ) => void;
   toggleTrackMute: (trackId: string) => void;
 
@@ -687,8 +690,14 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       updateTracksAndSave(newTracks);
     },
 
-    updateElementTrim: (trackId, elementId, trimStart, trimEnd) => {
-      get().pushHistory();
+    updateElementTrim: (
+      trackId,
+      elementId,
+      trimStart,
+      trimEnd,
+      pushHistory = true
+    ) => {
+      if (pushHistory) get().pushHistory();
       updateTracksAndSave(
         get()._tracks.map((track) =>
           track.id === trackId
@@ -705,8 +714,13 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       );
     },
 
-    updateElementDuration: (trackId, elementId, duration) => {
-      get().pushHistory();
+    updateElementDuration: (
+      trackId,
+      elementId,
+      duration,
+      pushHistory = true
+    ) => {
+      if (pushHistory) get().pushHistory();
       updateTracksAndSave(
         get()._tracks.map((track) =>
           track.id === trackId
@@ -721,8 +735,13 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       );
     },
 
-    updateElementStartTime: (trackId, elementId, startTime) => {
-      get().pushHistory();
+    updateElementStartTime: (
+      trackId,
+      elementId,
+      startTime,
+      pushHistory = true
+    ) => {
+      if (pushHistory) get().pushHistory();
       updateTracksAndSave(
         get()._tracks.map((track) =>
           track.id === trackId

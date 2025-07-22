@@ -433,7 +433,6 @@ export function Timeline() {
   // Action handlers for toolbar
   const handleSplitSelected = () => {
     if (selectedElements.length === 0) {
-      toast.error("No elements selected");
       return;
     }
     let splitCount = 0;
@@ -459,7 +458,6 @@ export function Timeline() {
 
   const handleDuplicateSelected = () => {
     if (selectedElements.length === 0) {
-      toast.error("No elements selected");
       return;
     }
     const canDuplicate = selectedElements.length === 1;
@@ -553,7 +551,6 @@ export function Timeline() {
 
   const handleDeleteSelected = () => {
     if (selectedElements.length === 0) {
-      toast.error("No elements selected");
       return;
     }
     selectedElements.forEach(({ trackId, elementId }) => {
