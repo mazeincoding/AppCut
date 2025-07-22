@@ -70,7 +70,7 @@ export function Footer() {
             </div>
           </div>
 
-          <div className="flex gap-12 justify-end items-start py-2">
+          <div className="flex gap-12 justify-start items-start py-2">
             <div>
               <h3 className="font-semibold text-foreground mb-4">Resources</h3>
               <ul className="space-y-2 text-sm">

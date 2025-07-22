@@ -56,9 +56,26 @@ export function Header() {
         onClick={(e) => handleClick(e, "/projects")}
         prefetch={false}
       >
-        <Button size="sm" className="text-sm ml-4">
+        <Button 
+          size="sm" 
+          className="text-sm ml-4 relative shadow-lg hover:shadow-xl before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent no-underline"
+          style={{
+            backgroundColor: '#3b82f6', 
+            color: 'white',
+            height: '32px',
+            borderRadius: '6px',
+            fontSize: '12px',
+            position: 'relative',
+            overflow: 'hidden',
+            border: 'none',
+            outline: 'none',
+            boxShadow: 'none',
+            paddingLeft: '12px',
+            paddingRight: '12px'
+          }}
+        >
           Projects
-          <ArrowRight className="h-4 w-4" />
+          <ArrowRight className="h-4 w-4" style={{ width: '14px', height: '14px' }} />
         </Button>
       </Link>
     </nav>

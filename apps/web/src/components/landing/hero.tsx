@@ -107,13 +107,18 @@ export function Hero({ signupCount }: HeroProps) {
       <div className="mt-12 flex gap-8 justify-center">
         <form
           onSubmit={handleSubmit}
-          className="flex gap-3 w-full max-w-lg flex-col sm:flex-row"
+          className="flex gap-3 w-full max-w-lg flex-col sm:flex-row items-center"
         >
-          <div className="relative w-full">
+          <div className="relative">
             <Input
               type="email"
               placeholder="Enter your email"
-              className="h-11 text-base flex-1"
+              className="h-8 text-sm"
+              style={{
+                width: '200px',
+                fontSize: '12px',
+                height: '32px'
+              }}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isSubmitting}
@@ -122,13 +127,28 @@ export function Hero({ signupCount }: HeroProps) {
           </div>
           <Button
             type="submit"
-            className="h-11 text-base !bg-foreground"
+            className="relative shadow-lg hover:shadow-xl before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent no-underline flex-shrink-0"
+            style={{
+              backgroundColor: '#3b82f6', 
+              color: 'white',
+              height: '32px',
+              borderRadius: '6px',
+              fontSize: '12px',
+              position: 'relative',
+              overflow: 'hidden',
+              border: 'none',
+              outline: 'none',
+              boxShadow: 'none',
+              paddingLeft: '12px',
+              paddingRight: '12px',
+              width: 'auto'
+            }}
             disabled={isSubmitting}
           >
             <span className="relative z-10">
-              {isSubmitting ? "Joining..." : "Join waitlist"}
+              {isSubmitting ? "Joining..." : "Join"}
             </span>
-            <ArrowRight className="relative z-10 ml-0.5 h-4 w-4 inline-block" />
+            <ArrowRight className="relative z-10 ml-0.5" style={{ width: '14px', height: '14px' }} />
           </Button>
         </form>
       </div>
@@ -194,13 +214,18 @@ export function Hero({ signupCount }: HeroProps) {
           >
             <form
               onSubmit={handleSubmit}
-              className="flex gap-3 w-full max-w-lg flex-col sm:flex-row"
+              className="flex gap-3 w-full max-w-lg flex-col sm:flex-row items-center"
             >
-              <div className="relative w-full">
+              <div className="relative">
                 <Input
                   type="email"
                   placeholder="Enter your email"
-                  className="h-11 text-base flex-1"
+                  className="h-8 text-sm"
+                  style={{
+                    width: '200px',
+                    fontSize: '12px',
+                    height: '32px'
+                  }}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isSubmitting}
@@ -209,13 +234,28 @@ export function Hero({ signupCount }: HeroProps) {
               </div>
               <Button
                 type="submit"
-                className="h-11 text-base !bg-foreground"
+                className="relative shadow-lg hover:shadow-xl before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent no-underline flex-shrink-0"
+                style={{
+                  backgroundColor: '#3b82f6', 
+                  color: 'white',
+                  height: '32px',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  border: 'none',
+                  outline: 'none',
+                  boxShadow: 'none',
+                  paddingLeft: '12px',
+                  paddingRight: '12px',
+                  width: 'auto'
+                }}
                 disabled={isSubmitting}
               >
                 <span className="relative z-10">
-                  {isSubmitting ? "Joining..." : "Join waitlist"}
+                  {isSubmitting ? "Joining..." : "Join"}
                 </span>
-                <ArrowRight className="relative z-10 ml-0.5 h-4 w-4 inline-block" />
+                <ArrowRight className="relative z-10 ml-0.5" style={{ width: '14px', height: '14px' }} />
               </Button>
             </form>
           </motion.div>
