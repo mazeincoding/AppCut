@@ -136,13 +136,18 @@ export async function generateVideo(
       });
     }
     
-    // Step 1: Submit to FAL queue
-    const queueResponse = await fetch(`${FAL_API_BASE}/${endpoint}`, {
+    // Step 1: Try queue mode first
+    console.log('📤 Attempting queue submission with payload:', payload);
+    
+    let queueResponse = await fetch(`${FAL_API_BASE}/${endpoint}`, {
       method: 'POST',
       headers: {
         'Authorization': `Key ${FAL_API_KEY}`,
         'Content-Type': 'application/json',
-        'X-Fal-Queue': 'true', // Enable queue mode
+        // Try different queue headers
+        'X-Fal-Queue': 'true',
+        'X-Queue': 'true',
+        'Queue': 'true'
       },
       body: JSON.stringify(payload),
     });
@@ -161,15 +166,87 @@ export async function generateVideo(
     }
 
     const queueResult = await queueResponse.json();
-    console.log('✅ FAL Queue submitted:', queueResult);
+    console.log('✅ FAL Response received:', queueResult);
+    console.log('🗋 Response structure:', {
+      hasRequestId: !!queueResult.request_id,
+      hasVideo: !!queueResult.video,
+      hasVideoUrl: !!(queueResult.video && queueResult.video.url),
+      keys: Object.keys(queueResult),
+      fullResponse: queueResult
+    });
     
+    // Check if we got a request_id (queue mode) or direct result
     const requestId = queueResult.request_id;
-    if (!requestId) {
-      throw new Error('No request ID received from FAL queue');
+    
+    if (requestId) {
+      console.log('📋 Queue mode: polling for result...');
+      // Step 2: Poll for status with progress updates
+      return await pollQueueStatus(requestId, endpoint, startTime, onProgress, jobId, request.model);
+    } else if (queueResult.video && queueResult.video.url) {
+      console.log('⚡ Direct mode: video ready immediately');
+      // Direct response - video is already ready
+      if (onProgress) {
+        onProgress({
+          status: 'completed',
+          progress: 100,
+          message: `Video generated successfully with ${request.model}`,
+          elapsedTime: Math.floor((Date.now() - startTime) / 1000)
+        });
+      }
+      
+      return {
+        job_id: jobId,
+        status: 'completed',
+        message: `Video generated successfully with ${request.model}`,
+        estimated_time: Math.floor((Date.now() - startTime) / 1000),
+        video_url: queueResult.video.url,
+        video_data: queueResult
+      };
+    } else {
+      console.warn('⚠️ Queue mode failed, trying direct API call...');
+      
+      // Fallback: Try direct API call without queue headers
+      const directResponse = await fetch(`${FAL_API_BASE}/${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Key ${FAL_API_KEY}`,
+          'Content-Type': 'application/json',
+          // No queue headers for direct mode
+        },
+        body: JSON.stringify(payload),
+      });
+      
+      if (!directResponse.ok) {
+        const errorData = await directResponse.json().catch(() => ({}));
+        throw new Error(`Both queue and direct modes failed. Status: ${directResponse.status}, Error: ${JSON.stringify(errorData)}`);
+      }
+      
+      const directResult = await directResponse.json();
+      console.log('✅ Direct API result:', directResult);
+      
+      if (directResult.video && directResult.video.url) {
+        if (onProgress) {
+          onProgress({
+            status: 'completed',
+            progress: 100,
+            message: `Video generated successfully with ${request.model}`,
+            elapsedTime: Math.floor((Date.now() - startTime) / 1000)
+          });
+        }
+        
+        return {
+          job_id: jobId,
+          status: 'completed',
+          message: `Video generated successfully with ${request.model}`,
+          estimated_time: Math.floor((Date.now() - startTime) / 1000),
+          video_url: directResult.video.url,
+          video_data: directResult
+        };
+      } else {
+        console.error('❌ Both attempts failed. Queue result:', queueResult, 'Direct result:', directResult);
+        throw new Error('No video URL received from either queue or direct API mode. Please check the logs for details.');
+      }
     }
-
-    // Step 2: Poll for status with progress updates
-    return await pollQueueStatus(requestId, endpoint, startTime, onProgress, jobId, request.model);
     
   } catch (error) {
     console.error('Error generating video:', error);

@@ -1000,20 +1000,14 @@ export function Timeline() {
 
           {/* Timeline Ruler */}
           <div
-            className="flex-1 relative overflow-hidden"
+            className="flex-1 relative overflow-hidden timeline-ruler"
             style={{ height: '28px' }}
             onWheel={handleWheel}
             onMouseDown={handleSelectionMouseDown}
             onClick={handleTimelineContentClick}
             data-ruler-area
             ref={(el) => {
-              if (el) {
-                console.log("Ruler Container:", {
-                  height: el.offsetHeight,
-                  width: el.offsetWidth,
-                  className: el.className,
-                });
-              }
+              // Ruler container ref (debug logging removed)
             }}
           >
             <ScrollArea className="w-full" ref={rulerScrollRef}>
@@ -1044,15 +1038,7 @@ export function Timeline() {
                   const interval = getTimeInterval(zoomLevel);
                   const markerCount = Math.ceil(duration / interval) + 1;
 
-                  // Debug logging
-                  console.log("Timeline Ruler Debug:", {
-                    zoomLevel,
-                    duration,
-                    interval,
-                    markerCount,
-                    pixelsPerSecond: TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel,
-                    rulerWidth: dynamicTimelineWidth,
-                  });
+                  // Timeline ruler calculations (debug logging removed)
 
                   return Array.from({ length: markerCount }, (_, i) => {
                     const time = i * interval;
@@ -1061,14 +1047,7 @@ export function Timeline() {
                     const isMainMarker =
                       time % (interval >= 1 ? Math.max(1, interval) : 1) === 0;
 
-                    // Debug each marker
-                    if (i < 5) { // Log first 5 markers
-                      console.log(`Marker ${i}:`, {
-                        time,
-                        leftPosition: time * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel,
-                        isMainMarker,
-                      });
-                    }
+                    // Marker rendering (debug logging removed to prevent console spam)
 
                     return (
                       <div
@@ -1154,7 +1133,7 @@ export function Timeline() {
 
           {/* Timeline Tracks Content */}
           <div
-            className="flex-1 relative overflow-hidden"
+            className="flex-1 relative overflow-hidden timeline-tracks"
             onWheel={handleWheel}
             onMouseDown={handleSelectionMouseDown}
             onClick={handleTimelineContentClick}
