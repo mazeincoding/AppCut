@@ -54,13 +54,8 @@ export function TimelinePlayhead({
   const timelineContainerHeight = timelineRef.current?.offsetHeight || 400;
   const totalHeight = timelineContainerHeight - 8; // 8px padding from edges
 
-  // Get dynamic track labels width, fallback to 0 if no tracks or no ref
-  const trackLabelsWidth =
-    tracks.length > 0 && trackLabelsRef?.current
-      ? trackLabelsRef.current.offsetWidth
-      : 0;
+  // Since playhead is now inside scrollable content, position directly without track labels offset
   const leftPosition =
-    trackLabelsWidth +
     playheadPosition * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel;
 
   return (

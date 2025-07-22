@@ -513,22 +513,7 @@ export function Timeline() {
         className="flex-1 flex flex-col overflow-hidden relative"
         ref={timelineRef}
       >
-        <TimelinePlayhead
-          currentTime={currentTime}
-          duration={duration}
-          zoomLevel={zoomLevel}
-          tracks={tracks}
-          seek={seek}
-          rulerRef={rulerRef}
-          rulerScrollRef={rulerScrollRef}
-          tracksScrollRef={tracksScrollRef}
-          trackLabelsRef={trackLabelsRef}
-          timelineRef={timelineRef}
-          playheadRef={playheadRef}
-          isSnappingToPlayhead={
-            showSnapIndicator && currentSnapPoint?.type === "playhead"
-          }
-        />
+
         <SnapIndicator
           snapPoint={currentSnapPoint}
           zoomLevel={zoomLevel}
@@ -599,8 +584,8 @@ export function Timeline() {
                       <div
                         key={i}
                         className={`absolute top-0 bottom-0 ${isMainMarker
-                            ? "border-l border-muted-foreground/40"
-                            : "border-l border-muted-foreground/20"
+                          ? "border-l border-muted-foreground/40"
+                          : "border-l border-muted-foreground/20"
                           }`}
                         style={{
                           left: `${time * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel}px`,
@@ -608,8 +593,8 @@ export function Timeline() {
                       >
                         <span
                           className={`absolute top-1 left-1 text-[0.6rem] ${isMainMarker
-                              ? "text-muted-foreground font-medium"
-                              : "text-muted-foreground/70"
+                            ? "text-muted-foreground font-medium"
+                            : "text-muted-foreground/70"
                             }`}
                         >
                           {(() => {
@@ -708,6 +693,22 @@ export function Timeline() {
                   width: `${dynamicTimelineWidth}px`,
                 }}
               >
+                <TimelinePlayhead
+                  currentTime={currentTime}
+                  duration={duration}
+                  zoomLevel={zoomLevel}
+                  tracks={tracks}
+                  seek={seek}
+                  rulerRef={rulerRef}
+                  rulerScrollRef={rulerScrollRef}
+                  tracksScrollRef={tracksScrollRef}
+                  trackLabelsRef={trackLabelsRef}
+                  timelineRef={timelineRef}
+                  playheadRef={playheadRef}
+                  isSnappingToPlayhead={
+                    showSnapIndicator && currentSnapPoint?.type === "playhead"
+                  }
+                />
                 {tracks.length === 0 ? (
                   <div></div>
                 ) : (
