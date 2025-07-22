@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { TimelineTrack } from "@/types/timeline";
 import {
   TIMELINE_CONSTANTS,
@@ -50,6 +50,22 @@ export function TimelinePlayhead({
     playheadRef,
   });
 
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  useEffect(() => {
+    const rulerViewport = rulerScrollRef.current?.querySelector("[data-radix-scroll-area-viewport]") as HTMLElement;
+    if (!rulerViewport) return;
+
+    const handleScroll = () => {
+      setScrollLeft(rulerViewport.scrollLeft);
+    };
+
+    rulerViewport.addEventListener("scroll", handleScroll);
+    return () => {
+      rulerViewport.removeEventListener("scroll", handleScroll);
+    };
+  }, [rulerScrollRef]);
+
   // Use timeline container height minus a few pixels for breathing room
   const timelineContainerHeight = timelineRef.current?.offsetHeight || 400;
   const totalHeight = timelineContainerHeight - 8; // 8px padding from edges
@@ -61,7 +77,8 @@ export function TimelinePlayhead({
       : 0;
   const leftPosition =
     trackLabelsWidth +
-    playheadPosition * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel;
+    playheadPosition * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel -
+    scrollLeft;
 
   return (
     <div
