@@ -284,19 +284,15 @@ export function Timeline() {
       let scrollLeft = 0;
 
       if (isRulerClick) {
-        // Calculate based on ruler position
-        const rulerContent = rulerScrollRef.current?.querySelector(
-          "[data-radix-scroll-area-viewport]"
-        ) as HTMLElement;
+        // Calculate based on ruler position - use direct container for native scroll
+        const rulerContent = rulerScrollRef.current;
         if (!rulerContent) return;
         const rect = rulerContent.getBoundingClientRect();
         mouseX = e.clientX - rect.left;
         scrollLeft = rulerContent.scrollLeft;
       } else {
-        // Calculate based on tracks content position
-        const tracksContent = tracksScrollRef.current?.querySelector(
-          "[data-radix-scroll-area-viewport]"
-        ) as HTMLElement;
+        // Calculate based on tracks content position - use direct container for native scroll
+        const tracksContent = tracksScrollRef.current;
         if (!tracksContent) return;
         const rect = tracksContent.getBoundingClientRect();
         mouseX = e.clientX - rect.left;
@@ -588,15 +584,37 @@ export function Timeline() {
 
   // --- Scroll synchronization effect ---
   useEffect(() => {
-    const rulerViewport = rulerScrollRef.current?.querySelector(
-      "[data-radix-scroll-area-viewport]"
-    ) as HTMLElement;
-    const tracksViewport = tracksScrollRef.current?.querySelector(
-      "[data-radix-scroll-area-viewport]"
-    ) as HTMLElement;
-    const trackLabelsViewport = trackLabelsScrollRef.current?.querySelector(
-      "[data-radix-scroll-area-viewport]"
-    ) as HTMLElement;
+    // Helper function to get scrollable viewport (Radix ScrollArea or native container)
+    const getScrollableViewport = (containerRef: React.RefObject<HTMLDivElement>): HTMLElement | null => {
+      if (!containerRef.current) return null;
+      
+      // First try to find Radix ScrollArea viewport
+      const radixViewport = containerRef.current.querySelector("[data-radix-scroll-area-viewport]") as HTMLElement;
+      if (radixViewport) return radixViewport;
+      
+      // Fallback to the container itself if it's scrollable
+      const container = containerRef.current;
+      const hasOverflow = container && (
+        container.style.overflow === 'auto' ||
+        container.style.overflow === 'scroll' ||
+        container.style.overflowX === 'auto' ||
+        container.style.overflowX === 'scroll' ||
+        container.style.overflowY === 'auto' ||
+        container.style.overflowY === 'scroll' ||
+        getComputedStyle(container).overflow.includes('auto') ||
+        getComputedStyle(container).overflow.includes('scroll') ||
+        getComputedStyle(container).overflowX.includes('auto') ||
+        getComputedStyle(container).overflowX.includes('scroll') ||
+        getComputedStyle(container).overflowY.includes('auto') ||
+        getComputedStyle(container).overflowY.includes('scroll')
+      );
+      
+      return hasOverflow ? container : null;
+    };
+
+    const rulerViewport = getScrollableViewport(rulerScrollRef);
+    const tracksViewport = getScrollableViewport(tracksScrollRef);
+    const trackLabelsViewport = getScrollableViewport(trackLabelsScrollRef);
 
     if (!rulerViewport || !tracksViewport) return;
 
@@ -915,6 +933,10 @@ export function Timeline() {
             onClick={handleTimelineContentClick}
             data-ruler-area
             ref={rulerScrollRef}
+            role="scrollbar"
+            aria-orientation="horizontal"
+            aria-label="Timeline ruler"
+            tabIndex={0}
           >
             <div
               ref={rulerRef}
@@ -1040,10 +1062,15 @@ export function Timeline() {
             }}
             onClick={handleTimelineContentClick}
             ref={tracksContainerRef}
+            role="scrollbar"
+            aria-label="Timeline tracks"
+            tabIndex={0}
           >
             <div
               ref={tracksScrollRef}
               className="w-full h-full"
+              role="grid"
+              aria-label="Timeline tracks content"
             >
               <SelectionBox
                 startPos={selectionBox?.startPos || null}

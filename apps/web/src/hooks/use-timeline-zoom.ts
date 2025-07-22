@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, RefObject } from "react";
+import { MIN_ZOOM, MAX_ZOOM } from "@/constants/timeline-constants";
 
 interface UseTimelineZoomProps {
   containerRef: RefObject<HTMLDivElement>;
@@ -13,8 +14,6 @@ interface UseTimelineZoomReturn {
 }
 
 const ZOOM_STORAGE_KEY = 'opencut-timeline-zoom';
-const MIN_ZOOM = 0.5; // Minimum zoom to keep element borders visible
-const MAX_ZOOM = 5;
 
 export function useTimelineZoom({
   containerRef,

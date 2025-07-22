@@ -38,6 +38,7 @@ import { useTimelineZoom } from "@/hooks/use-timeline-zoom";
 import { processMediaFiles } from "@/lib/media-processing";
 import { toast } from "sonner";
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useActionHandler } from "@/constants/actions";
 import { TimelineTrackContent } from "./timeline-track";
 import {
   TimelinePlayhead,
@@ -420,23 +421,6 @@ export function Timeline() {
     }
   };
 
-  // Keyboard shortcuts for timeline actions
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Only handle shortcuts when timeline is focused or no input is focused
-      const isInputFocused = document.activeElement?.tagName.match(/INPUT|TEXTAREA|SELECT/);
-      if (isInputFocused) return;
-
-      if (e.key === 'Delete' || e.key === 'Backspace') {
-        e.preventDefault();
-        handleDeleteSelected();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedElements, rippleEditingEnabled]);
-
   // Context menu handlers
   const handleSplitElement = () => {
     if (selectedElements.length !== 1) {
@@ -517,6 +501,9 @@ export function Timeline() {
     });
     clearSelectedElements();
   };
+
+  // Register delete action with centralized keybinding system
+  useActionHandler("delete-selected", handleDeleteSelected);
 
   // --- Scroll synchronization effect ---
   useEffect(() => {
