@@ -63,7 +63,20 @@ export interface CostEstimate {
 /**
  * Generate an AI video from a text prompt using FAL AI directly
  */
-export async function generateVideo(request: VideoGenerationRequest): Promise<VideoGenerationResponse> {
+// Add callback type for progress updates
+export type ProgressCallback = (status: {
+  status: 'queued' | 'processing' | 'completed' | 'failed';
+  progress?: number;
+  message?: string;
+  elapsedTime?: number;
+  estimatedTime?: number;
+  logs?: string[];
+}) => void;
+
+export async function generateVideo(
+  request: VideoGenerationRequest, 
+  onProgress?: ProgressCallback
+): Promise<VideoGenerationResponse> {
   try {
     if (!FAL_API_KEY) {
       console.error('❌ FAL API Key Missing!');
@@ -110,69 +123,286 @@ export async function generateVideo(request: VideoGenerationRequest): Promise<Vi
     
     console.log(`📤 Sending request to ${endpoint} with payload:`, payload);
     
-    const response = await fetch(`${FAL_API_BASE}/${endpoint}`, {
+    // Track start time for elapsed time calculation
+    const startTime = Date.now();
+    
+    // Initial status update
+    if (onProgress) {
+      onProgress({
+        status: 'queued',
+        progress: 0,
+        message: 'Submitting request to FAL.ai queue...',
+        elapsedTime: 0
+      });
+    }
+    
+    // Step 1: Submit to FAL queue
+    const queueResponse = await fetch(`${FAL_API_BASE}/${endpoint}`, {
       method: 'POST',
       headers: {
         'Authorization': `Key ${FAL_API_KEY}`,
         'Content-Type': 'application/json',
+        'X-Fal-Queue': 'true', // Enable queue mode
       },
       body: JSON.stringify(payload),
     });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('❌ FAL API Error Response:', {
-        status: response.status,
-        statusText: response.statusText,
+    if (!queueResponse.ok) {
+      const errorData = await queueResponse.json().catch(() => ({}));
+      console.error('❌ FAL Queue Submit Error:', {
+        status: queueResponse.status,
+        statusText: queueResponse.statusText,
         errorData: errorData,
         endpoint: endpoint
       });
       
-      // Handle different error structures from FAL.ai
-      let errorMessage = `FAL API error! status: ${response.status}`;
-      
-      if (errorData.detail) {
-        errorMessage = errorData.detail;
-      } else if (errorData.error) {
-        errorMessage = errorData.error;
-      } else if (errorData.message) {
-        errorMessage = errorData.message;
-      } else if (typeof errorData === 'string') {
-        errorMessage = errorData;
-      } else if (errorData.errors && Array.isArray(errorData.errors)) {
-        errorMessage = errorData.errors.join(', ');
-      }
-      
-      // Check for specific FAL.ai error patterns
-      if (response.status === 422) {
-        errorMessage = `Invalid request parameters: ${JSON.stringify(errorData)}`;
-      } else if (response.status === 401) {
-        errorMessage = 'Invalid FAL API key. Please check your NEXT_PUBLIC_FAL_API_KEY environment variable.';
-      } else if (response.status === 429) {
-        errorMessage = 'Rate limit exceeded. Please wait a moment before trying again.';
-      } else if (response.status === 404) {
-        errorMessage = `Model endpoint not found: ${endpoint}. The model may have been updated or moved.`;
-      }
-      
+      let errorMessage = handleQueueError(queueResponse, errorData, endpoint);
       throw new Error(errorMessage);
     }
 
-    const result = await response.json();
-    console.log('✅ FAL API response:', result);
+    const queueResult = await queueResponse.json();
+    console.log('✅ FAL Queue submitted:', queueResult);
+    
+    const requestId = queueResult.request_id;
+    if (!requestId) {
+      throw new Error('No request ID received from FAL queue');
+    }
 
-    // Return in our expected format
-    return {
-      job_id: jobId,
-      status: 'completed',
-      message: `Video generated successfully with ${request.model}`,
-      estimated_time: 0,
-      video_url: result.video?.url || result.video,
-      video_data: result
-    };
+    // Step 2: Poll for status with progress updates
+    return await pollQueueStatus(requestId, endpoint, startTime, onProgress, jobId, request.model);
+    
   } catch (error) {
     console.error('Error generating video:', error);
+    if (onProgress) {
+      onProgress({
+        status: 'failed',
+        progress: 0,
+        message: error instanceof Error ? error.message : 'Unknown error occurred',
+        elapsedTime: 0
+      });
+    }
     throw error;
   }
+}
+
+/**
+ * Poll FAL queue status with real-time progress updates
+ */
+async function pollQueueStatus(
+  requestId: string,
+  endpoint: string,
+  startTime: number,
+  onProgress?: ProgressCallback,
+  jobId?: string,
+  modelName?: string
+): Promise<VideoGenerationResponse> {
+  const maxAttempts = 60; // 5 minutes max (5s intervals)
+  let attempts = 0;
+  
+  while (attempts < maxAttempts) {
+    attempts++;
+    const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+    
+    try {
+      // Check queue status
+      const statusResponse = await fetch(`${FAL_API_BASE}/queue/requests/${requestId}/status`, {
+        headers: {
+          'Authorization': `Key ${FAL_API_KEY}`,
+        },
+      });
+      
+      if (!statusResponse.ok) {
+        console.warn(`⚠️ Status check failed (attempt ${attempts}):`, statusResponse.status);
+        await sleep(5000);
+        continue;
+      }
+      
+      const status = await statusResponse.json();
+      console.log(`📊 Queue status (${elapsedTime}s):`, status);
+      
+      // Update progress based on status
+      if (onProgress) {
+        const progressUpdate = mapQueueStatusToProgress(status, elapsedTime);
+        onProgress(progressUpdate);
+      }
+      
+      // Check if completed
+      if (status.status === 'COMPLETED') {
+        // Get the result
+        const resultResponse = await fetch(`${FAL_API_BASE}/queue/requests/${requestId}`, {
+          headers: {
+            'Authorization': `Key ${FAL_API_KEY}`,
+          },
+        });
+        
+        if (resultResponse.ok) {
+          const result = await resultResponse.json();
+          console.log('✅ FAL Queue completed:', result);
+          
+          if (onProgress) {
+            onProgress({
+              status: 'completed',
+              progress: 100,
+              message: `Video generated successfully with ${modelName}`,
+              elapsedTime: elapsedTime
+            });
+          }
+          
+          return {
+            job_id: jobId || requestId,
+            status: 'completed',
+            message: `Video generated successfully with ${modelName}`,
+            estimated_time: elapsedTime,
+            video_url: result.video?.url || result.video,
+            video_data: result
+          };
+        }
+      }
+      
+      // Check if failed
+      if (status.status === 'FAILED') {
+        const errorMessage = status.error || 'Video generation failed';
+        if (onProgress) {
+          onProgress({
+            status: 'failed',
+            progress: 0,
+            message: errorMessage,
+            elapsedTime: elapsedTime
+          });
+        }
+        throw new Error(errorMessage);
+      }
+      
+      // Continue polling for IN_PROGRESS or IN_QUEUE
+      await sleep(5000); // Poll every 5 seconds
+      
+    } catch (error) {
+      console.error(`❌ Status polling error (attempt ${attempts}):`, error);
+      
+      if (attempts >= maxAttempts) {
+        const errorMessage = `Timeout: Video generation took longer than expected (${Math.floor(maxAttempts * 5 / 60)} minutes)`;
+        if (onProgress) {
+          onProgress({
+            status: 'failed',
+            progress: 0,
+            message: errorMessage,
+            elapsedTime: elapsedTime
+          });
+        }
+        throw new Error(errorMessage);
+      }
+      
+      // Wait before retry
+      await sleep(5000);
+    }
+  }
+  
+  throw new Error('Maximum polling attempts reached');
+}
+
+/**
+ * Map FAL queue status to our progress format
+ */
+function mapQueueStatusToProgress(status: any, elapsedTime: number): {
+  status: 'queued' | 'processing' | 'completed' | 'failed';
+  progress?: number;
+  message?: string;
+  elapsedTime?: number;
+  estimatedTime?: number;
+  logs?: string[];
+} {
+  const baseUpdate = {
+    elapsedTime: elapsedTime,
+    logs: status.logs || []
+  };
+  
+  switch (status.status) {
+    case 'IN_QUEUE':
+      return {
+        ...baseUpdate,
+        status: 'queued',
+        progress: 5,
+        message: `Queued (position: ${status.queue_position || 'unknown'})`,
+        estimatedTime: status.estimated_time
+      };
+      
+    case 'IN_PROGRESS':
+      const progress = Math.min(90, 20 + (elapsedTime * 2)); // Gradual progress based on time
+      return {
+        ...baseUpdate,
+        status: 'processing',
+        progress: progress,
+        message: 'Generating video...',
+        estimatedTime: status.estimated_time
+      };
+      
+    case 'COMPLETED':
+      return {
+        ...baseUpdate,
+        status: 'completed',
+        progress: 100,
+        message: 'Video generation completed!'
+      };
+      
+    case 'FAILED':
+      return {
+        ...baseUpdate,
+        status: 'failed',
+        progress: 0,
+        message: status.error || 'Generation failed'
+      };
+      
+    default:
+      return {
+        ...baseUpdate,
+        status: 'queued',
+        progress: 0,
+        message: `Status: ${status.status}`
+      };
+  }
+}
+
+/**
+ * Handle queue-specific errors
+ */
+function handleQueueError(response: Response, errorData: any, endpoint: string): string {
+  let errorMessage = `FAL Queue error! status: ${response.status}`;
+  
+  if (errorData.detail) {
+    if (Array.isArray(errorData.detail)) {
+      errorMessage = errorData.detail.map((d: any) => d.msg || d).join(', ');
+    } else {
+      errorMessage = errorData.detail;
+    }
+  } else if (errorData.error) {
+    errorMessage = errorData.error;
+  } else if (errorData.message) {
+    errorMessage = errorData.message;
+  } else if (typeof errorData === 'string') {
+    errorMessage = errorData;
+  } else if (errorData.errors && Array.isArray(errorData.errors)) {
+    errorMessage = errorData.errors.join(', ');
+  }
+  
+  // Check for specific FAL.ai error patterns
+  if (response.status === 422) {
+    errorMessage = `Invalid request parameters: ${JSON.stringify(errorData)}`;
+  } else if (response.status === 401) {
+    errorMessage = 'Invalid FAL API key. Please check your NEXT_PUBLIC_FAL_API_KEY environment variable.';
+  } else if (response.status === 429) {
+    errorMessage = 'Rate limit exceeded. Please wait a moment before trying again.';
+  } else if (response.status === 404) {
+    errorMessage = `Model endpoint not found: ${endpoint}. The model may have been updated or moved.`;
+  }
+  
+  return errorMessage;
+}
+
+/**
+ * Sleep utility for polling
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 /**

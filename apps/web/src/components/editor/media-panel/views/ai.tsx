@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { generateVideo, generateVideoFromImage, handleApiError, getGenerationStatus } from "@/lib/ai-video-client";
+import { generateVideo, generateVideoFromImage, handleApiError, getGenerationStatus, ProgressCallback } from "@/lib/ai-video-client";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { useMediaStore } from "@/stores/media-store";
 import { useProjectStore } from "@/stores/project-store";
@@ -161,7 +161,11 @@ export function AiView() {
   // Progress tracking
   const [generationProgress, setGenerationProgress] = useState<number>(0);
   const [statusMessage, setStatusMessage] = useState<string>("");
+  const [elapsedTime, setElapsedTime] = useState<number>(0);
+  const [estimatedTime, setEstimatedTime] = useState<number | undefined>();
+  const [currentModelIndex, setCurrentModelIndex] = useState<number>(0);
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
+  const [progressLogs, setProgressLogs] = useState<string[]>([]);
   
   // History panel state
   const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState<boolean>(false);
@@ -378,13 +382,26 @@ export function AiView() {
         
         let response;
         
+        setCurrentModelIndex(i);
+        
+        // Create progress callback for this model
+        const progressCallback: ProgressCallback = (status) => {
+          setGenerationProgress(status.progress || 0);
+          setStatusMessage(status.message || `Generating with ${AI_MODELS.find(m => m.id === modelId)?.name}...`);
+          setElapsedTime(status.elapsedTime || 0);
+          setEstimatedTime(status.estimatedTime);
+          if (status.logs) {
+            setProgressLogs(status.logs);
+          }
+        };
+        
         if (activeTab === "text") {
           response = await generateVideo({
             prompt: prompt.trim(),
             model: modelId,
             resolution: "1080p",
             duration: 6  // Default to 6 seconds (works for all models)
-          });
+          }, progressCallback);
         } else {
           response = await generateVideoFromImage({
             image: selectedImage!,
@@ -480,6 +497,10 @@ export function AiView() {
     setError(null);
     setGenerationProgress(0);
     setStatusMessage("");
+    setElapsedTime(0);
+    setEstimatedTime(undefined);
+    setCurrentModelIndex(0);
+    setProgressLogs([]);
     if (pollingInterval) {
       clearInterval(pollingInterval);
       setPollingInterval(null);
@@ -776,6 +797,69 @@ export function AiView() {
             )}
           </Button>
         </div>
+        
+        {/* Real-time Progress Display */}
+        {isGenerating && (
+          <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg space-y-3">
+            {/* Progress Header */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Loader2 className="size-4 animate-spin text-blue-500" />
+                <span className="text-sm font-medium text-blue-700">
+                  Model {currentModelIndex + 1} of {selectedModels.length}
+                </span>
+              </div>
+              <div className="text-xs text-blue-600">
+                {Math.floor(elapsedTime / 60)}:{String(elapsedTime % 60).padStart(2, '0')}
+              </div>
+            </div>
+            
+            {/* Progress Bar */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-blue-600">{statusMessage}</span>
+                <span className="text-blue-600">{generationProgress}%</span>
+              </div>
+              <div className="w-full bg-blue-100 rounded-full h-2">
+                <div 
+                  className="bg-blue-500 h-2 rounded-full transition-all duration-300 ease-out"
+                  style={{ width: `${generationProgress}%` }}
+                />
+              </div>
+            </div>
+            
+            {/* Time Information */}
+            <div className="flex justify-between text-xs text-blue-600">
+              <span>Elapsed: {Math.floor(elapsedTime / 60)}:{String(elapsedTime % 60).padStart(2, '0')}</span>
+              {estimatedTime && (
+                <span>Est. remaining: {Math.floor(estimatedTime / 60)}:{String(estimatedTime % 60).padStart(2, '0')}</span>
+              )}
+            </div>
+            
+            {/* Current Model */}
+            <div className="text-xs text-blue-600">
+              Generating with: <span className="font-medium">
+                {AI_MODELS.find(m => m.id === selectedModels[currentModelIndex])?.name}
+              </span>
+            </div>
+            
+            {/* Progress Logs */}
+            {progressLogs.length > 0 && (
+              <details className="text-xs">
+                <summary className="text-blue-600 cursor-pointer hover:text-blue-700">
+                  View detailed logs ({progressLogs.length} entries)
+                </summary>
+                <div className="mt-2 p-2 bg-blue-50 rounded border max-h-24 overflow-y-auto">
+                  {progressLogs.map((log, index) => (
+                    <div key={index} className="text-blue-700 font-mono text-[10px] mb-1">
+                      {log}
+                    </div>
+                  ))}
+                </div>
+              </details>
+            )}
+          </div>
+        )}
         
         {/* Error Display */}
         {error && (
