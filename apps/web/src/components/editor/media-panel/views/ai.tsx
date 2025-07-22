@@ -1,7 +1,7 @@
 "use client";
 
 import { BotIcon, Loader2, Play, Download, History, Trash2, ImageIcon, TypeIcon, Upload, X } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Fragment } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -559,7 +559,7 @@ export function AiView() {
 
         {/* Model Selection */}
         <div className="space-y-2">
-          <Label htmlFor="model">AI Model</Label>
+          <Label htmlFor="model" className="text-sm font-medium text-foreground">AI Model</Label>
           <Select 
             key={`model-select-${activeTab}`}
             value={selectedModel}
@@ -577,6 +577,7 @@ export function AiView() {
             <SelectTrigger 
               id="model"
               type="button"
+              className="h-10 border border-border/50 bg-background hover:border-border transition-colors duration-200 focus:ring-2 focus:ring-primary/20 focus:border-primary/50"
               onClick={(e) => {
                 // Prevent event bubbling to document handlers
                 e.stopPropagation();
@@ -587,35 +588,46 @@ export function AiView() {
                 });
               }}
             >
-              <SelectValue placeholder="Select AI model" />
+              <SelectValue 
+                placeholder="Select AI model" 
+                className="text-sm text-foreground placeholder:text-muted-foreground/70"
+              />
             </SelectTrigger>
-            <SelectContent onClick={(e) => e.stopPropagation()}>
-              {AI_MODELS.map((model) => (
-                <SelectItem 
-                  key={model.id} 
-                  value={model.id}
-                  onClick={(e) => {
-                    // Prevent event bubbling to document handlers
-                    e.stopPropagation();
-                    debugLogger.log('AIView', 'MODEL_ITEM_CLICK', { 
-                      modelId: model.id, 
-                      modelName: model.name,
-                      timestamp: Date.now()
-                    });
-                  }}
-                >
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{model.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {model.price} • {model.resolution}
+            <SelectContent 
+              onClick={(e) => e.stopPropagation()}
+              className="bg-background border border-border/50 shadow-lg rounded-lg min-w-[280px]"
+            >
+              {AI_MODELS.map((model, index) => (
+                <Fragment key={model.id}>
+                  <SelectItem 
+                    value={model.id}
+                    className="px-3 py-4 rounded-md hover:bg-accent/50 focus:bg-accent/50 cursor-pointer transition-colors duration-150 border-0 focus:text-foreground my-1"
+                    onClick={(e) => {
+                      // Prevent event bubbling to document handlers
+                      e.stopPropagation();
+                      debugLogger.log('AIView', 'MODEL_ITEM_CLICK', { 
+                        modelId: model.id, 
+                        modelName: model.name,
+                        timestamp: Date.now()
+                      });
+                    }}
+                  >
+                    <div className="flex flex-col space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-sm text-foreground">{model.name}</span>
+                        <span className="text-xs text-muted-foreground font-normal">
+                          {model.price} • {model.resolution}
+                        </span>
+                      </div>
+                      <span className="text-xs text-muted-foreground/80 leading-relaxed">
+                        {model.description}
                       </span>
                     </div>
-                    <span className="text-xs text-muted-foreground">
-                      {model.description}
-                    </span>
-                  </div>
-                </SelectItem>
+                  </SelectItem>
+                  {index < AI_MODELS.length - 1 && (
+                    <div className="mx-2 h-px bg-border/30 my-1" />
+                  )}
+                </Fragment>
               ))}
             </SelectContent>
           </Select>

@@ -712,7 +712,21 @@ export function Timeline() {
                 variant="text"
                 size="icon"
                 onClick={toggle}
-                className="mr-2"
+                className="mr-2 transition-all duration-200"
+                style={{
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  boxShadow: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'rgba(59, 130, 246, 1)';
+                  e.currentTarget.style.transform = 'scale(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
               >
                 {isPlaying ? (
                   <Pause className="h-4 w-4" />

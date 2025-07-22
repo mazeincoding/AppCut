@@ -73,13 +73,27 @@ export function TabBar() {
           return (
             <div
               className={cn(
-                "flex flex-col gap-2 items-center cursor-pointer px-3 py-2 mx-1 rounded-lg transition-colors hover:bg-white/10 flex-shrink-0 min-w-[52px]",
+                "flex flex-col gap-2 items-center cursor-pointer px-3 pt-3 pb-2 mx-1 rounded-lg transition-all duration-200 hover:bg-white/10 flex-shrink-0 min-w-[52px] group",
                 activeTab === tabKey ? "text-primary bg-primary/10" : "text-muted-foreground bg-white/5"
               )}
               onClick={() => setActiveTab(tabKey)}
               key={tabKey}
+              style={{
+                transform: 'scale(1)'
+              }}
+              onMouseEnter={(e) => {
+                if (activeTab !== tabKey) {
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
             >
-              <tab.icon className="!size-[1.3rem]" />
+              <tab.icon className={cn(
+                "!size-[1.5rem] transition-all duration-200",
+                activeTab !== tabKey && "group-hover:text-blue-500"
+              )} />
               <span className="text-[0.65rem] tracking-wide mt-1 leading-none">{tab.label}<br /><span className="text-[0.2rem] leading-none">&nbsp;</span></span>
             </div>
           );
