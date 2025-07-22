@@ -766,7 +766,26 @@ export function Timeline() {
           <div className="w-px h-6 bg-border mx-1" />
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="text" size="icon" onClick={handleSplitSelected}>
+              <Button 
+                variant="text" 
+                size="icon" 
+                onClick={handleSplitSelected}
+                className="transition-all duration-200"
+                style={{
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  boxShadow: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'rgba(59, 130, 246, 1)';
+                  e.currentTarget.style.transform = 'scale(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              >
                 <Scissors className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
@@ -778,6 +797,21 @@ export function Timeline() {
                 variant="text"
                 size="icon"
                 onClick={handleSplitAndKeepLeft}
+                className="transition-all duration-200"
+                style={{
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  boxShadow: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'rgba(59, 130, 246, 1)';
+                  e.currentTarget.style.transform = 'scale(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
               >
                 <ArrowLeftToLine className="h-4 w-4" />
               </Button>
@@ -790,6 +824,21 @@ export function Timeline() {
                 variant="text"
                 size="icon"
                 onClick={handleSplitAndKeepRight}
+                className="transition-all duration-200"
+                style={{
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  boxShadow: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'rgba(59, 130, 246, 1)';
+                  e.currentTarget.style.transform = 'scale(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
               >
                 <ArrowRightToLine className="h-4 w-4" />
               </Button>
