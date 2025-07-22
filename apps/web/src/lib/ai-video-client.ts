@@ -74,12 +74,12 @@ export async function generateVideo(request: VideoGenerationRequest): Promise<Vi
       'veo3': 'fal-ai/google/veo3',
       'veo3_fast': 'fal-ai/google/veo3/fast',
       'veo2': 'fal-ai/google/veo2', 
-      'hailuo': 'fal-ai/minimax/hailuo-ai/video',
+      'hailuo': 'fal-ai/minimax/hailuo-02/standard/text-to-video',
       'kling': 'fal-ai/bytedance/kling-video/v1.5/pro',
       'kling_v2': 'fal-ai/kling-video/v2.1/master'
     };
 
-    const endpoint = modelEndpoints[request.model] || 'fal-ai/minimax/hailuo-ai/video';
+    const endpoint = modelEndpoints[request.model] || 'fal-ai/minimax/hailuo-02/standard/text-to-video';
     const jobId = generateJobId();
 
     console.log(`🎬 Generating video with FAL AI: ${endpoint}`);
@@ -283,11 +283,11 @@ export async function getAvailableModels(): Promise<ModelsResponse> {
       },
       {
         id: "hailuo",
-        name: "Hailuo",
-        description: "Fast generation, good quality",
-        price: "$0.08",
-        resolution: "720p",
-        max_duration: 15
+        name: "Hailuo 02",
+        description: "Ultra-realistic physics simulation, 768p quality",
+        price: "$0.28",
+        resolution: "768p",
+        max_duration: 10
       },
       {
         id: "kling",
@@ -317,7 +317,7 @@ export async function estimateCost(request: VideoGenerationRequest): Promise<Cos
     "veo3": { base_cost: 3.00, max_duration: 30 },
     "veo3_fast": { base_cost: 2.00, max_duration: 30 },
     "veo2": { base_cost: 2.50, max_duration: 30 },
-    "hailuo": { base_cost: 0.08, max_duration: 15 },
+    "hailuo": { base_cost: 0.28, max_duration: 10 },
     "kling": { base_cost: 0.10, max_duration: 15 },
     "kling_v2": { base_cost: 0.15, max_duration: 10 }
   };
