@@ -36,16 +36,16 @@ function CreateButton({ onClick, disabled = false }: { onClick: () => void; disa
       style={{
         backgroundColor: '#3b82f6', 
         color: 'white',
-        height: '36px',
+        height: '32px',
         borderRadius: '6px',
-        fontSize: '14px',
+        fontSize: '12px',
         position: 'relative',
         overflow: 'hidden',
         border: 'none',
         outline: 'none',
         boxShadow: 'none',
-        paddingLeft: '16px',
-        paddingRight: '16px'
+        paddingLeft: '12px',
+        paddingRight: '12px'
       }}
       onClick={onClick} 
       disabled={disabled}
@@ -153,10 +153,24 @@ export default function ProjectsPage() {
         <div className="pt-6 px-6 flex items-center justify-between w-full h-16">
         <Link
           href="/"
-          className="flex items-center gap-1 hover:text-muted-foreground transition-colors"
+          className="flex items-center gap-1 hover:text-muted-foreground transition-colors relative shadow-lg hover:shadow-xl before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent no-underline"
+          style={{
+            backgroundColor: '#3b82f6', 
+            color: 'white',
+            height: '32px',
+            borderRadius: '6px',
+            fontSize: '12px',
+            position: 'relative',
+            overflow: 'hidden',
+            border: 'none',
+            outline: 'none',
+            boxShadow: 'none',
+            paddingLeft: '12px',
+            paddingRight: '12px'
+          }}
           prefetch={false}
         >
-          <ChevronLeft className="!size-5 shrink-0" />
+          <ChevronLeft className="!size-5 shrink-0" style={{ width: '14px', height: '14px' }} />
           <span className="text-sm font-medium">Back</span>
         </Link>
         <div className="block md:hidden">
@@ -182,18 +196,34 @@ export default function ProjectsPage() {
               )}
             </div>
           ) : (
-            <div className="flex flex-col items-end gap-2">
+            <div className="flex items-center gap-16">
               <CreateButton onClick={handleCreateProject} disabled={isCreatingProject} />
+              <div className="w-px h-6 bg-gray-300"></div>
               <Button
                 variant="destructive"
                 size="sm"
+                className="relative shadow-lg hover:shadow-xl before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent no-underline"
+                style={{
+                  backgroundColor: '#3b82f6', 
+                  color: 'white',
+                  height: '32px',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  border: 'none',
+                  outline: 'none',
+                  boxShadow: 'none',
+                  paddingLeft: '12px',
+                  paddingRight: '12px'
+                }}
                 onClick={() => {
                   setSelectedProjects(new Set(savedProjects.map(p => p.id)));
                   setIsBulkDeleteDialogOpen(true);
                 }}
                 disabled={savedProjects.length === 0}
               >
-                <Trash2 className="!size-3 mr-1" />
+                <Trash2 className="mr-1" style={{ width: '16px', height: '16px' }} />
                 Delete All
               </Button>
             </div>
