@@ -312,7 +312,7 @@ export default function ProjectsPage() {
         ) : savedProjects.length === 0 ? (
           <NoProjects onCreateProject={handleCreateProject} disabled={isCreatingProject} />
         ) : (
-          <div className="grid grid-cols-4 gap-10">
+          <div className="grid grid-cols-4" style={{ gap: '20px' }}>
             {console.log("🎨 [RENDER] Rendering project cards:", savedProjects.length, savedProjects)}
             {savedProjects.map((project) => {
               console.log("🎨 [RENDER] Rendering project:", project.id, project.name);
@@ -404,8 +404,15 @@ function ProjectCard({ project, isSelected, onSelect }: ProjectCardProps) {
               deleteProject(project.id);
             }
           }}
-          className="absolute top-3 right-3 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-all duration-200 z-30"
-          style={{ opacity: 1 }}
+          className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 z-30"
+          style={{ 
+            opacity: 1,
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            color: 'white',
+            border: 'none',
+            outline: 'none',
+            boxShadow: 'none'
+          }}
           title="Delete project"
         >
           <Trash2 className="h-3 w-3" />
