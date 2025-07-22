@@ -8,6 +8,7 @@ import { HeaderBase } from "./header-base";
 import { formatTimeCode } from "@/lib/time";
 import { useProjectStore } from "@/stores/project-store";
 import { KeyboardShortcutsHelp } from "./keyboard-shortcuts-help";
+import { TimelineSelector } from "./timeline-selector";
 import { useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 
@@ -88,14 +89,15 @@ export function EditorHeader() {
   );
 
   const centerContent = (
-    <div className="flex items-center gap-2 text-xs">
-      <span>
+    <div className="flex items-center gap-4">
+      <TimelineSelector />
+      <div className="text-xs text-muted-foreground">
         {formatTimeCode(
           getTotalDuration(),
           "HH:MM:SS:FF",
           activeProject?.fps || 30
         )}
-      </span>
+      </div>
     </div>
   );
 
