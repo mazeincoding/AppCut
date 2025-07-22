@@ -15,6 +15,10 @@ import { useMediaPanelStore } from "../store";
 import { AIHistoryPanel } from "./ai-history-panel";
 import { debugLogger } from "@/lib/debug-logger";
 
+// FAL API constants for testing
+const FAL_API_KEY = process.env.NEXT_PUBLIC_FAL_API_KEY;
+const FAL_API_BASE = 'https://fal.run';
+
 interface AIModel {
   id: string;
   name: string;
@@ -83,6 +87,357 @@ export function AiView() {
   };
 
   const isModelSelected = (modelId: string) => selectedModels.includes(modelId);
+
+  // 🧪 TESTING FUNCTION: Test video download and media panel loading
+  const handleTestDownloadAndMedia = async () => {
+    if (selectedModels.length === 0) {
+      setError('Select at least one model to test download functionality');
+      return;
+    }
+
+    setIsGenerating(true);
+    setError(null);
+    setGeneratedVideos([]);
+    
+    try {
+      const testVideo = {
+        jobId: `test-${Date.now()}`,
+        videoUrl: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_5mb.mp4', // 5MB test video
+        videoPath: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_5mb.mp4',
+        fileSize: 5242880, // 5MB
+        duration: 30,
+        prompt: prompt.trim() || 'Test video download',
+        model: selectedModels[0]
+      };
+
+      setStatusMessage('Testing video download and media panel integration...');
+      
+      // Test the actual download and media panel logic
+      if (activeProject) {
+        const modelName = AI_MODELS.find(m => m.id === selectedModels[0])?.name || selectedModels[0];
+        const fileName = `test-${modelName.toLowerCase().replace(/\s+/g, '-')}-${testVideo.jobId.substring(0, 8)}.mp4`;
+        
+        setStatusMessage('Downloading test video...');
+        
+        try {
+          // Fetch the video
+          const videoResponse = await fetch(testVideo.videoUrl);
+          if (!videoResponse.ok) {
+            throw new Error(`Failed to fetch video: ${videoResponse.status}`);
+          }
+          
+          const blob = await videoResponse.blob();
+          const file = new File([blob], fileName, {
+            type: 'video/mp4',
+          });
+          
+          setStatusMessage('Adding to media panel...');
+          
+          // Add to media panel
+          await addMediaItem(activeProject.id, {
+            name: `TEST: ${testVideo.prompt.substring(0, 20)}...`,
+            type: "video",
+            file: file,
+            url: testVideo.videoUrl,
+            duration: testVideo.duration || 5,
+            width: 1280,
+            height: 720,
+          });
+          
+          setStatusMessage('Downloading to Downloads folder...');
+          
+          // Test download to Downloads folder
+          const downloadLink = document.createElement('a');
+          downloadLink.href = URL.createObjectURL(blob);
+          downloadLink.download = fileName;
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+          URL.revokeObjectURL(downloadLink.href);
+          
+          // Show success
+          setGeneratedVideos([{ modelId: selectedModels[0], video: testVideo }]);
+          addToHistory(testVideo);
+          setStatusMessage('✅ Test completed successfully!');
+          
+          debugLogger.log('AIView', 'TEST_DOWNLOAD_AND_MEDIA_SUCCESS', { 
+            fileName,
+            modelName,
+            projectId: activeProject.id,
+            fileSize: blob.size
+          });
+          
+        } catch (downloadError) {
+          console.error('Download/Media test error:', downloadError);
+          setError(`Download test failed: ${downloadError instanceof Error ? downloadError.message : 'Unknown error'}`);
+          
+          debugLogger.log('AIView', 'TEST_DOWNLOAD_AND_MEDIA_FAILED', { 
+            error: downloadError instanceof Error ? downloadError.message : 'Unknown error',
+            modelName,
+            projectId: activeProject.id 
+          });
+        }
+      } else {
+        setError('No active project found for testing media panel integration');
+      }
+      
+    } catch (error) {
+      setError('Test error: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      debugLogger.log('AIView', 'TEST_DOWNLOAD_GENERAL_ERROR', { 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // 🧪 TESTING FUNCTION: Test with real FAL.ai completed request
+  const handleTestRealFALResult = async (requestId: string) => {
+    setIsGenerating(true);
+    setError(null);
+    setGeneratedVideos([]);
+    
+    try {
+      setStatusMessage('Fetching completed FAL.ai request result...');
+      
+      let resultResponse;
+      let result;
+      
+      // Try multiple endpoint approaches
+      const endpoints = [
+        `${FAL_API_BASE}/fal-ai/minimax/hailuo-02/standard/text-to-video/requests/${requestId}`,
+        `${FAL_API_BASE}/queue/requests/${requestId}`,
+        `${FAL_API_BASE}/queue/${requestId}/result`
+      ];
+      
+      let lastError;
+      for (const endpoint of endpoints) {
+        try {
+          console.log(`Trying endpoint: ${endpoint}`);
+          resultResponse = await fetch(endpoint, {
+            headers: {
+              'Authorization': `Key ${FAL_API_KEY}`,
+            },
+          });
+          
+          if (resultResponse.ok) {
+            result = await resultResponse.json();
+            console.log('✅ Successful endpoint:', endpoint);
+            console.log('Result:', result);
+            break;
+          } else {
+            console.warn(`❌ ${endpoint} failed: ${resultResponse.status}`);
+            lastError = `${endpoint}: ${resultResponse.status} ${resultResponse.statusText}`;
+          }
+        } catch (err) {
+          console.warn(`❌ ${endpoint} error:`, err);
+          lastError = `${endpoint}: ${err instanceof Error ? err.message : 'Unknown error'}`;
+        }
+      }
+      
+      if (!result) {
+        throw new Error(`All endpoints failed. Last error: ${lastError}`);
+      }
+      
+      console.log('✅ FAL Result fetched:', result);
+      
+      if (!result.video || !result.video.url) {
+        throw new Error('No video URL found in FAL result');
+      }
+      
+      console.log('📋 Video details:', {
+        url: result.video.url,
+        fileName: result.video.file_name,
+        fileSize: result.video.file_size,
+        contentType: result.video.content_type
+      });
+      
+      const testVideo = {
+        jobId: requestId,
+        videoUrl: result.video.url,
+        videoPath: result.video.url,
+        fileSize: result.video.file_size || 1554879,
+        duration: 6, // Hailuo standard duration
+        prompt: 'Real FAL.ai Hailuo 02 generated video',
+        model: 'hailuo'
+      };
+      
+      // Test the download and media panel logic with real video
+      if (activeProject) {
+        const modelName = 'Hailuo 02';
+        const fileName = result.video.file_name ? 
+          `fal-${result.video.file_name.replace('.mp4', '')}-${requestId.substring(0, 8)}.mp4` :
+          `fal-hailuo-${requestId.substring(0, 8)}.mp4`;
+        
+        setStatusMessage('Downloading real FAL.ai video...');
+        
+        try {
+          // Fetch the actual generated video
+          const videoResponse = await fetch(testVideo.videoUrl);
+          if (!videoResponse.ok) {
+            throw new Error(`Failed to fetch generated video: ${videoResponse.status}`);
+          }
+          
+          const blob = await videoResponse.blob();
+          const file = new File([blob], fileName, {
+            type: 'video/mp4',
+          });
+          
+          setStatusMessage('Adding real video to media panel...');
+          
+          // Add to media panel
+          await addMediaItem(activeProject.id, {
+            name: `FAL (${modelName}): Real Generated Video`,
+            type: "video",
+            file: file,
+            url: testVideo.videoUrl,
+            duration: testVideo.duration,
+            width: 1280,
+            height: 720,
+          });
+          
+          setStatusMessage('Downloading real video to Downloads folder...');
+          
+          // Download to Downloads folder
+          const downloadLink = document.createElement('a');
+          downloadLink.href = URL.createObjectURL(blob);
+          downloadLink.download = fileName;
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+          URL.revokeObjectURL(downloadLink.href);
+          
+          // Show success
+          setGeneratedVideos([{ modelId: 'hailuo', video: testVideo }]);
+          addToHistory(testVideo);
+          setStatusMessage('✅ Real FAL.ai video processed successfully!');
+          
+          debugLogger.log('AIView', 'REAL_FAL_TEST_SUCCESS', { 
+            requestId,
+            fileName,
+            videoUrl: testVideo.videoUrl,
+            fileSize: blob.size,
+            projectId: activeProject.id
+          });
+          
+        } catch (processError) {
+          console.error('Real FAL video processing error:', processError);
+          setError(`Real video processing failed: ${processError instanceof Error ? processError.message : 'Unknown error'}`);
+        }
+      } else {
+        setError('No active project found for testing real video');
+      }
+      
+    } catch (error) {
+      console.error('Real FAL test error:', error);
+      setError('Real FAL test failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      debugLogger.log('AIView', 'REAL_FAL_TEST_FAILED', { 
+        requestId,
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // 🧪 TESTING FUNCTION: Test with your actual generated video URL
+  const handleTestDirectVideo = async () => {
+    if (selectedModels.length === 0) {
+      setError('Select at least one model to test with your video');
+      return;
+    }
+
+    setIsGenerating(true);
+    setError(null);
+    setGeneratedVideos([]);
+    
+    try {
+      // Your actual FAL.ai generated video
+      const yourVideo = {
+        jobId: 'ee88fd67-2f12-42e6-ab02-431df3172091',
+        videoUrl: 'https://v3.fal.media/files/monkey/FH-h7SQN7Wrkncu96GBP__output.mp4',
+        videoPath: 'https://v3.fal.media/files/monkey/FH-h7SQN7Wrkncu96GBP__output.mp4',
+        fileSize: 1554879, // 1.5MB from your result
+        duration: 6,
+        prompt: 'Your actual FAL.ai generated video',
+        model: selectedModels[0]
+      };
+
+      setStatusMessage('Processing your actual FAL.ai video...');
+      
+      // Test the actual download and media panel logic with your video
+      if (activeProject) {
+        const modelName = AI_MODELS.find(m => m.id === selectedModels[0])?.name || selectedModels[0];
+        const fileName = `your-fal-video-${yourVideo.jobId.substring(0, 8)}.mp4`;
+        
+        setStatusMessage('Downloading your actual FAL video...');
+        
+        try {
+          // Fetch your actual video
+          const videoResponse = await fetch(yourVideo.videoUrl);
+          if (!videoResponse.ok) {
+            throw new Error(`Failed to fetch your video: ${videoResponse.status}`);
+          }
+          
+          const blob = await videoResponse.blob();
+          const file = new File([blob], fileName, {
+            type: 'video/mp4',
+          });
+          
+          setStatusMessage('Adding your video to media panel...');
+          
+          // Add to media panel
+          await addMediaItem(activeProject.id, {
+            name: `YOUR FAL VIDEO: Hailuo 02 Generated`,
+            type: "video",
+            file: file,
+            url: yourVideo.videoUrl,
+            duration: yourVideo.duration,
+            width: 1280,
+            height: 720,
+          });
+          
+          setStatusMessage('Downloading your video to Downloads folder...');
+          
+          // Test download to Downloads folder
+          const downloadLink = document.createElement('a');
+          downloadLink.href = URL.createObjectURL(blob);
+          downloadLink.download = fileName;
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+          URL.revokeObjectURL(downloadLink.href);
+          
+          // Show success
+          setGeneratedVideos([{ modelId: selectedModels[0], video: yourVideo }]);
+          addToHistory(yourVideo);
+          setStatusMessage(`✅ Your actual FAL video processed! (${(blob.size / 1024 / 1024).toFixed(1)}MB)`);
+          
+          debugLogger.log('AIView', 'YOUR_FAL_VIDEO_SUCCESS', { 
+            fileName,
+            videoUrl: yourVideo.videoUrl,
+            actualFileSize: blob.size,
+            expectedFileSize: yourVideo.fileSize,
+            projectId: activeProject.id
+          });
+          
+        } catch (downloadError) {
+          console.error('Your video processing error:', downloadError);
+          setError(`Your video processing failed: ${downloadError instanceof Error ? downloadError.message : 'Unknown error'}`);
+        }
+      } else {
+        setError('No active project found for your video test');
+      }
+      
+    } catch (error) {
+      setError('Your video test error: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      debugLogger.log('AIView', 'YOUR_FAL_VIDEO_FAILED', { 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   // 🧪 TESTING FUNCTION: Mock generation without API calls (remove before production)
   const handleMockGenerate = async () => {
@@ -773,6 +1128,66 @@ export function AiView() {
               <>
                 <BotIcon className="mr-2 size-4" />
                 Generate Video
+              </>
+            )}
+          </Button>
+          
+          {/* 🧪 TESTING: Test Download & Media Panel */}
+          <Button 
+            onClick={handleTestDownloadAndMedia}
+            disabled={selectedModels.length === 0 || isGenerating}
+            className="w-full"
+            size="lg"
+            variant="secondary"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="mr-2 size-4 animate-spin" />
+                Testing...
+              </>
+            ) : (
+              <>
+                📁 Test Download & Media Panel
+              </>
+            )}
+          </Button>
+          
+          {/* 🧪 TESTING: Test Real FAL Request Result */}
+          <Button 
+            onClick={() => handleTestRealFALResult('ee88fd67-2f12-42e6-ab02-431df3172091')}
+            disabled={isGenerating}
+            className="w-full"
+            size="lg"
+            variant="secondary"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="mr-2 size-4 animate-spin" />
+                Fetching FAL Result...
+              </>
+            ) : (
+              <>
+                🎬 Test Your FAL Request (ee88f...)
+              </>
+            )}
+          </Button>
+          
+          {/* 🧪 TESTING: Test with Your Actual Video URL */}
+          <Button 
+            onClick={() => handleTestDirectVideo()}
+            disabled={selectedModels.length === 0 || isGenerating}
+            className="w-full"
+            size="lg"
+            variant="secondary"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="mr-2 size-4 animate-spin" />
+                Processing Your Video...
+              </>
+            ) : (
+              <>
+                ✨ Test Your Real Video (1.5MB)
               </>
             )}
           </Button>
