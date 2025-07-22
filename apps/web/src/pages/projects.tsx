@@ -413,6 +413,14 @@ function ProjectCard({ project, isSelected, onSelect }: ProjectCardProps) {
             outline: 'none',
             boxShadow: 'none'
           }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = 'rgba(220, 38, 38, 1)';
+            e.currentTarget.style.transform = 'scale(1.1)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = 'white';
+            e.currentTarget.style.transform = 'scale(1)';
+          }}
           title="Delete project"
         >
           <Trash2 className="h-3 w-3" />
@@ -504,7 +512,22 @@ function ProjectCard({ project, isSelected, onSelect }: ProjectCardProps) {
                 console.log("🔗 [CLICK DEBUG] Click: Open Project:", project.id);
                 window.location.href = `/editor/project/${encodeURIComponent(project.id)}`;
               }}
-              className="flex items-center space-x-1 px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded-md transition-colors"
+              className="flex items-center space-x-1 px-3 py-1 text-xs rounded-md transition-colors"
+              style={{
+                backgroundColor: 'transparent',
+                color: 'white',
+                border: 'none',
+                outline: 'none',
+                boxShadow: 'none'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.8)';
+                e.currentTarget.style.transform = 'scale(1.05)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
             >
               <span>▶</span>
               <span>Open</span>
