@@ -28,12 +28,13 @@ interface AIModel {
 }
 
 const AI_MODELS: AIModel[] = [
+  { id: "kling_v2", name: "Kling v2.1", description: "Premium model with unparalleled motion fluidity", price: "0.15", resolution: "1080p" },
   { id: "seedance", name: "Seedance v1 Lite", description: "Fast and efficient text-to-video generation", price: "0.18", resolution: "720p" },
-  { id: "veo3", name: "Veo3", description: "Highest quality, slower generation", price: "3.00", resolution: "1080p" },
-  { id: "veo3_fast", name: "Veo3 Fast", description: "High quality, faster generation", price: "2.00", resolution: "1080p" },
   { id: "hailuo", name: "Hailuo 02", description: "Standard quality with realistic physics", price: "0.27", resolution: "768p" },
   { id: "hailuo_pro", name: "Hailuo 02 Pro", description: "Premium 1080p with ultra-realistic physics", price: "0.48", resolution: "1080p" },
-  { id: "kling_v2", name: "Kling v2.1", description: "Premium model with unparalleled motion fluidity", price: "0.15", resolution: "1080p" },
+  { id: "seedance_pro", name: "Seedance v1 Pro", description: "High quality 1080p video generation", price: "0.62", resolution: "1080p" },
+  { id: "veo3_fast", name: "Veo3 Fast", description: "High quality, faster generation", price: "2.00", resolution: "1080p" },
+  { id: "veo3", name: "Veo3", description: "Highest quality, slower generation", price: "3.00", resolution: "1080p" },
 ];
 
 interface GeneratedVideo {

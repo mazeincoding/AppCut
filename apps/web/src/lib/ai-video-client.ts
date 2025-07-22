@@ -89,6 +89,7 @@ export async function generateVideo(
     // Map our model names to FAL endpoints
     const modelEndpoints: { [key: string]: string } = {
       'seedance': 'fal-ai/bytedance/seedance/v1/lite/text-to-video',
+      'seedance_pro': 'fal-ai/bytedance/seedance/v1/pro/text-to-video',
       'veo3': 'fal-ai/google/veo3',
       'veo3_fast': 'fal-ai/google/veo3/fast',
       'hailuo': 'fal-ai/minimax/hailuo-02/standard/text-to-video',
@@ -115,10 +116,16 @@ export async function generateVideo(
       payload.duration = requestedDuration >= 10 ? '10' : '6';
       // Hailuo doesn't use resolution parameter directly
     } else if (request.model === 'seedance') {
-      // Seedance supports 5s or 10s duration, 720p default
+      // Seedance Lite supports 5s or 10s duration, 720p default
       payload.duration = request.duration || 5;
       payload.resolution = request.resolution || '720p';
       // Optional parameters for Seedance
+      payload.aspect_ratio = '16:9'; // Default aspect ratio
+    } else if (request.model === 'seedance_pro') {
+      // Seedance Pro supports 5s or 10s duration, 1080p default
+      payload.duration = request.duration || 5;
+      payload.resolution = request.resolution || '1080p';
+      // Optional parameters for Seedance Pro
       payload.aspect_ratio = '16:9'; // Default aspect ratio
     } else {
       // Other models (Veo, Kling)
@@ -624,28 +631,20 @@ export async function getAvailableModels(): Promise<ModelsResponse> {
   return {
     models: [
       {
+        id: "kling_v2",
+        name: "Kling v2.1",
+        description: "Premium model with unparalleled motion fluidity",
+        price: "$0.15",
+        resolution: "1080p",
+        max_duration: 10
+      },
+      {
         id: "seedance",
         name: "Seedance v1 Lite",
         description: "Fast and efficient text-to-video generation",
         price: "$0.18",
         resolution: "720p",
         max_duration: 10
-      },
-      {
-        id: "veo3",
-        name: "Veo3",
-        description: "Highest quality, slower generation",
-        price: "$3.00",
-        resolution: "1080p",
-        max_duration: 30
-      },
-      {
-        id: "veo3_fast",
-        name: "Veo3 Fast",
-        description: "High quality, faster generation",
-        price: "$2.00",
-        resolution: "1080p",
-        max_duration: 30
       },
       {
         id: "hailuo",
@@ -664,12 +663,28 @@ export async function getAvailableModels(): Promise<ModelsResponse> {
         max_duration: 6
       },
       {
-        id: "kling_v2",
-        name: "Kling v2.1",
-        description: "Premium model with unparalleled motion fluidity",
-        price: "$0.15",
+        id: "seedance_pro",
+        name: "Seedance v1 Pro",
+        description: "High quality 1080p video generation",
+        price: "$0.62",
         resolution: "1080p",
         max_duration: 10
+      },
+      {
+        id: "veo3_fast",
+        name: "Veo3 Fast",
+        description: "High quality, faster generation",
+        price: "$2.00",
+        resolution: "1080p",
+        max_duration: 30
+      },
+      {
+        id: "veo3",
+        name: "Veo3",
+        description: "Highest quality, slower generation",
+        price: "$3.00",
+        resolution: "1080p",
+        max_duration: 30
       }
     ]
   };
@@ -680,12 +695,13 @@ export async function getAvailableModels(): Promise<ModelsResponse> {
  */
 export async function estimateCost(request: VideoGenerationRequest): Promise<CostEstimate> {
   const modelCosts: { [key: string]: { base_cost: number; max_duration: number } } = {
+    "kling_v2": { base_cost: 0.15, max_duration: 10 },
     "seedance": { base_cost: 0.18, max_duration: 10 },
-    "veo3": { base_cost: 3.00, max_duration: 30 },
-    "veo3_fast": { base_cost: 2.00, max_duration: 30 },
     "hailuo": { base_cost: 0.27, max_duration: 6 },
     "hailuo_pro": { base_cost: 0.48, max_duration: 6 },
-    "kling_v2": { base_cost: 0.15, max_duration: 10 }
+    "seedance_pro": { base_cost: 0.62, max_duration: 10 },
+    "veo3_fast": { base_cost: 2.00, max_duration: 30 },
+    "veo3": { base_cost: 3.00, max_duration: 30 }
   };
 
   const modelInfo = modelCosts[request.model] || { base_cost: 1.00, max_duration: 30 };
