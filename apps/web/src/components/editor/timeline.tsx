@@ -841,22 +841,6 @@ export function Timeline() {
         className="flex-1 flex flex-col overflow-hidden relative"
         ref={timelineRef}
       >
-        <TimelinePlayhead
-          currentTime={currentTime}
-          duration={duration}
-          zoomLevel={zoomLevel}
-          tracks={tracks}
-          seek={seek}
-          rulerRef={rulerRef}
-          rulerScrollRef={rulerScrollRef}
-          tracksScrollRef={tracksScrollRef}
-          trackLabelsRef={trackLabelsRef}
-          timelineRef={timelineRef}
-          playheadRef={playheadRef}
-          isSnappingToPlayhead={
-            showSnapIndicator && currentSnapPoint?.type === "playhead"
-          }
-        />
         <SnapIndicator
           snapPoint={currentSnapPoint}
           zoomLevel={zoomLevel}
@@ -1021,6 +1005,22 @@ export function Timeline() {
                   width: `${dynamicTimelineWidth}px`,
                 }}
               >
+                <TimelinePlayhead
+                  currentTime={currentTime}
+                  duration={duration}
+                  zoomLevel={zoomLevel}
+                  tracks={tracks}
+                  seek={seek}
+                  rulerRef={rulerRef}
+                  rulerScrollRef={rulerScrollRef}
+                  tracksScrollRef={tracksScrollRef}
+                  trackLabelsRef={trackLabelsRef}
+                  timelineRef={timelineRef}
+                  playheadRef={playheadRef}
+                  isSnappingToPlayhead={
+                    showSnapIndicator && currentSnapPoint?.type === "playhead"
+                  }
+                />
                 {tracks.length === 0 ? (
                   <div></div>
                 ) : (
