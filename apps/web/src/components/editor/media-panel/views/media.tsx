@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DraggableMediaItem } from "@/components/ui/draggable-item";
+import { HoverScrubVideoPreview } from "@/components/ui/hover-scrub-video-preview";
 import { useProjectStore } from "@/stores/project-store";
 import { useTimelineStore } from "@/stores/timeline-store";
 
@@ -34,6 +35,7 @@ export function MediaView() {
   const [progress, setProgress] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [mediaFilter, setMediaFilter] = useState("all");
+  const [hoveredItems, setHoveredItems] = useState<Set<string>>(new Set());
 
   const processFiles = async (files: FileList | File[]) => {
     if (!files || files.length === 0) return;
@@ -96,6 +98,18 @@ export function MediaView() {
     return `${min}:${sec.toString().padStart(2, "0")}`;
   };
 
+  const handleItemHoverChange = (itemId: string, isHovering: boolean) => {
+    setHoveredItems(prev => {
+      const newSet = new Set(prev);
+      if (isHovering) {
+        newSet.add(itemId);
+      } else {
+        newSet.delete(itemId);
+      }
+      return newSet;
+    });
+  };
+
   const [filteredMediaItems, setFilteredMediaItems] = useState(mediaItems);
 
   useEffect(() => {
@@ -133,6 +147,30 @@ export function MediaView() {
     }
 
     if (item.type === "video") {
+      const isHovered = hoveredItems.has(item.id);
+      
+      if (item.url && item.duration) {
+        return (
+          <div className="relative w-full h-full">
+            <HoverScrubVideoPreview
+              src={item.url}
+              duration={item.duration}
+              thumbnailUrl={item.thumbnailUrl}
+              alt={item.name}
+              className="rounded"
+              onHoverChange={(hovering) => handleItemHoverChange(item.id, hovering)}
+            />
+            {!isHovered && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded pointer-events-none">
+                <Video className="h-6 w-6 text-white drop-shadow-md" />
+              </div>
+            )}
+            <div className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1 rounded pointer-events-none">
+              {formatDuration(item.duration)}
+            </div>
+          </div>
+        );
+      }
       if (item.thumbnailUrl) {
         return (
           <div className="relative w-full h-full">
