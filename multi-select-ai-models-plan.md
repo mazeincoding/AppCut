@@ -566,13 +566,220 @@ const totalCost = selectedModels.reduce((total, modelId) => {
 
 ## Testing Checklist
 
+### 🔍 UI/UX Testing (No Cost)
 - [ ] Multi-model selection works correctly
-- [ ] Cost calculation is accurate
+- [ ] Cost calculation is accurate  
+- [ ] Toggle buttons respond properly
+- [ ] Select All / Clear All functions work
+- [ ] Selected models info panel updates correctly
+- [ ] Validation messages show properly
+- [ ] UI responsive with many selected models
+
+### 🧪 API Function Testing (No Video Generation)
+
+#### Test 1: Dry Run Validation
+```javascript
+// Test the validation logic without API calls
+const testValidation = () => {
+  const selectedModels = ['veo3', 'hailuo', 'kling'];
+  const prompt = "Test prompt";
+  
+  // Should return true for valid inputs
+  console.log('Validation passed:', selectedModels.length > 0 && prompt.trim().length > 0);
+  
+  // Test cost calculation
+  const totalCost = selectedModels.reduce((total, modelId) => {
+    const model = AI_MODELS.find(m => m.id === modelId);
+    return total + (model ? parseFloat(model.price) : 0);
+  }, 0);
+  console.log('Total cost:', totalCost.toFixed(2));
+};
+```
+
+#### Test 2: Mock API Response Handler
+```javascript
+// Test the response processing logic with mock data
+const testResponseHandling = () => {
+  const mockResponse = {
+    job_id: 'test-job-123',
+    status: 'completed',
+    video_url: 'https://example.com/test-video.mp4'
+  };
+  
+  const mockModelId = 'veo3';
+  const mockPrompt = 'Test video generation';
+  
+  // Test video object creation
+  const newVideo = {
+    jobId: mockResponse.job_id,
+    videoUrl: mockResponse.video_url,
+    videoPath: mockResponse.video_url,
+    fileSize: undefined,
+    duration: 5,
+    prompt: mockPrompt,
+    model: mockModelId
+  };
+  
+  console.log('Mock video object:', newVideo);
+  return newVideo;
+};
+```
+
+#### Test 3: Generation Loop Logic (Without API Calls)
+```javascript
+// Test the multi-model generation loop structure
+const testGenerationLoop = async () => {
+  const selectedModels = ['veo3', 'hailuo', 'kling'];
+  const generations = [];
+  
+  for (let i = 0; i < selectedModels.length; i++) {
+    const modelId = selectedModels[i];
+    const modelName = AI_MODELS.find(m => m.id === modelId)?.name;
+    
+    console.log(`Processing model ${i + 1}/${selectedModels.length}: ${modelName}`);
+    
+    // Mock successful response
+    const mockVideo = {
+      jobId: `mock-job-${i}`,
+      videoUrl: `https://example.com/video-${modelId}.mp4`,
+      model: modelId
+    };
+    
+    generations.push({ modelId, video: mockVideo });
+  }
+  
+  console.log('Generated results:', generations);
+  return generations;
+};
+```
+
+#### Test 4: Error Handling Simulation
+```javascript
+// Test error handling without real API failures
+const testErrorHandling = () => {
+  try {
+    // Simulate API error
+    const mockError = new Error('Rate limit exceeded');
+    throw mockError;
+  } catch (error) {
+    console.log('Error handled:', error.message);
+    // Test error message formatting
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.log('Formatted error:', errorMessage);
+  }
+};
+```
+
+### 🎮 Interactive Testing Steps
+
+#### Step 1: Component State Testing
+1. Open browser dev tools
+2. Navigate to AI Video Generation panel
+3. Select multiple models using checkboxes
+4. Verify `selectedModels` array updates in React DevTools
+5. Check cost calculation updates in real-time
+6. Test Select All / Clear All buttons
+
+#### Step 2: Validation Testing
+1. Try generating without selecting models → Should show "Select at least one AI model"
+2. Try generating without prompt → Should show "Enter a video description"
+3. Select models and enter prompt → Generate button should become enabled
+4. Verify cost display shows correct total
+
+#### Step 3: Mock API Testing (Recommended)
+Add this temporary testing function to the component:
+
+```typescript
+// Add to ai.tsx for testing (remove before production)
+const handleMockGenerate = async () => {
+  if (selectedModels.length === 0) return;
+  
+  setIsGenerating(true);
+  setGeneratedVideos([]);
+  
+  try {
+    const mockGenerations: GeneratedVideoResult[] = [];
+    
+    for (let i = 0; i < selectedModels.length; i++) {
+      const modelId = selectedModels[i];
+      const modelName = AI_MODELS.find(m => m.id === modelId)?.name;
+      
+      setStatusMessage(`Mock generating with ${modelName} (${i + 1}/${selectedModels.length})`);
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const mockVideo: GeneratedVideo = {
+        jobId: `mock-job-${Date.now()}-${i}`,
+        videoUrl: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
+        videoPath: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
+        fileSize: 1024000,
+        duration: 5,
+        prompt: prompt.trim(),
+        model: modelId
+      };
+      
+      mockGenerations.push({ modelId, video: mockVideo });
+    }
+    
+    setGeneratedVideos(mockGenerations);
+    setStatusMessage(`Mock generated ${mockGenerations.length} videos!`);
+    
+  } catch (error) {
+    console.error('Mock generation error:', error);
+  } finally {
+    setIsGenerating(false);
+  }
+};
+```
+
+### 🚨 Real API Testing (Use Sparingly - Costs Money)
+
+#### Minimal Cost Testing
+If you need to test real API integration:
+
+1. **Single Model Test**: Select only cheapest model (Hailuo - $0.08)
+2. **Short Prompt**: Use minimal prompt like "test"
+3. **Monitor Costs**: Keep track of spending
+4. **Test One Feature**: Focus on specific functionality
+
+#### Production Testing
 - [ ] Generation works with multiple models
-- [ ] Error handling for partial failures
+- [ ] Error handling for partial failures  
 - [ ] Results display correctly for each model
 - [ ] Performance acceptable with multiple concurrent generations
-- [ ] UI responsive with many selected models
+- [ ] Videos properly added to Media panel
+- [ ] Download functionality works
+- [ ] History tracking functions correctly
+
+### 🛠️ Debug Console Commands
+
+Add these to browser console for testing:
+
+```javascript
+// Check current state
+window.__REACT_DEVTOOLS_GLOBAL_HOOK__.renderers.forEach(r => {
+  const fiber = r.findFiberByHostInstance?.(document.querySelector('[data-testid="ai-view"]'));
+  if (fiber) console.log('AI View State:', fiber.memoizedState);
+});
+
+// Test cost calculation
+const testCost = (modelIds) => {
+  const AI_MODELS = [
+    { id: "veo3", price: "3.00" },
+    { id: "hailuo", price: "0.08" },
+    { id: "kling", price: "0.10" }
+  ];
+  const total = modelIds.reduce((sum, id) => {
+    const model = AI_MODELS.find(m => m.id === id);
+    return sum + (model ? parseFloat(model.price) : 0);
+  }, 0);
+  console.log(`Models: ${modelIds.join(', ')} | Total: $${total.toFixed(2)}`);
+};
+
+// Example usage
+testCost(['veo3', 'hailuo']); // Should show $3.08
+```
 
 ## Future Enhancements
 

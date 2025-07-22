@@ -83,6 +83,66 @@ export function AiView() {
 
   const isModelSelected = (modelId: string) => selectedModels.includes(modelId);
 
+  // 🧪 TESTING FUNCTION: Mock generation without API calls (remove before production)
+  const handleMockGenerate = async () => {
+    if (activeTab === "text") {
+      if (!prompt.trim() || selectedModels.length === 0) return;
+    } else {
+      if (!selectedImage || selectedModels.length === 0) return;
+    }
+    
+    setIsGenerating(true);
+    setError(null);
+    setJobId(null);
+    setGeneratedVideos([]);
+    
+    try {
+      const mockGenerations: GeneratedVideoResult[] = [];
+      
+      for (let i = 0; i < selectedModels.length; i++) {
+        const modelId = selectedModels[i];
+        const modelName = AI_MODELS.find(m => m.id === modelId)?.name;
+        
+        setStatusMessage(`🧪 Mock generating with ${modelName} (${i + 1}/${selectedModels.length})`);
+        
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        const mockVideo: GeneratedVideo = {
+          jobId: `mock-job-${Date.now()}-${i}`,
+          videoUrl: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4', // Free sample video
+          videoPath: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
+          fileSize: 1024000,
+          duration: 5,
+          prompt: prompt.trim(),
+          model: modelId
+        };
+        
+        mockGenerations.push({ modelId, video: mockVideo });
+        
+        // Mock history addition
+        addToHistory(mockVideo);
+        
+        debugLogger.log('AIView', 'MOCK_VIDEO_GENERATED', { 
+          modelName,
+          mockJobId: mockVideo.jobId,
+          modelId 
+        });
+      }
+      
+      setGeneratedVideos(mockGenerations);
+      setStatusMessage(`🧪 Mock generated ${mockGenerations.length} videos successfully!`);
+      
+    } catch (error) {
+      setError('Mock generation error: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      debugLogger.log('AIView', 'MOCK_GENERATION_FAILED', { 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   // DEBUG: Component lifecycle tracking
   debugLogger.log('AIView', 'RENDER', {
     activeTab,
@@ -675,7 +735,7 @@ export function AiView() {
         )}
 
         {/* Generate Button */}
-        <div className="mt-auto pt-4">
+        <div className="mt-auto pt-4 space-y-2">
           <Button 
             onClick={handleGenerate}
             disabled={!canGenerate}
@@ -695,15 +755,36 @@ export function AiView() {
             )}
           </Button>
           
-          {/* Error Display */}
-          {error && (
+          {/* 🧪 TESTING: Mock Generate Button - Remove before production */}
+          <Button 
+            onClick={handleMockGenerate}
+            disabled={!canGenerate}
+            className="w-full"
+            size="lg"
+            variant="outline"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="mr-2 size-4 animate-spin" />
+                Mock Generating...
+              </>
+            ) : (
+              <>
+                🧪 Test Generate (No Cost)
+              </>
+            )}
+          </Button>
+        </div>
+        
+        {/* Error Display */}
+        {error && (
             <div className="mt-2 p-2 bg-destructive/10 border border-destructive/20 rounded text-sm text-destructive">
               {error}
             </div>
           )}
-          
-          {/* Progress Display */}
-          {isGenerating && jobId && (
+        
+        {/* Progress Display */}
+        {isGenerating && jobId && (
             <div className="mt-2 space-y-2">
               <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded">
                 <div className="flex items-center gap-2 mb-2">
@@ -728,35 +809,34 @@ export function AiView() {
                 </div>
               </div>
             </div>
-          )}
-          
-          {/* Success Display */}
-          {jobId && !isGenerating && !generatedVideo && !error && (
-            <div className="mt-2 p-2 bg-green-500/10 border border-green-500/20 rounded text-sm text-green-700">
-              ✅ Generation completed! Processing video...
-            </div>
-          )}
-          
-          {/* Cost Display */}
-          {selectedModels.length > 0 && !generatedVideos.length && (
-            <div className="mt-2 text-center">
-              <span className="text-xs text-muted-foreground">
-                Total Cost: USD {totalCost.toFixed(2)} • {selectedModels.length} model{selectedModels.length > 1 ? 's' : ''}
-              </span>
-            </div>
-          )}
-          
-          {/* Validation Message */}
-          {!canGenerate && !isGenerating && generatedVideos.length === 0 && (
-            <div className="mt-2 text-center">
-              <span className="text-xs text-muted-foreground">
-                {selectedModels.length === 0 ? "Select at least one AI model" : 
-                 activeTab === "text" ? "Enter a video description" : 
-                 "Upload an image"}
-              </span>
-            </div>
-          )}
-        </div>
+        )}
+        
+        {/* Success Display */}
+        {jobId && !isGenerating && !generatedVideo && !error && (
+          <div className="mt-2 p-2 bg-green-500/10 border border-green-500/20 rounded text-sm text-green-700">
+            ✅ Generation completed! Processing video...
+          </div>
+        )}
+        
+        {/* Cost Display */}
+        {selectedModels.length > 0 && !generatedVideos.length && (
+          <div className="mt-2 text-center">
+            <span className="text-xs text-muted-foreground">
+              Total Cost: USD {totalCost.toFixed(2)} • {selectedModels.length} model{selectedModels.length > 1 ? 's' : ''}
+            </span>
+          </div>
+        )}
+        
+        {/* Validation Message */}
+        {!canGenerate && !isGenerating && generatedVideos.length === 0 && (
+          <div className="mt-2 text-center">
+            <span className="text-xs text-muted-foreground">
+              {selectedModels.length === 0 ? "Select at least one AI model" : 
+               activeTab === "text" ? "Enter a video description" : 
+               "Upload an image"}
+            </span>
+          </div>
+        )}
         
         {/* Multi-Video Generated Success */}
         {generatedVideos.length > 0 && (
