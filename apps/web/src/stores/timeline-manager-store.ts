@@ -499,7 +499,7 @@ export const useTimelineManagerStore = create<TimelineManagerStore>(
 
       try {
         const timelineStore = useTimelineStore.getState();
-        await timelineStore.saveProjectTimeline(activeTimeline.id);
+        await timelineStore.saveTimeline(activeTimeline.id);
       } catch (error) {
         console.error("Failed to save active timeline data:", error);
       }

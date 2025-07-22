@@ -170,7 +170,7 @@ interface TimelineStore {
 
   // Persistence actions
   loadProjectTimeline: (projectId: string) => Promise<void>;
-  saveProjectTimeline: (projectId: string) => Promise<void>;
+  saveTimeline: (projectId: string) => Promise<void>;
   clearTimeline: () => void;
   updateTextElement: (
     trackId: string,
@@ -1309,7 +1309,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       }
     },
 
-    saveProjectTimeline: async (timelineId) => {
+    saveTimeline: async (timelineId) => {
       try {
         await storageService.saveTimeline(timelineId, get()._tracks);
       } catch (error) {

@@ -113,7 +113,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       const timelineStore = useTimelineStore.getState();
       await Promise.all([
         storageService.saveProject(activeProject),
-        timelineStore.saveProjectTimeline(activeProject.id),
+        timelineStore.saveTimeline(activeProject.id),
       ]);
       await get().loadAllProjects(); // Refresh the list
     } catch (error) {
