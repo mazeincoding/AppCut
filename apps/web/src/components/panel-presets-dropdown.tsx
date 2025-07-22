@@ -31,7 +31,7 @@ export function PanelPresetsDropdown() {
           <LayoutGrid className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent>
+      <DropdownMenuContent className="w-48">
         {menuItems.map(({ label, layout }) => (
           <DropdownMenuItem
             key={layout}
