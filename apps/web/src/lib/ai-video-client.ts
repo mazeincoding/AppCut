@@ -90,10 +90,8 @@ export async function generateVideo(
     const modelEndpoints: { [key: string]: string } = {
       'veo3': 'fal-ai/google/veo3',
       'veo3_fast': 'fal-ai/google/veo3/fast',
-      'veo2': 'fal-ai/google/veo2', 
       'hailuo': 'fal-ai/minimax/hailuo-02/standard/text-to-video',
       'hailuo_pro': 'fal-ai/minimax/hailuo-02/pro/text-to-video',
-      'kling': 'fal-ai/bytedance/kling-video/v1.5/pro',
       'kling_v2': 'fal-ai/kling-video/v2.1/master'
     };
 
@@ -635,14 +633,6 @@ export async function getAvailableModels(): Promise<ModelsResponse> {
         max_duration: 30
       },
       {
-        id: "veo2",
-        name: "Veo2",
-        description: "Good quality, balanced speed",
-        price: "$2.50",
-        resolution: "1080p",
-        max_duration: 30
-      },
-      {
         id: "hailuo",
         name: "Hailuo 02",
         description: "Standard quality with realistic physics",
@@ -657,14 +647,6 @@ export async function getAvailableModels(): Promise<ModelsResponse> {
         price: "$0.48",
         resolution: "1080p",
         max_duration: 6
-      },
-      {
-        id: "kling",
-        name: "Kling v1.5",
-        description: "Fast generation, cost-effective",
-        price: "$0.10",
-        resolution: "720p",
-        max_duration: 15
       },
       {
         id: "kling_v2",
@@ -685,10 +667,8 @@ export async function estimateCost(request: VideoGenerationRequest): Promise<Cos
   const modelCosts: { [key: string]: { base_cost: number; max_duration: number } } = {
     "veo3": { base_cost: 3.00, max_duration: 30 },
     "veo3_fast": { base_cost: 2.00, max_duration: 30 },
-    "veo2": { base_cost: 2.50, max_duration: 30 },
     "hailuo": { base_cost: 0.27, max_duration: 6 },
     "hailuo_pro": { base_cost: 0.48, max_duration: 6 },
-    "kling": { base_cost: 0.10, max_duration: 15 },
     "kling_v2": { base_cost: 0.15, max_duration: 10 }
   };
 
