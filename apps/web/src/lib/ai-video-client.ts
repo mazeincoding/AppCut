@@ -97,8 +97,10 @@ export async function generateVideo(request: VideoGenerationRequest): Promise<Vi
     
     // Hailuo models have specific parameter requirements
     if (request.model === 'hailuo' || request.model === 'hailuo_pro') {
-      // Hailuo uses duration as seconds (6s max)
-      payload.duration = Math.min(request.duration || 6, 6);
+      // Hailuo only accepts '6' or '10' as string values for duration
+      // Standard supports 6s, Pro supports both 6s and 10s (but 10s not at 1080p)
+      const requestedDuration = request.duration || 6;
+      payload.duration = requestedDuration >= 10 ? '10' : '6';
       // Hailuo doesn't use resolution parameter directly
     } else {
       // Other models

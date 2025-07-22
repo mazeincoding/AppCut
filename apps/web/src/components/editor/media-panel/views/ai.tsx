@@ -114,7 +114,7 @@ export function AiView() {
           videoUrl: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4', // Free sample video
           videoPath: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
           fileSize: 1024000,
-          duration: 5,
+          duration: 6,
           prompt: prompt.trim(),
           model: modelId
         };
@@ -383,7 +383,7 @@ export function AiView() {
             prompt: prompt.trim(),
             model: modelId,
             resolution: "1080p",
-            duration: 5
+            duration: 6  // Default to 6 seconds (works for all models)
           });
         } else {
           response = await generateVideoFromImage({
@@ -391,7 +391,7 @@ export function AiView() {
             model: modelId,
             prompt: prompt.trim() || undefined,
             resolution: "1080p",
-            duration: 5
+            duration: 6  // Default to 6 seconds (works for all models)
           });
         }
         
@@ -401,7 +401,7 @@ export function AiView() {
             videoUrl: response.video_url,
             videoPath: response.video_url,
             fileSize: undefined,
-            duration: 5,
+            duration: 6,
             prompt: prompt.trim(),
             model: modelId
           };
