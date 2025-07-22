@@ -65,12 +65,20 @@ Replace the outer flex-col structure with a vertical ResizablePanelGroup:
   
   <ResizablePanelGroup direction="vertical" className="flex-1">
     {/* Main content area (existing horizontal panels) */}
-    <ResizablePanel defaultSize={timelinePanel} minSize={60} maxSize={85}>
+    <ResizablePanel defaultSize={mainContentHeight} minSize={60} maxSize={85}>
       <div className="h-full overflow-hidden">
         <ResizablePanelGroup direction="horizontal" className="h-full">
           {/* Media Panel */}
           <ResizablePanel defaultSize={toolsPanel} minSize={15} maxSize={35}>
-            <div>
+            <div 
+              className="h-full rounded-xl overflow-hidden"
+              style={{
+                borderTop: '2px solid #ff6b6b',
+                borderRight: '2px solid #4ecdc4', 
+                borderBottom: '2px solid #45b7d1',
+                borderLeft: '2px solid #96ceb4'
+              }}
+            >
               <MediaPanel />
             </div>
           </ResizablePanel>
@@ -79,7 +87,15 @@ Replace the outer flex-col structure with a vertical ResizablePanelGroup:
           
           {/* Preview Panel */}
           <ResizablePanel defaultSize={mainContent}>
-            <div>
+            <div 
+              className="h-full rounded-xl overflow-hidden"
+              style={{
+                borderTop: '2px solid #ff6b6b',
+                borderRight: '2px solid #4ecdc4', 
+                borderBottom: '2px solid #45b7d1',
+                borderLeft: '2px solid #96ceb4'
+              }}
+            >
               <PreviewPanel />
             </div>
           </ResizablePanel>
@@ -88,8 +104,16 @@ Replace the outer flex-col structure with a vertical ResizablePanelGroup:
           
           {/* Properties Panel */}
           <ResizablePanel defaultSize={propertiesPanel} minSize={15} maxSize={35}>
-            <div>
-              <PropertiesPanel />
+            <div 
+              className="h-full rounded-xl overflow-hidden"
+              style={{
+                borderTop: '2px solid #ff6b6b',
+                borderRight: '2px solid #4ecdc4', 
+                borderBottom: '2px solid #45b7d1',
+                borderLeft: '2px solid #96ceb4'
+              }}
+            >
+              {isDialogOpen ? <ExportDialog /> : <PropertiesPanel />}
             </div>
           </ResizablePanel>
         </ResizablePanelGroup>
@@ -106,7 +130,7 @@ Replace the outer flex-col structure with a vertical ResizablePanelGroup:
       maxSize={40}
       onResize={(size) => setTimelineHeight(size)}
     >
-      <div className="h-full p-4 pt-2">
+      <div className="p-4 pt-2 h-full">
         <div 
           className="h-full rounded-xl overflow-hidden"
           style={{
@@ -133,13 +157,17 @@ Add timeline height state:
 ```tsx
 interface PanelStore {
   // ... existing properties
+  mainContentHeight: number;
+  setMainContentHeight: (size: number) => void;
   timelineHeight: number;
   setTimelineHeight: (size: number) => void;
 }
 
 export const usePanelStore = create<PanelStore>((set) => ({
   // ... existing state
-  timelineHeight: 25, // Default 25% of screen height
+  mainContentHeight: 75, // Default 75% for main content area
+  setMainContentHeight: (size) => set({ mainContentHeight: size }),
+  timelineHeight: 25, // Default 25% for timeline
   setTimelineHeight: (size) => set({ timelineHeight: size }),
 }));
 ```
@@ -166,8 +194,10 @@ const {
   setMainContent,
   propertiesPanel,
   setPropertiesPanel,
-  timelineHeight,     // Add this
-  setTimelineHeight,  // Add this
+  mainContentHeight,     // Add this
+  setMainContentHeight,  // Add this
+  timelineHeight,        // Add this
+  setTimelineHeight,     // Add this
 } = usePanelStore();
 ```
 

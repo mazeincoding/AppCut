@@ -33,6 +33,10 @@ function EditorContent() {
     setTimeline,
     propertiesPanel,
     setPropertiesPanel,
+    mainContentHeight,
+    setMainContentHeight,
+    timelineHeight,
+    setTimelineHeight,
   } = usePanelStore();
 
   const { activeProject, loadProject, createNewProject } = useProjectStore();
@@ -285,66 +289,110 @@ function EditorContent() {
   });
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="h-screen bg-background">
       <EditorHeader />
-      <div className="flex-1 overflow-hidden flex flex-col">
-        <div className="flex-1 p-4">
-          <ResizablePanelGroup direction="horizontal" className="w-full h-full gap-6">
-            <ResizablePanel 
-              defaultSize={toolsPanel} 
-              minSize={15} 
-              maxSize={35}
-              onResize={(size) => setToolsPanel(size)}
-            >
-              <div 
-                className="h-full rounded-xl overflow-hidden"
-                style={{
-                  borderTop: '2px solid #ff6b6b',
-                  borderRight: '2px solid #4ecdc4', 
-                  borderBottom: '2px solid #45b7d1',
-                  borderLeft: '2px solid #96ceb4'
-                }}
+      
+      <ResizablePanelGroup direction="vertical" className="flex-1">
+        {/* Main content area (existing horizontal panels) */}
+        <ResizablePanel 
+          defaultSize={mainContentHeight} 
+          minSize={60} 
+          maxSize={85}
+          onResize={(size) => setMainContentHeight(size)}
+        >
+          <div className="h-full overflow-hidden p-4">
+            <ResizablePanelGroup direction="horizontal" className="h-full gap-6">
+              {/* Media Panel */}
+              <ResizablePanel 
+                defaultSize={toolsPanel} 
+                minSize={15} 
+                maxSize={35}
+                onResize={(size) => setToolsPanel(size)}
               >
-                <MediaPanel />
-              </div>
-            </ResizablePanel>
-            <ResizableHandle withHandle />
-            <ResizablePanel 
-              defaultSize={mainContent} 
-              minSize={30}
-              onResize={(size) => setMainContent(size)}
-            >
-              <div className="h-full rounded-xl overflow-hidden">
-                <PreviewPanel />
-              </div>
-            </ResizablePanel>
-            <ResizableHandle withHandle />
-            <ResizablePanel 
-              defaultSize={propertiesPanel} 
-              minSize={15} 
-              maxSize={35}
-              onResize={(size) => setPropertiesPanel(size)}
-            >
-              <div className="h-full border-4 border-border rounded-xl overflow-hidden">
-                {isDialogOpen ? <ExportDialog /> : <PropertiesPanel />}
-              </div>
-            </ResizablePanel>
-          </ResizablePanelGroup>
-        </div>
-        <div className="p-4 pt-2">
-          <div 
-            className="rounded-xl overflow-hidden"
-            style={{
-              borderTop: '2px solid #ff6b6b',
-              borderRight: '2px solid #4ecdc4', 
-              borderBottom: '2px solid #45b7d1',
-              borderLeft: '2px solid #96ceb4'
-            }}
-          >
-            <Timeline />
+                <div 
+                  className="h-full rounded-xl overflow-hidden"
+                  style={{
+                    borderTop: '2px solid #ff6b6b',
+                    borderRight: '2px solid #4ecdc4', 
+                    borderBottom: '2px solid #45b7d1',
+                    borderLeft: '2px solid #96ceb4'
+                  }}
+                >
+                  <MediaPanel />
+                </div>
+              </ResizablePanel>
+              
+              <ResizableHandle withHandle />
+              
+              {/* Preview Panel */}
+              <ResizablePanel 
+                defaultSize={mainContent} 
+                minSize={30}
+                onResize={(size) => setMainContent(size)}
+              >
+                <div 
+                  className="h-full rounded-xl overflow-hidden"
+                  style={{
+                    borderTop: '2px solid #ff6b6b',
+                    borderRight: '2px solid #4ecdc4', 
+                    borderBottom: '2px solid #45b7d1',
+                    borderLeft: '2px solid #96ceb4'
+                  }}
+                >
+                  <PreviewPanel />
+                </div>
+              </ResizablePanel>
+              
+              <ResizableHandle withHandle />
+              
+              {/* Properties Panel */}
+              <ResizablePanel 
+                defaultSize={propertiesPanel} 
+                minSize={15} 
+                maxSize={35}
+                onResize={(size) => setPropertiesPanel(size)}
+              >
+                <div 
+                  className="h-full rounded-xl overflow-hidden"
+                  style={{
+                    borderTop: '2px solid #ff6b6b',
+                    borderRight: '2px solid #4ecdc4', 
+                    borderBottom: '2px solid #45b7d1',
+                    borderLeft: '2px solid #96ceb4'
+                  }}
+                >
+                  {isDialogOpen ? <ExportDialog /> : <PropertiesPanel />}
+                </div>
+              </ResizablePanel>
+            </ResizablePanelGroup>
           </div>
-        </div>
-      </div>
+        </ResizablePanel>
+        
+        {/* Vertical resize handle */}
+        <ResizableHandle withHandle />
+        
+        {/* Timeline panel - NOW RESIZABLE */}
+        <ResizablePanel 
+          defaultSize={timelineHeight} 
+          minSize={15} 
+          maxSize={40}
+          onResize={(size) => setTimelineHeight(size)}
+        >
+          <div className="p-4 pt-2 h-full">
+            <div 
+              className="h-full rounded-xl overflow-hidden"
+              style={{
+                borderTop: '2px solid #ff6b6b',
+                borderRight: '2px solid #4ecdc4', 
+                borderBottom: '2px solid #45b7d1',
+                borderLeft: '2px solid #96ceb4'
+              }}
+            >
+              <Timeline />
+            </div>
+          </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 }
