@@ -54,6 +54,8 @@ import {
   getTotalTracksHeight,
   TIMELINE_CONSTANTS,
   snapTimeToFrame,
+  MIN_ZOOM,
+  MAX_ZOOM,
 } from "@/constants/timeline-constants";
 import { TimelineZoomControl } from "../timeline-zoom-control";
 
@@ -426,19 +428,14 @@ export function Timeline() {
       
       // Fallback to the container itself if it's scrollable
       const container = containerRef.current;
+      const computedStyle = getComputedStyle(container);
       const hasOverflow = container && (
-        container.style.overflow === 'auto' ||
-        container.style.overflow === 'scroll' ||
-        container.style.overflowX === 'auto' ||
-        container.style.overflowX === 'scroll' ||
-        container.style.overflowY === 'auto' ||
-        container.style.overflowY === 'scroll' ||
-        getComputedStyle(container).overflow.includes('auto') ||
-        getComputedStyle(container).overflow.includes('scroll') ||
-        getComputedStyle(container).overflowX.includes('auto') ||
-        getComputedStyle(container).overflowX.includes('scroll') ||
-        getComputedStyle(container).overflowY.includes('auto') ||
-        getComputedStyle(container).overflowY.includes('scroll')
+        computedStyle.overflow.includes('auto') ||
+        computedStyle.overflow.includes('scroll') ||
+        computedStyle.overflowX.includes('auto') ||
+        computedStyle.overflowX.includes('scroll') ||
+        computedStyle.overflowY.includes('auto') ||
+        computedStyle.overflowY.includes('scroll')
       );
       
       return hasOverflow ? container : null;
@@ -580,7 +577,7 @@ export function Timeline() {
             onMouseDown={handleSelectionMouseDown}
             onClick={handleTimelineContentClick}
             data-ruler-area
-            role="scrollbar"
+            role="region"
             aria-orientation="horizontal"
             aria-label="Timeline ruler"
             tabIndex={0}
@@ -987,19 +984,12 @@ function TimelineToolbar({
     const pixelsPerSecond = TIMELINE_CONSTANTS.PIXELS_PER_SECOND;
     const requiredWidth = totalDuration * pixelsPerSecond;
     
-    console.log('Fit to Window Debug:', {
-      totalDuration,
-      containerWidth,
-      requiredWidth,
-      currentZoom: zoomLevel
-    });
-    
     // Calculate zoom to fit content with some padding
     const paddingFactor = 0.95; // 5% padding
     const fitZoom = (containerWidth * paddingFactor) / requiredWidth;
     
     // Clamp to valid zoom range
-    return Math.max(0.25, Math.min(4, fitZoom));
+    return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, fitZoom));
   };
 
   const handleFitToWindow = () => {
