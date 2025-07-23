@@ -43,7 +43,7 @@ const MODEL_ENDPOINTS: Record<string, ModelEndpoint> = {
   'seededit': {
     endpoint: 'fal-ai/bytedance/seededit/v3/edit-image',
     defaultParams: {
-      guidance_scale: 0.5,
+      guidance_scale: 1.0,
     }
   },
   'flux-kontext': {
@@ -162,7 +162,10 @@ export async function editImage(
     payload.num_images = request.numImages;
   }
 
-  console.log(`🎨 Editing image with ${request.model}:`, payload);
+  console.log(`🎨 Editing image with ${request.model}:`, {
+    ...payload,
+    image_url: payload.image_url?.substring(0, 50) + '...' // Truncate for readability
+  });
 
   if (onProgress) {
     onProgress({
@@ -187,18 +190,24 @@ export async function editImage(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(`API error: ${response.status} ${errorData.detail || response.statusText}`);
+      console.error('FAL API Error:', errorData);
+      const errorMessage = errorData.detail 
+        ? (typeof errorData.detail === 'string' ? errorData.detail : JSON.stringify(errorData.detail))
+        : errorData.message || response.statusText;
+      throw new Error(`API error: ${response.status} - ${errorMessage}`);
     }
 
     const result = await response.json();
-    console.log('✅ FAL API response:', result);
+    console.log('✅ FAL API response:', JSON.stringify(result, null, 2));
 
     // Check if we got a direct result or need to poll
     if (result.request_id) {
       // Queue mode - poll for results
+      console.log('📋 Using queue mode with request_id:', result.request_id);
       return await pollImageEditStatus(result.request_id, modelConfig.endpoint, startTime, onProgress, jobId, request.model);
     } else if (result.images && result.images.length > 0) {
       // Direct mode - return immediately
+      console.log('🎯 Using direct mode with images:', result.images.length);
       if (onProgress) {
         onProgress({
           status: 'completed',
@@ -216,8 +225,56 @@ export async function editImage(
         seed_used: result.seed,
         processing_time: Math.floor((Date.now() - startTime) / 1000)
       };
+    } else if (result.image && result.image.url) {
+      // Alternative direct mode format - single image object
+      console.log('🎯 Using direct mode with single image object');
+      if (onProgress) {
+        onProgress({
+          status: 'completed',
+          progress: 100,
+          message: 'Image editing completed!',
+          elapsedTime: Math.floor((Date.now() - startTime) / 1000)
+        });
+      }
+
+      return {
+        job_id: jobId,
+        status: 'completed',
+        message: 'Image edited successfully',
+        result_url: result.image.url,
+        seed_used: result.seed,
+        processing_time: Math.floor((Date.now() - startTime) / 1000)
+      };
+    } else if (result.url) {
+      // Alternative direct mode format - URL at root level
+      console.log('🎯 Using direct mode with root URL');
+      if (onProgress) {
+        onProgress({
+          status: 'completed',
+          progress: 100,
+          message: 'Image editing completed!',
+          elapsedTime: Math.floor((Date.now() - startTime) / 1000)
+        });
+      }
+
+      return {
+        job_id: jobId,
+        status: 'completed',
+        message: 'Image edited successfully',
+        result_url: result.url,
+        seed_used: result.seed,
+        processing_time: Math.floor((Date.now() - startTime) / 1000)
+      };
     } else {
-      throw new Error('Unexpected response format from FAL API');
+      console.error('❌ Unexpected API response structure:', {
+        hasRequestId: !!result.request_id,
+        hasImages: !!result.images,
+        hasImageObject: !!result.image,
+        hasUrlRoot: !!result.url,
+        keys: Object.keys(result),
+        result: result
+      });
+      throw new Error(`Unexpected response format from FAL API. Response keys: ${Object.keys(result).join(', ')}`);
     }
   } catch (error) {
     if (onProgress) {
@@ -393,7 +450,7 @@ export function getImageEditModels() {
       estimatedCost: '$0.05-0.10',
       features: ['Photo retouching', 'Object modification', 'Realistic edits'],
       parameters: {
-        guidanceScale: { min: 0, max: 1, default: 0.5, step: 0.1 },
+        guidanceScale: { min: 1, max: 10, default: 1.0, step: 0.1 },
         seed: { optional: true }
       }
     },

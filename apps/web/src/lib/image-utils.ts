@@ -151,10 +151,18 @@ export async function downloadImage(url: string, filename: string): Promise<void
     const link = document.createElement('a');
     link.href = downloadUrl;
     link.download = filename;
+    link.style.display = 'none';
+    
     document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(downloadUrl);
+    
+    // Use setTimeout to ensure proper download without navigation
+    setTimeout(() => {
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => {
+        URL.revokeObjectURL(downloadUrl);
+      }, 100);
+    }, 10);
   } catch (error) {
     throw new Error(`Failed to download image: ${error}`);
   }

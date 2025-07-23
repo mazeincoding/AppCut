@@ -25,6 +25,8 @@ import {
 } from "@/components/ui/select";
 import { DraggableMediaItem } from "@/components/ui/draggable-item";
 import { useProjectStore } from "@/stores/project-store";
+import { useAdjustmentStore } from "@/stores/adjustment-store";
+import { useMediaPanelStore } from "../store";
 
 export function MediaView() {
   const { mediaItems, addMediaItem, removeMediaItem } = useMediaStore();
@@ -299,6 +301,27 @@ export function MediaView() {
                     />
                   </ContextMenuTrigger>
                   <ContextMenuContent>
+                    {item.type === 'image' && (
+                      <ContextMenuItem
+                        onClick={() => {
+                          // Navigate to adjustment tab and load the image
+                          const mediaStore = useMediaStore.getState();
+                          const adjustmentStore = useAdjustmentStore.getState();
+                          const mediaPanelStore = useMediaPanelStore.getState();
+                          
+                          // Set the image in adjustment store
+                          const imageUrl = item.source.startsWith('blob:') 
+                            ? item.source 
+                            : URL.createObjectURL(item.file);
+                          adjustmentStore.setOriginalImage(item.file, imageUrl);
+                          
+                          // Navigate to adjustment tab
+                          mediaPanelStore.setActiveTab('adjustment');
+                        }}
+                      >
+                        Edit Image
+                      </ContextMenuItem>
+                    )}
                     <ContextMenuItem>Export clips</ContextMenuItem>
                     <ContextMenuItem
                       variant="destructive"

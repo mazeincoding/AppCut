@@ -14,11 +14,13 @@ import {
   Redo2,
   Loader2,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  ArrowLeft
 } from 'lucide-react';
 import { useAdjustmentStore } from '@/stores/adjustment-store';
 import { useMediaStore } from '@/stores/media-store';
 import { useProjectStore } from '@/stores/project-store';
+import { useMediaPanelStore } from '../store';
 import { 
   editImage, 
   uploadImageToFAL, 
@@ -74,12 +76,13 @@ export function AdjustmentView() {
   // Media and project stores for adding edited images
   const { addMediaItem } = useMediaStore();
   const { activeProject } = useProjectStore();
+  const { setActiveTab } = useMediaPanelStore();
 
   const [uploadingImage, setUploadingImage] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Handle automatic download and add to media panel
-  const handleAutoDownloadAndAddToMedia = useCallback(async (
+  // Handle automatic add to media panel (download disabled temporarily)
+  const handleAutoAddToMedia = useCallback(async (
     imageUrl: string, 
     modelName: string, 
     promptText: string
@@ -118,20 +121,13 @@ export function AdjustmentView() {
         height
       });
 
-      // Also download to local folder
-      const downloadUrl = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(downloadUrl);
+      // Download functionality temporarily disabled to fix navigation bug
+      // TODO: Re-implement download without causing navigation to blob URL
 
-      console.log(`✅ Edited image automatically downloaded and added to media: ${filename}`);
+      console.log(`✅ Edited image automatically added to media: ${filename}`);
       
     } catch (error) {
-      console.error('Failed to auto-download and add to media:', error);
+      console.error('Failed to auto-add to media:', error);
       toast.error('Failed to add edited image to media panel');
     }
   }, [activeProject, addMediaItem]);
@@ -210,10 +206,12 @@ export function AdjustmentView() {
           processingTime: result.processing_time
         });
         
-        // Automatically download and add to media panel
-        await handleAutoDownloadAndAddToMedia(result.result_url, selectedModel, prompt);
+        // Automatically add to media panel (download disabled temporarily to fix navigation bug)
+        await handleAutoAddToMedia(result.result_url, selectedModel, prompt);
         
-        toast.success('Image edited successfully and added to media!');
+        toast.success(`🎉 Image edited successfully with ${selectedModel}! Check the preview panel and your media library.`, {
+          duration: 4000
+        });
       } else {
         throw new Error('No result URL received');
       }
@@ -223,7 +221,7 @@ export function AdjustmentView() {
       setError(`Edit failed: ${errorMessage}`);
       setProcessingState({ isProcessing: false });
     }
-  }, [originalImage, prompt, selectedModel, parameters, originalImageUrl, addToHistory, setProcessingState, handleAutoDownloadAndAddToMedia]);
+  }, [originalImage, prompt, selectedModel, parameters, originalImageUrl, addToHistory, setProcessingState, handleAutoAddToMedia]);
 
   // Handle download
   const handleDownload = useCallback(async () => {
@@ -248,6 +246,15 @@ export function AdjustmentView() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setActiveTab('media')}
+            className="mr-2 hover:bg-primary hover:text-primary-foreground transition-colors"
+            aria-label="Back to media"
+          >
+            <ArrowLeft className="size-4" />
+          </Button>
           <ImageIcon className="size-5 text-primary" />
           <h2 className="text-lg font-semibold">Image Adjustment</h2>
           {editHistory.length > 0 && (
@@ -358,14 +365,16 @@ export function AdjustmentView() {
                       </div>
                     </div>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={clearImage}
-                    className="border-green-300 hover:bg-green-100 dark:border-green-700 dark:hover:bg-green-900/20"
-                  >
-                    Change
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={clearImage}
+                      className="border-green-300 hover:bg-green-100 dark:border-green-700 dark:hover:bg-green-900/20 text-xs"
+                    >
+                      Remove
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>

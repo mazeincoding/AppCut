@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,7 +10,9 @@ import {
   ImageIcon, 
   SplitSquareVertical, 
   Eye,
-  Maximize2
+  Maximize2,
+  X,
+  ArrowLeft
 } from 'lucide-react';
 
 export function PreviewPanel() {
@@ -27,6 +29,22 @@ export function PreviewPanel() {
 
   const hasEdit = currentEditedUrl;
   const currentEdit = editHistory[currentHistoryIndex];
+
+  // Close fullscreen on Escape key
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && fullscreen) {
+        setFullscreen(false);
+      }
+    };
+
+    if (fullscreen) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [fullscreen]);
 
   if (!originalImageUrl) {
     return (
@@ -74,12 +92,14 @@ export function PreviewPanel() {
               </Button>
             </div>
 
-            {/* Fullscreen */}
+            {/* Fullscreen - Disabled temporarily */}
             <Button
               variant="outline"
               size="sm"
               onClick={() => setFullscreen(true)}
-              className="h-6 px-2"
+              className="h-6 px-2 opacity-50 cursor-not-allowed"
+              disabled={true}
+              title="Fullscreen temporarily disabled"
             >
               <Maximize2 className="size-3" />
             </Button>
@@ -184,24 +204,36 @@ export function PreviewPanel() {
       {/* Fullscreen Modal */}
       {fullscreen && (
         <div 
-          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4"
           onClick={() => setFullscreen(false)}
         >
+          {/* Header with close options */}
+          <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between bg-gradient-to-b from-black/50 to-transparent">
+            <div className="text-white text-sm opacity-75">
+              Press ESC or click outside image to close
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                className="bg-white/20 hover:bg-white/30 text-white border-white/20"
+                onClick={() => setFullscreen(false)}
+              >
+                <X className="size-4 mr-1" />
+                Close
+              </Button>
+            </div>
+          </div>
+
+          {/* Image container */}
           <div className="max-w-full max-h-full">
             <img
               src={hasEdit ? currentEditedUrl : originalImageUrl}
               alt="Fullscreen preview"
-              className="max-w-full max-h-full object-contain"
+              className="max-w-full max-h-full object-contain shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             />
           </div>
-          <Button
-            variant="secondary"
-            className="absolute top-4 right-4"
-            onClick={() => setFullscreen(false)}
-          >
-            Close
-          </Button>
         </div>
       )}
     </Card>

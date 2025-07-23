@@ -89,7 +89,7 @@ const getDefaultParameters = (model: AdjustmentState['selectedModel']) => {
   switch (model) {
     case 'seededit':
       return {
-        guidanceScale: 0.5,
+        guidanceScale: 1.0,
         steps: 20,
         seed: undefined,
         safetyTolerance: 2,

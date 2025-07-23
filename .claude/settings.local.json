@@ -62,7 +62,9 @@
       "Bash(claude mcp:*)",
       "Bash(cmd /c:*)",
       "Bash(git checkout:*)",
-      "WebFetch(domain:fal.ai)"
+      "WebFetch(domain:fal.ai)",
+      "Bash(git check-ignore:*)",
+      "Bash(git rm:*)"
     ],
     "deny": []
   }

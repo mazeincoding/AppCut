@@ -5,7 +5,8 @@
       "Bash(rd:*)",
       "Bash(rm:*)",
       "Bash(find:*)",
-      "Bash(bun run:*)"
+      "Bash(bun run:*)",
+      "Bash(npm run lint:*)"
     ],
     "deny": []
   }
