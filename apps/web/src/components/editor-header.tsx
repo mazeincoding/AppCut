@@ -8,14 +8,43 @@ import { HeaderBase } from "./header-base";
 import { formatTimeCode } from "@/lib/time";
 import { useProjectStore } from "@/stores/project-store";
 import { KeyboardShortcutsHelp } from "./keyboard-shortcuts-help";
+import { useState, useRef } from "react";
+import { Input } from "@/components/ui/input";
 
 export function EditorHeader() {
   const { getTotalDuration } = useTimelineStore();
-  const { activeProject } = useProjectStore();
+  const { activeProject, renameProject } = useProjectStore();
+  const [isEditing, setIsEditing] = useState(false);
+  const [newName, setNewName] = useState(activeProject?.name || "");
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleExport = () => {
     // TODO: Implement export functionality
+    // NOTE: This is already being worked on
     console.log("Export project");
+  };
+
+  const handleNameClick = () => {
+    if (!activeProject) return;
+    setNewName(activeProject.name);
+    setIsEditing(true);
+  };
+
+  const handleNameSave = async () => {
+    if (activeProject && newName.trim() && newName !== activeProject.name) {
+      try {
+        await renameProject(activeProject.id, newName.trim());
+      } catch (error) {
+        console.error("Failed to rename project:", error);
+        setNewName(activeProject.name);
+      }
+    }
+    setIsEditing(false);
+  };
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") handleNameSave();
+    else if (e.key === "Escape") setIsEditing(false);
   };
 
   const leftContent = (
@@ -25,8 +54,36 @@ export function EditorHeader() {
         className="font-medium tracking-tight flex items-center gap-2 hover:opacity-80 transition-opacity"
       >
         <ChevronLeft className="h-4 w-4" />
-        <span className="text-sm">{activeProject?.name}</span>
       </Link>
+      <div className="w-[14rem] h-9 flex items-center">
+        {isEditing ? (
+          <Input
+            ref={inputRef}
+            className="text-sm font-medium px-2 py-1 h-9 truncate"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            onBlur={handleNameSave}
+            onKeyDown={handleInputKeyDown}
+            onFocus={(e) => e.target.select()}
+            maxLength={64}
+            aria-label="Project name"
+            autoFocus
+          />
+        ) : (
+          <span
+            className="text-sm font-medium cursor-pointer hover:underline"
+            title="Click to rename"
+            role="button"
+            tabIndex={0}
+            onClick={handleNameClick}
+            onKeyDown={(e) => e.key === "Enter" && handleNameClick()}
+          >
+            <div className="truncate text-ellipsis overflow-clip w-40">
+              {activeProject?.name}
+            </div>
+          </span>
+        )}
+      </div>
     </div>
   );
 
@@ -62,7 +119,7 @@ export function EditorHeader() {
       leftContent={leftContent}
       centerContent={centerContent}
       rightContent={rightContent}
-      className="bg-background h-[3.2rem] px-4"
+      className="bg-background h-[3.2rem] px-4 items-center"
     />
   );
 }
