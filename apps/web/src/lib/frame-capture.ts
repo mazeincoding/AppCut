@@ -36,7 +36,8 @@ export class FrameCaptureService {
    * Get frame data for a specific frame number
    */
   getFrameData(frameNumber: number): FrameData {
-    const timestamp = frameNumber / this.options.fps;
+    // Use more precise timestamp calculation to avoid floating-point errors
+    const timestamp = Math.round((frameNumber / this.options.fps) * 1000) / 1000;
     
     // Get visible elements for this timestamp
     const elements = this.getVisibleElements(this.timelineElements, timestamp);

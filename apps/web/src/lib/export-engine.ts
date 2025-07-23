@@ -486,7 +486,7 @@ export class ExportEngine {
           
           if (mediaItem) {
             if (mediaItem.type === "video") {
-              await this.renderVideoElement(element, bounds, timestamp);
+              await this.renderVideoElement(element, bounds, timestamp, frameData);
             } else if (mediaItem.type === "image") {
               this.renderImageElement(element, bounds);
             }
@@ -508,7 +508,7 @@ export class ExportEngine {
   /**
    * Render a video element
    */
-  private async renderVideoElement(element: TimelineElement, bounds: any, timestamp: number): Promise<void> {
+  private async renderVideoElement(element: TimelineElement, bounds: any, timestamp: number, frameData?: any): Promise<void> {
 
     if (element.type !== "media") {
       console.warn("❌ Element is not media type:", element.type);
@@ -541,8 +541,10 @@ export class ExportEngine {
           // Seek to the correct time and wait for it
           await this.seekVideoToTime(preloadedVideo, elementTime);
           
-          // Small delay to ensure frame is ready after seeking
-          await new Promise(resolve => setTimeout(resolve, 16)); // ~1 frame at 60fps
+          // Longer delay for initial frames to ensure video decoder is ready
+          const isEarlyFrame = frameData.frameNumber < 5;
+          const delayMs = isEarlyFrame ? 50 : 16; // Extra delay for first 5 frames
+          await new Promise(resolve => setTimeout(resolve, delayMs));
           
           // Draw the video frame
           this.renderer.drawImage(preloadedVideo, bounds.x, bounds.y, bounds.width, bounds.height);
@@ -680,7 +682,8 @@ export class ExportEngine {
       const onLoadedData = () => {
         if (resolved) return;
         // Sometimes seeked event doesn't fire, but loadeddata means we have the frame
-        if (Math.abs(video.currentTime - time) < 0.05) {
+        // Use much tighter tolerance for frame precision (1 frame at 60fps = ~0.016s)
+        if (Math.abs(video.currentTime - time) < 0.016) {
           resolved = true;
           console.log(`✅ Video loaded data at ${time}s (via loadeddata), actualTime: ${video.currentTime}`);
           cleanup();
@@ -710,10 +713,19 @@ export class ExportEngine {
       
       const timeoutId = setTimeout(onTimeout, 1000); // 1 second timeout
       
+      // Check if we're already very close to the target time
+      if (Math.abs(video.currentTime - time) < 0.008) { // Half frame at 60fps
+        console.log(`✅ Video already at ${time}s, skipping seek`);
+        resolved = true;
+        cleanup();
+        resolve();
+        return;
+      }
+      
       // Set the time - this triggers seeking
       video.currentTime = time;
       
-      // Always force seeking for better frame accuracy, don't assume "already at correct time"
+      // Always force seeking for better frame accuracy
       // This ensures we get the exact frame for the timestamp
     });
   }
