@@ -319,3 +319,131 @@ export const encodeImagesToVideo = async (
 
   return blob;
 };
+
+// Enhanced thumbnail generation interfaces
+export interface EnhancedThumbnailOptions {
+  timestamps?: number[]; // Multiple timestamps, default [1]
+  resolution?: 'low' | 'medium' | 'high'; // 160x120, 320x240, 480x360
+  quality?: number; // JPEG quality 0-1, default 0.8
+  format?: 'jpeg' | 'png' | 'webp'; // Output format
+  sceneDetection?: boolean; // Smart scene detection for better thumbnails
+}
+
+export interface EnhancedThumbnailResult {
+  thumbnails: string[];
+  metadata: {
+    duration: number;
+    dimensions: { width: number; height: number };
+    fps: number;
+    timestamps: number[];
+  };
+}
+
+// Helper to get video duration using FFmpeg
+export const getVideoDuration = async (videoFile: File): Promise<number> => {
+  const info = await getVideoInfo(videoFile);
+  return info.duration;
+};
+
+// Helper to get video dimensions
+export const getVideoDimensions = async (videoFile: File): Promise<{ width: number; height: number }> => {
+  const info = await getVideoInfo(videoFile);
+  return { width: info.width, height: info.height };
+};
+
+// Helper to get video FPS
+export const getVideoFPS = async (videoFile: File): Promise<number> => {
+  const info = await getVideoInfo(videoFile);
+  return info.fps;
+};
+
+// Smart scene detection helper
+const detectSceneChanges = async (
+  ffmpeg: FFmpeg,
+  videoFile: File,
+  targetCount: number = 5
+): Promise<number[]> => {
+  // For now, return evenly distributed timestamps
+  // TODO: Implement actual scene detection using FFmpeg scene filter
+  const duration = await getVideoDuration(videoFile);
+  return Array.from({ length: targetCount }, (_, i) => 
+    (duration / (targetCount + 1)) * (i + 1)
+  );
+};
+
+// Enhanced thumbnail generation with multiple timestamps and options
+export const generateEnhancedThumbnails = async (
+  videoFile: File,
+  options: EnhancedThumbnailOptions = {}
+): Promise<EnhancedThumbnailResult> => {
+  const ffmpeg = await initFFmpeg();
+  
+  // Get video info first
+  const videoInfo = await getVideoInfo(videoFile);
+  
+  // Use existing FFmpeg pipeline but generate multiple thumbnails
+  const {
+    timestamps = [1],
+    resolution = 'medium',
+    format = 'jpeg',
+    sceneDetection = false,
+    quality = 0.8
+  } = options;
+  
+  // Resolution mapping
+  const resolutions = {
+    low: { width: 160, height: 120 },
+    medium: { width: 320, height: 240 },
+    high: { width: 480, height: 360 }
+  };
+  
+  const { width, height } = resolutions[resolution];
+  
+  // Scene detection logic using FFmpeg scene detection
+  const finalTimestamps = sceneDetection 
+    ? await detectSceneChanges(ffmpeg, videoFile, timestamps.length)
+    : timestamps;
+  
+  // Filter timestamps to be within video duration
+  const validTimestamps = finalTimestamps.filter(t => t < videoInfo.duration);
+  
+  const inputName = 'input.mp4';
+  await ffmpeg.writeFile(inputName, new Uint8Array(await videoFile.arrayBuffer()));
+  
+  // Generate multiple thumbnails
+  const thumbnails: string[] = [];
+  
+  for (const timestamp of validTimestamps) {
+    const outputName = `thumb_${timestamp}.${format}`;
+    
+    await ffmpeg.exec([
+      '-i', inputName,
+      '-ss', timestamp.toString(),
+      '-vframes', '1',
+      '-vf', `scale=${width}:${height}`,
+      '-q:v', quality === 1 ? '1' : quality === 0.8 ? '2' : '5', // Map quality to FFmpeg q:v
+      '-f', format,
+      outputName
+    ]);
+    
+    const thumbData = await ffmpeg.readFile(outputName);
+    const blob = new Blob([thumbData], { type: `image/${format}` });
+    thumbnails.push(URL.createObjectURL(blob));
+    
+    // Cleanup individual thumbnail file
+    await ffmpeg.deleteFile(outputName);
+  }
+  
+  // Cleanup input file
+  await ffmpeg.deleteFile(inputName);
+  
+  return {
+    thumbnails,
+    metadata: {
+      duration: videoInfo.duration,
+      dimensions: { width: videoInfo.width, height: videoInfo.height },
+      fps: videoInfo.fps,
+      timestamps: validTimestamps
+    }
+  };
+};

@@ -50,8 +50,11 @@ export async function processMediaFiles(
           height = videoInfo.height;
           fps = videoInfo.fps;
 
-          // Generate thumbnail using FFmpeg
+          // Generate basic thumbnail for initial display
           thumbnailUrl = await generateThumbnail(file, 1);
+          
+          // Note: Enhanced thumbnails will be generated after the item is added to the store
+          // This allows for immediate display while enhanced thumbnails are generated in background
         } catch (error) {
           console.warn(
             "FFmpeg processing failed, falling back to basic processing:",

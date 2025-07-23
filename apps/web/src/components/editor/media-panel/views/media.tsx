@@ -3,7 +3,7 @@
 import { useDragDrop } from "@/hooks/use-drag-drop";
 import { processMediaFiles } from "@/lib/media-processing";
 import { useMediaStore, type MediaItem } from "@/stores/media-store";
-import { Image, Music, Plus, Upload, Video } from "lucide-react";
+import { Image, Music, Plus, Upload, Video, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -29,8 +29,204 @@ import { useAdjustmentStore } from "@/stores/adjustment-store";
 import { useMediaPanelStore } from "../store";
 import { ExportAllButton } from "../export-all-button";
 
+// Enhanced video preview component with hover scrubbing
+const EnhancedVideoPreview = ({ item }: { item: MediaItem }) => {
+  const [currentThumbnail, setCurrentThumbnail] = useState(item.thumbnailUrl);
+  const [isHovering, setIsHovering] = useState(false);
+  const [scrubPosition, setScrubPosition] = useState(0);
+  const { getThumbnailAtTime, generateEnhancedThumbnails } = useMediaStore();
+
+  // Handle thumbnail scrubbing on hover
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isHovering || !item.duration || !item.thumbnails) return;
+    
+    const rect = e.currentTarget.getBoundingClientRect();
+    const position = (e.clientX - rect.left) / rect.width;
+    const timestamp = position * item.duration;
+    
+    const thumbnail = getThumbnailAtTime(item.id, timestamp);
+    if (thumbnail) {
+      setCurrentThumbnail(thumbnail);
+      setScrubPosition(position);
+    }
+  };
+
+  // Reset to primary thumbnail when not hovering
+  const handleMouseLeave = () => {
+    setIsHovering(false);
+    setCurrentThumbnail(item.thumbnailUrl);
+    setScrubPosition(0);
+  };
+
+  // Generate enhanced thumbnails if not available
+  useEffect(() => {
+    if (item.type === 'video' && !item.thumbnails && !item.thumbnailError) {
+      generateEnhancedThumbnails(item.id, {
+        resolution: 'medium',
+        sceneDetection: true
+      });
+    }
+  }, [item.id, item.type, item.thumbnails, item.thumbnailError, generateEnhancedThumbnails]);
+
+  if (item.thumbnailError) {
+    return (
+      <div className="relative w-full h-full bg-muted flex items-center justify-center rounded">
+        <Video className="h-8 w-8 text-muted-foreground" />
+        <div className="absolute bottom-1 left-1 text-xs text-red-500">
+          Thumbnail failed
+        </div>
+      </div>
+    );
+  }
+
+  if (!item.thumbnailUrl) {
+    return (
+      <div className="w-full h-full bg-gradient-to-br from-blue-500/30 to-purple-500/30 flex flex-col items-center justify-center text-white rounded border border-blue-500/20">
+        <Video className="h-8 w-8 mb-1 drop-shadow-sm" />
+        <span className="text-xs font-medium">Video</span>
+        {item.duration && (
+          <span className="text-xs opacity-80 bg-black/30 px-1 rounded mt-1">
+            {formatDuration(item.duration)}
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div 
+      className="relative w-full h-full cursor-pointer group"
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={handleMouseLeave}
+    >
+      {/* Enhanced thumbnail display */}
+      <img 
+        src={currentThumbnail || item.thumbnailUrl} 
+        className="w-full h-full object-cover rounded transition-all duration-150" 
+        alt={`Thumbnail for ${item.name}`}
+        loading="lazy"
+      />
+      
+      {/* Existing gradient and video icon */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-transparent rounded"></div>
+      <div className="absolute top-1 right-1">
+        <Video className="h-4 w-4 text-white drop-shadow-md bg-black/50 rounded p-0.5" />
+      </div>
+      
+      {/* Enhanced duration badge */}
+      {item.duration && (
+        <div className="absolute bottom-1 right-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs px-1.5 py-0.5 rounded font-medium">
+          {formatDuration(item.duration)}
+        </div>
+      )}
+      
+      {/* File name */}
+      <div className="absolute bottom-1 left-1 text-white text-xs font-medium drop-shadow-sm bg-black/50 px-1.5 py-0.5 rounded truncate max-w-[80%]">
+        {item.name.replace(/\.[^/.]+$/, '')}
+      </div>
+      
+      {/* NEW: Scrub position indicator */}
+      {isHovering && item.thumbnails && (
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/20">
+          <div 
+            className="h-full bg-white/80 transition-all duration-75"
+            style={{ width: `${scrubPosition * 100}%` }}
+          />
+        </div>
+      )}
+      
+      {/* NEW: Quality indicator */}
+      {item.thumbnailMetadata?.sceneDetected && (
+        <div className="absolute top-1 left-1 bg-green-500/80 text-white text-xs px-1 py-0.5 rounded">
+          HD
+        </div>
+      )}
+      
+      {/* NEW: Multiple thumbnails indicator */}
+      {item.thumbnails && item.thumbnails.length > 1 && (
+        <div className="absolute top-8 left-1 bg-blue-500/80 text-white text-xs px-1 py-0.5 rounded">
+          {item.thumbnails.length}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Helper function for formatting duration
+const formatDuration = (duration: number) => {
+  // Format seconds as mm:ss
+  const min = Math.floor(duration / 60);
+  const sec = Math.floor(duration % 60);
+  return `${min}:${sec.toString().padStart(2, "0")}`;
+};
+
+// Thumbnail quality controls component
+const ThumbnailControls = () => {
+  const { mediaItems, generateEnhancedThumbnails, clearThumbnailCache } = useMediaStore();
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleRegenerateAll = async (quality: 'low' | 'medium' | 'high') => {
+    setIsGenerating(true);
+    const videoItems = mediaItems.filter(item => item.type === 'video');
+    
+    for (const item of videoItems) {
+      await generateEnhancedThumbnails(item.id, {
+        resolution: quality,
+        sceneDetection: true,
+        timestamps: quality === 'high' ? [1, 5, 10, 15, 20] : [1, 5, 10]
+      });
+    }
+    
+    setIsGenerating(false);
+  };
+
+  if (!mediaItems.some(item => item.type === 'video')) {
+    return null;
+  }
+
+  return (
+    <div className="flex gap-2 mb-2 p-2 bg-muted rounded-lg">
+      <div className="flex gap-1">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => handleRegenerateAll('low')}
+          disabled={isGenerating}
+        >
+          {isGenerating ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Low'}
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => handleRegenerateAll('medium')}
+          disabled={isGenerating}
+        >
+          Medium
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => handleRegenerateAll('high')}
+          disabled={isGenerating}
+        >
+          High
+        </Button>
+      </div>
+      
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={clearThumbnailCache}
+      >
+        Clear Cache
+      </Button>
+    </div>
+  );
+};
+
 export function MediaView() {
-  const { mediaItems, addMediaItem, removeMediaItem } = useMediaStore();
+  const { mediaItems, addMediaItem, removeMediaItem, generateEnhancedThumbnails, getThumbnailAtTime, clearThumbnailCache } = useMediaStore();
   const { activeProject } = useProjectStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -55,6 +251,20 @@ export function MediaView() {
       // Add each processed media item to the store
       for (const item of processedItems) {
         await addMediaItem(activeProject.id, item);
+        
+        // Generate enhanced thumbnails for videos in the background
+        if (item.type === 'video') {
+          // Get the newly added item with its ID
+          const addedItem = useMediaStore.getState().mediaItems.find(
+            media => media.file === item.file && media.name === item.name
+          );
+          if (addedItem) {
+            generateEnhancedThumbnails(addedItem.id, {
+              resolution: 'medium',
+              sceneDetection: true
+            });
+          }
+        }
       }
     } catch (error) {
       // Show error toast if processing fails
@@ -94,12 +304,6 @@ export function MediaView() {
     await removeMediaItem(activeProject.id, id);
   };
 
-  const formatDuration = (duration: number) => {
-    // Format seconds as mm:ss
-    const min = Math.floor(duration / 60);
-    const sec = Math.floor(duration % 60);
-    return `${min}:${sec.toString().padStart(2, "0")}`;
-  };
 
   const [filteredMediaItems, setFilteredMediaItems] = useState(mediaItems);
 
@@ -138,41 +342,7 @@ export function MediaView() {
     }
 
     if (item.type === "video") {
-      if (item.thumbnailUrl) {
-        return (
-          <div className="relative w-full h-full">
-            <img
-              src={item.thumbnailUrl}
-              alt={item.name}
-              className="w-full h-full object-cover rounded"
-              loading="lazy"
-            />
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-transparent rounded"></div>
-            <div className="absolute top-1 right-1">
-              <Video className="h-4 w-4 text-white drop-shadow-md bg-black/50 rounded p-0.5" />
-            </div>
-            {item.duration && (
-              <div className="absolute bottom-1 right-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs px-1.5 py-0.5 rounded font-medium">
-                {formatDuration(item.duration)}
-              </div>
-            )}
-            <div className="absolute bottom-1 left-1 text-white text-xs font-medium drop-shadow-sm bg-black/50 px-1.5 py-0.5 rounded truncate max-w-[80%]">
-              {item.name.replace(/\.[^/.]+$/, '')}
-            </div>
-          </div>
-        );
-      }
-      return (
-        <div className="w-full h-full bg-gradient-to-br from-blue-500/30 to-purple-500/30 flex flex-col items-center justify-center text-white rounded border border-blue-500/20">
-          <Video className="h-8 w-8 mb-1 drop-shadow-sm" />
-          <span className="text-xs font-medium">Video</span>
-          {item.duration && (
-            <span className="text-xs opacity-80 bg-black/30 px-1 rounded mt-1">
-              {formatDuration(item.duration)}
-            </span>
-          )}
-        </div>
-      );
+      return <EnhancedVideoPreview item={item} />;
     }
 
     if (item.type === "audio") {
@@ -215,6 +385,9 @@ export function MediaView() {
       >
         {/* Show overlay when dragging files over the panel */}
         <DragOverlay isVisible={isDragOver} />
+
+        {/* Thumbnail quality controls */}
+        <ThumbnailControls />
 
         <div className="px-3 pt-1 pb-2">
           {/* Button to add/upload media */}
@@ -316,8 +489,10 @@ export function MediaView() {
                           // Set the image in adjustment store
                           const imageUrl = item.url && item.url.startsWith('blob:') 
                             ? item.url 
-                            : URL.createObjectURL(item.file);
-                          adjustmentStore.setOriginalImage(item.file, imageUrl);
+                            : item.file ? URL.createObjectURL(item.file) : '';
+                          if (item.file && imageUrl) {
+                            adjustmentStore.setOriginalImage(item.file, imageUrl);
+                          }
                           
                           // Navigate to adjustment tab
                           mediaPanelStore.setActiveTab('adjustment');

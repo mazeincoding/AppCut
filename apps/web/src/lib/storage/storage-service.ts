@@ -156,15 +156,17 @@ class StorageService {
       this.getProjectMediaAdapters(projectId);
 
     // Save file to project-specific OPFS
-    await mediaFilesAdapter.set(mediaItem.id, mediaItem.file);
+    if (mediaItem.file) {
+      await mediaFilesAdapter.set(mediaItem.id, mediaItem.file);
+    }
 
     // Save metadata to project-specific IndexedDB
     const metadata: MediaFileData = {
       id: mediaItem.id,
       name: mediaItem.name,
       type: mediaItem.type,
-      size: mediaItem.file.size,
-      lastModified: mediaItem.file.lastModified,
+      size: mediaItem.file?.size || 0,
+      lastModified: mediaItem.file?.lastModified || Date.now(),
       width: mediaItem.width,
       height: mediaItem.height,
       duration: mediaItem.duration,

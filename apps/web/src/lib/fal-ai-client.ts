@@ -77,7 +77,7 @@ class FalAIClient {
         if (typeof errorData.detail === 'string') {
           errorMessage = errorData.detail;
         } else if (Array.isArray(errorData.detail)) {
-          errorMessage = errorData.detail.map(d => d.msg || JSON.stringify(d)).join(', ');
+          errorMessage = errorData.detail.map((d: any) => d.msg || JSON.stringify(d)).join(', ');
         } else {
           errorMessage = JSON.stringify(errorData.detail, null, 2);
         }

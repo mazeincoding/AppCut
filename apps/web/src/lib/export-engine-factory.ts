@@ -115,15 +115,7 @@ export class ExportEngineFactory {
         console.log(`⚡ Parallel engine: ${memorySettings.parallelEncoders} encoders, ${memoryStatus.availableGB.toFixed(1)}GB available`);
         
         const parallelEngine = new ParallelExportEngine({
-          ...options,
-          // Pass memory monitor for runtime memory management
-          memoryMonitor: this.memoryMonitor,
-          // Apply memory-optimized settings
-          parallelSettings: {
-            ...memorySettings,
-            batchSize: Math.min(memorySettings.parallelEncoders * 2, 16),
-            maxMemoryUsage: memoryStatus.availableGB * 0.4 // Use 40% of available memory
-          }
+          ...options
         });
 
         return parallelEngine;

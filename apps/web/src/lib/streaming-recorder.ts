@@ -129,7 +129,7 @@ export class StreamingRecorder {
       console.log('🎬 Starting streaming recorder...');
       
       // Check memory before starting
-      await this.memoryMonitor.checkMemoryConstraints();
+      await this.memoryMonitor.checkMemoryDuringExport(0);
       
       // Set up MediaRecorder stream
       const stream = this.canvas.captureStream(this.fps);
@@ -156,7 +156,7 @@ export class StreamingRecorder {
       
     } catch (error) {
       console.error('❌ Failed to start streaming recorder:', error);
-      throw new Error(`Recording initialization failed: ${error.message}`);
+      throw new Error(`Recording initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -236,7 +236,7 @@ export class StreamingRecorder {
     try {
       // Check memory constraints before processing frame
       if (Date.now() - this.lastMemoryCheck > this.memoryCheckInterval) {
-        await this.memoryMonitor.checkMemoryConstraints();
+        await this.memoryMonitor.checkMemoryDuringExport(this.framesProcessed);
         this.lastMemoryCheck = Date.now();
       }
 

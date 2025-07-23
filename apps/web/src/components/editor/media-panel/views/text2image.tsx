@@ -281,7 +281,7 @@ export function Text2ImageView() {
                 {generationMode === "single" ? "Generated Image" : "Compare Results"}
               </CardTitle>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={clearResults}
                 className="text-xs"
@@ -317,7 +317,7 @@ export function Text2ImageView() {
                             modelKey,
                             imageUrl: result.imageUrl!,
                             prompt,
-                            settings: { imageSize, seed }
+                            settings: { imageSize, seed: seed ? parseInt(seed) : undefined }
                           }])}
                           className="w-full"
                           variant="outline"
@@ -353,7 +353,7 @@ export function Text2ImageView() {
                                 modelKey,
                                 imageUrl: result.imageUrl!,
                                 prompt,
-                                settings: { imageSize, seed }
+                                settings: { imageSize, seed: seed ? parseInt(seed) : undefined }
                               })}
                             />
                           )}
@@ -377,7 +377,7 @@ export function Text2ImageView() {
                               modelKey,
                               imageUrl: result.imageUrl!,
                               prompt,
-                              settings: { imageSize, seed }
+                              settings: { imageSize, seed: seed ? parseInt(seed) : undefined }
                             })}
                           />
                         )}

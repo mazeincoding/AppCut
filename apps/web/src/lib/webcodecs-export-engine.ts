@@ -51,7 +51,7 @@ export class WebCodecsExportEngine extends ExportEngine {
       qualityLevel: 'medium'
     };
 
-    this.log('🚀 WebCodecs export engine initialized');
+    console.log('🚀 WebCodecs export engine initialized');
   }
 
   /**
@@ -63,18 +63,18 @@ export class WebCodecsExportEngine extends ExportEngine {
       // SAFETY: Always check compatibility with graceful fallback
       const webCodecsAvailable = await WebCodecsCompatibility.safeWebCodecsCheck();
       if (!webCodecsAvailable) {
-        this.log('WebCodecs not available, will use existing export engine');
+        console.log('WebCodecs not available, will use existing export engine');
         throw new Error('FALLBACK_TO_EXISTING_ENGINE');
       }
 
       const supportDetails = await WebCodecsCompatibility.checkSupport();
       if (!supportDetails.supported) {
-        this.log('WebCodecs supported but no compatible codecs found');
+        console.log('WebCodecs supported but no compatible codecs found');
         throw new Error('FALLBACK_TO_EXISTING_ENGINE');
       }
 
-      this.log('WebCodecs supported codecs:', supportDetails.codecs);
-      this.log('Hardware acceleration:', supportDetails.hardwareAcceleration);
+      console.log('WebCodecs supported codecs:', supportDetails.codecs);
+      console.log('Hardware acceleration:', supportDetails.hardwareAcceleration);
 
       // Choose best codec (prefer hardware-accelerated H.264)
       const preferredCodec = await WebCodecsCompatibility.getBestCodec();
@@ -86,12 +86,12 @@ export class WebCodecsExportEngine extends ExportEngine {
       await this.initializeMuxer(preferredCodec);
       await this.initializeEncoder(preferredCodec);
 
-      this.log('✅ WebCodecs initialization successful');
+      console.log('✅ WebCodecs initialization successful');
     } catch (error) {
-      if (error.message === 'FALLBACK_TO_EXISTING_ENGINE') {
+      if (error instanceof Error && error.message === 'FALLBACK_TO_EXISTING_ENGINE') {
         throw error;
       }
-      this.log('WebCodecs initialization failed:', error);
+      console.log('WebCodecs initialization failed:', error);
       throw new Error('FALLBACK_TO_EXISTING_ENGINE');
     }
   }
@@ -102,26 +102,24 @@ export class WebCodecsExportEngine extends ExportEngine {
   private async initializeMuxer(codec: string): Promise<void> {
     try {
       // SAFETY: Dynamic import to prevent breaking if mp4-muxer not available
-      const { Mp4Muxer, ArrayBufferTarget } = await import('mp4-muxer');
+      const { Muxer, ArrayBufferTarget } = await import('mp4-muxer');
       
       const muxerTarget = new ArrayBufferTarget();
-      this.muxer = new Mp4Muxer({
+      this.muxer = new Muxer({
         target: muxerTarget,
         video: {
-          codec,
+          codec: codec as "vp9" | "av1" | "hevc" | "avc",
           width: this.settings.width,
           height: this.settings.height,
-          frameRate: this.fps
+          // frameRate: this.fps // Not supported by mp4-muxer VideoOptions
         },
-        fastStart: 'in-memory',
-        // Memory optimization for 8GB limit
-        chunkSize: 1024 * 1024, // 1MB chunks to avoid memory spikes
-        maxBufferSize: this.webCodecsSettings.bufferSize
+        fastStart: 'in-memory'
+        // Note: chunkSize and maxBufferSize not supported by mp4-muxer
       });
 
-      this.log('📦 MP4 muxer initialized with', this.webCodecsSettings.bufferSize / (1024 * 1024), 'MB buffer');
+      console.log('📦 MP4 muxer initialized with', this.webCodecsSettings.bufferSize / (1024 * 1024), 'MB buffer');
     } catch (error) {
-      this.log('Failed to initialize muxer:', error);
+      console.log('Failed to initialize muxer:', error);
       throw error;
     }
   }
@@ -135,7 +133,7 @@ export class WebCodecsExportEngine extends ExportEngine {
         this.handleEncodedChunk(chunk, metadata);
       },
       error: (error: Error) => {
-        this.log('WebCodecs encoder error:', error);
+        console.log('WebCodecs encoder error:', error);
         this.onError?.(error.message);
       }
     });
@@ -147,7 +145,7 @@ export class WebCodecsExportEngine extends ExportEngine {
       height: this.settings.height,
       bitrate: this.webCodecsSettings.bitrate,
       framerate: this.fps,
-      keyFrameInterval: this.webCodecsSettings.keyFrameInterval,
+      // keyFrameInterval: this.webCodecsSettings.keyFrameInterval, // Not supported by VideoEncoderConfig
       latencyMode: 'quality',
       hardwareAcceleration: this.webCodecsSettings.type === 'hardware' ? 'prefer-hardware' : 'prefer-software'
     };
@@ -159,7 +157,7 @@ export class WebCodecsExportEngine extends ExportEngine {
 
     this.encoder.configure(config);
     this.isEncoding = true;
-    this.log('🎬 WebCodecs encoder configured:', config);
+    console.log('🎬 WebCodecs encoder configured:', config);
   }
 
   /**
@@ -172,7 +170,7 @@ export class WebCodecsExportEngine extends ExportEngine {
       // Add chunk to muxer
       this.muxer.addVideoChunk(chunk, metadata);
     } catch (error) {
-      this.log('Error adding chunk to muxer:', error);
+      console.log('Error adding chunk to muxer:', error);
       this.onError?.(`Muxing error: ${error}`);
     }
   }
@@ -223,7 +221,7 @@ export class WebCodecsExportEngine extends ExportEngine {
       throw new Error('WebCodecs components not initialized');
     }
 
-    this.log('🎬 Finalizing WebCodecs export...');
+    console.log('🎬 Finalizing WebCodecs export...');
 
     // Flush remaining frames
     await this.encoder.flush();
@@ -252,7 +250,7 @@ export class WebCodecsExportEngine extends ExportEngine {
       this.onProgress?.(5, 'WebCodecs encoder initialized');
 
       const totalFrames = this.captureService.getTotalFrames();
-      this.log(`🚀 Starting WebCodecs export: ${totalFrames} frames`);
+      console.log(`🚀 Starting WebCodecs export: ${totalFrames} frames`);
 
       // Start encoding - implements "Start WebCodecs Export" from mermaid
       for (let i = 0; i < totalFrames; i++) {
@@ -276,7 +274,7 @@ export class WebCodecsExportEngine extends ExportEngine {
       return videoBlob;
 
     } catch (error) {
-      this.log('WebCodecs export failed:', error);
+      console.log('WebCodecs export failed:', error);
       
       // SAFETY: Clean up WebCodecs resources (implements "Cleanup WebCodecs" from mermaid)
       try {
@@ -290,12 +288,12 @@ export class WebCodecsExportEngine extends ExportEngine {
         // Clear memory caches
         await this.memoryMonitor.optimizeMemoryUsage();
       } catch (cleanupError) {
-        this.log('WebCodecs cleanup error (non-critical):', cleanupError);
+        console.log('WebCodecs cleanup error (non-critical):', cleanupError);
       }
       
       // SAFETY: Always fall back to existing optimized export engine
       // Implements "Auto Fallback to Optimized" from mermaid diagram
-      this.log('🔄 Falling back to existing optimized export engine');
+      console.log('🔄 Falling back to existing optimized export engine');
       this.onProgress?.(0, 'Switching to optimized export engine...');
       
       // Call parent class (existing optimized engine) method
@@ -314,7 +312,7 @@ export class WebCodecsExportEngine extends ExportEngine {
       try {
         this.encoder.close();
       } catch (error) {
-        this.log('Error closing encoder during cancel:', error);
+        console.log('Error closing encoder during cancel:', error);
       }
     }
     

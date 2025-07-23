@@ -32,18 +32,18 @@ export interface ExportEngineOptions {
 }
 
 export class ExportEngine {
-  private canvas: HTMLCanvasElement;
-  private settings: ExportSettings;
-  private timelineElements: TimelineElement[];
-    private mediaItems: MediaItem[];
-  private duration: number;
-  private fps: number;
-  private onProgress?: (progress: number, status: string) => void;
+  protected canvas: HTMLCanvasElement;
+  protected settings: ExportSettings;
+  protected timelineElements: TimelineElement[];
+  protected mediaItems: MediaItem[];
+  protected duration: number;
+  protected fps: number;
+  protected onProgress?: (progress: number, status: string) => void;
   private onError?: (error: string) => void;
 
   private renderer: CanvasRenderer;
   private captureService: FrameCaptureService;
-  private recorder: VideoRecorder | FFmpegVideoRecorder;
+  protected recorder: VideoRecorder | FFmpegVideoRecorder;
   private audioMixer: AudioMixer;
   private isExporting = false;
   private shouldCancel = false;
@@ -466,7 +466,7 @@ export class ExportEngine {
   /**
    * Render a single timeline element
    */
-  private async renderElement(element: TimelineElement, timestamp: number): Promise<void> {
+  protected async renderElement(element: TimelineElement, timestamp: number): Promise<void> {
 
     const bounds = this.captureService.calculateElementBounds(
       element,
@@ -748,7 +748,7 @@ export class ExportEngine {
     try {
       // Create image element from media item
       const imageElement = document.createElement("img");
-      imageElement.src = mediaItem.url || URL.createObjectURL(mediaItem.file);
+      imageElement.src = mediaItem.url || (mediaItem.file ? URL.createObjectURL(mediaItem.file) : '');
       
       console.log("🖼️ Image element created:", {
         src: imageElement.src,

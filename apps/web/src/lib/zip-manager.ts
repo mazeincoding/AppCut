@@ -31,7 +31,9 @@ export class ZipManager {
         const filename = this.resolveFilename(item.name)
         
         // Add file to ZIP directly
-        this.zip.file(filename, item.file)
+        if (item.file) {
+          this.zip.file(filename, item.file)
+        }
         
         completed++
         onProgress?.(completed / total)

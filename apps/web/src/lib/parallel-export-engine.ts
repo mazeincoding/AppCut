@@ -106,7 +106,7 @@ export class ParallelExportEngine extends ExportEngine {
       canvas.height = this.canvas.height;
       
       // Create dedicated renderer for this canvas
-      const renderer = new CanvasRenderer(canvas);
+      const renderer = new CanvasRenderer(canvas, this.settings);
       
       this.canvasPool.push(canvas);
       this.rendererPool.push(renderer);
@@ -130,14 +130,14 @@ export class ParallelExportEngine extends ExportEngine {
       console.log(`📊 Exporting ${totalFrames} frames at ${this.fps}fps`);
       
       // Start recorder
-      await this.startRecording();
+      await this.recorder.startRecording();
       
       // Process frames in parallel batches
       const startTime = Date.now();
       await this.processFramesInParallel(totalFrames);
       
       // Finalize recording
-      const blob = await this.finishRecording();
+      const blob = await this.recorder.stopRecording();
       
       const exportTime = (Date.now() - startTime) / 1000;
       console.log(`✅ Parallel export completed in ${exportTime.toFixed(1)}s`);
@@ -162,7 +162,7 @@ export class ParallelExportEngine extends ExportEngine {
     
     while (processedFrames < totalFrames) {
       // Check memory before processing each batch
-      await this.memoryMonitor.checkMemoryConstraints();
+      await this.memoryMonitor.checkMemoryDuringExport(processedFrames);
       
       // Calculate batch range
       const batchStart = processedFrames;
@@ -227,8 +227,12 @@ export class ParallelExportEngine extends ExportEngine {
       
       // Render all timeline elements at current timestamp
       for (const element of this.timelineElements) {
-        if (this.isElementVisibleAtTime(element, timestamp)) {
-          await renderer.renderElement(element, timestamp, this.mediaItems);
+        // Check if element is visible at this timestamp
+        const elementStart = element.startTime;
+        const elementEnd = element.startTime + element.duration - (element.trimStart || 0) - (element.trimEnd || 0);
+        
+        if (timestamp >= elementStart && timestamp <= elementEnd) {
+          await this.renderElement(element, timestamp);
         }
       }
       
@@ -313,12 +317,6 @@ export class ParallelExportEngine extends ExportEngine {
     }
   }
 
-  /**
-   * Check if timeline element is visible at given timestamp
-   */
-  private isElementVisibleAtTime(element: TimelineElement, timestamp: number): boolean {
-    return timestamp >= element.startTime && timestamp < element.endTime;
-  }
 
   /**
    * Cleanup resources
@@ -334,8 +332,7 @@ export class ParallelExportEngine extends ExportEngine {
       this.canvasPool.length = 0;
       this.rendererPool.length = 0;
       
-      // Call parent cleanup
-      await super.cleanup?.();
+      // Parent class doesn't have cleanup method
       
       // Force memory cleanup
       await this.memoryMonitor.optimizeMemoryUsage();

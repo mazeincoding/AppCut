@@ -2,6 +2,8 @@ import { create } from "zustand";
 import { storageService } from "@/lib/storage/storage-service";
 import { useTimelineStore } from "./timeline-store";
 import { generateUUID } from "@/lib/utils";
+import { generateEnhancedThumbnails, type EnhancedThumbnailOptions } from "@/lib/ffmpeg-utils";
+import { thumbnailCache } from "@/lib/thumbnail-cache";
 
 export type MediaType = "image" | "video" | "audio";
 
@@ -32,6 +34,16 @@ export interface MediaItem {
     settings?: any;
     generatedAt?: Date;
   };
+  // Enhanced thumbnail properties
+  thumbnails?: string[]; // Multiple thumbnail URLs for scrubbing
+  thumbnailTimestamps?: number[]; // Timestamps for each thumbnail
+  thumbnailResolution?: 'low' | 'medium' | 'high'; // Current quality level
+  thumbnailError?: string; // Error message if generation failed
+  thumbnailMetadata?: {
+    sceneDetected?: boolean;
+    generatedAt: number;
+    cacheSize: number;
+  };
 }
 
 interface MediaStore {
@@ -50,6 +62,12 @@ interface MediaStore {
   
   // Generated image actions
   addGeneratedImages: (items: Array<Omit<MediaItem, "id">>) => void;
+  
+  // Enhanced thumbnail methods
+  generateEnhancedThumbnails: (mediaId: string, options?: EnhancedThumbnailOptions) => Promise<void>;
+  getThumbnailAtTime: (mediaId: string, timestamp: number) => string | null;
+  setThumbnailQuality: (mediaId: string, quality: 'low' | 'medium' | 'high') => Promise<void>;
+  clearThumbnailCache: () => void;
 }
 
 // Helper function to determine file type
@@ -294,5 +312,109 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     }));
 
     console.log(`Added ${newItems.length} generated images to media panel`);
+  },
+
+  generateEnhancedThumbnails: async (mediaId, options = {}) => {
+    const item = get().mediaItems.find(item => item.id === mediaId);
+    if (!item || !item.file || item.type !== 'video') return;
+    
+    try {
+      // Default options for enhanced thumbnails
+      const defaultOptions: EnhancedThumbnailOptions = {
+        resolution: options.resolution || 'medium',
+        timestamps: options.timestamps || [
+          1,
+          item.duration ? item.duration * 0.25 : 5,
+          item.duration ? item.duration * 0.5 : 10,
+          item.duration ? item.duration * 0.75 : 15
+        ].filter(t => !item.duration || t < item.duration),
+        sceneDetection: options.sceneDetection ?? true,
+        quality: options.quality || 0.8,
+        format: options.format || 'jpeg'
+      };
+
+      const { thumbnails, metadata } = await generateEnhancedThumbnails(item.file, defaultOptions);
+      
+      // Cache thumbnails
+      for (let i = 0; i < thumbnails.length; i++) {
+        await thumbnailCache.cacheThumbnail(
+          mediaId,
+          metadata.timestamps[i],
+          thumbnails[i],
+          defaultOptions.resolution!
+        );
+      }
+      
+      set((state) => ({
+        mediaItems: state.mediaItems.map(existing => 
+          existing.id === mediaId 
+            ? { 
+                ...existing, 
+                thumbnails,
+                thumbnailTimestamps: metadata.timestamps,
+                thumbnailUrl: thumbnails[0], // Set first as primary
+                thumbnailError: undefined,
+                thumbnailResolution: defaultOptions.resolution,
+                thumbnailMetadata: {
+                  sceneDetected: defaultOptions.sceneDetection || false,
+                  generatedAt: Date.now(),
+                  cacheSize: thumbnails.length
+                }
+              }
+            : existing
+        )
+      }));
+    } catch (error) {
+      console.error('Failed to generate enhanced thumbnails:', error);
+      set((state) => ({
+        mediaItems: state.mediaItems.map(existing => 
+          existing.id === mediaId 
+            ? { ...existing, thumbnailError: error instanceof Error ? error.message : 'Unknown error' }
+            : existing
+        )
+      }));
+    }
+  },
+
+  getThumbnailAtTime: (mediaId, timestamp) => {
+    const item = get().mediaItems.find(item => item.id === mediaId);
+    if (!item?.thumbnails || !item?.thumbnailTimestamps) {
+      // Try to get from cache
+      return thumbnailCache.getClosestThumbnail(mediaId, timestamp);
+    }
+    
+    // Find closest thumbnail to requested timestamp
+    let closestIndex = 0;
+    let minDiff = Math.abs(item.thumbnailTimestamps[0] - timestamp);
+    
+    for (let i = 1; i < item.thumbnailTimestamps.length; i++) {
+      const diff = Math.abs(item.thumbnailTimestamps[i] - timestamp);
+      if (diff < minDiff) {
+        minDiff = diff;
+        closestIndex = i;
+      }
+    }
+    
+    return item.thumbnails[closestIndex];
+  },
+
+  setThumbnailQuality: async (mediaId, quality) => {
+    const item = get().mediaItems.find(item => item.id === mediaId);
+    if (!item || item.type !== 'video') return;
+
+    // Clear existing thumbnails from cache
+    thumbnailCache.clearVideoCache(mediaId);
+
+    // Generate new thumbnails with specified quality
+    await get().generateEnhancedThumbnails(mediaId, {
+      resolution: quality,
+      timestamps: item.thumbnailTimestamps || [1, 5, 10, 15, 20],
+      sceneDetection: item.thumbnailMetadata?.sceneDetected ?? true
+    });
+  },
+
+  clearThumbnailCache: () => {
+    thumbnailCache.clearAllCache();
+    console.log('Thumbnail cache cleared');
   },
 }));

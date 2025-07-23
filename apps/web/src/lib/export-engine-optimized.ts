@@ -32,21 +32,21 @@ export interface ExportEngineOptions {
 }
 
 export class ExportEngine {
-  private canvas: HTMLCanvasElement;
-  private settings: ExportSettings;
-  private timelineElements: TimelineElement[];
-  private mediaItems: MediaItem[];
-  private duration: number;
-  private fps: number;
-  private onProgress?: (progress: number, status: string) => void;
-  private onError?: (error: string) => void;
+  protected canvas: HTMLCanvasElement;
+  protected settings: ExportSettings;
+  protected timelineElements: TimelineElement[];
+  protected mediaItems: MediaItem[];
+  protected duration: number;
+  protected fps: number;
+  protected onProgress?: (progress: number, status: string) => void;
+  protected onError?: (error: string) => void;
 
   private renderer: CanvasRenderer;
-  private captureService: FrameCaptureService;
-  private recorder: VideoRecorder | FFmpegVideoRecorder;
+  protected captureService: FrameCaptureService;
+  protected recorder: VideoRecorder | FFmpegVideoRecorder;
   private audioMixer: AudioMixer;
   private isExporting = false;
-  private shouldCancel = false;
+  protected shouldCancel = false;
   private preloadedVideos: Map<string, HTMLVideoElement> = new Map();
   private memoryMonitoringStarted = false;
 
@@ -403,7 +403,7 @@ export class ExportEngine {
   /**
    * Phase 1.2: Optimized single frame rendering
    */
-  private async renderSingleFrameOptimized(frameData: { 
+  protected async renderSingleFrameOptimized(frameData: { 
     frameNumber: number; 
     timestamp: number; 
     elements: TimelineElement[] 
