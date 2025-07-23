@@ -731,7 +731,7 @@ export class ExportEngine {
     
     const warning = memoryMonitor.checkFileSafety(estimatedBytes);
     
-    if (warning && (warning.level === 'critical' || warning.level === 'error')) {
+    if (warning && warning.level === 'error') {
       throw new MemoryError(
         warning.message,
         {
@@ -741,7 +741,7 @@ export class ExportEngine {
       );
     }
     
-    if (warning && warning.level === 'warning') {
+    if (warning && (warning.level === 'warning' || warning.level === 'critical')) {
       this.onProgress?.(
         this.lastProgress || 0,
         `⚠️ ${warning.message}`
