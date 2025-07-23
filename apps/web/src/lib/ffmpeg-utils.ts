@@ -2,9 +2,10 @@ import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { toBlobURL } from '@ffmpeg/util';
 
 let ffmpeg: FFmpeg | null = null;
+let isLoaded = false;
 
 export const initFFmpeg = async (): Promise<FFmpeg> => {
-  if (ffmpeg) {
+  if (ffmpeg && isLoaded) {
     console.log("✅ FFmpeg already initialized, reusing instance");
     return ffmpeg;
   }
@@ -30,6 +31,8 @@ export const initFFmpeg = async (): Promise<FFmpeg> => {
       wasmURL,
     });
     
+    isLoaded = true;
+    
     // Set up logging (if supported)
     try {
       ffmpeg.on('log', ({ message }) => {
@@ -44,6 +47,7 @@ export const initFFmpeg = async (): Promise<FFmpeg> => {
   } catch (error) {
     console.error("❌ Failed to initialize FFmpeg:", error);
     ffmpeg = null; // Reset on failure
+    isLoaded = false;
     throw new Error(`FFmpeg initialization failed: ${error}`);
   }
 };
@@ -377,6 +381,11 @@ export const generateEnhancedThumbnails = async (
   options: EnhancedThumbnailOptions = {}
 ): Promise<EnhancedThumbnailResult> => {
   const ffmpeg = await initFFmpeg();
+  
+  // Ensure FFmpeg is properly loaded
+  if (!ffmpeg || !isLoaded) {
+    throw new Error('FFmpeg failed to initialize properly');
+  }
   
   // Get video info first
   const videoInfo = await getVideoInfo(videoFile);
