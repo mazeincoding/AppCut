@@ -422,7 +422,7 @@ export const generateEnhancedThumbnails = async (
       '-vframes', '1',
       '-vf', `scale=${width}:${height}`,
       '-q:v', quality === 1 ? '1' : quality === 0.8 ? '2' : '5', // Map quality to FFmpeg q:v
-      '-f', format,
+      '-f', format === 'jpeg' ? 'mjpeg' : format, // Use mjpeg for JPEG output
       outputName
     ]);
     
