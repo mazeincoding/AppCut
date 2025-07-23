@@ -8,6 +8,8 @@ import { useRef, useState, useEffect } from "react";
 
 export function TabBar() {
   const { activeTab, setActiveTab } = useMediaPanelStore();
+  
+  
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isAtEnd, setIsAtEnd] = useState(false);
   const [isAtStart, setIsAtStart] = useState(true);
@@ -61,38 +63,42 @@ export function TabBar() {
   }, []);
 
   return (
-    <div className="flex">
-      <ScrollButton
-        direction="left"
-        onClick={scrollToStart}
-        isVisible={!isAtStart}
-      />
+    <div className="border-timeline rounded-sm mb-8 mt-4">
       <div
         ref={scrollContainerRef}
-        className="h-12 bg-panel-accent px-3 flex justify-start items-center gap-5 overflow-x-auto scrollbar-x-hidden relative"
+        className="h-18 bg-panel-accent px-6 py-2 flex justify-start items-center gap-12 overflow-x-auto scrollbar-x-hidden relative"
       >
         {(Object.keys(tabs) as Tab[]).map((tabKey) => {
           const tab = tabs[tabKey];
           return (
             <div
               className={cn(
-                "flex flex-col gap-0.5 items-center cursor-pointer",
-                activeTab === tabKey ? "text-primary" : "text-muted-foreground"
+                "flex flex-col gap-2 items-center cursor-pointer px-3 pt-3 pb-2 mx-1 rounded-lg transition-all duration-200 hover:bg-white/10 flex-shrink-0 min-w-[52px] group",
+                activeTab === tabKey ? "text-primary bg-primary/10" : "text-muted-foreground bg-white/5"
               )}
               onClick={() => setActiveTab(tabKey)}
               key={tabKey}
+              style={{
+                transform: 'scale(1)'
+              }}
+              onMouseEnter={(e) => {
+                if (activeTab !== tabKey) {
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
             >
-              <tab.icon className="!size-[1.1rem]" />
-              <span className="text-[0.65rem]">{tab.label}</span>
+              <tab.icon className={cn(
+                "!size-[1.5rem] transition-all duration-200",
+                activeTab !== tabKey && "group-hover:text-blue-500"
+              )} />
+              <span className="text-[0.65rem] tracking-wide mt-1 leading-none">{tab.label}<br /><span className="text-[0.2rem] leading-none">&nbsp;</span></span>
             </div>
           );
         })}
       </div>
-      <ScrollButton
-        direction="right"
-        onClick={scrollToEnd}
-        isVisible={!isAtEnd}
-      />
     </div>
   );
 }
@@ -114,7 +120,7 @@ function ScrollButton({
     <div className="bg-panel-accent w-12 h-full flex items-center justify-center">
       <Button
         size="icon"
-        className="rounded-[0.4rem] w-4 h-7 !bg-foreground/10"
+        className="rounded-[0.4rem] w-4 h-7 !bg-white/20 hover:!bg-white/30"
         onClick={onClick}
       >
         <Icon className="!size-4 text-foreground" />

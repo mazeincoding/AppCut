@@ -150,7 +150,7 @@ export class ExportEngine {
           trimEnd: trimEnd,
           effectiveDuration: effectiveDuration,
           elementEndTime: elementEndTime,
-          mediaId: el.mediaId
+          mediaId: el.type === 'media' ? el.mediaId : 'N/A (text element)'
         });
         
         // CRITICAL: Check if trim values are causing the issue
@@ -165,12 +165,13 @@ export class ExportEngine {
       // Log media items duration comparison
       console.log("🎥 MEDIA ITEMS DURATION ANALYSIS:");
       const mediaAnalysis = this.timelineElements
-        .filter(el => el.type === 'media' && el.mediaId)
+        .filter(el => el.type === 'media')
         .map((el, index) => {
-          const mediaItem = this.getMediaItem(el.mediaId!);
+          const mediaEl = el as any; // Type assertion since we filtered for media
+          const mediaItem = this.getMediaItem(mediaEl.mediaId);
           const analysis = {
             elementId: el.id,
-            mediaId: el.mediaId,
+            mediaId: mediaEl.mediaId,
             mediaType: mediaItem?.type,
             sourceDuration: mediaItem?.duration,
             timelineElementDuration: el.duration,
@@ -790,15 +791,53 @@ export class ExportEngine {
   /**
    * Create download link for the exported video
    */
-  static createDownloadLink(blob: Blob, filename: string): void {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  static async createDownloadLink(blob: Blob, filename: string): Promise<void> {
+    // Use modern File System Access API if available
+    if ('showSaveFilePicker' in window) {
+      try {
+        const fileHandle = await (window as any).showSaveFilePicker({
+          suggestedName: filename,
+          types: [{
+            description: 'Video files',
+            accept: { 
+              'video/mp4': ['.mp4'],
+              'video/webm': ['.webm'],
+              'video/quicktime': ['.mov']
+            }
+          }]
+        })
+        
+        const writable = await fileHandle.createWritable()
+        await writable.write(blob)
+        await writable.close()
+        return
+      } catch (error) {
+        // Fall back to traditional download if user cancels or API unavailable
+      }
+    }
+
+    // Safe iframe-based download to prevent navigation bug
+    const url = URL.createObjectURL(blob)
+    
+    const iframe = document.createElement('iframe')
+    iframe.style.display = 'none'
+    document.body.appendChild(iframe)
+    
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document
+    if (iframeDoc) {
+      const link = iframeDoc.createElement('a')
+      link.href = url
+      link.download = filename
+      iframeDoc.body.appendChild(link)
+      link.click()
+      iframeDoc.body.removeChild(link)
+    }
+    
+    // Cleanup with delay for video files
+    setTimeout(() => {
+      document.body.removeChild(iframe)
+      URL.revokeObjectURL(url)
+    }, 1000)
   }
 
   /**

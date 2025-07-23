@@ -9,13 +9,14 @@ export interface MediaItem {
   id: string;
   name: string;
   type: MediaType;
-  file: File;
-  url?: string; // Object URL for preview
+  file?: File; // Optional for generated images
+  url?: string; // Object URL for preview or direct URL for generated
   thumbnailUrl?: string; // For video thumbnails
   duration?: number; // For video/audio duration
   width?: number; // For video/image width
   height?: number; // For video/image height
   fps?: number; // For video frame rate
+  size?: number; // File size in bytes
   // Text-specific properties
   content?: string; // Text content
   fontSize?: number; // Font size
@@ -23,6 +24,14 @@ export interface MediaItem {
   color?: string; // Text color
   backgroundColor?: string; // Background color
   textAlign?: "left" | "center" | "right"; // Text alignment
+  // Generated image metadata
+  metadata?: {
+    source?: "text2image" | "upload";
+    model?: string;
+    prompt?: string;
+    settings?: any;
+    generatedAt?: Date;
+  };
 }
 
 interface MediaStore {
@@ -38,6 +47,9 @@ interface MediaStore {
   loadProjectMedia: (projectId: string) => Promise<void>;
   clearProjectMedia: (projectId: string) => Promise<void>;
   clearAllMedia: () => void; // Clear local state only
+  
+  // Generated image actions
+  addGeneratedImages: (items: Array<Omit<MediaItem, "id">>) => void;
 }
 
 // Helper function to determine file type
@@ -263,5 +275,24 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
 
     // Clear local state
     set({ mediaItems: [] });
+  },
+
+  addGeneratedImages: (items) => {
+    // Convert items to full MediaItem objects with IDs
+    const newItems: MediaItem[] = items.map((item) => ({
+      ...item,
+      id: generateUUID(),
+      metadata: {
+        ...item.metadata,
+        source: "text2image",
+      },
+    }));
+
+    // Add to local state
+    set((state) => ({
+      mediaItems: [...state.mediaItems, ...newItems],
+    }));
+
+    console.log(`Added ${newItems.length} generated images to media panel`);
   },
 }));

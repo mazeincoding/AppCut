@@ -2,6 +2,7 @@ import { TProject } from "@/types/project";
 import { MediaItem } from "@/stores/media-store";
 import { IndexedDBAdapter } from "./indexeddb-adapter";
 import { OPFSAdapter } from "./opfs-adapter";
+import { ElectronOPFSAdapter } from "./electron-opfs-adapter";
 import {
   MediaFileData,
   StorageConfig,
@@ -9,6 +10,39 @@ import {
   TimelineData,
 } from "./types";
 import { TimelineTrack } from "@/types/timeline";
+
+// Check if we're running in Electron
+const isElectron = () => {
+  // Check multiple ways to detect Electron
+  if (typeof window !== 'undefined') {
+    // Primary check: electronAPI exists
+    if (window.electronAPI !== undefined) {
+      return true;
+    }
+    
+    // Secondary check: environment variable
+    if (process.env.NEXT_PUBLIC_ELECTRON === 'true') {
+      return true;
+    }
+    
+    // Tertiary check: user agent contains Electron
+    if (navigator.userAgent.toLowerCase().includes('electron')) {
+      return true;
+    }
+    
+    // Additional check: look for Electron in global
+    if (typeof window.require !== 'undefined') {
+      return true;
+    }
+    
+    // Check document body for electron attribute
+    if (document.body && document.body.hasAttribute('data-electron')) {
+      return true;
+    }
+  }
+  
+  return false;
+};
 
 class StorageService {
   private projectsAdapter: IndexedDBAdapter<SerializedProject>;
@@ -37,7 +71,12 @@ class StorageService {
       this.config.version
     );
 
-    const mediaFilesAdapter = new OPFSAdapter(`media-files-${projectId}`);
+    // Re-check Electron environment at runtime (not just at initialization)
+    const isElectronEnv = isElectron();
+    
+    const mediaFilesAdapter = isElectronEnv 
+      ? new ElectronOPFSAdapter(`media-files-${projectId}`)
+      : new OPFSAdapter(`media-files-${projectId}`);
 
     return { mediaMetadataAdapter, mediaFilesAdapter };
   }
@@ -64,8 +103,12 @@ class StorageService {
       backgroundType: project.backgroundType,
       blurIntensity: project.blurIntensity,
     };
-
-    await this.projectsAdapter.set(project.id, serializedProject);
+    
+    try {
+      await this.projectsAdapter.set(project.id, serializedProject);
+    } catch (error) {
+      throw error;
+    }
   }
 
   async loadProject(id: string): Promise<TProject | null> {
@@ -262,6 +305,10 @@ class StorageService {
 
   // Check browser support
   isOPFSSupported(): boolean {
+    // In Electron, we use IndexedDB fallback which is always supported
+    if (isElectron()) {
+      return true;
+    }
     return OPFSAdapter.isSupported();
   }
 

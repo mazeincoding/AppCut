@@ -42,8 +42,8 @@ export function BackgroundIcon({ className }: { className?: string }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="353"
-      height="353"
+      width="16"
+      height="16"
       viewBox="0 0 353 353"
       fill="none"
       className={className}

@@ -120,7 +120,7 @@ export function TimelineElement({
     isBeingDragged && dragState.isDragging
       ? dragState.currentTime
       : element.startTime;
-  const elementLeft = elementStartTime * 50 * zoomLevel;
+  const elementLeft = elementStartTime * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel;
 
   const handleDeleteElement = () => {
     removeElementFromTrack(track.id, element.id);
@@ -307,18 +307,15 @@ export function TimelineElement({
       );
     }
 
-    if (mediaItem.type === "video" && mediaItem.thumbnailUrl) {
+    if (mediaItem.type === "video") {
       return (
-        <div className="w-full h-full flex items-center gap-2">
-          <div className="w-8 h-8 flex-shrink-0">
-            <img
-              src={mediaItem.thumbnailUrl}
-              alt={mediaItem.name}
-              className="w-full h-full object-cover rounded-sm"
-              draggable={false}
-            />
-          </div>
-          <span className="text-xs text-foreground/80 truncate flex-1">
+        <div 
+          className="absolute inset-0 flex items-center px-2"
+          style={{
+            background: 'linear-gradient(to right, #3b82f6, #8b5cf6, #ec4899) !important'
+          }}
+        >
+          <span className="text-xs text-white font-medium truncate drop-shadow-sm">
             {element.name}
           </span>
         </div>
@@ -360,6 +357,7 @@ export function TimelineElement({
           className={`absolute top-0 h-full select-none timeline-element ${
             isBeingDragged ? "z-50" : "z-10"
           }`}
+          data-testid="timeline-element"
           style={{
             left: `${elementLeft}px`,
             width: `${elementWidth}px`,
@@ -371,9 +369,11 @@ export function TimelineElement({
           onMouseLeave={resizing ? handleResizeEnd : undefined}
         >
           <div
-            className={`relative h-full rounded-[0.15rem] cursor-pointer overflow-hidden ${getTrackElementClasses(
-              track.type
-            )} ${isSelected ? "border-b-[0.5px] border-t-[0.5px] border-foreground" : ""} ${
+            className={`relative h-full rounded-[0.15rem] cursor-pointer overflow-hidden ${
+              element.type === "media" && mediaItems.find((item) => item.id === element.mediaId)?.type === "video" 
+                ? "bg-transparent border-white/80" 
+                : getTrackElementClasses(track.type)
+            } border border-white/20 ${isSelected ? "border-foreground" : ""} ${
               isBeingDragged ? "z-50" : "z-10"
             }`}
             onClick={(e) => onElementClick && onElementClick(e, element)}
@@ -382,9 +382,7 @@ export function TimelineElement({
               onElementMouseDown && onElementMouseDown(e, element)
             }
           >
-            <div className="absolute inset-0 flex items-center h-full">
-              {renderElementContent()}
-            </div>
+            {renderElementContent()}
 
             {/* Duration Mismatch Indicator */}
             {durationMismatch?.hasAnyMismatch && (

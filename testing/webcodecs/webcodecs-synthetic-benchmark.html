@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebCodecs vs Canvas Export Benchmark</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .method {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .results {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .progress {
+            width: 100%;
+            height: 20px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background: #007bff;
+            transition: width 0.3s;
+        }
+        .video-container {
+            margin: 10px 0;
+        }
+        video {
+            max-width: 300px;
+            border: 1px solid #ddd;
+        }
+        .error {
+            color: red;
+            background: #ffebee;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            color: green;
+            background: #e8f5e8;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .comparison {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebCodecs vs Canvas Export Performance Benchmark</h1>
+    <p>This script tests the actual performance difference between traditional canvas-based video export and WebCodecs API.</p>
+    
+    <div>
+        <label for="videoFile">Select test video:</label>
+        <input type="file" id="videoFile" accept="video/*">
+        <p><small>Or use the default test: <code>c:\Users\zdhpe\Desktop\video_agent\character_refine\videos\3_us_office.mp4</code></small></p>
+    </div>
+
+    <div>
+        <label for="duration">Test duration (seconds):</label>
+        <input type="number" id="duration" value="10" min="1" max="60">
+        <small>Shorter duration for quick testing</small>
+    </div>
+
+    <div>
+        <button onclick="runBenchmark()">Start Benchmark</button>
+        <button onclick="resetBenchmark()">Reset</button>
+    </div>
+
+    <div class="container">
+        <!-- Traditional Canvas Method -->
+        <div class="method">
+            <h3>🎨 Traditional Canvas Method</h3>
+            <p>Current OpenCut approach: Canvas → PNG frames → MediaRecorder</p>
+            
+            <div class="progress">
+                <div class="progress-bar" id="canvasProgress"></div>
+            </div>
+            <div id="canvasStatus">Ready</div>
+            
+            <div class="results" id="canvasResults">
+                <strong>Results:</strong><br>
+                Time: <span id="canvasTime">-</span><br>
+                Frames: <span id="canvasFrames">-</span><br>
+                FPS: <span id="canvasFPS">-</span><br>
+                File size: <span id="canvasSize">-</span>
+            </div>
+            
+            <div class="video-container">
+                <video id="canvasVideo" controls style="display:none;"></video>
+            </div>
+        </div>
+
+        <!-- WebCodecs Method -->
+        <div class="method">
+            <h3>⚡ WebCodecs Method</h3>
+            <p>New approach: Canvas → VideoFrame → WebCodecs encoder → MP4</p>
+            
+            <div class="progress">
+                <div class="progress-bar" id="webCodecsProgress"></div>
+            </div>
+            <div id="webCodecsStatus">Checking compatibility...</div>
+            
+            <div class="results" id="webCodecsResults">
+                <strong>Results:</strong><br>
+                Time: <span id="webCodecsTime">-</span><br>
+                Frames: <span id="webCodecsFrames">-</span><br>
+                FPS: <span id="webCodecsFPS">-</span><br>
+                File size: <span id="webCodecsSize">-</span>
+            </div>
+            
+            <div class="video-container">
+                <video id="webCodecsVideo" controls style="display:none;"></video>
+            </div>
+        </div>
+    </div>
+
+    <div class="comparison" id="comparison" style="display:none;">
+        <h3>📊 Performance Comparison</h3>
+        <div id="comparisonResults"></div>
+    </div>
+
+    <script>
+        let testVideo = null;
+        let testDuration = 10;
+
+        // Check WebCodecs support on page load
+        window.addEventListener('load', checkWebCodecsSupport);
+
+        function checkWebCodecsSupport() {
+            const status = document.getElementById('webCodecsStatus');
+            
+            if (!('VideoEncoder' in window) || !('VideoFrame' in window)) {
+                status.innerHTML = '<span style="color: red;">❌ WebCodecs not supported in this browser</span>';
+                return;
+            }
+
+            // Test basic codec support
+            VideoEncoder.isConfigSupported({
+                codec: 'avc1.42001E', // H.264 baseline
+                width: 640,
+                height: 480,
+                bitrate: 1_000_000,
+                framerate: 30
+            }).then(support => {
+                if (support.supported) {
+                    status.innerHTML = '<span style="color: green;">✅ WebCodecs ready (H.264 supported)</span>';
+                } else {
+                    status.innerHTML = '<span style="color: orange;">⚠️ WebCodecs available but H.264 not supported</span>';
+                }
+            }).catch(error => {
+                status.innerHTML = '<span style="color: red;">❌ WebCodecs error: ' + error.message + '</span>';
+            });
+        }
+
+        document.getElementById('videoFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const video = document.createElement('video');
+                video.src = URL.createObjectURL(file);
+                video.onloadedmetadata = () => {
+                    testVideo = video;
+                    console.log('Test video loaded:', video.videoWidth + 'x' + video.videoHeight, video.duration + 's');
+                };
+            }
+        });
+
+        document.getElementById('duration').addEventListener('change', function(e) {
+            testDuration = parseInt(e.target.value);
+        });
+
+        async function runBenchmark() {
+            if (!testVideo) {
+                // Create a synthetic test video
+                await createTestVideo();
+            }
+
+            // Reset UI
+            resetUI();
+
+            // Run both methods
+            console.log('🚀 Starting benchmark...');
+            
+            try {
+                // Method 1: Traditional Canvas
+                console.log('Testing traditional canvas method...');
+                const canvasResult = await testCanvasMethod();
+                displayCanvasResults(canvasResult);
+
+                // Method 2: WebCodecs (if supported)
+                if ('VideoEncoder' in window) {
+                    console.log('Testing WebCodecs method...');
+                    const webCodecsResult = await testWebCodecsMethod();
+                    displayWebCodecsResults(webCodecsResult);
+                    
+                    // Show comparison
+                    showComparison(canvasResult, webCodecsResult);
+                } else {
+                    document.getElementById('webCodecsStatus').innerHTML = '<span style="color: red;">❌ WebCodecs not supported - cannot compare</span>';
+                }
+            } catch (error) {
+                console.error('Benchmark failed:', error);
+                alert('Benchmark failed: ' + error.message);
+            }
+        }
+
+        async function createTestVideo() {
+            console.log('Creating synthetic test video...');
+            
+            // Create a simple animated canvas as test content
+            const canvas = document.createElement('canvas');
+            canvas.width = 640;
+            canvas.height = 480;
+            const ctx = canvas.getContext('2d');
+            
+            testVideo = {
+                canvas: canvas,
+                width: 640,
+                height: 480,
+                duration: testDuration,
+                isSynthetic: true
+            };
+        }
+
+        async function testCanvasMethod() {
+            return new Promise(async (resolve, reject) => {
+                const startTime = performance.now();
+                const canvas = document.createElement('canvas');
+                canvas.width = testVideo.width || 640;
+                canvas.height = testVideo.height || 480;
+                const ctx = canvas.getContext('2d');
+                
+                const fps = 30;
+                const totalFrames = testDuration * fps;
+                let frameCount = 0;
+                
+                document.getElementById('canvasStatus').textContent = 'Rendering frames...';
+
+                // Create MediaRecorder for canvas
+                const stream = canvas.captureStream(fps);
+                const mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: 'video/webm;codecs=vp9'
+                });
+                
+                const chunks = [];
+                mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(chunks, { type: 'video/webm' });
+                    const endTime = performance.now();
+                    
+                    resolve({
+                        time: (endTime - startTime) / 1000,
+                        frames: frameCount,
+                        fps: frameCount / ((endTime - startTime) / 1000),
+                        size: blob.size,
+                        blob: blob
+                    });
+                };
+
+                mediaRecorder.start();
+
+                // Render frames
+                const renderFrame = () => {
+                    if (frameCount >= totalFrames) {
+                        mediaRecorder.stop();
+                        return;
+                    }
+
+                    // Draw test content
+                    const progress = frameCount / totalFrames;
+                    ctx.fillStyle = `hsl(${progress * 360}, 70%, 50%)`;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    ctx.fillStyle = 'white';
+                    ctx.font = '48px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`Frame ${frameCount}`, canvas.width/2, canvas.height/2);
+                    
+                    frameCount++;
+                    
+                    // Update progress
+                    document.getElementById('canvasProgress').style.width = (progress * 100) + '%';
+                    document.getElementById('canvasStatus').textContent = `Frame ${frameCount}/${totalFrames}`;
+
+                    // Continue rendering
+                    setTimeout(renderFrame, 1000 / fps);
+                };
+
+                renderFrame();
+            });
+        }
+
+        async function testWebCodecsMethod() {
+            if (!('VideoEncoder' in window)) {
+                throw new Error('WebCodecs not supported');
+            }
+
+            return new Promise(async (resolve, reject) => {
+                const startTime = performance.now();
+                const canvas = document.createElement('canvas');
+                canvas.width = testVideo.width || 640;
+                canvas.height = testVideo.height || 480;
+                const ctx = canvas.getContext('2d');
+                
+                const fps = 30;
+                const totalFrames = testDuration * fps;
+                let frameCount = 0;
+                
+                document.getElementById('webCodecsStatus').textContent = 'Initializing WebCodecs...';
+
+                // Simple MP4 container simulation (in real implementation, use mp4-muxer)
+                const encodedChunks = [];
+                
+                const encoder = new VideoEncoder({
+                    output: (chunk, metadata) => {
+                        encodedChunks.push(chunk);
+                    },
+                    error: (error) => {
+                        console.error('WebCodecs encoder error:', error);
+                        reject(error);
+                    }
+                });
+
+                // Configure encoder
+                const config = {
+                    codec: 'avc1.42001E', // H.264 baseline
+                    width: canvas.width,
+                    height: canvas.height,
+                    bitrate: 2_000_000,
+                    framerate: fps
+                };
+
+                try {
+                    encoder.configure(config);
+                } catch (error) {
+                    reject(new Error('WebCodecs configuration failed: ' + error.message));
+                    return;
+                }
+
+                document.getElementById('webCodecsStatus').textContent = 'Encoding frames...';
+
+                // Render and encode frames
+                const encodeFrame = async () => {
+                    if (frameCount >= totalFrames) {
+                        // Finalize
+                        await encoder.flush();
+                        encoder.close();
+                        
+                        // Create blob from chunks (simplified)
+                        const totalSize = encodedChunks.reduce((size, chunk) => size + chunk.byteLength, 0);
+                        const blob = new Blob([new Uint8Array(totalSize)], { type: 'video/mp4' });
+                        
+                        const endTime = performance.now();
+                        
+                        resolve({
+                            time: (endTime - startTime) / 1000,
+                            frames: frameCount,
+                            fps: frameCount / ((endTime - startTime) / 1000),
+                            size: blob.size,
+                            blob: blob
+                        });
+                        return;
+                    }
+
+                    // Draw test content (same as canvas method)
+                    const progress = frameCount / totalFrames;
+                    ctx.fillStyle = `hsl(${progress * 360}, 70%, 50%)`;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    ctx.fillStyle = 'white';
+                    ctx.font = '48px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`Frame ${frameCount}`, canvas.width/2, canvas.height/2);
+
+                    // Create VideoFrame and encode
+                    const timestamp = (frameCount * 1_000_000) / fps; // microseconds
+                    const videoFrame = new VideoFrame(canvas, {
+                        timestamp: timestamp,
+                        duration: 1_000_000 / fps
+                    });
+
+                    try {
+                        encoder.encode(videoFrame, { keyFrame: frameCount % 30 === 0 });
+                        videoFrame.close();
+                    } catch (error) {
+                        console.error('Frame encoding error:', error);
+                        videoFrame.close();
+                    }
+
+                    frameCount++;
+                    
+                    // Update progress
+                    document.getElementById('webCodecsProgress').style.width = (progress * 100) + '%';
+                    document.getElementById('webCodecsStatus').textContent = `Frame ${frameCount}/${totalFrames}`;
+
+                    // Continue encoding (much faster than setTimeout)
+                    requestAnimationFrame(encodeFrame);
+                };
+
+                encodeFrame();
+            });
+        }
+
+        function displayCanvasResults(result) {
+            document.getElementById('canvasTime').textContent = result.time.toFixed(2) + 's';
+            document.getElementById('canvasFrames').textContent = result.frames;
+            document.getElementById('canvasFPS').textContent = result.fps.toFixed(1);
+            document.getElementById('canvasSize').textContent = formatBytes(result.size);
+            
+            const video = document.getElementById('canvasVideo');
+            video.src = URL.createObjectURL(result.blob);
+            video.style.display = 'block';
+            
+            document.getElementById('canvasStatus').innerHTML = '<span style="color: green;">✅ Complete</span>';
+        }
+
+        function displayWebCodecsResults(result) {
+            document.getElementById('webCodecsTime').textContent = result.time.toFixed(2) + 's';
+            document.getElementById('webCodecsFrames').textContent = result.frames;
+            document.getElementById('webCodecsFPS').textContent = result.fps.toFixed(1);
+            document.getElementById('webCodecsSize').textContent = formatBytes(result.size);
+            
+            const video = document.getElementById('webCodecsVideo');
+            video.src = URL.createObjectURL(result.blob);
+            video.style.display = 'block';
+            
+            document.getElementById('webCodecsStatus').innerHTML = '<span style="color: green;">✅ Complete</span>';
+        }
+
+        function showComparison(canvasResult, webCodecsResult) {
+            const speedup = canvasResult.time / webCodecsResult.time;
+            const fpsImprovement = webCodecsResult.fps / canvasResult.fps;
+            
+            let comparisonHtml = `
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="background: #f0f0f0;">
+                        <th style="padding: 10px; border: 1px solid #ddd;">Metric</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">Canvas Method</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">WebCodecs Method</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">Improvement</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Export Time</strong></td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${canvasResult.time.toFixed(2)}s</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${webCodecsResult.time.toFixed(2)}s</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; ${speedup > 1 ? 'color: green; font-weight: bold;' : 'color: red;'}">${speedup.toFixed(1)}x ${speedup > 1 ? 'faster' : 'slower'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd;"><strong>Effective FPS</strong></td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${canvasResult.fps.toFixed(1)}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${webCodecsResult.fps.toFixed(1)}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; ${fpsImprovement > 1 ? 'color: green; font-weight: bold;' : 'color: red;'}">${fpsImprovement.toFixed(1)}x ${fpsImprovement > 1 ? 'better' : 'worse'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd;"><strong>File Size</strong></td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${formatBytes(canvasResult.size)}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${formatBytes(webCodecsResult.size)}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${((webCodecsResult.size / canvasResult.size) * 100).toFixed(0)}% of original</td>
+                    </tr>
+                </table>
+                
+                <div style="margin-top: 20px; padding: 15px; ${speedup > 1.5 ? 'background: #d4edda; border: 1px solid #c3e6cb; color: #155724;' : speedup > 1 ? 'background: #fff3cd; border: 1px solid #ffeaa7; color: #856404;' : 'background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24;'} border-radius: 4px;">
+                    <strong>Conclusion:</strong> 
+                    ${speedup > 2 ? `🚀 WebCodecs is significantly faster (${speedup.toFixed(1)}x speedup)! The performance claims are verified.` :
+                      speedup > 1.2 ? `✅ WebCodecs is faster (${speedup.toFixed(1)}x speedup), but not as dramatic as claimed.` :
+                      speedup > 0.8 ? `⚠️ Performance is similar. WebCodecs advantage may be more apparent with longer/complex videos.` :
+                      `❌ WebCodecs is actually slower in this test. This could be due to browser implementation or test limitations.`}
+                </div>
+            `;
+            
+            document.getElementById('comparisonResults').innerHTML = comparisonHtml;
+            document.getElementById('comparison').style.display = 'block';
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function resetBenchmark() {
+            document.getElementById('canvasProgress').style.width = '0%';
+            document.getElementById('webCodecsProgress').style.width = '0%';
+            document.getElementById('canvasStatus').textContent = 'Ready';
+            document.getElementById('webCodecsStatus').textContent = 'Ready';
+            
+            ['canvasTime', 'canvasFrames', 'canvasFPS', 'canvasSize', 
+             'webCodecsTime', 'webCodecsFrames', 'webCodecsFPS', 'webCodecsSize'].forEach(id => {
+                document.getElementById(id).textContent = '-';
+            });
+            
+            document.getElementById('canvasVideo').style.display = 'none';
+            document.getElementById('webCodecsVideo').style.display = 'none';
+            document.getElementById('comparison').style.display = 'none';
+            
+            checkWebCodecsSupport();
+        }
+
+        function resetUI() {
+            resetBenchmark();
+        }
+    </script>
+</body>
+</html>

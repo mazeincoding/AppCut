@@ -11,10 +11,14 @@ interface ExportStore {
   // Error state
   error: string | null;
   
+  // Dialog state
+  isDialogOpen: boolean;
+  
   // Actions
   updateSettings: (settings: Partial<ExportSettings>) => void;
   updateProgress: (progress: Partial<ExportProgress>) => void;
   setError: (error: string | null) => void;
+  setDialogOpen: (open: boolean) => void;
   resetExport: () => void;
 }
 
@@ -44,6 +48,7 @@ export const useExportStore = create<ExportStore>((set) => ({
   settings: getDefaultSettings(),
   progress: getDefaultProgress(),
   error: null,
+  isDialogOpen: false, // Dialog starts closed
   
   updateSettings: (newSettings) =>
     set((state) => ({
@@ -57,10 +62,13 @@ export const useExportStore = create<ExportStore>((set) => ({
   
   setError: (error) => set({ error }),
   
+  setDialogOpen: (open) => set({ isDialogOpen: open }),
+  
   resetExport: () =>
     set({
       settings: getDefaultSettings(),
       progress: getDefaultProgress(),
       error: null,
+      isDialogOpen: false, // Close dialog on reset
     }),
 }));

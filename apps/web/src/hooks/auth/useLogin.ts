@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { signIn } from "@opencut/auth/client";
+import { signIn } from "@/lib/workspace-packages/auth/client";
 
 export function useLogin() {
     const router = useRouter();

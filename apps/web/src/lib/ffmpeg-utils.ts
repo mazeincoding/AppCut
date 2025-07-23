@@ -60,13 +60,14 @@ export const generateThumbnail = async (
   // Write input file
   await ffmpeg.writeFile(inputName, new Uint8Array(await videoFile.arrayBuffer()));
   
-  // Generate thumbnail at specific time
+  // Generate thumbnail at specific time with memory-efficient settings
   await ffmpeg.exec([
     '-i', inputName,
     '-ss', timeInSeconds.toString(),
     '-vframes', '1',
-    '-vf', 'scale=320:240',
-    '-q:v', '2',
+    '-vf', 'scale=160:120', // Smaller size to reduce memory usage
+    '-q:v', '5', // Lower quality to reduce memory usage
+    '-update', '1', // Fix for single image output
     outputName
   ]);
   

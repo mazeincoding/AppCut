@@ -1,5 +1,5 @@
-import { db, sql } from "@opencut/db";
-import { waitlist } from "@opencut/db/schema";
+import { db, sql } from "@/lib/workspace-packages/db";
+import { waitlist } from "@/lib/workspace-packages/db/schema";
 
 export async function getWaitlistCount() {
   try {

@@ -14,12 +14,12 @@ interface TimelinePlayheadProps {
   zoomLevel: number;
   tracks: TimelineTrack[];
   seek: (time: number) => void;
-  rulerRef: React.RefObject<HTMLDivElement>;
-  rulerScrollRef: React.RefObject<HTMLDivElement>;
-  tracksScrollRef: React.RefObject<HTMLDivElement>;
-  trackLabelsRef?: React.RefObject<HTMLDivElement>;
-  timelineRef: React.RefObject<HTMLDivElement>;
-  playheadRef?: React.RefObject<HTMLDivElement>;
+  rulerRef: React.RefObject<HTMLDivElement | null>;
+  rulerScrollRef: React.RefObject<HTMLDivElement | null>;
+  tracksScrollRef: React.RefObject<HTMLDivElement | null>;
+  trackLabelsRef?: React.RefObject<HTMLDivElement | null>;
+  timelineRef: React.RefObject<HTMLDivElement | null>;
+  playheadRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 export function TimelinePlayhead({
@@ -64,20 +64,20 @@ export function TimelinePlayhead({
   return (
     <div
       ref={playheadRef}
-      className="absolute pointer-events-auto z-[100]"
+      className="absolute pointer-events-auto z-[999]"
       style={{
         left: `${leftPosition}px`,
         top: 0,
         height: `${totalHeight}px`,
-        width: "2px", // Slightly wider for better click target
+        width: "8px", // Much wider for better visibility and click target
       }}
       onMouseDown={handlePlayheadMouseDown}
     >
       {/* The red line spanning full height */}
-      <div className="absolute left-0 w-0.5 bg-foreground cursor-col-resize h-full" />
+      <div className="absolute left-0 w-2 bg-red-600 cursor-col-resize h-full shadow-xl shadow-red-600/80 border-l border-red-400" />
 
       {/* Red dot indicator at the top (in ruler area) */}
-      <div className="absolute top-1 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-foreground rounded-full border-2 border-foreground shadow-sm" />
+      <div className="absolute top-1 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-red-600 rounded-full border-2 border-red-400 shadow-xl shadow-red-600/80" />
     </div>
   );
 }

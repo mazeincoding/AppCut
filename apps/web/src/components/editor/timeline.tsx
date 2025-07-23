@@ -242,7 +242,7 @@ export function Timeline() {
   // Update timeline duration when tracks change
   useEffect(() => {
     const totalDuration = getTotalDuration();
-    setDuration(Math.max(totalDuration, 10)); // Minimum 10 seconds for empty timeline
+    setDuration(Math.max(totalDuration, 20)); // Minimum 20 seconds for empty timeline
   }, [tracks, setDuration, getTotalDuration]);
 
   // Keyboard event for deleting selected elements
@@ -697,13 +697,13 @@ export function Timeline() {
 
   return (
     <div
-      className={`h-full flex flex-col transition-colors duration-200 relative bg-panel rounded-sm overflow-hidden`}
+      className={`h-full flex flex-col transition-colors duration-200 relative bg-panel rounded-xl overflow-hidden`}
       {...dragProps}
       onMouseEnter={() => setIsInTimeline(true)}
       onMouseLeave={() => setIsInTimeline(false)}
     >
       {/* Toolbar */}
-      <div className="border-b flex items-center px-2 py-1 gap-1">
+      <div className="border-b flex items-center px-2 py-1 pb-3 gap-1">
         <TooltipProvider delayDuration={500}>
           {/* Play/Pause Button */}
           <Tooltip>
@@ -712,7 +712,21 @@ export function Timeline() {
                 variant="text"
                 size="icon"
                 onClick={toggle}
-                className="mr-2"
+                className="mr-2 transition-all duration-200"
+                style={{
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  boxShadow: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'rgba(59, 130, 246, 1)';
+                  e.currentTarget.style.transform = 'scale(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
               >
                 {isPlaying ? (
                   <Pause className="h-4 w-4" />
@@ -766,7 +780,26 @@ export function Timeline() {
           <div className="w-px h-6 bg-border mx-1" />
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="text" size="icon" onClick={handleSplitSelected}>
+              <Button 
+                variant="text" 
+                size="icon" 
+                onClick={handleSplitSelected}
+                className="transition-all duration-200"
+                style={{
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  boxShadow: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'rgba(59, 130, 246, 1)';
+                  e.currentTarget.style.transform = 'scale(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              >
                 <Scissors className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
@@ -778,6 +811,21 @@ export function Timeline() {
                 variant="text"
                 size="icon"
                 onClick={handleSplitAndKeepLeft}
+                className="transition-all duration-200"
+                style={{
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  boxShadow: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'rgba(59, 130, 246, 1)';
+                  e.currentTarget.style.transform = 'scale(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
               >
                 <ArrowLeftToLine className="h-4 w-4" />
               </Button>
@@ -790,6 +838,21 @@ export function Timeline() {
                 variant="text"
                 size="icon"
                 onClick={handleSplitAndKeepRight}
+                className="transition-all duration-200"
+                style={{
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  boxShadow: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'rgba(59, 130, 246, 1)';
+                  e.currentTarget.style.transform = 'scale(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
               >
                 <ArrowRightToLine className="h-4 w-4" />
               </Button>
@@ -798,7 +861,26 @@ export function Timeline() {
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="text" size="icon" onClick={handleSeparateAudio}>
+              <Button 
+                variant="text" 
+                size="icon" 
+                onClick={handleSeparateAudio}
+                className="transition-all duration-200"
+                style={{
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  boxShadow: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'rgba(59, 130, 246, 1)';
+                  e.currentTarget.style.transform = 'scale(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              >
                 <SplitSquareHorizontal className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
@@ -810,6 +892,21 @@ export function Timeline() {
                 variant="text"
                 size="icon"
                 onClick={handleDuplicateSelected}
+                className="transition-all duration-200"
+                style={{
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  boxShadow: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'rgba(59, 130, 246, 1)';
+                  e.currentTarget.style.transform = 'scale(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
               >
                 <Copy className="h-4 w-4" />
               </Button>
@@ -818,7 +915,26 @@ export function Timeline() {
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="text" size="icon" onClick={handleFreezeSelected}>
+              <Button 
+                variant="text" 
+                size="icon" 
+                onClick={handleFreezeSelected}
+                className="transition-all duration-200"
+                style={{
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  boxShadow: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'rgba(59, 130, 246, 1)';
+                  e.currentTarget.style.transform = 'scale(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              >
                 <Snowflake className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
@@ -826,7 +942,26 @@ export function Timeline() {
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="text" size="icon" onClick={handleDeleteSelected}>
+              <Button 
+                variant="text" 
+                size="icon" 
+                onClick={handleDeleteSelected}
+                className="transition-all duration-200"
+                style={{
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  boxShadow: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'rgba(220, 38, 38, 1)';
+                  e.currentTarget.style.transform = 'scale(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              >
                 <Trash2 className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
@@ -865,18 +1000,23 @@ export function Timeline() {
 
           {/* Timeline Ruler */}
           <div
-            className="flex-1 relative overflow-hidden h-4"
+            className="flex-1 relative overflow-hidden timeline-ruler"
+            style={{ height: '28px' }}
             onWheel={handleWheel}
             onMouseDown={handleSelectionMouseDown}
             onClick={handleTimelineContentClick}
             data-ruler-area
+            ref={(el) => {
+              // Ruler container ref (debug logging removed)
+            }}
           >
             <ScrollArea className="w-full" ref={rulerScrollRef}>
               <div
                 ref={rulerRef}
-                className="relative h-4 select-none cursor-default"
+                className="relative select-none cursor-default"
                 style={{
                   width: `${dynamicTimelineWidth}px`,
+                  height: '28px',
                 }}
                 onMouseDown={handleRulerMouseDown}
               >
@@ -887,16 +1027,18 @@ export function Timeline() {
                     const pixelsPerSecond =
                       TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoom;
                     if (pixelsPerSecond >= 200) return 0.1; // Every 0.1s when very zoomed in
-                    if (pixelsPerSecond >= 100) return 0.5; // Every 0.5s when zoomed in
-                    if (pixelsPerSecond >= 50) return 1; // Every 1s at normal zoom
-                    if (pixelsPerSecond >= 25) return 2; // Every 2s when zoomed out
-                    if (pixelsPerSecond >= 12) return 5; // Every 5s when more zoomed out
-                    if (pixelsPerSecond >= 6) return 10; // Every 10s when very zoomed out
-                    return 30; // Every 30s when extremely zoomed out
+                    if (pixelsPerSecond >= 100) return 0.2; // Every 0.2s when zoomed in (1.0, 1.2, 1.4, 1.6, 1.8)
+                    if (pixelsPerSecond >= 50) return 0.5; // Every 0.5s at normal zoom
+                    if (pixelsPerSecond >= 25) return 1; // Every 1s when zoomed out
+                    if (pixelsPerSecond >= 12) return 2; // Every 2s when more zoomed out
+                    if (pixelsPerSecond >= 6) return 5; // Every 5s when very zoomed out
+                    return 10; // Every 10s when extremely zoomed out
                   };
 
                   const interval = getTimeInterval(zoomLevel);
                   const markerCount = Math.ceil(duration / interval) + 1;
+
+                  // Timeline ruler calculations (debug logging removed)
 
                   return Array.from({ length: markerCount }, (_, i) => {
                     const time = i * interval;
@@ -905,20 +1047,25 @@ export function Timeline() {
                     const isMainMarker =
                       time % (interval >= 1 ? Math.max(1, interval) : 1) === 0;
 
+                    // Marker rendering (debug logging removed to prevent console spam)
+
                     return (
                       <div
                         key={i}
-                        className={`absolute top-0 bottom-0 ${
+                        className={`absolute ${
                           isMainMarker
-                            ? "border-l border-muted-foreground/40"
-                            : "border-l border-muted-foreground/20"
+                            ? "border-l-2 border-muted-foreground/60"
+                            : "border-l border-muted-foreground/40"
                         }`}
                         style={{
                           left: `${time * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel}px`,
+                          top: '0px',
+                          height: '500px',
+                          zIndex: 1
                         }}
                       >
                         <span
-                          className={`absolute top-1 left-1 text-[0.6rem] ${
+                          className={`absolute top-0 left-1.5 text-[0.65rem] ${
                             isMainMarker
                               ? "text-muted-foreground font-medium"
                               : "text-muted-foreground/70"
@@ -986,7 +1133,7 @@ export function Timeline() {
 
           {/* Timeline Tracks Content */}
           <div
-            className="flex-1 relative overflow-hidden"
+            className="flex-1 relative overflow-hidden timeline-tracks"
             onWheel={handleWheel}
             onMouseDown={handleSelectionMouseDown}
             onClick={handleTimelineContentClick}

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenCut - Desktop Video Editor</title>
+    <script>
+        // Try to redirect to Next.js app if running in development
+        if (window.location.protocol === 'file:' && window.electronAPI) {
+            // Check if we should redirect to development server
+            fetch('http://localhost:3000').then(() => {
+                console.log('🔄 Development server detected, redirecting...');
+                window.location.href = 'http://localhost:3000';
+            }).catch(() => {
+                console.log('📄 Using static HTML - development server not available');
+            });
+        }
+    </script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            text-align: center;
+            max-width: 600px;
+        }
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        .status {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+        }
+        .feature {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #4ade80;
+        }
+        .demo-note {
+            background: rgba(255,200,100,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #fbbf24;
+        }
+        button {
+            background: #4ade80;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover {
+            background: #22c55e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 OpenCut Desktop</h1>
+        <p>Privacy-focused video editor running natively on your desktop</p>
+        
+        <div class="status">
+            <h3>✅ Electron App Status</h3>
+            <div class="feature">🖥️ Desktop application running</div>
+            <div class="feature">🔒 Secure IPC communication enabled</div>
+            <div class="feature">🔐 Authentication bypassed for desktop mode</div>
+            <div class="feature">📱 Native system integration ready</div>
+            <div class="feature">⚡ Ready for native FFmpeg integration</div>
+        </div>
+
+        <div class="demo-note">
+            <h3>🚧 Development Build</h3>
+            <p>This is a demo build showing the Electron shell. The full video editor will be integrated in the next steps of Task 9.</p>
+            <p><strong>Next:</strong> Step 3 - Native FFmpeg integration for 5-10x faster video exports</p>
+        </div>
+
+        <div>
+            <button onclick="testIPC()">Test IPC Communication</button>
+            <button onclick="showDevTools()">Open Dev Tools</button>
+        </div>
+
+        <div id="ipc-result" style="margin-top: 20px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 5px; display: none;"></div>
+    </div>
+
+    <script>
+        async function testIPC() {
+            const resultDiv = document.getElementById('ipc-result');
+            try {
+                if (window.electronAPI) {
+                    const response = await window.electronAPI.ping();
+                    resultDiv.innerHTML = `✅ IPC Test Success: ${response}`;
+                    resultDiv.style.backgroundColor = 'rgba(34, 197, 94, 0.2)';
+                } else {
+                    resultDiv.innerHTML = '❌ Electron API not available';
+                    resultDiv.style.backgroundColor = 'rgba(239, 68, 68, 0.2)';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `❌ IPC Error: ${error.message}`;
+                resultDiv.style.backgroundColor = 'rgba(239, 68, 68, 0.2)';
+            }
+            resultDiv.style.display = 'block';
+        }
+
+        function showDevTools() {
+            // This will be handled by Electron
+            console.log('Dev tools requested');
+        }
+
+        // Auto-test IPC on load
+        window.addEventListener('load', () => {
+            setTimeout(testIPC, 1000);
+        });
+    </script>
+</body>
+</html>

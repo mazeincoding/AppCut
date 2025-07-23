@@ -7,6 +7,12 @@ import { RiGithubLine, RiTwitterXLine } from "react-icons/ri";
 import { getStars } from "@/lib/fetch-github-stars";
 import Image from "next/image";
 
+// Check if we're running in Electron
+const isElectron = typeof window !== 'undefined' && window.electronAPI !== undefined;
+
+// Create motion component that disables animations in Electron
+const MotionFooter = isElectron ? "footer" : motion.footer;
+
 export function Footer() {
   const [star, setStar] = useState<string>();
 
@@ -24,18 +30,20 @@ export function Footer() {
   }, []);
 
   return (
-    <motion.footer
+    <MotionFooter
       className="bg-background border-t"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 0.8, duration: 0.8 }}
+      {...(!isElectron && {
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+        transition: { delay: 0.8, duration: 0.8 }
+      })}
     >
       <div className="max-w-5xl mx-auto px-8 py-10">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-8">
           {/* Brand Section */}
           <div className="md:col-span-1 max-w-sm">
             <div className="flex items-center gap-2 mb-4">
-              <Image src="/logo.svg" alt="OpenCut" width={24} height={24} />
+              <Image src="./logo.svg" alt="OpenCut" width={24} height={24} />
               <span className="font-bold text-lg">OpenCut</span>
             </div>
             <p className="text-sm text-muted-foreground mb-5">
@@ -62,14 +70,16 @@ export function Footer() {
             </div>
           </div>
 
-          <div className="flex gap-12 justify-end items-start py-2">
+          <div className="flex gap-12 justify-start items-start py-2">
             <div>
               <h3 className="font-semibold text-foreground mb-4">Resources</h3>
               <ul className="space-y-2 text-sm">
                 <li>
                   <Link
                     href="/privacy"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    className="transition-colors no-underline"
+                    style={{ color: 'white' }}
+                    prefetch={false}
                   >
                     Privacy policy
                   </Link>
@@ -77,7 +87,9 @@ export function Footer() {
                 <li>
                   <Link
                     href="/terms"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    className="transition-colors no-underline"
+                    style={{ color: 'white' }}
+                    prefetch={false}
                   >
                     Terms of use
                   </Link>
@@ -92,7 +104,9 @@ export function Footer() {
                 <li>
                   <Link
                     href="/contributors"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    className="transition-colors no-underline"
+                    style={{ color: 'white' }}
+                    prefetch={false}
                   >
                     Contributors
                   </Link>
@@ -100,7 +114,8 @@ export function Footer() {
                 <li>
                   <Link
                     href="https://github.com/OpenCut-app/OpenCut/blob/main/README.md"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    className="transition-colors no-underline"
+                    style={{ color: 'white' }}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -119,6 +134,6 @@ export function Footer() {
           </div>
         </div>
       </div>
-    </motion.footer>
+    </MotionFooter>
   );
 }

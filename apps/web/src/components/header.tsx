@@ -4,14 +4,16 @@ import Link from "next/link";
 import { Button } from "./ui/button";
 import { ArrowRight } from "lucide-react";
 import { HeaderBase } from "./header-base";
-import { useSession } from "@opencut/auth/client";
+import { useSession } from "@/lib/auth-wrapper";
 import { getStars } from "@/lib/fetch-github-stars";
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { useElectronLink } from "@/lib/electron-navigation";
 
 export function Header() {
   const { data: session } = useSession();
   const [star, setStar] = useState<string>("");
+  const { handleClick, isElectron } = useElectronLink();
 
   useEffect(() => {
     const fetchStars = async () => {
@@ -27,23 +29,79 @@ export function Header() {
   }, []);
 
   const leftContent = (
-    <Link href="/" className="flex items-center gap-3">
-      <Image src="/logo.svg" alt="OpenCut Logo" width={32} height={32} />
+    <Link 
+      href="/" 
+      className="flex items-center gap-3"
+      onClick={(e) => handleClick(e, "/")}
+      prefetch={false}
+    >
+      <Image src="./logo.svg" alt="OpenCut Logo" width={32} height={32} />
       <span className="text-xl font-medium hidden md:block">OpenCut</span>
     </Link>
   );
 
   const rightContent = (
-    <nav className="flex items-center gap-3">
-      <Link href="/contributors">
-        <Button variant="text" className="text-sm p-0">
+    <nav className="flex items-center gap-8">
+      <Link 
+        href="/contributors"
+        onClick={(e) => handleClick(e, "/contributors")}
+        prefetch={false}
+      >
+        <Button 
+          variant="text" 
+          className="text-sm p-0 relative shadow-lg hover:shadow-xl before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent no-underline"
+          style={{
+            backgroundColor: '#3b82f6', 
+            color: 'white',
+            height: '32px',
+            borderRadius: '6px',
+            fontSize: '12px',
+            position: 'relative',
+            overflow: 'hidden',
+            border: 'none',
+            outline: 'none',
+            boxShadow: 'none',
+            paddingLeft: '12px',
+            paddingRight: '12px'
+          }}
+        >
           Contributors
         </Button>
       </Link>
-      <Link href="/projects">
-        <Button size="sm" className="text-sm ml-4">
+      <div className="w-px h-6 bg-gray-300"></div>
+      <Link 
+        href="/projects"
+        onClick={(e) => handleClick(e, "/projects")}
+        prefetch={false}
+      >
+        <Button 
+          size="sm" 
+          className="text-sm ml-4 relative shadow-lg hover:shadow-xl before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent no-underline transition-all duration-200"
+          style={{
+            backgroundColor: '#3b82f6', 
+            color: 'white',
+            height: '32px',
+            borderRadius: '6px',
+            fontSize: '12px',
+            position: 'relative',
+            overflow: 'hidden',
+            border: 'none',
+            outline: 'none',
+            boxShadow: 'none',
+            paddingLeft: '12px',
+            paddingRight: '12px'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.05)';
+            e.currentTarget.style.backgroundColor = '#2563eb';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.backgroundColor = '#3b82f6';
+          }}
+        >
           Projects
-          <ArrowRight className="h-4 w-4" />
+          <ArrowRight className="h-4 w-4" style={{ width: '14px', height: '14px' }} />
         </Button>
       </Link>
     </nav>

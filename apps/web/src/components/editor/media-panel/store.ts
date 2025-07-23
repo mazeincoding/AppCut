@@ -10,6 +10,7 @@ import {
   LucideIcon,
   TypeIcon,
   BotIcon,
+  ImageIcon,
 } from "lucide-react";
 import { create } from "zustand";
 
@@ -17,6 +18,7 @@ export type Tab =
   | "media"
   | "audio"
   | "text"
+  | "text2image"
   | "stickers"
   | "effects"
   | "transitions"
@@ -34,6 +36,10 @@ export const tabs: { [key in Tab]: { icon: LucideIcon; label: string } } = {
     icon: VideoIcon,
     label: "Media",
   },
+  adjustment: {
+    icon: SlidersHorizontalIcon,
+    label: "Adjustment",
+  },
   audio: {
     icon: MusicIcon,
     label: "Audio",
@@ -41,6 +47,10 @@ export const tabs: { [key in Tab]: { icon: LucideIcon; label: string } } = {
   text: {
     icon: TypeIcon,
     label: "Text",
+  },
+  text2image: {
+    icon: ImageIcon,
+    label: "Text2Image",
   },
   stickers: {
     icon: StickerIcon,
@@ -62,18 +72,19 @@ export const tabs: { [key in Tab]: { icon: LucideIcon; label: string } } = {
     icon: BlendIcon,
     label: "Filters",
   },
-  adjustment: {
-    icon: SlidersHorizontalIcon,
-    label: "Adjustment",
-  },
 };
 
 interface MediaPanelStore {
   activeTab: Tab;
   setActiveTab: (tab: Tab) => void;
+  // AI-specific tab state (separate from main tabs)
+  aiActiveTab: "text" | "image";
+  setAiActiveTab: (tab: "text" | "image") => void;
 }
 
 export const useMediaPanelStore = create<MediaPanelStore>((set) => ({
   activeTab: "media",
   setActiveTab: (tab) => set({ activeTab: tab }),
+  aiActiveTab: "text",
+  setAiActiveTab: (tab) => set({ aiActiveTab: tab }),
 }));

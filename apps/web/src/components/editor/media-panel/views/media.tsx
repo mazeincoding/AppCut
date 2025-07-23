@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DragOverlay } from "@/components/ui/drag-overlay";
+import { debugLogger } from "@/lib/debug-logger";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -24,6 +25,9 @@ import {
 } from "@/components/ui/select";
 import { DraggableMediaItem } from "@/components/ui/draggable-item";
 import { useProjectStore } from "@/stores/project-store";
+import { useAdjustmentStore } from "@/stores/adjustment-store";
+import { useMediaPanelStore } from "../store";
+import { ExportAllButton } from "../export-all-button";
 
 export function MediaView() {
   const { mediaItems, addMediaItem, removeMediaItem } = useMediaStore();
@@ -54,7 +58,9 @@ export function MediaView() {
       }
     } catch (error) {
       // Show error toast if processing fails
-      console.error("Error processing files:", error);
+      debugLogger.log('MediaView', 'FILE_PROCESSING_ERROR', { 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
       toast.error("Failed to process files");
     } finally {
       setIsProcessing(false);
@@ -141,23 +147,27 @@ export function MediaView() {
               className="w-full h-full object-cover rounded"
               loading="lazy"
             />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded">
-              <Video className="h-6 w-6 text-white drop-shadow-md" />
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-transparent rounded"></div>
+            <div className="absolute top-1 right-1">
+              <Video className="h-4 w-4 text-white drop-shadow-md bg-black/50 rounded p-0.5" />
             </div>
             {item.duration && (
-              <div className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1 rounded">
+              <div className="absolute bottom-1 right-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs px-1.5 py-0.5 rounded font-medium">
                 {formatDuration(item.duration)}
               </div>
             )}
+            <div className="absolute bottom-1 left-1 text-white text-xs font-medium drop-shadow-sm bg-black/50 px-1.5 py-0.5 rounded truncate max-w-[80%]">
+              {item.name.replace(/\.[^/.]+$/, '')}
+            </div>
           </div>
         );
       }
       return (
-        <div className="w-full h-full bg-muted/30 flex flex-col items-center justify-center text-muted-foreground rounded">
-          <Video className="h-6 w-6 mb-1" />
-          <span className="text-xs">Video</span>
+        <div className="w-full h-full bg-gradient-to-br from-blue-500/30 to-purple-500/30 flex flex-col items-center justify-center text-white rounded border border-blue-500/20">
+          <Video className="h-8 w-8 mb-1 drop-shadow-sm" />
+          <span className="text-xs font-medium">Video</span>
           {item.duration && (
-            <span className="text-xs opacity-70">
+            <span className="text-xs opacity-80 bg-black/30 px-1 rounded mt-1">
               {formatDuration(item.duration)}
             </span>
           )}
@@ -200,13 +210,13 @@ export function MediaView() {
       />
 
       <div
-        className={`h-full flex flex-col gap-1 transition-colors relative ${isDragOver ? "bg-accent/30" : ""}`}
+        className={`h-full flex flex-col gap-1 transition-colors relative border-panel-primary rounded-sm ${isDragOver ? "bg-accent/30" : ""}`}
         {...dragProps}
       >
         {/* Show overlay when dragging files over the panel */}
         <DragOverlay isVisible={isDragOver} />
 
-        <div className="p-3 pb-2">
+        <div className="px-3 pt-1 pb-2">
           {/* Button to add/upload media */}
           <div className="flex gap-2">
             {/* Search and filter controls */}
@@ -224,10 +234,13 @@ export function MediaView() {
             <Input
               type="text"
               placeholder="Search media..."
-              className="min-w-[60px] flex-1 h-full text-xs"
+              className="min-w-[60px] flex-1 h-full text-xs border-subtle"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+
+            {/* Export All button */}
+            <ExportAllButton variant="outline" size="sm" />
 
             {/* Add media button */}
             <Button
@@ -292,6 +305,27 @@ export function MediaView() {
                     />
                   </ContextMenuTrigger>
                   <ContextMenuContent>
+                    {item.type === 'image' && (
+                      <ContextMenuItem
+                        onClick={() => {
+                          // Navigate to adjustment tab and load the image
+                          const mediaStore = useMediaStore.getState();
+                          const adjustmentStore = useAdjustmentStore.getState();
+                          const mediaPanelStore = useMediaPanelStore.getState();
+                          
+                          // Set the image in adjustment store
+                          const imageUrl = item.url && item.url.startsWith('blob:') 
+                            ? item.url 
+                            : URL.createObjectURL(item.file);
+                          adjustmentStore.setOriginalImage(item.file, imageUrl);
+                          
+                          // Navigate to adjustment tab
+                          mediaPanelStore.setActiveTab('adjustment');
+                        }}
+                      >
+                        Edit Image
+                      </ContextMenuItem>
+                    )}
                     <ContextMenuItem>Export clips</ContextMenuItem>
                     <ContextMenuItem
                       variant="destructive"

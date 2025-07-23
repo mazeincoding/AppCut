@@ -1,0 +1,1041 @@
+
+≡ƒÜÇ Electron app starting...
+≡ƒôª Loading built Next.js app via app:// protocol
+
+≡ƒöì === PROTOCOL DEBUG START ===
+≡ƒôÑ Raw request URL: app://index.html
+≡ƒöº URL after prefix removal: index.html
+≡ƒöô URL after decoding: index.html
+≡ƒôü Constructed file path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\index.html
+≡ƒöÆ Normalized path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\index.html
+≡ƒöÆ Out directory: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out
+≡ƒôè File stats:
+   - Size: 27570 bytes
+   - Extension: .html
+   - Modified: 2025-07-18T01:10:58.273Z
+Γ£à Serving file successfully
+≡ƒöì === PROTOCOL DEBUG END ===
+
+[RENDERER INFO] Electron preload script loaded
+
+≡ƒöì === PROTOCOL DEBUG START ===
+≡ƒôÑ Raw request URL: app://_next/static/css/727973242bb33abd.css
+≡ƒöº URL after prefix removal: _next/static/css/727973242bb33abd.css
+≡ƒöô URL after decoding: _next/static/css/727973242bb33abd.css
+≡ƒôü Constructed file path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\css\727973242bb33abd.css
+≡ƒöÆ Normalized path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\css\727973242bb33abd.css
+≡ƒöÆ Out directory: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out
+≡ƒôè File stats:
+   - Size: 48 bytes
+   - Extension: .css
+   - Modified: 2025-07-18T01:10:58.289Z
+Γ£à Serving file successfully
+≡ƒöì === PROTOCOL DEBUG END ===
+
+
+≡ƒöì === PROTOCOL DEBUG START ===
+≡ƒôÑ Raw request URL: app://_next/static/css/95b6b022ec16b740.css
+≡ƒöº URL after prefix removal: _next/static/css/95b6b022ec16b740.css
+≡ƒöô URL after decoding: _next/static/css/95b6b022ec16b740.css
+≡ƒôü Constructed file path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\css\95b6b022ec16b740.css
+≡ƒöÆ Normalized path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\css\95b6b022ec16b740.css
+≡ƒöÆ Out directory: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out
+≡ƒôè File stats:
+   - Size: 18879 bytes
+   - Extension: .css
+   - Modified: 2025-07-18T01:10:58.290Z
+Γ£à Serving file successfully
+≡ƒöì === PROTOCOL DEBUG END ===
+
+
+≡ƒöì === PROTOCOL DEBUG START ===
+≡ƒôÑ Raw request URL: app://_next/static/chunks/webpack-b79e680ed4d74ee9.js
+≡ƒöº URL after prefix removal: _next/static/chunks/webpack-b79e680ed4d74ee9.js
+≡ƒöô URL after decoding: _next/static/chunks/webpack-b79e680ed4d74ee9.js
+≡ƒôü Constructed file path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\chunks\webpack-b79e680ed4d74ee9.js
+≡ƒöÆ Normalized path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\chunks\webpack-b79e680ed4d74ee9.js
+≡ƒöÆ Out directory: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out
+≡ƒôè File stats:
+   - Size: 3692 bytes
+   - Extension: .js
+   - Modified: 2025-07-18T01:10:33.653Z
+Γ£à Serving file successfully
+≡ƒöì === PROTOCOL DEBUG END ===
+
+
+≡ƒöì === PROTOCOL DEBUG START ===
+≡ƒôÑ Raw request URL: app://_next/static/chunks/87c73c54-c5cc8f38df49878d.js
+≡ƒöº URL after prefix removal: _next/static/chunks/87c73c54-c5cc8f38df49878d.js
+≡ƒöô URL after decoding: _next/static/chunks/87c73c54-c5cc8f38df49878d.js
+≡ƒôü Constructed file path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\chunks\87c73c54-c5cc8f38df49878d.js
+≡ƒöÆ Normalized path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\chunks\87c73c54-c5cc8f38df49878d.js
+≡ƒöÆ Out directory: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out
+≡ƒôè File stats:
+   - Size: 168467 bytes
+   - Extension: .js
+   - Modified: 2025-07-18T01:10:33.653Z
+Γ£à Serving file successfully
+≡ƒöì === PROTOCOL DEBUG END ===
+
+
+≡ƒöì === PROTOCOL DEBUG START ===
+≡ƒôÑ Raw request URL: app://_next/static/chunks/315-b1a6c7657c9644f5.js
+≡ƒöº URL after prefix removal: _next/static/chunks/315-b1a6c7657c9644f5.js
+≡ƒöô URL after decoding: _next/static/chunks/315-b1a6c7657c9644f5.js
+≡ƒôü Constructed file path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\chunks\315-b1a6c7657c9644f5.js
+≡ƒöÆ Normalized path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\chunks\315-b1a6c7657c9644f5.js
+≡ƒöÆ Out directory: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out
+≡ƒôè File stats:
+   - Size: 174695 bytes
+   - Extension: .js
+   - Modified: 2025-07-18T01:10:33.657Z
+Γ£à Serving file successfully
+≡ƒöì === PROTOCOL DEBUG END ===
+
+
+≡ƒöì === PROTOCOL DEBUG START ===
+≡ƒôÑ Raw request URL: app://_next/static/chunks/main-app-af3ddf1092a7b19a.js
+≡ƒöº URL after prefix removal: _next/static/chunks/main-app-af3ddf1092a7b19a.js
+≡ƒöô URL after decoding: _next/static/chunks/main-app-af3ddf1092a7b19a.js
+≡ƒôü Constructed file path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\chunks\main-app-af3ddf1092a7b19a.js
+≡ƒöÆ Normalized path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\chunks\main-app-af3ddf1092a7b19a.js
+≡ƒöÆ Out directory: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out
+≡ƒôè File stats:
+   - Size: 572 bytes
+   - Extension: .js
+   - Modified: 2025-07-18T01:10:33.648Z
+Γ£à Serving file successfully
+≡ƒöì === PROTOCOL DEBUG END ===
+
+
+≡ƒöì === PROTOCOL DEBUG START ===
+≡ƒôÑ Raw request URL: app://_next/static/chunks/701-7a76d15abc5e8120.js
+≡ƒöº URL after prefix removal: _next/static/chunks/701-7a76d15abc5e8120.js
+≡ƒöô URL after decoding: _next/static/chunks/701-7a76d15abc5e8120.js
+≡ƒôü Constructed file path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\chunks\701-7a76d15abc5e8120.js
+≡ƒöÆ Normalized path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\chunks\701-7a76d15abc5e8120.js
+≡ƒöÆ Out directory: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out
+≡ƒôè File stats:
+   - Size: 27579 bytes
+   - Extension: .js
+   - Modified: 2025-07-18T01:10:33.654Z
+Γ£à Serving file successfully
+≡ƒöì === PROTOCOL DEBUG END ===
+
+
+≡ƒöì === PROTOCOL DEBUG START ===
+≡ƒôÑ Raw request URL: app://_next/static/chunks/904-4440e902be625c47.js
+≡ƒöº URL after prefix removal: _next/static/chunks/904-4440e902be625c47.js
+≡ƒöô URL after decoding: _next/static/chunks/904-4440e902be625c47.js
+≡ƒôü Constructed file path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\chunks\904-4440e902be625c47.js
+≡ƒöÆ Normalized path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\chunks\904-4440e902be625c47.js
+≡ƒöÆ Out directory: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out
+≡ƒôè File stats:
+   - Size: 70854 bytes
+   - Extension: .js
+   - Modified: 2025-07-18T01:10:33.655Z
+Γ£à Serving file successfully
+≡ƒöì === PROTOCOL DEBUG END ===
+
+
+≡ƒöì === PROTOCOL DEBUG START ===
+≡ƒôÑ Raw request URL: app://_next/static/chunks/444-81f9707d62cc017c.js
+≡ƒöº URL after prefix removal: _next/static/chunks/444-81f9707d62cc017c.js
+≡ƒöô URL after decoding: _next/static/chunks/444-81f9707d62cc017c.js
+≡ƒôü Constructed file path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\chunks\444-81f9707d62cc017c.js
+≡ƒöÆ Normalized path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\chunks\444-81f9707d62cc017c.js
+≡ƒöÆ Out directory: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out
+≡ƒôè File stats:
+   - Size: 8830 bytes
+   - Extension: .js
+   - Modified: 2025-07-18T01:10:33.657Z
+Γ£à Serving file successfully
+≡ƒöì === PROTOCOL DEBUG END ===
+
+
+≡ƒöì === PROTOCOL DEBUG START ===
+≡ƒôÑ Raw request URL: app://_next/static/chunks/736-3df3526214a7b450.js
+≡ƒöº URL after prefix removal: _next/static/chunks/736-3df3526214a7b450.js
+≡ƒöô URL after decoding: _next/static/chunks/736-3df3526214a7b450.js
+≡ƒôü Constructed file path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\chunks\736-3df3526214a7b450.js
+≡ƒöÆ Normalized path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\chunks\736-3df3526214a7b450.js
+≡ƒöÆ Out directory: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out
+≡ƒôè File stats:
+   - Size: 11510 bytes
+   - Extension: .js
+   - Modified: 2025-07-18T01:10:33.659Z
+Γ£à Serving file successfully
+≡ƒöì === PROTOCOL DEBUG END ===
+
+
+≡ƒöì === PROTOCOL DEBUG START ===
+≡ƒôÑ Raw request URL: app://_next/static/chunks/213-418aca4a3f8163d3.js
+≡ƒöº URL after prefix removal: _next/static/chunks/213-418aca4a3f8163d3.js
+≡ƒöô URL after decoding: _next/static/chunks/213-418aca4a3f8163d3.js
+≡ƒôü Constructed file path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\chunks\213-418aca4a3f8163d3.js
+≡ƒöÆ Normalized path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\chunks\213-418aca4a3f8163d3.js
+≡ƒöÆ Out directory: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out
+≡ƒôè File stats:
+   - Size: 27013 bytes
+   - Extension: .js
+   - Modified: 2025-07-18T01:10:33.659Z
+Γ£à Serving file successfully
+≡ƒöì === PROTOCOL DEBUG END ===
+
+
+≡ƒöì === PROTOCOL DEBUG START ===
+≡ƒôÑ Raw request URL: app://_next/static/chunks/app/layout-a14f92bbe0d6405a.js
+≡ƒöº URL after prefix removal: _next/static/chunks/app/layout-a14f92bbe0d6405a.js
+≡ƒöô URL after decoding: _next/static/chunks/app/layout-a14f92bbe0d6405a.js
+≡ƒôü Constructed file path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\chunks\app\layout-a14f92bbe0d6405a.js
+≡ƒöÆ Normalized path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\chunks\app\layout-a14f92bbe0d6405a.js
+≡ƒöÆ Out directory: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out
+≡ƒôè File stats:
+   - Size: 4662 bytes
+   - Extension: .js
+   - Modified: 2025-07-18T01:10:33.648Z
+Γ£à Serving file successfully
+≡ƒöì === PROTOCOL DEBUG END ===
+
+
+≡ƒöì === PROTOCOL DEBUG START ===
+≡ƒôÑ Raw request URL: app://_next/static/chunks/c6ede321-0f4a630fbf461f00.js
+≡ƒöº URL after prefix removal: _next/static/chunks/c6ede321-0f4a630fbf461f00.js
+≡ƒöô URL after decoding: _next/static/chunks/c6ede321-0f4a630fbf461f00.js
+≡ƒôü Constructed file path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\chunks\c6ede321-0f4a630fbf461f00.js
+≡ƒöÆ Normalized path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\chunks\c6ede321-0f4a630fbf461f00.js
+≡ƒöÆ Out directory: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out
+≡ƒôè File stats:
+   - Size: 3283 bytes
+   - Extension: .js
+   - Modified: 2025-07-18T01:10:33.653Z
+Γ£à Serving file successfully
+≡ƒöì === PROTOCOL DEBUG END ===
+
+
+≡ƒöì === PROTOCOL DEBUG START ===
+≡ƒôÑ Raw request URL: app://_next/static/chunks/541-1f60288d634e182e.js
+≡ƒöº URL after prefix removal: _next/static/chunks/541-1f60288d634e182e.js
+≡ƒöô URL after decoding: _next/static/chunks/541-1f60288d634e182e.js
+≡ƒôü Constructed file path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\chunks\541-1f60288d634e182e.js
+≡ƒöÆ Normalized path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\chunks\541-1f60288d634e182e.js
+≡ƒöÆ Out directory: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out
+≡ƒôè File stats:
+   - Size: 9827 bytes
+   - Extension: .js
+   - Modified: 2025-07-18T01:10:33.654Z
+Γ£à Serving file successfully
+≡ƒöì === PROTOCOL DEBUG END ===
+
+
+≡ƒöì === PROTOCOL DEBUG START ===
+≡ƒôÑ Raw request URL: app://_next/static/chunks/773-c1499fa6f55a63b6.js
+≡ƒöº URL after prefix removal: _next/static/chunks/773-c1499fa6f55a63b6.js
+≡ƒöô URL after decoding: _next/static/chunks/773-c1499fa6f55a63b6.js
+≡ƒôü Constructed file path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\chunks\773-c1499fa6f55a63b6.js
+≡ƒöÆ Normalized path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\chunks\773-c1499fa6f55a63b6.js
+≡ƒöÆ Out directory: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out
+≡ƒôè File stats:
+   - Size: 14525 bytes
+   - Extension: .js
+   - Modified: 2025-07-18T01:10:33.655Z
+Γ£à Serving file successfully
+≡ƒöì === PROTOCOL DEBUG END ===
+
+
+≡ƒöì === PROTOCOL DEBUG START ===
+≡ƒôÑ Raw request URL: app://_next/static/chunks/675-91a0072c2743681f.js
+≡ƒöº URL after prefix removal: _next/static/chunks/675-91a0072c2743681f.js
+≡ƒöô URL after decoding: _next/static/chunks/675-91a0072c2743681f.js
+≡ƒôü Constructed file path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\chunks\675-91a0072c2743681f.js
+≡ƒöÆ Normalized path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\chunks\675-91a0072c2743681f.js
+≡ƒöÆ Out directory: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out
+≡ƒôè File stats:
+   - Size: 118112 bytes
+   - Extension: .js
+   - Modified: 2025-07-18T01:10:33.657Z
+Γ£à Serving file successfully
+≡ƒöì === PROTOCOL DEBUG END ===
+
+
+≡ƒöì === PROTOCOL DEBUG START ===
+≡ƒôÑ Raw request URL: app://_next/static/chunks/app/page-cbaa1b58973b40cc.js
+≡ƒöº URL after prefix removal: _next/static/chunks/app/page-cbaa1b58973b40cc.js
+≡ƒöô URL after decoding: _next/static/chunks/app/page-cbaa1b58973b40cc.js
+≡ƒôü Constructed file path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\chunks\app\page-cbaa1b58973b40cc.js
+≡ƒöÆ Normalized path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\chunks\app\page-cbaa1b58973b40cc.js
+≡ƒöÆ Out directory: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out
+≡ƒôè File stats:
+   - Size: 15939 bytes
+   - Extension: .js
+   - Modified: 2025-07-18T01:10:33.651Z
+Γ£à Serving file successfully
+≡ƒöì === PROTOCOL DEBUG END ===
+
+
+≡ƒöì === PROTOCOL DEBUG START ===
+≡ƒôÑ Raw request URL: app://_next/static/media/e4af272ccee01ff0-s.p.woff2
+≡ƒöº URL after prefix removal: _next/static/media/e4af272ccee01ff0-s.p.woff2
+≡ƒöô URL after decoding: _next/static/media/e4af272ccee01ff0-s.p.woff2
+≡ƒôü Constructed file path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\media\e4af272ccee01ff0-s.p.woff2
+≡ƒöÆ Normalized path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\_next\static\media\e4af272ccee01ff0-s.p.woff2
+≡ƒöÆ Out directory: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out
+≡ƒôè File stats:
+   - Size: 48432 bytes
+   - Extension: .woff2
+   - Modified: 2025-07-18T01:10:33.639Z
+Γ£à Serving file successfully
+≡ƒöì === PROTOCOL DEBUG END ===
+
+Γ£à Electron window ready - OpenCut loaded successfully
+[RENDERER INFO] ≡ƒöì DOM Content Loaded - Initial check:
+[RENDERER INFO] - window.React: undefined
+[RENDERER INFO] - window.ReactDOM: undefined
+[RENDERER INFO] - window.next: undefined
+
+≡ƒöì === PROTOCOL DEBUG START ===
+≡ƒôÑ Raw request URL: app://logo.svg
+≡ƒöº URL after prefix removal: logo.svg
+≡ƒöô URL after decoding: logo.svg
+≡ƒôü Constructed file path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\logo.svg
+≡ƒöÆ Normalized path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\logo.svg
+≡ƒöÆ Out directory: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out
+≡ƒôè File stats:
+   - Size: 372 bytes
+   - Extension: .svg
+   - Modified: 2025-07-15T08:05:25.677Z
+≡ƒû╝∩╕Å IMAGE FILE DETECTED:
+   - File: logo.svg
+   - Size: 372 bytes
+   - Header bytes: 0x3c 0x73 0x76 0x67 0x20 0x77 0x69 0x64
+Γ£à Serving file successfully
+≡ƒöì === PROTOCOL DEBUG END ===
+
+
+≡ƒöì === PROTOCOL DEBUG START ===
+≡ƒôÑ Raw request URL: app://landing-page-bg.png
+≡ƒöº URL after prefix removal: landing-page-bg.png
+≡ƒöô URL after decoding: landing-page-bg.png
+≡ƒôü Constructed file path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\landing-page-bg.png
+≡ƒöÆ Normalized path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\landing-page-bg.png
+≡ƒöÆ Out directory: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out
+≡ƒôè File stats:
+   - Size: 230853 bytes
+   - Extension: .png
+   - Modified: 2025-07-15T08:05:25.675Z
+≡ƒû╝∩╕Å IMAGE FILE DETECTED:
+   - File: landing-page-bg.png
+   - Size: 230853 bytes
+   - Header bytes: 0x89 0x50 0x4e 0x47 0x0d 0x0a 0x1a 0x0a
+   - PNG header valid: true
+Γ£à Serving file successfully
+≡ƒöì === PROTOCOL DEBUG END ===
+
+≡ƒöº Page finished loading - injecting simple debug script...
+≡ƒÄ» Page loaded - Testing Electron IPC and storage...
+[RENDERER WARNING] %cElectron Security Warning (Disabled webSecurity) font-weight: bold; This renderer process has "webSecurity" disabled. This
+  exposes users of this app to severe security risks.
+
+For more information and help, consult
+https://electronjs.org/docs/tutorial/security.
+This warning will not show up
+once the app is packaged.
+  Source: node:electron/js2c/sandbox_bundle:2
+[RENDERER WARNING] %cElectron Security Warning (allowRunningInsecureContent) font-weight: bold; This renderer process has "allowRunningInsecureContent"
+  enabled. This exposes users of this app to severe security risks.
+
+  
+For more information and help, consult
+https://electronjs.org/docs/tutorial/security.
+This warning will not show up
+once the app is packaged.
+  Source: node:electron/js2c/sandbox_bundle:2
+[RENDERER WARNING] %cElectron Security Warning (Insecure Content-Security-Policy) font-weight: bold; This renderer process has either no Content Security
+  Policy set or a policy with "unsafe-eval" enabled. This exposes users of
+  this app to unnecessary security risks.
+
+For more information and help, consult
+https://electronjs.org/docs/tutorial/security.
+This warning will not show up
+once the app is packaged.
+  Source: node:electron/js2c/sandbox_bundle:2
+[RENDERER INFO] ≡ƒÜÇ SIMPLE DEBUG STARTING...
+[RENDERER INFO] ≡ƒôä DOM already ready - running immediate checks...
+[RENDERER INFO] 
+≡ƒû╝∩╕Å === IMMEDIATE IMAGE CHECK ===
+[RENDERER INFO] Total images found: 3
+[RENDERER INFO] Image 1:
+[RENDERER INFO]   - Src: app://logo.svg
+[RENDERER INFO]   - Natural size: 32x32
+[RENDERER INFO]   - Display size: 32x32
+[RENDERER INFO]   - Complete: true
+[RENDERER INFO]   - Classes: 
+[RENDERER INFO] Image 2:
+[RENDERER INFO]   - Src: app://landing-page-bg.png
+[RENDERER INFO]   - Natural size: 1904x1269
+[RENDERER INFO]   - Display size: 1269x1904
+[RENDERER INFO]   - Complete: true
+[RENDERER INFO]   - Classes: absolute top-0 left-0 -z-50 size-full object-cover
+[RENDERER INFO] ≡ƒÄ» FOUND BACKGROUND IMAGE!
+[RENDERER INFO]   - Parent element: DIV
+[RENDERER INFO]   - Parent classes: min-h-[calc(100vh-4.5rem)] supports-[height:100dvh]:min-h-[calc(100dvh-4.5rem)] flex flex-col justify-between items-center text-center px-4
+[RENDERER INFO]   - Computed styles:
+[RENDERER INFO]     - Object fit: fill
+[RENDERER INFO]     - Object position: 50% 50%
+[RENDERER INFO]     - Width: 1269px
+[RENDERER INFO]     - Height: 1903.5px
+[RENDERER INFO]     - Z-index: auto
+[RENDERER INFO]     - Position: static
+[RENDERER INFO] Image 3:
+[RENDERER INFO]   - Src: app://logo.svg
+[RENDERER INFO]   - Natural size: 32x32
+[RENDERER INFO]   - Display size: 24x24
+[RENDERER INFO]   - Complete: true
+[RENDERER INFO]   - Classes: 
+[RENDERER INFO] 
+≡ƒÄ¿ === IMMEDIATE BACKGROUND CHECK ===
+[RENDERER INFO] Total background images: 0
+[RENDERER INFO] ≡ƒÜÇ SIMPLE DEBUG SETUP COMPLETE
+Γ£à Simple debug script injected successfully
+[RENDERER INFO] ≡ƒöì React setup check...
+[RENDERER INFO] - React: not available
+[RENDERER INFO] - ReactDOM: not available
+[RENDERER INFO] - Next.js: not available
+≡ƒôí Received ping from renderer process
+[RENDERER INFO] ≡ƒöì Storage API availability:
+[RENDERER INFO] - IndexedDB: true
+[RENDERER INFO] - Navigator.storage: false
+[RENDERER INFO] - OPFS getDirectory: false
+[RENDERER INFO] Γ£à IPC Test successful: pong from Electron main process
+[RENDERER INFO] 
+ΓÅ░ TIMEOUT CHECK (1s)
+[RENDERER INFO] 
+≡ƒû╝∩╕Å === IMMEDIATE IMAGE CHECK ===
+[RENDERER INFO] Total images found: 3
+[RENDERER INFO] Image 1:
+[RENDERER INFO]   - Src: app://logo.svg
+[RENDERER INFO]   - Natural size: 32x32
+[RENDERER INFO]   - Display size: 32x32
+[RENDERER INFO]   - Complete: true
+[RENDERER INFO]   - Classes: 
+[RENDERER INFO] Image 2:
+[RENDERER INFO]   - Src: app://landing-page-bg.png
+[RENDERER INFO]   - Natural size: 1904x1269
+[RENDERER INFO]   - Display size: 1269x1904
+[RENDERER INFO]   - Complete: true
+[RENDERER INFO]   - Classes: absolute top-0 left-0 -z-50 size-full object-cover
+[RENDERER INFO] ≡ƒÄ» FOUND BACKGROUND IMAGE!
+[RENDERER INFO]   - Parent element: DIV
+[RENDERER INFO]   - Parent classes: min-h-[calc(100vh-4.5rem)] supports-[height:100dvh]:min-h-[calc(100dvh-4.5rem)] flex flex-col justify-between items-center text-center px-4
+[RENDERER INFO]   - Computed styles:
+[RENDERER INFO]     - Object fit: fill
+[RENDERER INFO]     - Object position: 50% 50%
+[RENDERER INFO]     - Width: 1269px
+[RENDERER INFO]     - Height: 1903.5px
+[RENDERER INFO]     - Z-index: auto
+[RENDERER INFO]     - Position: static
+[RENDERER INFO] Image 3:
+[RENDERER INFO]   - Src: app://logo.svg
+[RENDERER INFO]   - Natural size: 32x32
+[RENDERER INFO]   - Display size: 24x24
+[RENDERER INFO]   - Complete: true
+[RENDERER INFO]   - Classes: 
+[RENDERER INFO] 
+≡ƒÄ¿ === IMMEDIATE BACKGROUND CHECK ===
+[RENDERER INFO] Total background images: 0
+[RENDERER INFO] ≡ƒöì After delay check (2s):
+[RENDERER INFO] - window.React: undefined
+[RENDERER INFO] - window.ReactDOM: undefined
+[RENDERER INFO] - window.next: undefined
+[RENDERER INFO] - document.querySelector("#__next"): false
+[RENDERER INFO] Γ¥î Next.js app not rendered
+[RENDERER INFO] ≡ƒöì Storage service initialization test...
+[RENDERER INFO] Γ¥î Storage service not available
+[RENDERER INFO] 
+ΓÅ░ TIMEOUT CHECK (3s)
+[RENDERER INFO] 
+≡ƒû╝∩╕Å === IMMEDIATE IMAGE CHECK ===
+[RENDERER INFO] Total images found: 3
+[RENDERER INFO] Image 1:
+[RENDERER INFO]   - Src: app://logo.svg
+[RENDERER INFO]   - Natural size: 32x32
+[RENDERER INFO]   - Display size: 32x32
+[RENDERER INFO]   - Complete: true
+[RENDERER INFO]   - Classes: 
+[RENDERER INFO] Image 2:
+[RENDERER INFO]   - Src: app://landing-page-bg.png
+[RENDERER INFO]   - Natural size: 1904x1269
+[RENDERER INFO]   - Display size: 1269x1904
+[RENDERER INFO]   - Complete: true
+[RENDERER INFO]   - Classes: absolute top-0 left-0 -z-50 size-full object-cover
+[RENDERER INFO] ≡ƒÄ» FOUND BACKGROUND IMAGE!
+[RENDERER INFO]   - Parent element: DIV
+[RENDERER INFO]   - Parent classes: min-h-[calc(100vh-4.5rem)] supports-[height:100dvh]:min-h-[calc(100dvh-4.5rem)] flex flex-col justify-between items-center text-center px-4
+[RENDERER INFO]   - Computed styles:
+[RENDERER INFO]     - Object fit: fill
+[RENDERER INFO]     - Object position: 50% 50%
+[RENDERER INFO]     - Width: 1269px
+[RENDERER INFO]     - Height: 1903.5px
+[RENDERER INFO]     - Z-index: auto
+[RENDERER INFO]     - Position: static
+[RENDERER INFO] Image 3:
+[RENDERER INFO]   - Src: app://logo.svg
+[RENDERER INFO]   - Natural size: 32x32
+[RENDERER INFO]   - Display size: 24x24
+[RENDERER INFO]   - Complete: true
+[RENDERER INFO]   - Classes: 
+[RENDERER INFO] 
+≡ƒÄ¿ === IMMEDIATE BACKGROUND CHECK ===
+[RENDERER INFO] Total background images: 0
+
+≡ƒÜÇ Electron app starting...
+≡ƒöº Setting up protocol...
+≡ƒöì Protocol schemes: false
+Γ£à Protocol registration result: true
+≡ƒöì Protocol now registered: true
+≡ƒûÑ∩╕Å Screen bounds: { screenWidth: 1920, screenHeight: 1032, screenX: 0, screenY: 0 }
+≡ƒ¬ƒ Window state before validation: { width: 1728, height: 928, x: 96, y: 37, isMaximized: false }
+Γ£à Window state after validation: { width: 1728, height: 928, x: 96, y: 37, isMaximized: false }
+≡ƒÜÇ Creating window with state: { width: 1728, height: 928, x: 96, y: 37, isMaximized: false }
+≡ƒöº [MAIN PROCESS] Setting up JSON request blocking...
+≡ƒôª Loading built Next.js app via file:// protocol with relative paths
+≡ƒôü File path: C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\index.html
+≡ƒÜÇ Loading URL: file://C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\out\index.html
+Γ£à Navigation completed to: file:///C:/Users/zdhpe/Desktop/New%20folder/OpenCut/apps/web/out/index.html
+[RENDERER] ≡ƒöº [ELECTRON] Applying immediate location patches...
+[RENDERER INFO] ≡ƒöº [ELECTRON] Applying immediate location patches...
+[RENDERER] ≡ƒöº [ELECTRON] Checking location property descriptors...
+[RENDERER INFO] ≡ƒöº [ELECTRON] Checking location property descriptors...
+[RENDERER] - assign configurable: false
+[RENDERER INFO] - assign configurable: false
+[RENDERER] - replace configurable: false
+[RENDERER INFO] - replace configurable: false
+[RENDERER] Γä╣∩╕Å [ELECTRON] location.assign non-configurable, using fallback method
+[RENDERER INFO] Γä╣∩╕Å [ELECTRON] location.assign non-configurable, using fallback method
+[RENDERER] Γä╣∩╕Å [ELECTRON] location.replace non-configurable, using fallback method
+[RENDERER INFO] Γä╣∩╕Å [ELECTRON] location.replace non-configurable, using fallback method
+[RENDERER] Γ£à [ELECTRON] All location patches applied safely without errors
+[RENDERER INFO] Γ£à [ELECTRON] All location patches applied safely without errors
+[RENDERER] Γ£à [ELECTRON] Enhanced data fetching prevention applied (fetch + XHR)
+[RENDERER INFO] Γ£à [ELECTRON] Enhanced data fetching prevention applied (fetch + XHR)
+[RENDERER] Γ£à [ELECTRON] Next.js data fetching completely disabled
+[RENDERER INFO] Γ£à [ELECTRON] Next.js data fetching completely disabled
+[RENDERER] ≡ƒÜ½ [ELECTRON] Disabling service worker to prevent background requests
+[RENDERER INFO] ≡ƒÜ½ [ELECTRON] Disabling service worker to prevent background requests
+[RENDERER] ≡ƒÄ» [ELECTRON] Preload verification:
+[RENDERER INFO] ≡ƒÄ» [ELECTRON] Preload verification:
+[RENDERER] - Early location patches: APPLIED
+[RENDERER INFO] - Early location patches: APPLIED
+[RENDERER] - Hydration recovery system: INITIALIZED
+[RENDERER INFO] - Hydration recovery system: INITIALIZED
+[RENDERER] - ElectronAPI: EXPOSED
+[RENDERER INFO] - ElectronAPI: EXPOSED
+[RENDERER] - All preload features: READY
+[RENDERER INFO] - All preload features: READY
+[RENDERER] ≡ƒÜÇ [ELECTRON] Preload script fully loaded and configured
+[RENDERER INFO] ≡ƒÜÇ [ELECTRON] Preload script fully loaded and configured
+[RENDERER] ≡ƒÜÇ [ELECTRON] Preload script loaded
+[RENDERER INFO] ≡ƒÜÇ [ELECTRON] Preload script loaded
+[RENDERER] Γ£à [ELECTRON] Location patches already applied at startup
+[RENDERER INFO] Γ£à [ELECTRON] Location patches already applied at startup
+[RENDERER] ≡ƒÜÇ [ELECTRON DEBUG] JavaScript executing in Electron
+[RENDERER INFO] ≡ƒÜÇ [ELECTRON DEBUG] JavaScript executing in Electron
+  Source: file:///C:/Users/zdhpe/Desktop/New%20folder/OpenCut/apps/web/out/index.html:2
+[RENDERER] ≡ƒöº [ELECTRON] Setting up early React environment...
+[RENDERER INFO] ≡ƒöº [ELECTRON] Setting up early React environment...
+  Source: file:///C:/Users/zdhpe/Desktop/New%20folder/OpenCut/apps/web/out/index.html:6
+[RENDERER] Γ£à [ELECTRON] __NEXT_DATA__ overridden early
+[RENDERER INFO] Γ£à [ELECTRON] __NEXT_DATA__ overridden early
+  Source: file:///C:/Users/zdhpe/Desktop/New%20folder/OpenCut/apps/web/out/index.html:33
+≡ƒôì In-page navigation to: file:///C:/Users/zdhpe/Desktop/New%20folder/OpenCut/apps/web/out/index.html
+[RENDERER] ≡ƒöº [ELECTRON] Setting up document-level JSON request blocking...
+[RENDERER INFO] ≡ƒöº [ELECTRON] Setting up document-level JSON request blocking...
+[RENDERER] ≡ƒöä [ELECTRON] Setting up hydration recovery system...
+[RENDERER INFO] ≡ƒöä [ELECTRON] Setting up hydration recovery system...
+[RENDERER] ≡ƒÜÇ [ELECTRON] DOM ready, checking for ElectronAPI
+[RENDERER INFO] ≡ƒÜÇ [ELECTRON] DOM ready, checking for ElectronAPI
+  Source: file:///C:/Users/zdhpe/Desktop/New%20folder/OpenCut/apps/web/out/index.html:38
+[RENDERER] ≡ƒÜÇ [ELECTRON] ElectronAPI detected and data-electron set
+[RENDERER INFO] ≡ƒÜÇ [ELECTRON] ElectronAPI detected and data-electron set
+  Source: file:///C:/Users/zdhpe/Desktop/New%20folder/OpenCut/apps/web/out/index.html:42
+[RENDERER] ≡ƒÜÇ [DEBUG] Page loaded, body data-electron: true
+[RENDERER INFO] ≡ƒÜÇ [DEBUG] Page loaded, body data-electron: true
+  Source: file:///C:/Users/zdhpe/Desktop/New%20folder/OpenCut/apps/web/out/index.html:52
+[RENDERER] ≡ƒöì [ELECTRON] DOM Content Loaded - Initial verification:
+[RENDERER INFO] ≡ƒöì [ELECTRON] DOM Content Loaded - Initial verification:
+[RENDERER] - window.React: undefined
+[RENDERER INFO] - window.React: undefined
+[RENDERER] - window.ReactDOM: undefined
+[RENDERER INFO] - window.ReactDOM: undefined
+[RENDERER] - window.next: undefined
+[RENDERER INFO] - window.next: undefined
+[RENDERER] - location.assign patched: true
+[RENDERER INFO] - location.assign patched: true
+[RENDERER] - location.replace patched: true
+[RENDERER INFO] - location.replace patched: true
+[RENDERER] ≡ƒÄ» [ELECTRON] Enhanced preload verification:
+[RENDERER INFO] ≡ƒÄ» [ELECTRON] Enhanced preload verification:
+[RENDERER] - location.assign type: function
+[RENDERER INFO] - location.assign type: function
+[RENDERER] - location.assign configurable: false
+[RENDERER INFO] - location.assign configurable: false
+[RENDERER] - location.assign patched: false
+[RENDERER INFO] - location.assign patched: false
+[RENDERER] - location.replace type: function
+[RENDERER INFO] - location.replace type: function
+[RENDERER] - location.replace configurable: false
+[RENDERER INFO] - location.replace configurable: false
+[RENDERER] - location.replace patched: false
+[RENDERER INFO] - location.replace patched: false
+[RENDERER] - _electronAssign available: function
+[RENDERER INFO] - _electronAssign available: function
+[RENDERER] - _electronReplace available: function
+[RENDERER INFO] - _electronReplace available: function
+[RENDERER] - Total link elements: 18
+[RENDERER INFO] - Total link elements: 18
+[RENDERER] - Font-related elements: 1
+[RENDERER INFO] - Font-related elements: 1
+[RENDERER]   Font 1: ./_next/static/media/e4af272ccee01ff0-s.p.woff2 (RELATIVE Γ£à)
+[RENDERER INFO]   Font 1: ./_next/static/media/e4af272ccee01ff0-s.p.woff2 (RELATIVE Γ£à)
+[RENDERER] - Total assets checked: 33
+[RENDERER INFO] - Total assets checked: 33
+[RENDERER] - Assets with absolute paths: 0 Γ£à
+[RENDERER INFO] - Assets with absolute paths: 0 Γ£à
+[RENDERER] - ElectronAPI exposed: Γ¥î
+[RENDERER INFO] - ElectronAPI exposed: Γ¥î
+[RENDERER] - Hydration recovery ready: Γ£à
+[RENDERER INFO] - Hydration recovery ready: Γ£à
+[RENDERER] - Fetch interception active: Γ¥î
+[RENDERER INFO] - Fetch interception active: Γ¥î
+[RENDERER] - XHR interception active: Γ£à
+[RENDERER INFO] - XHR interception active: Γ£à
+[RENDERER] ≡ƒÄ» [ELECTRON] ULTRASYNC DEEPSYNC FACE-IT VERIFICATION:
+[RENDERER INFO] ≡ƒÄ» [ELECTRON] ULTRASYNC DEEPSYNC FACE-IT VERIFICATION:
+[RENDERER] - ULTRASYNC: Dynamic build patterns ACTIVE (catches all future build IDs)
+[RENDERER INFO] - ULTRASYNC: Dynamic build patterns ACTIVE (catches all future build IDs)
+[RENDERER] - DEEPSYNC: Windows drive patterns BLOCKED (C:/, D:/, E:/, F:/, G:/)
+[RENDERER INFO] - DEEPSYNC: Windows drive patterns BLOCKED (C:/, D:/, E:/, F:/, G:/)
+[RENDERER] - FACE-IT: Specific build IDs BLOCKED (waKrJH0rxx6B322TnfBIx, 66zZwW14Qejyf_lZt9a3l, xUF9JiSSZjidE53kQFWB9, 3F6FMLMQ3eKsn8EKkbZTH)
+[RENDERER INFO] - FACE-IT: Specific build IDs BLOCKED (waKrJH0rxx6B322TnfBIx, 66zZwW14Qejyf_lZt9a3l, xUF9JiSSZjidE53kQFWB9, 3F6FMLMQ3eKsn8EKkbZTH)
+[RENDERER] - PERSPECTIVE: Nested path patterns BLOCKED (out/index.html.json, Desktop paths)
+[RENDERER INFO] - PERSPECTIVE: Nested path patterns BLOCKED (out/index.html.json, Desktop paths)
+[RENDERER] - Core Next.js data patterns: BLOCKED
+[RENDERER INFO] - Core Next.js data patterns: BLOCKED
+[RENDERER] - HTML.json specific patterns: BLOCKED
+[RENDERER INFO] - HTML.json specific patterns: BLOCKED
+[RENDERER] - URL encoded folder paths: BLOCKED
+[RENDERER INFO] - URL encoded folder paths: BLOCKED
+[RENDERER] - Catch-all JSON patterns: BLOCKED
+[RENDERER INFO] - Catch-all JSON patterns: BLOCKED
+[RENDERER] - Service worker: DISABLED
+[RENDERER INFO] - Service worker: DISABLED
+[RENDERER] - Router prefetching: DISABLED
+[RENDERER INFO] - Router prefetching: DISABLED
+[RENDERER] - __NEXT_DATA__ overridden: YES
+[RENDERER INFO] - __NEXT_DATA__ overridden: YES
+[RENDERER] ≡ƒÜ½ [ELECTRON] ULTRASYNC DEEPSYNC FACE-IT: No data fetching errors should appear now
+[RENDERER INFO] ≡ƒÜ½ [ELECTRON] ULTRASYNC DEEPSYNC FACE-IT: No data fetching errors should appear now
+[RENDERER] ≡ƒÜÇ [ELECTRON] Enhanced verification complete - all systems checked
+[RENDERER INFO] ≡ƒÜÇ [ELECTRON] Enhanced verification complete - all systems checked
+Γ£à Electron window ready - OpenCut loaded successfully
+Γ£à Page finished loading successfully
+≡ƒöº Page finished loading - injecting debug scripts...
+≡ƒöì Process argv: [
+  'C:\\Users\\zdhpe\\Desktop\\New folder\\OpenCut\\node_modules\\electron\\dist\\electron.exe',
+  'electron/main-simple.js'
+]
+Γä╣∩╕Å No --test-navigation flag, using normal navigation
+Γä╣∩╕Å No --test-button flag, skipping button test
+≡ƒÄ» Page loaded - Testing Electron IPC and storage...
+Γ£à loadURL promise resolved
+≡ƒÜ½ [MAIN PROCESS] Blocking JSON request: file:///C:/_next/data/electron-static/C:/Users/zdhpe/Desktop/New%20folder/OpenCut/apps/web/out/index.html.json
+[RENDERER] %cElectron Security Warning (Disabled webSecurity) font-weight: bold; This renderer process has "webSecurity" disabled. This
+  exposes users of this app to severe security risks.
+
+For more information and help, consult
+https://electronjs.org/docs/tutorial/security.
+This warning will not show up
+once the app is packaged.
+[RENDERER WARNING] %cElectron Security Warning (Disabled webSecurity) font-weight: bold; This renderer process has "webSecurity" disabled. This
+  exposes users of this app to severe security risks.
+
+For more information and help, consult
+https://electronjs.org/docs/tutorial/security.
+This warning will not show up
+once the app is packaged.
+  Source: node:electron/js2c/sandbox_bundle:2
+[RENDERER] %cElectron Security Warning (allowRunningInsecureContent) font-weight: bold; This renderer process has "allowRunningInsecureContent"
+  enabled. This exposes users of this app to severe security risks.
+
+  
+For more information and help, consult
+https://electronjs.org/docs/tutorial/security.
+This warning will not show up
+once the app is packaged.
+[RENDERER WARNING] %cElectron Security Warning (allowRunningInsecureContent) font-weight: bold; This renderer process has "allowRunningInsecureContent"
+  enabled. This exposes users of this app to severe security risks.
+
+  
+For more information and help, consult
+https://electronjs.org/docs/tutorial/security.
+This warning will not show up
+once the app is packaged.
+  Source: node:electron/js2c/sandbox_bundle:2
+[RENDERER] %cElectron Security Warning (Insecure Content-Security-Policy) font-weight: bold; This renderer process has either no Content Security
+  Policy set or a policy with "unsafe-eval" enabled. This exposes users of
+  this app to unnecessary security risks.
+
+For more information and help, consult
+https://electronjs.org/docs/tutorial/security.
+This warning will not show up
+once the app is packaged.
+[RENDERER WARNING] %cElectron Security Warning (Insecure Content-Security-Policy) font-weight: bold; This renderer process has either no Content Security
+  Policy set or a policy with "unsafe-eval" enabled. This exposes users of
+  this app to unnecessary security risks.
+
+For more information and help, consult
+https://electronjs.org/docs/tutorial/security.
+This warning will not show up
+once the app is packaged.
+  Source: node:electron/js2c/sandbox_bundle:2
+[RENDERER] ≡ƒÜÇ [ELECTRON INJECT] JavaScript execution test
+[RENDERER INFO] ≡ƒÜÇ [ELECTRON INJECT] JavaScript execution test
+[RENDERER] ≡ƒÜÇ [ELECTRON INJECT] Document ready state: complete
+[RENDERER INFO] ≡ƒÜÇ [ELECTRON INJECT] Document ready state: complete
+[RENDERER] ≡ƒÜÇ [ELECTRON INJECT] Body exists: true
+[RENDERER INFO] ≡ƒÜÇ [ELECTRON INJECT] Body exists: true
+[RENDERER] ≡ƒÜÇ [ELECTRON INJECT] Window location: file:///C:/Users/zdhpe/Desktop/New%20folder/OpenCut/apps/web/out/index.html
+[RENDERER INFO] ≡ƒÜÇ [ELECTRON INJECT] Window location: file:///C:/Users/zdhpe/Desktop/New%20folder/OpenCut/apps/web/out/index.html
+[RENDERER] ≡ƒÜÇ [ELECTRON INJECT] Body innerHTML length: 11741
+[RENDERER INFO] ≡ƒÜÇ [ELECTRON INJECT] Body innerHTML length: 11741
+[RENDERER] ≡ƒÜÇ [ELECTRON INJECT] Has React root: true
+[RENDERER INFO] ≡ƒÜÇ [ELECTRON INJECT] Has React root: true
+[RENDERER] ≡ƒÜÇ [ELECTRON INJECT] React root content: <div class="__className_e8ce0c font-sans antialiased"><script>((e,i,s,u,m,a,l,h)=>{let d=document.documentElement,w=["light","dark"];function p(n){(Array.isArray(e)?e:[e]).forEach(y=>{let k=y==="class
+[RENDERER INFO] ≡ƒÜÇ [ELECTRON INJECT] React root content: <div class="__className_e8ce0c font-sans antialiased"><script>((e,i,s,u,m,a,l,h)=>{let d=document.documentElement,w=["light","dark"];function p(n){(Array.isArray(e)?e:[e]).forEach(y=>{let k=y==="class
+Γ£à JavaScript injection successful
+≡ƒôÑ Started loading content...
+≡ƒôì In-page navigation to: file:///C:/Users/zdhpe/Desktop/New%20folder/OpenCut/apps/web/out/index.html
+[RENDERER] ≡ƒÜÇ SIMPLE DEBUG STARTING...
+[RENDERER INFO] ≡ƒÜÇ SIMPLE DEBUG STARTING...
+[RENDERER] ≡ƒôä DOM already ready - running immediate checks...
+[RENDERER INFO] ≡ƒôä DOM already ready - running immediate checks...
+[RENDERER] 
+≡ƒû╝∩╕Å === IMMEDIATE IMAGE CHECK ===
+[RENDERER INFO] 
+≡ƒû╝∩╕Å === IMMEDIATE IMAGE CHECK ===
+[RENDERER] Total images found: 3
+[RENDERER INFO] Total images found: 3
+[RENDERER] Image 1:
+[RENDERER INFO] Image 1:
+[RENDERER]   - Src: file:///C:/Users/zdhpe/Desktop/New%20folder/OpenCut/apps/web/out/logo.svg
+[RENDERER INFO]   - Src: file:///C:/Users/zdhpe/Desktop/New%20folder/OpenCut/apps/web/out/logo.svg
+[RENDERER]   - Natural size: 32x32
+[RENDERER INFO]   - Natural size: 32x32
+[RENDERER]   - Display size: 32x32
+[RENDERER INFO]   - Display size: 32x32
+[RENDERER]   - Complete: true
+[RENDERER INFO]   - Complete: true
+[RENDERER]   - Classes: 
+[RENDERER INFO]   - Classes: 
+[RENDERER] Image 2:
+[RENDERER INFO] Image 2:
+[RENDERER]   - Src: file:///C:/Users/zdhpe/Desktop/New%20folder/OpenCut/apps/web/out/landing-page-bg.png
+[RENDERER INFO]   - Src: file:///C:/Users/zdhpe/Desktop/New%20folder/OpenCut/apps/web/out/landing-page-bg.png
+[RENDERER]   - Natural size: 1904x1269
+[RENDERER INFO]   - Natural size: 1904x1269
+[RENDERER]   - Display size: 1697x863
+[RENDERER INFO]   - Display size: 1697x863
+[RENDERER]   - Complete: true
+[RENDERER INFO]   - Complete: true
+[RENDERER]   - Classes: absolute top-0 left-0 -z-50 size-full object-cover
+[RENDERER INFO]   - Classes: absolute top-0 left-0 -z-50 size-full object-cover
+[RENDERER] ≡ƒÄ» FOUND BACKGROUND IMAGE!
+[RENDERER INFO] ≡ƒÄ» FOUND BACKGROUND IMAGE!
+[RENDERER]   - Parent element: DIV
+[RENDERER INFO]   - Parent element: DIV
+[RENDERER]   - Parent classes: min-h-[calc(100vh-4.5rem)] supports-[height:100dvh]:min-h-[calc(100dvh-4.5rem)] flex flex-col justify-between items-center text-center px-4
+[RENDERER INFO]   - Parent classes: min-h-[calc(100vh-4.5rem)] supports-[height:100dvh]:min-h-[calc(100dvh-4.5rem)] flex flex-col justify-between items-center text-center px-4
+[RENDERER]   - Computed styles:
+[RENDERER INFO]   - Computed styles:
+[RENDERER]     - Object fit: cover
+[RENDERER INFO]     - Object fit: cover
+[RENDERER]     - Object position: 50% 50%
+[RENDERER INFO]     - Object position: 50% 50%
+[RENDERER]     - Width: 1697px
+[RENDERER INFO]     - Width: 1697px
+[RENDERER]     - Height: 863px
+[RENDERER INFO]     - Height: 863px
+[RENDERER]     - Z-index: -50
+[RENDERER INFO]     - Z-index: -50
+[RENDERER]     - Position: absolute
+[RENDERER INFO]     - Position: absolute
+[RENDERER] Image 3:
+[RENDERER INFO] Image 3:
+[RENDERER]   - Src: file:///C:/Users/zdhpe/Desktop/New%20folder/OpenCut/apps/web/out/logo.svg
+[RENDERER INFO]   - Src: file:///C:/Users/zdhpe/Desktop/New%20folder/OpenCut/apps/web/out/logo.svg
+[RENDERER]   - Natural size: 32x32
+[RENDERER INFO]   - Natural size: 32x32
+[RENDERER]   - Display size: 24x24
+[RENDERER INFO]   - Display size: 24x24
+[RENDERER]   - Complete: true
+[RENDERER INFO]   - Complete: true
+[RENDERER]   - Classes: 
+[RENDERER INFO]   - Classes: 
+[RENDERER] 
+≡ƒÄ¿ === IMMEDIATE BACKGROUND CHECK ===
+[RENDERER INFO] 
+≡ƒÄ¿ === IMMEDIATE BACKGROUND CHECK ===
+[RENDERER] Total background images: 0
+[RENDERER INFO] Total background images: 0
+[RENDERER] ≡ƒÜÇ SIMPLE DEBUG SETUP COMPLETE
+[RENDERER INFO] ≡ƒÜÇ SIMPLE DEBUG SETUP COMPLETE
+Γ£à Simple debug script injected successfully
+[RENDERER] ≡ƒöì [HYDRATION DEBUG] Starting hydration analysis...
+[RENDERER INFO] ≡ƒöì [HYDRATION DEBUG] Starting hydration analysis...
+[RENDERER] ≡ƒöì [HYDRATION DEBUG] React status: [object Object]
+[RENDERER INFO] ≡ƒöì [HYDRATION DEBUG] React status: [object Object]
+[RENDERER] ≡ƒöì [HYDRATION DEBUG] DOM elements:
+[RENDERER INFO] ≡ƒöì [HYDRATION DEBUG] DOM elements:
+[RENDERER] - #__next element: found
+[RENDERER INFO] - #__next element: found
+[RENDERER] - hidden div: not found
+[RENDERER INFO] - hidden div: not found
+[RENDERER] - body classes: 
+[RENDERER INFO] - body classes: 
+Γ£à Hydration debug script injected successfully
+[RENDERER] ≡ƒöì React setup check...
+[RENDERER INFO] ≡ƒöì React setup check...
+[RENDERER] - React: available
+[RENDERER INFO] - React: available
+[RENDERER] - ReactDOM: available
+[RENDERER INFO] - ReactDOM: available
+[RENDERER] - Next.js: available
+[RENDERER INFO] - Next.js: available
+≡ƒôí Received ping from renderer process
+[RENDERER] ≡ƒöì Storage API availability:
+[RENDERER INFO] ≡ƒöì Storage API availability:
+[RENDERER] - IndexedDB: true
+[RENDERER INFO] - IndexedDB: true
+[RENDERER] - Navigator.storage: true
+[RENDERER INFO] - Navigator.storage: true
+[RENDERER] - OPFS getDirectory: true
+[RENDERER INFO] - OPFS getDirectory: true
+[RENDERER] Γ£à IPC Test successful: pong from Electron main process
+[RENDERER INFO] Γ£à IPC Test successful: pong from Electron main process
+≡ƒÜ½ [MAIN PROCESS] Blocking JSON request: devtools://devtools/bundled/core/i18n/locales/en-US.json
+[RENDERER] ≡ƒöº [ELECTRON] Applying ultra-aggressive Next.js disabling...
+[RENDERER INFO] ≡ƒöº [ELECTRON] Applying ultra-aggressive Next.js disabling...
+[RENDERER] ≡ƒöº [ELECTRON] Overriding __NEXT_DATA__ for complete data isolation
+[RENDERER INFO] ≡ƒöº [ELECTRON] Overriding __NEXT_DATA__ for complete data isolation
+[RENDERER] 
+ΓÅ░ TIMEOUT CHECK (1s)
+[RENDERER INFO] 
+ΓÅ░ TIMEOUT CHECK (1s)
+[RENDERER] 
+≡ƒû╝∩╕Å === IMMEDIATE IMAGE CHECK ===
+[RENDERER INFO] 
+≡ƒû╝∩╕Å === IMMEDIATE IMAGE CHECK ===
+[RENDERER] Total images found: 3
+[RENDERER INFO] Total images found: 3
+[RENDERER] Image 1:
+[RENDERER INFO] Image 1:
+[RENDERER]   - Src: file:///C:/Users/zdhpe/Desktop/New%20folder/OpenCut/apps/web/out/logo.svg
+[RENDERER INFO]   - Src: file:///C:/Users/zdhpe/Desktop/New%20folder/OpenCut/apps/web/out/logo.svg
+[RENDERER]   - Natural size: 32x32
+[RENDERER INFO]   - Natural size: 32x32
+[RENDERER]   - Display size: 32x32
+[RENDERER INFO]   - Display size: 32x32
+[RENDERER]   - Complete: true
+[RENDERER INFO]   - Complete: true
+[RENDERER]   - Classes: 
+[RENDERER INFO]   - Classes: 
+[RENDERER] Image 2:
+[RENDERER INFO] Image 2:
+[RENDERER]   - Src: file:///C:/Users/zdhpe/Desktop/New%20folder/OpenCut/apps/web/out/landing-page-bg.png
+[RENDERER INFO]   - Src: file:///C:/Users/zdhpe/Desktop/New%20folder/OpenCut/apps/web/out/landing-page-bg.png
+[RENDERER]   - Natural size: 1904x1269
+[RENDERER INFO]   - Natural size: 1904x1269
+[RENDERER]   - Display size: 1697x863
+[RENDERER INFO]   - Display size: 1697x863
+[RENDERER]   - Complete: true
+[RENDERER INFO]   - Complete: true
+[RENDERER]   - Classes: absolute top-0 left-0 -z-50 size-full object-cover
+[RENDERER INFO]   - Classes: absolute top-0 left-0 -z-50 size-full object-cover
+[RENDERER] ≡ƒÄ» FOUND BACKGROUND IMAGE!
+[RENDERER INFO] ≡ƒÄ» FOUND BACKGROUND IMAGE!
+[RENDERER]   - Parent element: DIV
+[RENDERER INFO]   - Parent element: DIV
+[RENDERER]   - Parent classes: min-h-[calc(100vh-4.5rem)] supports-[height:100dvh]:min-h-[calc(100dvh-4.5rem)] flex flex-col justify-between items-center text-center px-4
+[RENDERER INFO]   - Parent classes: min-h-[calc(100vh-4.5rem)] supports-[height:100dvh]:min-h-[calc(100dvh-4.5rem)] flex flex-col justify-between items-center text-center px-4
+[RENDERER]   - Computed styles:
+[RENDERER INFO]   - Computed styles:
+[RENDERER]     - Object fit: cover
+[RENDERER INFO]     - Object fit: cover
+[RENDERER]     - Object position: 50% 50%
+[RENDERER INFO]     - Object position: 50% 50%
+[RENDERER]     - Width: 1697px
+[RENDERER INFO]     - Width: 1697px
+[RENDERER]     - Height: 863px
+[RENDERER INFO]     - Height: 863px
+[RENDERER]     - Z-index: -50
+[RENDERER INFO]     - Z-index: -50
+[RENDERER]     - Position: absolute
+[RENDERER INFO]     - Position: absolute
+[RENDERER] Image 3:
+[RENDERER INFO] Image 3:
+[RENDERER]   - Src: file:///C:/Users/zdhpe/Desktop/New%20folder/OpenCut/apps/web/out/logo.svg
+[RENDERER INFO]   - Src: file:///C:/Users/zdhpe/Desktop/New%20folder/OpenCut/apps/web/out/logo.svg
+[RENDERER]   - Natural size: 32x32
+[RENDERER INFO]   - Natural size: 32x32
+[RENDERER]   - Display size: 24x24
+[RENDERER INFO]   - Display size: 24x24
+[RENDERER]   - Complete: true
+[RENDERER INFO]   - Complete: true
+[RENDERER]   - Classes: 
+[RENDERER INFO]   - Classes: 
+[RENDERER] 
+≡ƒÄ¿ === IMMEDIATE BACKGROUND CHECK ===
+[RENDERER INFO] 
+≡ƒÄ¿ === IMMEDIATE BACKGROUND CHECK ===
+[RENDERER] Total background images: 0
+[RENDERER INFO] Total background images: 0
+[RENDERER] ≡ƒöì [ELECTRON] After delay check (2s):
+[RENDERER INFO] ≡ƒöì [ELECTRON] After delay check (2s):
+[RENDERER] - window.React: undefined
+[RENDERER INFO] - window.React: undefined
+[RENDERER] - window.ReactDOM: undefined
+[RENDERER INFO] - window.ReactDOM: undefined
+[RENDERER] - window.next: undefined
+[RENDERER INFO] - window.next: undefined
+[RENDERER] - document.querySelector("#__next"): true
+[RENDERER INFO] - document.querySelector("#__next"): true
+[RENDERER] Γ£à [ELECTRON] Next.js app appears to be rendered
+[RENDERER INFO] Γ£à [ELECTRON] Next.js app appears to be rendered
+[RENDERER] - Child elements: 1
+[RENDERER INFO] - Child elements: 1
+[RENDERER] - Content preview: ((e,i,s,u,m,a,l,h)=>{let d=document.documentElement,w=["light","dark"];function p(n){(Array.isArray(...
+[RENDERER INFO] - Content preview: ((e,i,s,u,m,a,l,h)=>{let d=document.documentElement,w=["light","dark"];function p(n){(Array.isArray(...
+[RENDERER] ≡ƒöì Storage service initialization test...
+[RENDERER INFO] ≡ƒöì Storage service initialization test...
+[RENDERER] - Storage service available
+[RENDERER INFO] - Storage service available
+[RENDERER] - IndexedDB supported: true
+[RENDERER INFO] - IndexedDB supported: true
+[RENDERER] - OPFS supported: true
+[RENDERER INFO] - OPFS supported: true
+[RENDERER] - Fully supported: true
+[RENDERER INFO] - Fully supported: true
+[RENDERER] ≡ƒöì [ELECTRON] Hydration status check:
+[RENDERER INFO] ≡ƒöì [ELECTRON] Hydration status check:
+[RENDERER] - React root found: true
+[RENDERER INFO] - React root found: true
+[RENDERER] - React content rendered: false
+[RENDERER INFO] - React content rendered: false
+[RENDERER] - Hidden content (opacity:0): 0
+[RENDERER INFO] - Hidden content (opacity:0): 0
+[RENDERER] - Visible content (opacity:1): 2
+[RENDERER INFO] - Visible content (opacity:1): 2
+[RENDERER] - window.React available: undefined
+[RENDERER INFO] - window.React available: undefined
+[RENDERER] - window.ReactDOM available: undefined
+[RENDERER INFO] - window.ReactDOM available: undefined
+[RENDERER] ΓÜá∩╕Å [ELECTRON] React hydration failed, attempting recovery...
+[RENDERER WARNING] ΓÜá∩╕Å [ELECTRON] React hydration failed, attempting recovery...
+[RENDERER] Γ¥î [ELECTRON] React/ReactDOM not available for recovery
+[RENDERER WARNING] Γ¥î [ELECTRON] React/ReactDOM not available for recovery
+[RENDERER] Γ£à [ELECTRON] Safe mode HTML applied
+[RENDERER INFO] Γ£à [ELECTRON] Safe mode HTML applied
+[RENDERER] 
+ΓÅ░ TIMEOUT CHECK (3s)
+[RENDERER INFO] 
+ΓÅ░ TIMEOUT CHECK (3s)
+[RENDERER] 
+≡ƒû╝∩╕Å === IMMEDIATE IMAGE CHECK ===
+[RENDERER INFO] 
+≡ƒû╝∩╕Å === IMMEDIATE IMAGE CHECK ===
+[RENDERER] Total images found: 0
+[RENDERER INFO] Total images found: 0
+[RENDERER] 
+≡ƒÄ¿ === IMMEDIATE BACKGROUND CHECK ===
+[RENDERER INFO] 
+≡ƒÄ¿ === IMMEDIATE BACKGROUND CHECK ===
+[RENDERER] Total background images: 0
+[RENDERER INFO] Total background images: 0
+[RENDERER] 
+≡ƒöì === CONTENT VISIBILITY CHECK ===
+[RENDERER INFO] 
+≡ƒöì === CONTENT VISIBILITY CHECK ===
+[RENDERER] Body text length: 304
+[RENDERER INFO] Body text length: 304
+[RENDERER] Visible elements count: 55
+[RENDERER INFO] Visible elements count: 55
+[RENDERER] Hidden elements (opacity:0): 0
+[RENDERER INFO] Hidden elements (opacity:0): 0
+[RENDERER] Main content found: true
+[RENDERER INFO] Main content found: true
+[RENDERER] Body text preview: OpenCut - Safe Mode
+                Loading components, please wait...
+                Projects
+                Home
+              
+            
+          {"props":{"pageProps":{}},"page":"/","query":...
+[RENDERER INFO] Body text preview: OpenCut - Safe Mode
+                Loading components, please wait...
+                Projects
+                Home
+              
+            
+          {"props":{"pageProps":{}},"page":"/","query":...
+[RENDERER] Window.electronAPI exists: true
+[RENDERER INFO] Window.electronAPI exists: true
+[RENDERER] Body data-electron attribute: true
+[RENDERER INFO] Body data-electron attribute: true
+[RENDERER] Body has data-electron class/attribute: true
+[RENDERER INFO] Body has data-electron class/attribute: true
+[RENDERER] React available: object
+[RENDERER INFO] React available: object
+[RENDERER] ReactDOM available: object
+[RENDERER INFO] ReactDOM available: object
+[RENDERER] Hero text (h1) found: true
+[RENDERER INFO] Hero text (h1) found: true
+[RENDERER] Hero button found: true
+[RENDERER INFO] Hero button found: true
+[RENDERER] Hero form found: false
+[RENDERER INFO] Hero form found: false
+[RENDERER] Hero text styles:
+[RENDERER INFO] Hero text styles:
+[RENDERER]   - Opacity: 1
+[RENDERER INFO]   - Opacity: 1
+[RENDERER]   - Visibility: visible
+[RENDERER INFO]   - Visibility: visible
+[RENDERER]   - Display: block
+[RENDERER INFO]   - Display: block
+[RENDERER]   - Color: rgb(227, 227, 227)
+[RENDERER INFO]   - Color: rgb(227, 227, 227)
+[RENDERER] ≡ƒöº Applying aggressive Electron fixes...
+[RENDERER INFO] ≡ƒöº Applying aggressive Electron fixes...
+[RENDERER] ≡ƒÄë All Electron visibility fixes applied!
+[RENDERER INFO] ≡ƒÄë All Electron visibility fixes applied!
+[RENDERER] ≡ƒöì [HYDRATION DEBUG] Checking for React components after delay...
+[RENDERER INFO] ≡ƒöì [HYDRATION DEBUG] Checking for React components after delay...
+[RENDERER] - Total buttons found: 2
+[RENDERER INFO] - Total buttons found: 2
+[RENDERER] - Button 0: "Projects" (bg-blue-500 text-white px-4 py-2 rounded mr-2)
+[RENDERER INFO] - Button 0: "Projects" (bg-blue-500 text-white px-4 py-2 rounded mr-2)
+[RENDERER] - Button 1: "Home" (bg-gray-500 text-white px-4 py-2 rounded)
+[RENDERER INFO] - Button 1: "Home" (bg-gray-500 text-white px-4 py-2 rounded)
+[RENDERER] ≡ƒöì [HYDRATION DEBUG] Next.js data: [object Object]
+[RENDERER INFO] ≡ƒöì [HYDRATION DEBUG] Next.js data: [object Object]
+[RENDERER] ≡ƒöì [HYDRATION DEBUG] React Fiber found: [object HTMLDivElement]
+[RENDERER INFO] ≡ƒöì [HYDRATION DEBUG] React Fiber found: [object HTMLDivElement]
+[RENDERER] The resource file:///C:/Users/zdhpe/Desktop/New%20folder/OpenCut/apps/web/out/_next/static/media/e4af272ccee01ff0-s.p.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.
+[RENDERER WARNING] The resource file:///C:/Users/zdhpe/Desktop/New%20folder/OpenCut/apps/web/out/_next/static/media/e4af272ccee01ff0-s.p.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.
+  Source: file:///C:/Users/zdhpe/Desktop/New%20folder/OpenCut/apps/web/out/index.html:0
+[RENDERER] ≡ƒÜÇ [CLICK DEBUG] Click: DIV 
+              
+              
+[RENDERER INFO] ≡ƒÜÇ [CLICK DEBUG] Click: DIV 
+              
+              
+  Source: file:///C:/Users/zdhpe/Desktop/New%20folder/OpenCut/apps/web/out/index.html:57

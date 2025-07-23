@@ -4,10 +4,20 @@ import { TabBar } from "./tabbar";
 import { MediaView } from "./views/media";
 import { useMediaPanelStore, Tab } from "./store";
 import { TextView } from "./views/text";
+import { Text2ImageView } from "./views/text2image";
 import { AiView } from "./views/ai";
+import { AdjustmentView } from "./views/adjustment";
+import { debugLogger } from "@/lib/debug-logger";
 
 export function MediaPanel() {
   const { activeTab } = useMediaPanelStore();
+
+  // DEBUG: Media panel tab tracking
+  debugLogger.log('MediaPanel', 'RENDER', { 
+    activeTab, 
+    timestamp: Date.now(),
+    aiViewWillRender: activeTab === 'ai'
+  });
 
   const viewMap: Record<Tab, React.ReactNode> = {
     media: <MediaView />,
@@ -15,6 +25,7 @@ export function MediaPanel() {
       <div className="p-4 text-muted-foreground">Audio view coming soon...</div>
     ),
     text: <TextView />,
+    text2image: <Text2ImageView />,
     stickers: (
       <div className="p-4 text-muted-foreground">
         Stickers view coming soon...
@@ -40,18 +51,14 @@ export function MediaPanel() {
         Filters view coming soon...
       </div>
     ),
-    adjustment: (
-      <div className="p-4 text-muted-foreground">
-        Adjustment view coming soon...
-      </div>
-    ),
+    adjustment: <AdjustmentView />,
     ai: <AiView />,
   };
 
   return (
-    <div className="h-full flex flex-col bg-panel rounded-sm overflow-hidden">
+    <div className="h-full flex flex-col bg-panel rounded-xl overflow-hidden pt-4" data-testid="media-panel">
       <TabBar />
-      <div className="flex-1">{viewMap[activeTab]}</div>
+      <div className="flex-1 pt-6 px-4">{viewMap[activeTab]}</div>
     </div>
   );
 }

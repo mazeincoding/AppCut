@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 interface SelectionBoxProps {
   startPos: { x: number; y: number } | null;
   currentPos: { x: number; y: number } | null;
-  containerRef: React.RefObject<HTMLElement>;
+  containerRef: React.RefObject<HTMLElement | null>;
   isActive: boolean;
 }
 

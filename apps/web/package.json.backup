@@ -1,0 +1,49 @@
+{
+  "name": "opencut-desktop",
+  "version": "0.1.0",
+  "description": "Privacy-focused desktop video editor",
+  "author": "OpenCut Team",
+  "main": "electron/main-simple.js",
+  "scripts": {
+    "electron:build": "echo 'Using static HTML file'",
+    "electron:pack": "electron-builder --dir",
+    "electron:dist": "electron-builder --publish=never",
+    "electron:dist:win": "electron-builder --win"
+  },
+  "devDependencies": {
+    "electron": "37.2.3",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.opencut.desktop",
+    "productName": "OpenCut Desktop",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "electron-app.html",
+      "!node_modules"
+    ],
+    "extraFiles": [
+      {
+        "from": "public/ffmpeg",
+        "to": "ffmpeg",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "target": "portable"
+    },
+    "linux": {
+      "target": "AppImage"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}

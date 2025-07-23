@@ -145,7 +145,8 @@ export function TimelineTrackContent({
               (existingElement.duration -
                 existingElement.trimStart -
                 existingElement.trimEnd);
-            return finalTime < existingEnd && movingElementEnd > existingStart;
+            const ADJACENCY_TOLERANCE = 0.001;
+            return finalTime < existingEnd - ADJACENCY_TOLERANCE && movingElementEnd > existingStart + ADJACENCY_TOLERANCE;
           });
 
           if (!hasOverlap) {
@@ -192,7 +193,8 @@ export function TimelineTrackContent({
               (existingElement.duration -
                 existingElement.trimStart -
                 existingElement.trimEnd);
-            return finalTime < existingEnd && movingElementEnd > existingStart;
+            const ADJACENCY_TOLERANCE = 0.001;
+            return finalTime < existingEnd - ADJACENCY_TOLERANCE && movingElementEnd > existingStart + ADJACENCY_TOLERANCE;
           });
 
           if (!hasOverlap) {
@@ -361,7 +363,8 @@ export function TimelineTrackContent({
                 (existingElement.duration -
                   existingElement.trimStart -
                   existingElement.trimEnd);
-              return snappedTime < existingEnd && newElementEnd > existingStart;
+              const ADJACENCY_TOLERANCE = 0.001; // Small tolerance for floating-point precision
+              return snappedTime < existingEnd - ADJACENCY_TOLERANCE && newElementEnd > existingStart + ADJACENCY_TOLERANCE;
             });
           } else {
             // Media elements
@@ -382,8 +385,9 @@ export function TimelineTrackContent({
                   (existingElement.duration -
                     existingElement.trimStart -
                     existingElement.trimEnd);
+                const ADJACENCY_TOLERANCE = 0.001;
                 return (
-                  snappedTime < existingEnd && newElementEnd > existingStart
+                  snappedTime < existingEnd - ADJACENCY_TOLERANCE && newElementEnd > existingStart + ADJACENCY_TOLERANCE
                 );
               });
             }
@@ -427,8 +431,9 @@ export function TimelineTrackContent({
                 (existingElement.duration -
                   existingElement.trimStart -
                   existingElement.trimEnd);
+              const ADJACENCY_TOLERANCE = 0.001;
               return (
-                snappedTime < existingEnd && movingElementEnd > existingStart
+                snappedTime < existingEnd - ADJACENCY_TOLERANCE && movingElementEnd > existingStart + ADJACENCY_TOLERANCE
               );
             });
           }
@@ -589,10 +594,21 @@ export function TimelineTrackContent({
               existingElement.trimStart -
               existingElement.trimEnd);
 
-          // Check if elements overlap
-          return (
-            finalStartTime < existingEnd && movingElementEnd > existingStart
-          );
+          // Check if elements overlap (allow exact adjacency)
+          const ADJACENCY_TOLERANCE = 0.001; // Small tolerance for floating-point precision
+          const wouldOverlap = finalStartTime < existingEnd - ADJACENCY_TOLERANCE && 
+            movingElementEnd > existingStart + ADJACENCY_TOLERANCE;
+          
+          console.log('Overlap check:', {
+            finalStartTime,
+            movingElementEnd,
+            existingStart,
+            existingEnd,
+            wouldOverlap,
+            tolerance: ADJACENCY_TOLERANCE
+          });
+          
+          return wouldOverlap;
         });
 
         if (hasOverlap) {
@@ -670,8 +686,9 @@ export function TimelineTrackContent({
                 existingElement.trimStart -
                 existingElement.trimEnd);
 
-            // Check if elements overlap
-            return snappedTime < existingEnd && newElementEnd > existingStart;
+            // Check if elements overlap (allow exact adjacency)
+            const ADJACENCY_TOLERANCE = 0.001;
+            return snappedTime < existingEnd - ADJACENCY_TOLERANCE && newElementEnd > existingStart + ADJACENCY_TOLERANCE;
           });
 
           if (hasOverlap) {
@@ -832,8 +849,9 @@ export function TimelineTrackContent({
                 existingElement.trimStart -
                 existingElement.trimEnd);
 
-            // Check if elements overlap
-            return snappedTime < existingEnd && newElementEnd > existingStart;
+            // Check if elements overlap (allow exact adjacency)
+            const ADJACENCY_TOLERANCE = 0.001;
+            return snappedTime < existingEnd - ADJACENCY_TOLERANCE && newElementEnd > existingStart + ADJACENCY_TOLERANCE;
           });
 
           if (hasOverlap) {

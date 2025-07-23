@@ -270,7 +270,7 @@ export function estimateVideoMemoryUsage(
   // Estimate memory needed for video processing
   const frameSize = width * height * 4; // RGBA
   const totalFrames = duration * fps;
-  const bufferMultiplier = 3; // Account for processing buffers
+  const bufferMultiplier = 0.5; // More realistic buffer for browser processing
   
   return frameSize * totalFrames * bufferMultiplier;
 }

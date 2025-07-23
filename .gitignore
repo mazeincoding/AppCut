@@ -6,6 +6,7 @@
 # next.js
 /apps/web/.next/
 /apps/web/out/
+/apps/web/dist/
 
 # debug
 /apps/web/npm-debug.log*
@@ -15,6 +16,20 @@
 # env files (can opt-in for committing if needed)
 /apps/web/.env*
 !/apps/web/.env.example
+
+# Environment variables - comprehensive coverage
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.staging
+**/.env
+**/.env.local
+**/.env.development
+**/.env.test
+**/.env.production
+**/.env.staging
 
 # typescript
 /apps/web/next-env.d.ts
@@ -47,4 +62,14 @@ __pycache__/
 # AI Video Generator
 services/ai-video-generator/input/
 services/ai-video-generator/output/
+services/ai-video-generator/temp/electron-build/
+electron-build/
 services/ai-video-generator/temp/
+
+# Test results and fixtures
+test-results/
+apps/web/e2e/fixtures/*.jpg
+apps/web/e2e/fixtures/*.png
+apps/web/e2e/fixtures/*.bmp
+apps/web/e2e/fixtures/*.gif
+apps/web/e2e/fixtures/*.webp

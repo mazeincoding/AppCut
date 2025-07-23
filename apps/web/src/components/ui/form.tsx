@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import * as LabelPrimitive from "@radix-ui/react-label";
-import * as SlotPrimitive from "@radix-ui/react-slot";
+import { Slot } from "@radix-ui/react-slot";
 
 import {
   Controller,
@@ -105,14 +105,14 @@ const FormLabel = React.forwardRef<
 FormLabel.displayName = "FormLabel";
 
 const FormControl = React.forwardRef<
-  React.ElementRef<typeof SlotPrimitive.Slot>,
-  React.ComponentPropsWithoutRef<typeof SlotPrimitive.Slot>
+  React.ElementRef<typeof Slot>,
+  React.ComponentPropsWithoutRef<typeof Slot>
 >(({ ...props }, ref) => {
   const { error, formItemId, formDescriptionId, formMessageId } =
     useFormField();
 
   return (
-    <SlotPrimitive
+    <Slot
       ref={ref}
       id={formItemId}
       aria-describedby={
