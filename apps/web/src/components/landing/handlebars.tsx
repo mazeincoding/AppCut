@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { motion, useMotionValue, useTransform, PanInfo } from "motion/react";
+import { motion, useMotionValue, useTransform, PanInfo, animate } from "motion/react";
 
 interface HandlebarsProps {
   children: React.ReactNode;
@@ -19,6 +19,7 @@ export function Handlebars({
   const [leftHandle, setLeftHandle] = useState(0);
   const [rightHandle, setRightHandle] = useState(maxWidth);
   const [contentWidth, setContentWidth] = useState(maxWidth);
+  const [isDragging, setIsDragging] = useState(false);
 
   const leftHandleX = useMotionValue(0);
   const rightHandleX = useMotionValue(maxWidth);
@@ -32,6 +33,36 @@ export function Handlebars({
 
   const containerRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
+
+  const springConfig = {
+    type: "spring" as const,
+    stiffness: 80,
+    damping: 15,
+    mass: 1.5,
+    restDelta: 0.001,
+    restSpeed: 0.001
+  };
+
+  useEffect(() => {
+    if (!isDragging) {
+      animate(leftHandleX, 0, {
+        type: "spring",
+        stiffness: 300,
+        damping: 30,
+        mass: 1
+      });
+
+      animate(rightHandleX, contentWidth, {
+        type: "spring",
+        stiffness: 300,
+        damping: 30,
+        mass: 1
+      });
+
+      setLeftHandle(0);
+      setRightHandle(contentWidth);
+    }
+  }, [isDragging, contentWidth, leftHandleX, rightHandleX]);
 
   useEffect(() => {
     if (!measureRef.current) return;
@@ -53,18 +84,23 @@ export function Handlebars({
   }, [children, rightHandleX]);
 
   useEffect(() => {
-    leftHandleX.set(leftHandle);
-  }, [leftHandle, leftHandleX]);
+    if (isDragging) {
+      leftHandleX.set(leftHandle);
+    }
+  }, [leftHandle, leftHandleX, isDragging]);
 
   useEffect(() => {
-    rightHandleX.set(rightHandle);
-  }, [rightHandle, rightHandleX]);
+    if (isDragging) {
+      rightHandleX.set(rightHandle);
+    }
+  }, [rightHandle, rightHandleX, isDragging]);
 
   useEffect(() => {
     onRangeChange?.(leftHandle, rightHandle);
   }, [leftHandle, rightHandle, onRangeChange]);
 
   const handleLeftDrag = (event: any, info: PanInfo) => {
+    setIsDragging(true);
     const newLeft = Math.max(
       0,
       Math.min(leftHandle + info.offset.x, rightHandle - minWidth)
@@ -73,11 +109,16 @@ export function Handlebars({
   };
 
   const handleRightDrag = (event: any, info: PanInfo) => {
+    setIsDragging(true);
     const newRight = Math.max(
       leftHandle + minWidth,
       Math.min(contentWidth, rightHandle + info.offset.x)
     );
     setRightHandle(newRight);
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
   };
 
   return (
@@ -108,9 +149,10 @@ export function Handlebars({
             dragElastic={0}
             dragMomentum={false}
             onDrag={handleLeftDrag}
+            onDragEnd={handleDragEnd}
             whileHover={{ scale: 1.05 }}
             whileDrag={{ scale: 1.1 }}
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            transition={springConfig}
           >
             <div className="w-2 h-8 rounded-full bg-yellow-500"></div>
           </motion.div>
@@ -131,9 +173,10 @@ export function Handlebars({
             dragElastic={0}
             dragMomentum={false}
             onDrag={handleRightDrag}
+            onDragEnd={handleDragEnd}
             whileHover={{ scale: 1.05 }}
             whileDrag={{ scale: 1.1 }}
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            transition={springConfig}
           >
             <div className="w-2 h-8 rounded-full bg-yellow-500"></div>
           </motion.div>
@@ -154,6 +197,7 @@ export function Handlebars({
               width: contentWidth,
               whiteSpace: "nowrap",
             }}
+            transition={springConfig}
           >
             {children}
           </motion.div>
@@ -161,4 +205,4 @@ export function Handlebars({
       </div>
     </div>
   );
-};
+}
