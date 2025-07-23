@@ -248,11 +248,12 @@ export class ExportEngine {
       // Start memory monitoring
       this.startMemoryMonitoring();
 
-      // Calculate duration
+      // Calculate duration - avoid unnecessary duration adjustments that can cause frame issues
       const actualVideoDuration = this.calculateActualVideoDuration();
-      const safeDuration = Math.min(this.duration, actualVideoDuration + 0.1);
       
-      if (safeDuration !== this.duration) {
+      // Only adjust duration if there's significant difference (> 0.5s)
+      if (Math.abs(this.duration - actualVideoDuration) > 0.5) {
+        const safeDuration = Math.min(this.duration, actualVideoDuration + 0.1);
         this.log(`Adjusting export duration from ${this.duration}s to ${safeDuration}s`);
         this.duration = safeDuration;
         // Re-initialize capture service with new duration
@@ -511,9 +512,18 @@ export class ExportEngine {
     const elementTime = timestamp - (element.startTime || 0);
     const trimmedTime = elementTime + (element.trimStart || 0);
     
+    // Clamp to valid range to avoid seeking beyond video boundaries
+    const maxTime = Math.max(0, element.duration - 0.1);
+    const clampedTime = Math.max(0, Math.min(trimmedTime, maxTime));
+    
     // Find nearest cached frame
-    const nearestSecond = Math.floor(trimmedTime);
-    const cachedFrame = frameCache.get(nearestSecond);
+    const nearestSecond = Math.floor(clampedTime);
+    let cachedFrame = frameCache.get(nearestSecond);
+    
+    // If we don't have a frame for this second, try the previous second
+    if (!cachedFrame && nearestSecond > 0) {
+      cachedFrame = frameCache.get(nearestSecond - 1);
+    }
     
     if (cachedFrame) {
       const bounds = this.calculateBounds(element);
@@ -792,17 +802,33 @@ export class ExportEngine {
     const elementTime = timestamp - (element.startTime || 0);
     const trimmedTime = elementTime + (element.trimStart || 0);
 
-    if (trimmedTime < 0 || trimmedTime > element.duration) return;
-
-    video.currentTime = trimmedTime;
+    // Be more lenient with boundary checking to avoid frame jumping
+    if (trimmedTime < 0) return;
     
-    // Wait for seek to complete
-    await new Promise<void>((resolve) => {
-      video!.onseeked = () => resolve();
-      video!.currentTime = trimmedTime;
-      // Fallback timeout
-      setTimeout(resolve, 100);
-    });
+    // Clamp to video duration instead of returning early
+    const maxTime = Math.max(0, element.duration - 0.1); // Leave small buffer
+    const clampedTime = Math.min(trimmedTime, maxTime);
+    
+    // Only seek if we need to change position significantly (avoid micro-seeks)
+    const currentVideoTime = video.currentTime;
+    const timeDiff = Math.abs(currentVideoTime - clampedTime);
+    
+    if (timeDiff > 0.05) { // Only seek if difference > 50ms
+      video.currentTime = clampedTime;
+      
+      // Wait for seek to complete
+      await new Promise<void>((resolve) => {
+        const seekTimeout = setTimeout(() => {
+          this.log(`Seek timeout for time ${clampedTime}, using current frame`);
+          resolve();
+        }, 200); // Increased timeout for stability
+        
+        video!.onseeked = () => {
+          clearTimeout(seekTimeout);
+          resolve();
+        };
+      });
+    }
     
     this.renderer.save();
     
