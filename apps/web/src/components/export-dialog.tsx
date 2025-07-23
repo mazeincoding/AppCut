@@ -16,6 +16,8 @@ import { useProjectStore } from "@/stores/project-store";
 import { useMediaStore } from "@/stores/media-store";
 import { ExportCanvas, ExportCanvasRef } from "@/components/export-canvas";
 import { ExportEngine } from "@/lib/export-engine-optimized";
+import { ExportEngineFactory, EngineType } from "@/lib/export-engine-factory";
+import { WebCodecsCompatibility } from "@/lib/webcodecs-detector";
 import { memoryMonitor, getMemoryRecommendation, estimateVideoMemoryUsage } from "@/lib/memory-monitor";
 
 interface ExportDialogProps {
@@ -35,6 +37,11 @@ export function ExportDialog() {
   const [filename, setFilename] = useState(settings.filename);
   const [memoryWarning, setMemoryWarning] = useState<string | null>(null);
   const [memoryLevel, setMemoryLevel] = useState<'info' | 'warning' | 'critical' | 'error'>('info');
+  
+  // SAFETY: Engine selection state - implements mermaid diagram user preferences
+  const [exportEngine, setExportEngine] = useState<EngineType>('auto');
+  const [engineStatus, setEngineStatus] = useState<string>('Detecting capabilities...');
+  const [engineCapabilities, setEngineCapabilities] = useState<any>(null);
   
   // Export state
   const isExporting = progress.isExporting;
@@ -88,6 +95,28 @@ export function ExportDialog() {
     });
   }, [format, quality, filename, resolution.width, resolution.height, updateSettings]);
 
+  // SAFETY: Check engine capabilities on component mount - implements mermaid diagram
+  useEffect(() => {
+    const checkCapabilities = async () => {
+      try {
+        const capabilities = await ExportEngineFactory.getEngineCapabilities();
+        setEngineCapabilities(capabilities);
+        setEngineStatus(capabilities.statusMessage);
+        
+        // Auto-select recommended engine based on capabilities
+        if (capabilities.recommendedEngine !== exportEngine) {
+          setExportEngine(capabilities.recommendedEngine);
+        }
+      } catch (error) {
+        console.warn('Failed to check engine capabilities:', error);
+        setEngineStatus('⚠️ Using stable optimized engine');
+        setExportEngine('stable');
+      }
+    };
+    
+    checkCapabilities();
+  }, []);
+
   // Memory check effect
   useEffect(() => {
     const checkMemoryUsage = () => {
@@ -106,6 +135,12 @@ export function ExportDialog() {
       if (fileSafetyWarning) {
         setMemoryWarning(fileSafetyWarning.message);
         setMemoryLevel(fileSafetyWarning.level);
+        
+        // If memory is critical, force stable engine
+        if (fileSafetyWarning.level === 'error' && exportEngine !== 'stable') {
+          setExportEngine('stable');
+          setEngineStatus('⚠️ Memory critical - forced stable engine');
+        }
       } else {
         const recommendation = getMemoryRecommendation(estimatedMemoryBytes);
         setMemoryWarning(recommendation);
@@ -123,9 +158,9 @@ export function ExportDialog() {
     };
     
     checkMemoryUsage();
-  }, [quality, getTotalDuration, activeProject?.fps, resolution.width, resolution.height]);
+  }, [quality, getTotalDuration, activeProject?.fps, resolution.width, resolution.height, exportEngine]);
 
-  // Event handlers
+  // Event handlers - implements mermaid diagram export flow
   const handleExport = async () => {
     if (!canvasRef.current?.getCanvas() || isExporting) return;
 
@@ -136,8 +171,9 @@ export function ExportDialog() {
       if (!canvas) {
         throw new Error("Canvas not available");
       }
-      
-      const exportEngine = new ExportEngine({
+
+      // SAFETY: Use factory to select engine based on user preference - implements mermaid diagram
+      const engine = await ExportEngineFactory.createEngineByPreference(exportEngine, {
         canvas: canvas,
         settings: {
           ...settings,
@@ -154,9 +190,14 @@ export function ExportDialog() {
         onProgress: (progress, status) => {
           updateProgress({ isExporting: true, progress, status });
           
-          if (status.includes('💾') || status.includes('⚠️')) {
+          // Show memory warnings and engine status
+          if (status.includes('💾') || status.includes('⚠️') || status.includes('WebCodecs')) {
             setMemoryWarning(status);
-            setMemoryLevel('warning');
+            if (status.includes('WebCodecs')) {
+              setMemoryLevel('info');
+            } else {
+              setMemoryLevel('warning');
+            }
           }
         },
         onError: (error) => {
@@ -164,7 +205,7 @@ export function ExportDialog() {
         },
       });
 
-      const videoBlob = await exportEngine.startExport();
+      const videoBlob = await engine.startExport();
       const fullFilename = `${filename}.${format}`;
       await ExportEngine.createDownloadLink(videoBlob, fullFilename);
       
@@ -174,6 +215,12 @@ export function ExportDialog() {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       updateProgress({ isExporting: false, status: `Error: ${errorMessage}` });
+      
+      // SAFETY: If auto mode fails, suggest stable fallback
+      if (exportEngine === 'auto') {
+        setMemoryWarning(`${errorMessage} - Try switching to "Stable Mode" in export options.`);
+        setMemoryLevel('error');
+      }
     }
   };
 
@@ -246,6 +293,59 @@ export function ExportDialog() {
                 <Label htmlFor="480p">480p (Low Quality)</Label>
               </div>
             </RadioGroup>
+          </div>
+
+          {/* SAFETY: Export Engine Selection - implements mermaid diagram UI */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Export Engine</Label>
+            <RadioGroup value={exportEngine} onValueChange={(value) => setExportEngine(value as EngineType)}>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="auto" id="auto" />
+                <Label htmlFor="auto" className="flex-1">
+                  <div className="flex flex-col">
+                    <span>Auto (Recommended)</span>
+                    <span className="text-xs text-muted-foreground">Uses best available engine</span>
+                  </div>
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="stable" id="stable" />
+                <Label htmlFor="stable" className="flex-1">
+                  <div className="flex flex-col">
+                    <span>Stable Mode</span>
+                    <span className="text-xs text-muted-foreground">Uses proven optimized engine</span>
+                  </div>
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="webcodecs" id="webcodecs" />
+                <Label htmlFor="webcodecs" className="flex-1">
+                  <div className="flex flex-col">
+                    <span>WebCodecs (Experimental)</span>
+                    <span className="text-xs text-muted-foreground">Force new engine with fallback</span>
+                  </div>
+                </Label>
+              </div>
+            </RadioGroup>
+            <div className="p-3 bg-muted rounded-lg">
+              <div className="flex items-start space-x-2">
+                <Info className="h-4 w-4 mt-0.5 text-blue-500 flex-shrink-0" />
+                <div className="space-y-1">
+                  <p className="text-xs font-medium">Engine Status:</p>
+                  <p className="text-xs text-muted-foreground">{engineStatus}</p>
+                  {engineCapabilities && (
+                    <div className="text-xs text-muted-foreground space-y-1">
+                      {engineCapabilities.memoryStatus && (
+                        <div>Memory: {engineCapabilities.memoryStatus}</div>
+                      )}
+                      {engineCapabilities.hardwareAcceleration && (
+                        <div className="text-green-600">✅ Hardware acceleration available</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Resolution & Size Info */}
