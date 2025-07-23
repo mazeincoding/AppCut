@@ -166,7 +166,7 @@ export function ExportDialog() {
 
       const videoBlob = await exportEngine.startExport();
       const fullFilename = `${filename}.${format}`;
-      ExportEngine.createDownloadLink(videoBlob, fullFilename);
+      await ExportEngine.createDownloadLink(videoBlob, fullFilename);
       
       updateProgress({ isExporting: false, progress: 100, status: "Export complete!" });
       setTimeout(() => setDialogOpen(false), 1000);
@@ -215,15 +215,15 @@ export function ExportDialog() {
             <Label className="text-sm font-medium">Format</Label>
             <RadioGroup value={format} onValueChange={(value) => setFormat(value as ExportFormat)}>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value={ExportFormat.MP4} id="mp4" style={{ width: '12px', height: '12px' }} />
+                <RadioGroupItem value={ExportFormat.MP4} id="mp4" />
                 <Label htmlFor="mp4">MP4 (Recommended)</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value={ExportFormat.WEBM} id="webm" style={{ width: '12px', height: '12px' }} />
+                <RadioGroupItem value={ExportFormat.WEBM} id="webm" />
                 <Label htmlFor="webm">WebM</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value={ExportFormat.MOV} id="mov" style={{ width: '12px', height: '12px' }} />
+                <RadioGroupItem value={ExportFormat.MOV} id="mov" />
                 <Label htmlFor="mov">MOV</Label>
               </div>
             </RadioGroup>
@@ -234,15 +234,15 @@ export function ExportDialog() {
             <Label className="text-sm font-medium">Quality</Label>
             <RadioGroup value={quality} onValueChange={(value) => setQuality(value as ExportQuality)}>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value={ExportQuality.HIGH} id="1080p" style={{ width: '12px', height: '12px' }} />
+                <RadioGroupItem value={ExportQuality.HIGH} id="1080p" />
                 <Label htmlFor="1080p">1080p (High Quality)</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value={ExportQuality.MEDIUM} id="720p" style={{ width: '12px', height: '12px' }} />
+                <RadioGroupItem value={ExportQuality.MEDIUM} id="720p" />
                 <Label htmlFor="720p">720p (Medium Quality)</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value={ExportQuality.LOW} id="480p" style={{ width: '12px', height: '12px' }} />
+                <RadioGroupItem value={ExportQuality.LOW} id="480p" />
                 <Label htmlFor="480p">480p (Low Quality)</Label>
               </div>
             </RadioGroup>

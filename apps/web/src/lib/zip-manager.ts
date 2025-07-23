@@ -27,14 +27,11 @@ export class ZipManager {
 
     for (const item of items) {
       try {
-        // Get blob from File object directly
-        const blob = new Blob([item.file], { type: item.file.type })
-        
-        // Resolve naming conflicts
+        // File objects are already Blobs, so use them directly
         const filename = this.resolveFilename(item.name)
         
-        // Add file to ZIP
-        this.zip.file(filename, blob)
+        // Add file to ZIP directly
+        this.zip.file(filename, item.file)
         
         completed++
         onProgress?.(completed / total)

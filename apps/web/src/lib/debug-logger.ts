@@ -62,8 +62,17 @@ class DebugLogger {
     this.logs.push(entry);
     this.saveLogs();
 
-    // Also log to console for immediate visibility
-    console.log(`[DEBUG] ${component} - ${event}:`, data);
+    // Only log important events to console, skip frequent/repetitive ones
+    const skipConsoleLog = [
+      'RENDERING_EDITOR_INTERFACE',
+      'RENDER',
+      'TIMELINE_RENDER',
+      'MEDIA_PANEL_RENDER'
+    ].includes(event);
+
+    if (!skipConsoleLog) {
+      console.log(`[DEBUG] ${component} - ${event}:`, data);
+    }
   }
 
   clearLogs() {

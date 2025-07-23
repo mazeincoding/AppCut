@@ -926,7 +926,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       });
 
       const totalDuration = Math.max(...trackEndTimes, 0);
-      console.log("Timeline duration:", totalDuration);
+      // Uncomment for debugging: console.log("Timeline duration:", totalDuration);
       return totalDuration;
     },
 
@@ -1187,8 +1187,8 @@ if (typeof window !== 'undefined') {
     console.log("🔍 CHECKING TIMELINE DURATION:");
     const state = useTimelineStore.getState();
     const duration = state.getTotalDuration();
-    console.log("Timeline duration:", duration);
-    console.log("Timeline tracks:", state._tracks.length);
+    // Uncomment for debugging: console.log("Timeline duration:", duration);
+    // Uncomment for debugging: console.log("Timeline tracks:", state._tracks.length);
     state._tracks.forEach((track, i) => {
       console.log(`Track ${i + 1}:`, track.elements.length, "elements");
       track.elements.forEach((el, j) => {
