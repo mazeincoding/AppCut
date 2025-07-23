@@ -513,14 +513,22 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     } catch (error) {
       console.error('❌ Failed to generate timeline previews:', error);
       
+      // Provide more helpful error message
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Unknown error occurred during timeline preview generation';
+      
       // Update item with error state
       set((state) => ({
         mediaItems: state.mediaItems.map(existing => 
           existing.id === mediaId 
-            ? { ...existing, thumbnailError: `Timeline preview generation failed: ${error}` }
+            ? { ...existing, thumbnailError: `Timeline preview generation failed: ${errorMessage}` }
             : existing
         )
       }));
+      
+      // Don't throw error to prevent UI crashes - let component handle gracefully
+      console.log('Timeline preview generation failed, component will show fallback UI');
     }
   },
 
