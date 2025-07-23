@@ -1,4 +1,4 @@
-import { MediaElement, CropSettings } from "@/types/timeline";
+import { MediaElement, CropSettings }  from "@/types/timeline";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { useMediaStore } from "@/stores/media-store";
 import { Label } from "../../ui/label";
@@ -8,12 +8,10 @@ import { Switch } from "../../ui/switch";
 import { Separator } from "../../ui/separator";
 import { PropertyItem, PropertyItemLabel, PropertyItemValue } from "./property-item";
 import { Crop, RotateCcw } from "lucide-react";
-import { useState } from "react";
 
 export function MediaProperties({ element }: { element: MediaElement }) {
     const { updateElementProperties } = useTimelineStore();
     const { mediaItems } = useMediaStore();
-    const [showAdvanced, setShowAdvanced] = useState(false);
 
     // Find the media item
     const mediaItem = mediaItems.find((item) => item.id === element.mediaId);

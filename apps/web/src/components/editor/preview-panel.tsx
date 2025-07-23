@@ -309,7 +309,10 @@ export function PreviewPanel() {
 
             // Get crop properties
             const crop = element.crop;
-            const isCropped = crop?.enabled && crop;
+            const isCropped =
+                crop?.enabled &&
+                crop.width > 0 &&
+                crop.height > 0;
 
             // Test elements
             if (!mediaItem || element.mediaId === "test") {
@@ -355,7 +358,7 @@ export function PreviewPanel() {
                             opacity: transform.opacity,
                         }}
                     >
-                        {isCropped ? (
+                        {isCropped && crop ? (
                             <div
                                 className="relative overflow-hidden"
                                 style={{
@@ -410,7 +413,7 @@ export function PreviewPanel() {
                             opacity: transform.opacity,
                         }}
                     >
-                        {isCropped ? (
+                        {isCropped && crop ? (
                             <div
                                 className="relative overflow-hidden"
                                 style={{
