@@ -270,15 +270,23 @@ export class ExportEngine {
 
       this.onProgress?.(2, "Analyzing timeline content...");
       
-      // Phase 1 optimizations: Preload assets with detailed progress
-      this.onProgress?.(3, "Pre-loading images...");
-      await this.preloadImages();
+      // Skip expensive pre-loading for short videos (under 15 seconds)
+      const isShortVideo = this.duration < 15;
       
-      this.onProgress?.(5, "Pre-decoding video keyframes...");
-      await this.preloadVideoFrames();
-      
-      this.onProgress?.(8, "Loading video elements...");
-      await this.preloadMediaElements();
+      if (isShortVideo) {
+        this.log(`Short video detected (${this.duration}s) - skipping pre-loading optimizations`);
+        this.onProgress?.(8, "Short video - rendering directly...");
+      } else {
+        // Phase 1 optimizations: Preload assets with detailed progress for longer videos
+        this.onProgress?.(3, "Pre-loading images...");
+        await this.preloadImages();
+        
+        this.onProgress?.(5, "Pre-decoding video keyframes...");
+        await this.preloadVideoFrames();
+        
+        this.onProgress?.(8, "Loading video elements...");
+        await this.preloadMediaElements();
+      }
 
       this.onProgress?.(10, "Initializing video encoder...");
       
@@ -339,8 +347,11 @@ export class ExportEngine {
           return;
         }
 
-        // Check memory less frequently
-        if (currentFrame % 60 === 0) { // Every 2 seconds at 30fps
+        // Check memory less frequently, skip for very short videos
+        const isShortVideo = this.duration < 15;
+        const memoryCheckInterval = isShortVideo ? 300 : 60; // 10s vs 2s intervals
+        
+        if (currentFrame % memoryCheckInterval === 0) {
           try {
             this.checkMemoryStatus();
           } catch (error) {
@@ -451,9 +462,14 @@ export class ExportEngine {
     const mediaItem = this.mediaItems.find(m => m.id === mediaElement.mediaId);
     if (!mediaItem) return;
 
-    const bitmap = this.imageBitmapCache.get(mediaElement.mediaId);
+    // For short videos, skip cache and render directly
+    const isShortVideo = this.duration < 15;
+    const bitmap = isShortVideo ? null : this.imageBitmapCache.get(mediaElement.mediaId);
+    
     if (!bitmap) {
-      this.log('ImageBitmap not found in cache, falling back to regular rendering');
+      if (!isShortVideo) {
+        this.log('ImageBitmap not found in cache, falling back to regular rendering');
+      }
       return this.renderImageElement(element, this.calculateBounds(element));
     }
 
@@ -477,7 +493,10 @@ export class ExportEngine {
    */
   private async renderVideoElementOptimized(element: TimelineElement, timestamp: number): Promise<void> {
     const mediaElement = element as any; // Type assertion for media element
-    const frameCache = this.videoFrameCache.get(mediaElement.mediaId);
+    
+    // For short videos, skip cache and render directly
+    const isShortVideo = this.duration < 15;
+    const frameCache = isShortVideo ? null : this.videoFrameCache.get(mediaElement.mediaId);
     
     if (!frameCache || frameCache.size === 0) {
       // Fallback to regular video rendering
@@ -588,7 +607,11 @@ export class ExportEngine {
         throw new Error("Export cancelled");
       }
 
-      if (i % 60 === 0) { // Check every 2 seconds
+      // Check memory less frequently for short videos
+      const isShortVideo = this.duration < 15;
+      const memoryCheckInterval = isShortVideo ? 300 : 60; // 10s vs 2s intervals
+      
+      if (i % memoryCheckInterval === 0) {
         try {
           this.checkMemoryStatus();
         } catch (error) {
