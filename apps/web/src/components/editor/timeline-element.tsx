@@ -90,14 +90,12 @@ export function TimelineElement({
     ? mediaItems.find(item => item.id === element.mediaId)
     : null;
 
-  // Video preview hook for hover interactions
-  const videoPreview = mediaItem?.type === 'video' 
-    ? useVideoTimelinePreview({
-        element,
-        mediaItem,
-        elementRef
-      })
-    : null;
+  // Video preview hook for hover interactions - always call hook for consistent renders
+  const videoPreview = useVideoTimelinePreview({
+    element,
+    mediaItem: mediaItem || { type: 'image' } as any, // Provide fallback to satisfy type
+    elementRef
+  });
 
   const effectiveDuration =
     element.duration - element.trimStart - element.trimEnd;
@@ -333,8 +331,8 @@ export function TimelineElement({
           elementWidth={elementWidth}
           elementHeight={TIMELINE_CONSTANTS.TRACK_HEIGHT}
           isSelected={isSelected}
-          isHovered={videoPreview?.isHovered || false}
-          mousePosition={videoPreview?.mousePosition || undefined}
+          isHovered={videoPreview.isHovered}
+          mousePosition={videoPreview.mousePosition || undefined}
         />
       );
     }
@@ -399,7 +397,7 @@ export function TimelineElement({
             onContextMenu={(e) =>
               onElementMouseDown && onElementMouseDown(e, element)
             }
-            {...(videoPreview?.handlers || {})}
+            {...videoPreview.handlers}
           >
             {renderElementContent()}
 

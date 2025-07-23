@@ -19,6 +19,9 @@ export function useVideoTimelinePreview({
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null);
   const [previewTimestamp, setPreviewTimestamp] = useState<number>(0);
 
+  // Early return for non-video elements
+  const isVideoElement = mediaItem?.type === 'video';
+
   // Calculate timestamp from mouse position
   const calculateTimestamp = useCallback((clientX: number) => {
     if (!elementRef.current) return 0;
@@ -34,24 +37,28 @@ export function useVideoTimelinePreview({
     return trimStart + (progress * availableDuration);
   }, [element, elementRef]);
 
-  // Mouse event handlers
+  // Mouse event handlers - only active for video elements
   const handleMouseEnter = useCallback(() => {
-    setIsHovered(true);
-  }, []);
+    if (isVideoElement) {
+      setIsHovered(true);
+    }
+  }, [isVideoElement]);
 
   const handleMouseLeave = useCallback(() => {
-    setIsHovered(false);
-    setMousePosition(null);
-    setPreviewTimestamp(0);
-  }, []);
+    if (isVideoElement) {
+      setIsHovered(false);
+      setMousePosition(null);
+      setPreviewTimestamp(0);
+    }
+  }, [isVideoElement]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!isHovered) return;
+    if (!isVideoElement || !isHovered) return;
     
     const timestamp = calculateTimestamp(e.clientX);
     setPreviewTimestamp(timestamp);
     setMousePosition({ x: e.clientX, y: e.clientY });
-  }, [isHovered, calculateTimestamp]);
+  }, [isVideoElement, isHovered, calculateTimestamp]);
 
   // Calculate relative position (0-1) from mouse position
   const getRelativePosition = useCallback((clientX: number) => {
@@ -63,14 +70,14 @@ export function useVideoTimelinePreview({
   }, [elementRef]);
 
   return {
-    isHovered,
-    mousePosition,
-    previewTimestamp,
-    handlers: {
+    isHovered: isVideoElement ? isHovered : false,
+    mousePosition: isVideoElement ? mousePosition : null,
+    previewTimestamp: isVideoElement ? previewTimestamp : 0,
+    handlers: isVideoElement ? {
       onMouseEnter: handleMouseEnter,
       onMouseLeave: handleMouseLeave,
       onMouseMove: handleMouseMove
-    },
+    } : {},
     utils: {
       calculateTimestamp,
       getRelativePosition
