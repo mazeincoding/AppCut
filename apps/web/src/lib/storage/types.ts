@@ -18,6 +18,11 @@ export interface MediaFileData {
   width?: number;
   height?: number;
   duration?: number;
+  fps?: number;
+  bitrate?: number;
+  codecName?: string;
+  createdAt?: string; // ISO string
+  tags?: string[];
   // File will be stored separately in OPFS
 }
 

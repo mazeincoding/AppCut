@@ -1,5 +1,5 @@
-import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { toBlobURL } from '@ffmpeg/util';
+import { FFmpeg } from "@ffmpeg/ffmpeg";
+import { toBlobURL } from "@ffmpeg/util";
 
 let ffmpeg: FFmpeg | null = null;
 
@@ -7,13 +7,13 @@ export const initFFmpeg = async (): Promise<FFmpeg> => {
   if (ffmpeg) return ffmpeg;
 
   ffmpeg = new FFmpeg();
-  
+
   // Use locally hosted files instead of CDN
-  const baseURL = '/ffmpeg';
-  
+  const baseURL = "/ffmpeg";
+
   await ffmpeg.load({
-    coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-    wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+    coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
+    wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
   });
 
   return ffmpeg;
@@ -24,31 +24,39 @@ export const generateThumbnail = async (
   timeInSeconds: number = 1
 ): Promise<string> => {
   const ffmpeg = await initFFmpeg();
-  
-  const inputName = 'input.mp4';
-  const outputName = 'thumbnail.jpg';
-  
+
+  const inputName = "input.mp4";
+  const outputName = "thumbnail.jpg";
+
   // Write input file
-  await ffmpeg.writeFile(inputName, new Uint8Array(await videoFile.arrayBuffer()));
-  
+  await ffmpeg.writeFile(
+    inputName,
+    new Uint8Array(await videoFile.arrayBuffer())
+  );
+
   // Generate thumbnail at specific time
   await ffmpeg.exec([
-    '-i', inputName,
-    '-ss', timeInSeconds.toString(),
-    '-vframes', '1',
-    '-vf', 'scale=320:240',
-    '-q:v', '2',
-    outputName
+    "-i",
+    inputName,
+    "-ss",
+    timeInSeconds.toString(),
+    "-vframes",
+    "1",
+    "-vf",
+    "scale=320:240",
+    "-q:v",
+    "2",
+    outputName,
   ]);
-  
+
   // Read output file
   const data = await ffmpeg.readFile(outputName);
-  const blob = new Blob([data], { type: 'image/jpeg' });
-  
+  const blob = new Blob([data], { type: "image/jpeg" });
+
   // Cleanup
   await ffmpeg.deleteFile(inputName);
   await ffmpeg.deleteFile(outputName);
-  
+
   return URL.createObjectURL(blob);
 };
 
@@ -59,71 +67,87 @@ export const trimVideo = async (
   onProgress?: (progress: number) => void
 ): Promise<Blob> => {
   const ffmpeg = await initFFmpeg();
-  
-  const inputName = 'input.mp4';
-  const outputName = 'output.mp4';
-  
+
+  const inputName = "input.mp4";
+  const outputName = "output.mp4";
+
   // Set up progress callback
   if (onProgress) {
-    ffmpeg.on('progress', ({ progress }) => {
+    ffmpeg.on("progress", ({ progress }) => {
       onProgress(progress * 100);
     });
   }
-  
+
   // Write input file
-  await ffmpeg.writeFile(inputName, new Uint8Array(await videoFile.arrayBuffer()));
-  
+  await ffmpeg.writeFile(
+    inputName,
+    new Uint8Array(await videoFile.arrayBuffer())
+  );
+
   const duration = endTime - startTime;
-  
+
   // Trim video
   await ffmpeg.exec([
-    '-i', inputName,
-    '-ss', startTime.toString(),
-    '-t', duration.toString(),
-    '-c', 'copy', // Use stream copy for faster processing
-    outputName
+    "-i",
+    inputName,
+    "-ss",
+    startTime.toString(),
+    "-t",
+    duration.toString(),
+    "-c",
+    "copy", // Use stream copy for faster processing
+    outputName,
   ]);
-  
+
   // Read output file
   const data = await ffmpeg.readFile(outputName);
-  const blob = new Blob([data], { type: 'video/mp4' });
-  
+  const blob = new Blob([data], { type: "video/mp4" });
+
   // Cleanup
   await ffmpeg.deleteFile(inputName);
   await ffmpeg.deleteFile(outputName);
-  
+
   return blob;
 };
 
-export const getVideoInfo = async (videoFile: File): Promise<{
+export const getVideoInfo = async (
+  videoFile: File
+): Promise<{
   duration: number;
   width: number;
   height: number;
   fps: number;
+  bitrate?: number;
+  codecName?: string;
 }> => {
   const ffmpeg = await initFFmpeg();
 
-  const inputName = 'input.mp4';
+  const inputName = "input.mp4";
 
   // Write input file
-  await ffmpeg.writeFile(inputName, new Uint8Array(await videoFile.arrayBuffer()));
+  await ffmpeg.writeFile(
+    inputName,
+    new Uint8Array(await videoFile.arrayBuffer())
+  );
 
   // Capture FFmpeg stderr output with a one-time listener pattern
-  let ffmpegOutput = '';
+  let ffmpegOutput = "";
   let listening = true;
   const listener = (data: string) => {
     if (listening) ffmpegOutput += data;
   };
-  ffmpeg.on('log', ({ message }) => listener(message));
+  ffmpeg.on("log", ({ message }) => listener(message));
 
   // Run ffmpeg to get info (stderr will contain the info)
   try {
-    await ffmpeg.exec(['-i', inputName, '-f', 'null', '-']);
+    await ffmpeg.exec(["-i", inputName, "-f", "null", "-"]);
   } catch (error) {
     listening = false;
     await ffmpeg.deleteFile(inputName);
-    console.error('FFmpeg execution failed:', error);
-    throw new Error('Failed to extract video info. The file may be corrupted or in an unsupported format.');
+    console.error("FFmpeg execution failed:", error);
+    throw new Error(
+      "Failed to extract video info. The file may be corrupted or in an unsupported format."
+    );
   }
 
   // Disable listener after exec completes
@@ -132,7 +156,7 @@ export const getVideoInfo = async (videoFile: File): Promise<{
   // Cleanup
   await ffmpeg.deleteFile(inputName);
 
-  // Parse output for duration, resolution, and fps
+  // Parse output for duration, resolution, fps, bitrate, and codec
   // Example: Duration: 00:00:10.00, start: 0.000000, bitrate: 1234 kb/s
   // Example: Stream #0:0: Video: h264 (High), yuv420p(progressive), 1920x1080 [SAR 1:1 DAR 16:9], 30 fps, 30 tbr, 90k tbn, 60 tbc
 
@@ -143,20 +167,33 @@ export const getVideoInfo = async (videoFile: File): Promise<{
     duration = parseInt(h) * 3600 + parseInt(m) * 60 + parseFloat(s);
   }
 
-  const videoStreamMatch = ffmpegOutput.match(/Video:.* (\d+)x(\d+)[^,]*, ([\d.]+) fps/);
-  let width = 0, height = 0, fps = 0;
+  // Extract bitrate from Duration line
+  const bitrateMatch = ffmpegOutput.match(/bitrate: (\d+) kb\/s/);
+  let bitrate: number | undefined;
+  if (bitrateMatch) {
+    bitrate = parseInt(bitrateMatch[1]) * 1000; // Convert kb/s to b/s
+  }
+
+  const videoStreamMatch = ffmpegOutput.match(
+    /Video:.* (\d+)x(\d+)[^,]*, ([\d.]+) fps/
+  );
+  let width = 0,
+    height = 0,
+    fps = 0;
   if (videoStreamMatch) {
     width = parseInt(videoStreamMatch[1]);
     height = parseInt(videoStreamMatch[2]);
     fps = parseFloat(videoStreamMatch[3]);
   }
 
-  return {
-    duration,
-    width,
-    height,
-    fps
-  };
+  // Extract codec name
+  const codecMatch = ffmpegOutput.match(/Video: ([a-zA-Z0-9_-]+)/);
+  let codecName: string | undefined;
+  if (codecMatch) {
+    codecName = codecMatch[1];
+  }
+
+  return { duration, width, height, fps, bitrate, codecName };
 };
 
 export const convertToWebM = async (
@@ -164,68 +201,81 @@ export const convertToWebM = async (
   onProgress?: (progress: number) => void
 ): Promise<Blob> => {
   const ffmpeg = await initFFmpeg();
-  
-  const inputName = 'input.mp4';
-  const outputName = 'output.webm';
-  
+
+  const inputName = "input.mp4";
+  const outputName = "output.webm";
+
   // Set up progress callback
   if (onProgress) {
-    ffmpeg.on('progress', ({ progress }) => {
+    ffmpeg.on("progress", ({ progress }) => {
       onProgress(progress * 100);
     });
   }
-  
+
   // Write input file
-  await ffmpeg.writeFile(inputName, new Uint8Array(await videoFile.arrayBuffer()));
-  
+  await ffmpeg.writeFile(
+    inputName,
+    new Uint8Array(await videoFile.arrayBuffer())
+  );
+
   // Convert to WebM
   await ffmpeg.exec([
-    '-i', inputName,
-    '-c:v', 'libvpx-vp9',
-    '-crf', '30',
-    '-b:v', '0',
-    '-c:a', 'libopus',
-    outputName
+    "-i",
+    inputName,
+    "-c:v",
+    "libvpx-vp9",
+    "-crf",
+    "30",
+    "-b:v",
+    "0",
+    "-c:a",
+    "libopus",
+    outputName,
   ]);
-  
+
   // Read output file
   const data = await ffmpeg.readFile(outputName);
-  const blob = new Blob([data], { type: 'video/webm' });
-  
+  const blob = new Blob([data], { type: "video/webm" });
+
   // Cleanup
   await ffmpeg.deleteFile(inputName);
   await ffmpeg.deleteFile(outputName);
-  
+
   return blob;
 };
 
 export const extractAudio = async (
   videoFile: File,
-  format: 'mp3' | 'wav' = 'mp3'
+  format: "mp3" | "wav" = "mp3"
 ): Promise<Blob> => {
   const ffmpeg = await initFFmpeg();
-  
-  const inputName = 'input.mp4';
+
+  const inputName = "input.mp4";
   const outputName = `output.${format}`;
-  
+
   // Write input file
-  await ffmpeg.writeFile(inputName, new Uint8Array(await videoFile.arrayBuffer()));
-  
+  await ffmpeg.writeFile(
+    inputName,
+    new Uint8Array(await videoFile.arrayBuffer())
+  );
+
   // Extract audio
   await ffmpeg.exec([
-    '-i', inputName,
-    '-vn', // Disable video
-    '-acodec', format === 'mp3' ? 'libmp3lame' : 'pcm_s16le',
-    outputName
+    "-i",
+    inputName,
+    "-vn", // Disable video
+    "-acodec",
+    format === "mp3" ? "libmp3lame" : "pcm_s16le",
+    outputName,
   ]);
-  
+
   // Read output file
   const data = await ffmpeg.readFile(outputName);
   const blob = new Blob([data], { type: `audio/${format}` });
-  
+
   // Cleanup
   await ffmpeg.deleteFile(inputName);
   await ffmpeg.deleteFile(outputName);
-  
+
   return blob;
 };

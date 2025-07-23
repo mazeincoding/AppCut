@@ -34,10 +34,12 @@ export async function processMediaFiles(
     let width: number | undefined;
     let height: number | undefined;
     let fps: number | undefined;
+    let bitrate: number | undefined;
+    let codecName: string | undefined;
 
     try {
       if (fileType === "image") {
-        // Get image dimensions
+        // Get image dimensions and enhanced metadata
         const dimensions = await getImageDimensions(file);
         width = dimensions.width;
         height = dimensions.height;
@@ -49,6 +51,8 @@ export async function processMediaFiles(
           width = videoInfo.width;
           height = videoInfo.height;
           fps = videoInfo.fps;
+          bitrate = videoInfo.bitrate;
+          codecName = videoInfo.codecName;
 
           // Generate thumbnail using FFmpeg
           thumbnailUrl = await generateThumbnail(file, 1);
@@ -63,11 +67,19 @@ export async function processMediaFiles(
           width = videoResult.width;
           height = videoResult.height;
           duration = await getMediaDuration(file);
-          // FPS will remain undefined for fallback
+          // FPS, bitrate, and codec will remain undefined for fallback
         }
       } else if (fileType === "audio") {
-        // For audio, we don't set width/height/fps (they'll be undefined)
+        // For audio, extract duration and metadata
         duration = await getMediaDuration(file);
+        // Try to extract audio bitrate if available
+        try {
+          const audioInfo = await getVideoInfo(file); // FFmpeg can handle audio too
+          bitrate = audioInfo.bitrate;
+          codecName = audioInfo.codecName;
+        } catch (error) {
+          // Audio metadata extraction failed, continue without it
+        }
       }
 
       processedItems.push({
@@ -80,6 +92,12 @@ export async function processMediaFiles(
         width,
         height,
         fps,
+        bitrate,
+        codecName,
+        lastModified: file.lastModified
+          ? new Date(file.lastModified)
+          : undefined,
+        tags: [], // Initialize empty tags array
       });
 
       // Yield back to the event loop to keep the UI responsive
