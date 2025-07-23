@@ -122,9 +122,15 @@ export class ExportEngine {
       return mediaItem?.type === 'image';
     });
 
+    if (imageElements.length === 0) {
+      this.log('No images to preload');
+      return;
+    }
+
     this.log(`Pre-loading ${imageElements.length} images as ImageBitmap`);
 
-    await Promise.all(imageElements.map(async (element) => {
+    let loadedCount = 0;
+    await Promise.all(imageElements.map(async (element, index) => {
       const mediaElement = element as any; // Type assertion for media element
       const mediaItem = this.mediaItems.find(m => m.id === mediaElement.mediaId);
       if (!mediaItem) return;
@@ -138,8 +144,16 @@ export class ExportEngine {
         const blob = await response.blob();
         const bitmap = await createImageBitmap(blob);
         this.imageBitmapCache.set(mediaElement.mediaId, bitmap);
+        
+        loadedCount++;
+        // Update progress for image loading
+        const baseProgress = 3;
+        const progressRange = 2; // From 3% to 5%
+        const imageProgress = baseProgress + (loadedCount / imageElements.length) * progressRange;
+        this.onProgress?.(Math.floor(imageProgress), `Loading images... (${loadedCount}/${imageElements.length})`);
       } catch (error) {
         this.log('Failed to preload image:', mediaElement.mediaId, error);
+        loadedCount++;
       }
     }));
   }
@@ -155,10 +169,16 @@ export class ExportEngine {
       return mediaItem?.type === 'video';
     });
 
+    if (videoElements.length === 0) {
+      this.log('No videos to preload frames for');
+      return;
+    }
+
     this.log(`Pre-decoding frames for ${videoElements.length} videos`);
 
     // Only preload key frames to save memory
     const KEYFRAME_INTERVAL = 1; // Every 1 second
+    let processedVideos = 0;
 
     await Promise.all(videoElements.map(async (element) => {
       const mediaElement = element as any; // Type assertion for media element
@@ -170,6 +190,8 @@ export class ExportEngine {
       video.crossOrigin = "anonymous";
       
       const frameCache = new Map<number, ImageBitmap>();
+      const totalFrames = Math.ceil(mediaItem.duration / KEYFRAME_INTERVAL);
+      let decodedFrames = 0;
       
       try {
         await video.load();
@@ -183,11 +205,20 @@ export class ExportEngine {
           
           const bitmap = await createImageBitmap(video);
           frameCache.set(Math.floor(time), bitmap);
+          
+          decodedFrames++;
+          // Update progress for video frame decoding
+          const baseProgress = 5;
+          const progressRange = 3; // From 5% to 8%
+          const videoProgress = baseProgress + ((processedVideos * totalFrames + decodedFrames) / (videoElements.length * totalFrames)) * progressRange;
+          this.onProgress?.(Math.floor(videoProgress), `Decoding video frames... (${decodedFrames}/${totalFrames} frames)`);
         }
         
         this.videoFrameCache.set(mediaElement.mediaId, frameCache);
+        processedVideos++;
       } catch (error) {
         this.log('Failed to preload video frames:', mediaElement.mediaId, error);
+        processedVideos++;
       }
     }));
   }
@@ -237,14 +268,17 @@ export class ExportEngine {
         );
       }
 
-      this.onProgress?.(5, "Pre-loading media assets...");
+      this.onProgress?.(2, "Analyzing timeline content...");
       
-      // Phase 1 optimizations: Preload assets
-      await Promise.all([
-        this.preloadImages(),
-        this.preloadVideoFrames(),
-        this.preloadMediaElements()
-      ]);
+      // Phase 1 optimizations: Preload assets with detailed progress
+      this.onProgress?.(3, "Pre-loading images...");
+      await this.preloadImages();
+      
+      this.onProgress?.(5, "Pre-decoding video keyframes...");
+      await this.preloadVideoFrames();
+      
+      this.onProgress?.(8, "Loading video elements...");
+      await this.preloadMediaElements();
 
       this.onProgress?.(10, "Initializing video encoder...");
       
@@ -255,6 +289,9 @@ export class ExportEngine {
       await this.initializeAudioTracks();
 
       this.onProgress?.(15, "Rendering video frames...");
+      
+      // Track export start time for ETA calculation
+      this.exportStartTime = performance.now();
 
       // Render frames with optimizations
       const videoBlob = isFFmpegExportEnabled() 
@@ -326,12 +363,13 @@ export class ExportEngine {
           // Render with optimizations
           await this.renderSingleFrameOptimized(frameData);
           
-          // Update progress less frequently
-          const progress = Math.floor((currentFrame / totalFrames) * 100);
-          if (progress > lastProgressUpdate + 5) { // Update every 5%
+          // Update progress more frequently for better user feedback
+          const progress = 15 + Math.floor((currentFrame / totalFrames) * 75); // From 15% to 90%
+          if (progress > lastProgressUpdate + 2) { // Update every 2%
             lastProgressUpdate = progress;
             const memSummary = memoryMonitor.getMemorySummary();
-            this.onProgress?.(progress, `Rendering: ${progress}% (${memSummary})`);
+            const eta = this.calculateETA(currentFrame, totalFrames, performance.now() - (this.exportStartTime || 0));
+            this.onProgress?.(progress, `Rendering frame ${currentFrame + 1}/${totalFrames} - ETA: ${eta} (${memSummary})`);
           }
           
           currentFrame++;
@@ -564,10 +602,11 @@ export class ExportEngine {
       const dataUrl = this.canvas.toDataURL("image/png");
       await (this.recorder as FFmpegVideoRecorder).addFrame(dataUrl, i);
 
-      const progress = Math.floor((i / totalFrames) * 100);
-      if (progress % 5 === 0) { // Update every 5%
+      const progress = 15 + Math.floor((i / totalFrames) * 75); // From 15% to 90%
+      if (progress % 2 === 0) { // Update every 2%
         const memSummary = memoryMonitor.getMemorySummary();
-        this.onProgress?.(progress, `Rendering: ${progress}% (${memSummary})`);
+        const eta = this.calculateETA(i, totalFrames, performance.now() - (this.exportStartTime || 0));
+        this.onProgress?.(progress, `Rendering frame ${i + 1}/${totalFrames} - ETA: ${eta} (${memSummary})`);
       }
     }
 
@@ -592,6 +631,14 @@ export class ExportEngine {
       return this.getMediaItem(mediaElement.mediaId)?.type === "video";
     });
 
+    if (videoElements.length === 0) {
+      this.log('No video elements to preload');
+      return;
+    }
+
+    this.log(`Pre-loading ${videoElements.length} video elements`);
+    let loadedCount = 0;
+
     for (const element of videoElements) {
       const mediaElement = element as any;
       const mediaItem = this.getMediaItem(mediaElement.mediaId);
@@ -602,12 +649,24 @@ export class ExportEngine {
       video.crossOrigin = "anonymous";
       video.preload = "auto";
       
-      await new Promise<void>((resolve, reject) => {
-        video.onloadeddata = () => resolve();
-        video.onerror = () => reject(new Error(`Failed to load video: ${mediaItem.url}`));
-      });
+      try {
+        await new Promise<void>((resolve, reject) => {
+          video.onloadeddata = () => resolve();
+          video.onerror = () => reject(new Error(`Failed to load video: ${mediaItem.url}`));
+        });
 
-      this.preloadedVideos.set(mediaElement.mediaId, video);
+        this.preloadedVideos.set(mediaElement.mediaId, video);
+        loadedCount++;
+        
+        // Update progress for video element loading
+        const baseProgress = 8;
+        const progressRange = 2; // From 8% to 10%
+        const videoProgress = baseProgress + (loadedCount / videoElements.length) * progressRange;
+        this.onProgress?.(Math.floor(videoProgress), `Loading video elements... (${loadedCount}/${videoElements.length})`);
+      } catch (error) {
+        this.log('Failed to preload video element:', mediaElement.mediaId, error);
+        loadedCount++;
+      }
     }
   }
 
@@ -658,6 +717,20 @@ export class ExportEngine {
   }
 
   private lastProgress = 0;
+  private exportStartTime: number | null = null;
+
+  private calculateETA(currentFrame: number, totalFrames: number, elapsedMs: number): string {
+    if (currentFrame === 0) return 'Calculating...';
+    
+    const framesPerMs = currentFrame / elapsedMs;
+    const remainingFrames = totalFrames - currentFrame;
+    const etaMs = remainingFrames / framesPerMs;
+    
+    if (etaMs < 1000) return '<1s';
+    if (etaMs < 60000) return `${Math.round(etaMs / 1000)}s`;
+    if (etaMs < 3600000) return `${Math.round(etaMs / 60000)}m ${Math.round((etaMs % 60000) / 1000)}s`;
+    return `${Math.round(etaMs / 3600000)}h ${Math.round((etaMs % 3600000) / 60000)}m`;
+  }
 
   private async initializeAudioTracks(): Promise<void> {
     // TODO: Implement audio track initialization when AudioMixer API is updated
