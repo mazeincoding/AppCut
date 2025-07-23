@@ -486,7 +486,7 @@ export class ExportEngine {
           
           if (mediaItem) {
             if (mediaItem.type === "video") {
-              await this.renderVideoElement(element, bounds, timestamp, frameData);
+              await this.renderVideoElement(element, bounds, timestamp);
             } else if (mediaItem.type === "image") {
               this.renderImageElement(element, bounds);
             }
@@ -508,7 +508,7 @@ export class ExportEngine {
   /**
    * Render a video element
    */
-  private async renderVideoElement(element: TimelineElement, bounds: any, timestamp: number, frameData?: any): Promise<void> {
+  private async renderVideoElement(element: TimelineElement, bounds: any, timestamp: number): Promise<void> {
 
     if (element.type !== "media") {
       console.warn("❌ Element is not media type:", element.type);
@@ -542,8 +542,8 @@ export class ExportEngine {
           await this.seekVideoToTime(preloadedVideo, elementTime);
           
           // Longer delay for initial frames to ensure video decoder is ready
-          const isEarlyFrame = frameData.frameNumber < 5;
-          const delayMs = isEarlyFrame ? 50 : 16; // Extra delay for first 5 frames
+          const isEarlyFrame = timestamp < 0.2; // First 0.2 seconds
+          const delayMs = isEarlyFrame ? 50 : 16; // Extra delay for early frames
           await new Promise(resolve => setTimeout(resolve, delayMs));
           
           // Draw the video frame

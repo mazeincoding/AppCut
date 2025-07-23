@@ -44,6 +44,16 @@ export interface MediaItem {
     generatedAt: number;
     cacheSize: number;
   };
+  // Timeline preview properties
+  timelinePreviews?: {
+    thumbnails: string[]; // Timeline-specific thumbnail URLs
+    timestamps: number[]; // Corresponding timestamps for timeline
+    quality: 'low' | 'medium' | 'high'; // Quality level for timeline previews
+    density: number; // Thumbnails per second for timeline
+    elementDuration?: number; // Duration this was generated for
+    generatedAt: number; // When timeline previews were generated
+    zoomLevel?: number; // Zoom level these previews were optimized for
+  };
 }
 
 interface MediaStore {
@@ -68,6 +78,22 @@ interface MediaStore {
   getThumbnailAtTime: (mediaId: string, timestamp: number) => string | null;
   setThumbnailQuality: (mediaId: string, quality: 'low' | 'medium' | 'high') => Promise<void>;
   clearThumbnailCache: () => void;
+  
+  // Timeline preview methods
+  generateTimelinePreviews: (mediaId: string, options: {
+    density?: number;
+    elementDuration?: number; 
+    quality?: 'low' | 'medium' | 'high';
+    zoomLevel?: number;
+  }) => Promise<void>;
+  getTimelinePreviewStrip: (mediaId: string, elementDuration: number, zoomLevel: number) => string[];
+  getTimelinePreviewAtPosition: (mediaId: string, relativePosition: number, elementDuration: number) => {
+    thumbnailUrl: string;
+    timestamp: number;
+    exactTimestamp: number;
+  } | null;
+  clearTimelinePreviews: (mediaId: string) => void;
+  shouldRegenerateTimelinePreviews: (mediaId: string, currentZoomLevel: number, elementDuration: number) => boolean;
 }
 
 // Helper function to determine file type
@@ -416,5 +442,171 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
   clearThumbnailCache: () => {
     thumbnailCache.clearAllCache();
     console.log('Thumbnail cache cleared');
+  },
+
+  // Timeline preview methods
+  generateTimelinePreviews: async (mediaId, options) => {
+    const item = get().mediaItems.find(item => item.id === mediaId);
+    if (!item || !item.file || item.type !== 'video') {
+      console.warn('Cannot generate timeline previews: invalid media item', { mediaId, type: item?.type });
+      return;
+    }
+
+    try {
+      console.log('🎬 Generating timeline previews for:', mediaId, options);
+      
+      // Calculate timestamps based on density and duration
+      const { density = 2, elementDuration = item.duration || 10, quality = 'medium', zoomLevel = 1 } = options;
+      const interval = 1 / density;
+      const timestamps: number[] = [];
+      
+      // Generate timestamps at regular intervals
+      for (let t = 0; t < elementDuration; t += interval) {
+        timestamps.push(Math.min(t, (item.duration || elementDuration) - 0.1));
+      }
+      
+      // Ensure we have at least one timestamp
+      if (timestamps.length === 0) {
+        timestamps.push(0);
+      }
+      
+      // Generate thumbnails using existing enhanced thumbnail system
+      const { thumbnails } = await generateEnhancedThumbnails(item.file, {
+        timestamps,
+        resolution: quality,
+        quality: 0.7, // Optimized for timeline display
+        format: 'jpeg'
+      });
+      
+      // Cache each thumbnail individually for efficient retrieval
+      for (let i = 0; i < thumbnails.length; i++) {
+        await thumbnailCache.cacheThumbnail(
+          mediaId,
+          timestamps[i],
+          thumbnails[i],
+          quality
+        );
+      }
+      
+      // Update media item with timeline preview metadata
+      set((state) => ({
+        mediaItems: state.mediaItems.map(existing => 
+          existing.id === mediaId 
+            ? { 
+                ...existing, 
+                timelinePreviews: {
+                  thumbnails,
+                  timestamps,
+                  quality,
+                  density,
+                  elementDuration,
+                  generatedAt: Date.now(),
+                  zoomLevel
+                }
+              }
+            : existing
+        )
+      }));
+      
+      console.log('✅ Timeline previews generated:', thumbnails.length, 'thumbnails');
+      
+    } catch (error) {
+      console.error('❌ Failed to generate timeline previews:', error);
+      
+      // Update item with error state
+      set((state) => ({
+        mediaItems: state.mediaItems.map(existing => 
+          existing.id === mediaId 
+            ? { ...existing, thumbnailError: `Timeline preview generation failed: ${error}` }
+            : existing
+        )
+      }));
+    }
+  },
+
+  getTimelinePreviewStrip: (mediaId, elementDuration, zoomLevel) => {
+    const item = get().mediaItems.find(item => item.id === mediaId);
+    if (!item?.timelinePreviews) {
+      console.log('No timeline previews available for:', mediaId);
+      return [];
+    }
+    
+    // Return appropriate thumbnails based on zoom level and duration
+    const { thumbnails, density, generatedAt } = item.timelinePreviews;
+    
+    // Check if previews are stale (older than 5 minutes)
+    const isStale = Date.now() - generatedAt > 5 * 60 * 1000;
+    if (isStale) {
+      console.log('Timeline previews are stale, regeneration recommended');
+    }
+    
+    // Adjust thumbnail density based on zoom level
+    const targetDensity = Math.max(1, Math.floor(zoomLevel * density));
+    const step = Math.max(1, Math.floor(thumbnails.length / targetDensity));
+    
+    const selectedThumbnails = thumbnails.filter((_, index) => index % step === 0);
+    console.log('📊 Timeline preview strip:', selectedThumbnails.length, 'thumbnails for zoom', zoomLevel);
+    
+    return selectedThumbnails;
+  },
+
+  getTimelinePreviewAtPosition: (mediaId, relativePosition, elementDuration) => {
+    const item = get().mediaItems.find(item => item.id === mediaId);
+    if (!item?.timelinePreviews) return null;
+    
+    // Calculate timestamp from relative position (0-1)
+    const timestamp = relativePosition * elementDuration;
+    
+    // Find closest thumbnail to the timestamp
+    const { thumbnails, timestamps } = item.timelinePreviews;
+    let closestIndex = 0;
+    let minDiff = Math.abs(timestamps[0] - timestamp);
+    
+    for (let i = 1; i < timestamps.length; i++) {
+      const diff = Math.abs(timestamps[i] - timestamp);
+      if (diff < minDiff) {
+        minDiff = diff;
+        closestIndex = i;
+      }
+    }
+    
+    return {
+      thumbnailUrl: thumbnails[closestIndex],
+      timestamp: timestamps[closestIndex],
+      exactTimestamp: timestamp
+    };
+  },
+
+  clearTimelinePreviews: (mediaId) => {
+    set((state) => ({
+      mediaItems: state.mediaItems.map(existing => 
+        existing.id === mediaId 
+          ? { ...existing, timelinePreviews: undefined }
+          : existing
+      )
+    }));
+    
+    // Clear related cache entries
+    thumbnailCache.clearVideoCache(mediaId);
+    console.log('Timeline previews cleared for:', mediaId);
+  },
+
+  // Utility method to check if timeline previews need regeneration
+  shouldRegenerateTimelinePreviews: (mediaId, currentZoomLevel, elementDuration) => {
+    const item = get().mediaItems.find(item => item.id === mediaId);
+    if (!item?.timelinePreviews) return true;
+    
+    const { zoomLevel, elementDuration: cachedDuration, generatedAt } = item.timelinePreviews;
+    
+    // Regenerate if zoom level changed significantly
+    const zoomChanged = Math.abs((zoomLevel || 1) - currentZoomLevel) > 0.5;
+    
+    // Regenerate if duration changed
+    const durationChanged = Math.abs((cachedDuration || 0) - elementDuration) > 0.1;
+    
+    // Regenerate if previews are old (over 10 minutes)
+    const isOld = Date.now() - generatedAt > 10 * 60 * 1000;
+    
+    return zoomChanged || durationChanged || isOld;
   },
 }));

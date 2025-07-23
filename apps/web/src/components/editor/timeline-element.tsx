@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "../ui/button";
 import {
   MoreVertical,
@@ -18,6 +18,8 @@ import { useMediaStore } from "@/stores/media-store";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { usePlaybackStore } from "@/stores/playback-store";
 import AudioWaveform from "./audio-waveform";
+import { VideoTimelinePreview } from "./video-timeline-preview";
+import { useVideoTimelinePreview } from "@/hooks/use-video-timeline-preview";
 import { toast } from "sonner";
 import { TimelineElementProps, TrackType } from "@/types/timeline";
 import { useTimelineElementResize } from "@/hooks/use-timeline-element-resize";
@@ -67,6 +69,7 @@ export function TimelineElement({
   const { currentTime } = usePlaybackStore();
 
   const [elementMenuOpen, setElementMenuOpen] = useState(false);
+  const elementRef = useRef<HTMLDivElement>(null);
 
   const {
     resizing,
@@ -81,6 +84,20 @@ export function TimelineElement({
     onUpdateTrim: updateElementTrim,
     onUpdateDuration: updateElementDuration,
   });
+
+  // Get media item for video preview
+  const mediaItem = element.type === 'media' 
+    ? mediaItems.find(item => item.id === element.mediaId)
+    : null;
+
+  // Video preview hook for hover interactions
+  const videoPreview = mediaItem?.type === 'video' 
+    ? useVideoTimelinePreview({
+        element,
+        mediaItem,
+        elementRef
+      })
+    : null;
 
   const effectiveDuration =
     element.duration - element.trimStart - element.trimEnd;
@@ -309,16 +326,16 @@ export function TimelineElement({
 
     if (mediaItem.type === "video") {
       return (
-        <div 
-          className="absolute inset-0 flex items-center px-2"
-          style={{
-            background: 'linear-gradient(to right, #3b82f6, #8b5cf6, #ec4899) !important'
-          }}
-        >
-          <span className="text-xs text-white font-medium truncate drop-shadow-sm">
-            {element.name}
-          </span>
-        </div>
+        <VideoTimelinePreview
+          element={element}
+          mediaItem={mediaItem}
+          zoomLevel={zoomLevel}
+          elementWidth={elementWidth}
+          elementHeight={TIMELINE_CONSTANTS.TRACK_HEIGHT}
+          isSelected={isSelected}
+          isHovered={videoPreview?.isHovered || false}
+          mousePosition={videoPreview?.mousePosition || undefined}
+        />
       );
     }
 
@@ -369,6 +386,7 @@ export function TimelineElement({
           onMouseLeave={resizing ? handleResizeEnd : undefined}
         >
           <div
+            ref={elementRef}
             className={`relative h-full rounded-[0.15rem] cursor-pointer overflow-hidden ${
               element.type === "media" && mediaItems.find((item) => item.id === element.mediaId)?.type === "video" 
                 ? "bg-transparent border-white/80" 
@@ -381,6 +399,7 @@ export function TimelineElement({
             onContextMenu={(e) =>
               onElementMouseDown && onElementMouseDown(e, element)
             }
+            {...(videoPreview?.handlers || {})}
           >
             {renderElementContent()}
 
