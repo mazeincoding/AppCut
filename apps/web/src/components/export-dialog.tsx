@@ -15,7 +15,7 @@ import { useTimelineStore } from "@/stores/timeline-store";
 import { useProjectStore } from "@/stores/project-store";
 import { useMediaStore } from "@/stores/media-store";
 import { ExportCanvas, ExportCanvasRef } from "@/components/export-canvas";
-import { ExportEngine } from "@/lib/export-engine";
+import { ExportEngine } from "@/lib/export-engine-optimized";
 import { memoryMonitor, getMemoryRecommendation, estimateVideoMemoryUsage } from "@/lib/memory-monitor";
 
 interface ExportDialogProps {

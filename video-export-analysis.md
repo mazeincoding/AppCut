@@ -191,8 +191,33 @@ if (window.electron?.saveFile) {
 - Timeline content validation
 - Graceful error recovery with user feedback
 
+## Performance Analysis
+
+### Current Performance Limitations
+
+The video export system currently operates sequentially, which is the primary performance bottleneck:
+
+1. **Sequential Frame Rendering**: Frames are rendered one-by-one with `setTimeout` delays
+2. **Single-threaded Processing**: Only uses one CPU core
+3. **Blocking Operations**: Canvas operations block the main thread
+4. **Memory Inefficiency**: All frames kept in memory during export
+
+For a 60-second 1080p video at 30fps:
+- Total frames: 1,800
+- Minimum time: 60 seconds (due to frame intervals)
+- Actual time: 60-90 seconds (including processing overhead)
+
+### How It Can Be Much Faster
+
+See `video-export-optimization.md` for a comprehensive optimization plan that could achieve:
+- **20-50x speed improvements** through parallel processing, WebGL, and WebCodecs
+- Export times reduced from minutes to **3-6 seconds**
+- Better memory efficiency and CPU utilization
+
 ## Conclusion
 
-The video export system is well-architected but suffers from the same navigation bug that affected other download functionality in the application. The solution is to replace the unsafe `link.click()` method with a safe download approach that prevents browser navigation issues, particularly in Electron environments.
+The video export system has two main areas for improvement:
 
-The fix should be applied to `ExportEngine.createDownloadLink()` method to ensure reliable video downloads without navigation bugs.
+1. **Navigation Bug**: Replace the unsafe `link.click()` method with a safe download approach that prevents browser navigation issues, particularly in Electron environments. The fix should be applied to `ExportEngine.createDownloadLink()` method.
+
+2. **Performance**: The current sequential rendering approach is the main bottleneck. Implementing parallel processing, GPU acceleration, and modern browser APIs could dramatically improve export speeds by 20-50x.
