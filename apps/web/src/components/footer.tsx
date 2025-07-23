@@ -3,7 +3,8 @@
 import { motion } from "motion/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { RiDiscordFill, RiGithubLine, RiTwitterXLine } from "react-icons/ri";
+import { RiDiscordFill, RiTwitterXLine } from "react-icons/ri";
+import { FaGithub } from "react-icons/fa6";
 import { getStars } from "@/lib/fetch-github-stars";
 import Image from "next/image";
 
@@ -49,7 +50,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <RiGithubLine className="h-5 w-5" />
+                <FaGithub className="h-5 w-5" />
               </Link>
               <Link
                 href="https://x.com/OpenCutApp"

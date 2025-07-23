@@ -195,6 +195,7 @@ function generateKeybindingString(ev: KeyboardEvent): ShortcutKey | null {
 function getPressedKey(ev: KeyboardEvent): string | null {
   // Sometimes the property code is not available on the KeyboardEvent object
   const key = (ev.key ?? "").toLowerCase();
+  const code = ev.code ?? "";
 
   // Check arrow keys
   if (key.startsWith("arrow")) {
@@ -213,7 +214,15 @@ function getPressedKey(ev: KeyboardEvent): string | null {
   const isLetter = key.length === 1 && key >= "a" && key <= "z";
   if (isLetter) return key;
 
-  // Check if number keys
+  // Check number keys using physical position for AZERTY support
+  if (code.startsWith("Digit")) {
+    const digit = code.slice(5);
+    if (digit.length === 1 && digit >= "0" && digit <= "9") {
+      return digit;
+    }
+  }
+
+  // Fallback for other layouts
   const isDigit = key.length === 1 && key >= "0" && key <= "9";
   if (isDigit) return key;
 

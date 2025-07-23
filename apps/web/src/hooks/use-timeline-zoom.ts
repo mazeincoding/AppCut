@@ -24,6 +24,12 @@ export function useTimelineZoom({
       const delta = e.deltaY > 0 ? -0.15 : 0.15;
       setZoomLevel((prev) => Math.max(0.1, Math.min(10, prev + delta)));
     }
+    // For horizontal scrolling (when shift is held or horizontal wheel movement),
+    // let the event bubble up to allow ScrollArea to handle it
+    else if (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+      // Don't prevent default - let ScrollArea handle horizontal scrolling
+      return;
+    }
     // Otherwise, allow normal scrolling
   }, []);
 

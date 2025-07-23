@@ -3,7 +3,8 @@
   "packageManager": "bun@1.2.18",
   "devDependencies": {
     "turbo": "^2.5.4",
-    "typescript": "5.8.3"
+    "typescript": "5.8.3",
+    "@biomejs/biome": "^2.1.2"
   },
   "workspaces": [
     "apps/*",
@@ -14,6 +15,7 @@
     "build": "turbo run build",
     "check-types": "turbo run check-types",
     "lint": "turbo run lint",
+    "lint:fix": "turbo run lint:fix",
     "format": "turbo run format"
   },
   "dependencies": {

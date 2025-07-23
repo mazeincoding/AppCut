@@ -30,7 +30,12 @@ export function useTimelineElementResize({
 }: UseTimelineElementResizeProps) {
   const [resizing, setResizing] = useState<ResizeState | null>(null);
   const { mediaItems } = useMediaStore();
-  const { updateElementStartTime } = useTimelineStore();
+  const {
+    updateElementStartTime,
+    updateElementTrim,
+    updateElementDuration,
+    pushHistory,
+  } = useTimelineStore();
 
   // Set up document-level mouse listeners during resize (like proper drag behavior)
   useEffect(() => {
@@ -61,6 +66,9 @@ export function useTimelineElementResize({
   ) => {
     e.stopPropagation();
     e.preventDefault();
+
+    // Push history once at the start of the resize operation
+    pushHistory();
 
     setResizing({
       elementId,
@@ -122,13 +130,14 @@ export function useTimelineElementResize({
           return;
         }
 
-        onUpdateTrim(
+        updateElementTrim(
           track.id,
           element.id,
           newTrimStart,
-          resizing.initialTrimEnd
+          resizing.initialTrimEnd,
+          false
         );
-        updateElementStartTime(track.id, element.id, newStartTime);
+        updateElementStartTime(track.id, element.id, newStartTime, false);
       } else {
         // Trying to extend beyond trimStart = 0
         if (canExtendElementDuration()) {
@@ -138,22 +147,29 @@ export function useTimelineElementResize({
           const newDuration = element.duration + extensionAmount;
 
           // Keep trimStart at 0 and extend the element
-          onUpdateTrim(track.id, element.id, 0, resizing.initialTrimEnd);
-          onUpdateDuration(track.id, element.id, newDuration);
-          updateElementStartTime(track.id, element.id, newStartTime);
+          updateElementTrim(
+            track.id,
+            element.id,
+            0,
+            resizing.initialTrimEnd,
+            false
+          );
+          updateElementDuration(track.id, element.id, newDuration, false);
+          updateElementStartTime(track.id, element.id, newStartTime, false);
         } else {
           // Video/Audio: can't extend beyond original content - limit to trimStart = 0
           const newTrimStart = 0;
           const trimDelta = newTrimStart - resizing.initialTrimStart;
           const newStartTime = element.startTime + trimDelta;
 
-          onUpdateTrim(
+          updateElementTrim(
             track.id,
             element.id,
             newTrimStart,
-            resizing.initialTrimEnd
+            resizing.initialTrimEnd,
+            false
           );
-          updateElementStartTime(track.id, element.id, newStartTime);
+          updateElementStartTime(track.id, element.id, newStartTime, false);
         }
       }
     } else {
@@ -169,27 +185,35 @@ export function useTimelineElementResize({
           const newTrimEnd = 0; // Reset trimEnd to 0 since we're extending
 
           // Update duration first, then trim
-          onUpdateDuration(track.id, element.id, newDuration);
-          onUpdateTrim(
+          updateElementDuration(track.id, element.id, newDuration, false);
+          updateElementTrim(
             track.id,
             element.id,
             resizing.initialTrimStart,
-            newTrimEnd
+            newTrimEnd,
+            false
           );
         } else {
           // Can't extend - just set trimEnd to 0 (maximum possible extension)
-          onUpdateTrim(track.id, element.id, resizing.initialTrimStart, 0);
+          updateElementTrim(
+            track.id,
+            element.id,
+            resizing.initialTrimStart,
+            0,
+            false
+          );
         }
       } else {
         // Normal trimming within original duration
         const maxTrimEnd = element.duration - resizing.initialTrimStart - 0.1; // Leave at least 0.1s visible
         const newTrimEnd = Math.max(0, Math.min(maxTrimEnd, calculated));
 
-        onUpdateTrim(
+        updateElementTrim(
           track.id,
           element.id,
           resizing.initialTrimStart,
-          newTrimEnd
+          newTrimEnd,
+          false
         );
       }
     }
