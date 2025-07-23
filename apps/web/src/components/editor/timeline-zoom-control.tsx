@@ -104,7 +104,7 @@ export function TimelineZoomControl({
             variant="outline"
             size="sm"
             onClick={handleReset}
-            className="h-7 px-2 min-w-[60px] flex items-center gap-1"
+            className="h-7 px-2 min-w-[80px] flex items-center gap-1"
           >
             {onFitToWindow ? (
               <>

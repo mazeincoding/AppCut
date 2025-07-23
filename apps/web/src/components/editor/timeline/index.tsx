@@ -1,7 +1,7 @@
 "use client";
 
-import { ScrollArea } from "../ui/scroll-area";
-import { Button } from "../ui/button";
+import { ScrollArea } from "../../ui/scroll-area";
+import { Button } from "../../ui/button";
 import {
   Scissors,
   ArrowLeftToLine,
@@ -15,8 +15,7 @@ import {
   Video,
   Music,
   TypeIcon,
-  Lock,
-  LockOpen,
+  Magnet,
   Link,
 } from "lucide-react";
 import {
@@ -24,13 +23,13 @@ import {
   TooltipContent,
   TooltipTrigger,
   TooltipProvider,
-} from "../ui/tooltip";
+} from "../../ui/tooltip";
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
-} from "../ui/context-menu";
+} from "../../ui/context-menu";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { useMediaStore } from "@/stores/media-store";
 import { usePlaybackStore } from "@/stores/playback-store";
@@ -44,9 +43,9 @@ import {
   TimelinePlayhead,
   useTimelinePlayheadRuler,
 } from "./timeline-playhead";
-import { SelectionBox } from "./selection-box";
+import { SelectionBox } from "../selection-box";
 import { useSelectionBox } from "@/hooks/use-selection-box";
-import { SnapIndicator } from "./snap-indicator";
+import { SnapIndicator } from "../snap-indicator";
 import { SnapPoint } from "@/hooks/use-timeline-snapping";
 import type { DragData, TimelineTrack } from "@/types/timeline";
 import {
@@ -56,8 +55,7 @@ import {
   TIMELINE_CONSTANTS,
   snapTimeToFrame,
 } from "@/constants/timeline-constants";
-import { TimelineZoomControl } from "./timeline-zoom-control";
-import { useTimelineZoomActions } from "@/hooks/use-timeline-zoom-actions";
+import { TimelineZoomControl } from "../timeline-zoom-control";
 
 export function Timeline() {
   // Timeline shows all tracks (video, audio, effects) and their elements.
@@ -66,24 +64,11 @@ export function Timeline() {
 
   const {
     tracks,
-    addTrack,
-    addElementToTrack,
-    removeElementFromTrack,
-    removeElementFromTrackWithRipple,
     getTotalDuration,
-    calculateFitToWindowZoom,
-    selectedElements,
     clearSelectedElements,
-    setSelectedElements,
-    splitElement,
-    splitAndKeepLeft,
-    splitAndKeepRight,
-    toggleTrackMute,
-    separateAudio,
     snappingEnabled,
-    toggleSnapping,
-    rippleEditingEnabled,
-    toggleRippleEditing,
+    setSelectedElements,
+    toggleTrackMute,
     dragState,
   } = useTimelineStore();
   const { mediaItems, addMediaItem } = useMediaStore();
@@ -106,20 +91,10 @@ export function Timeline() {
     downTime: 0,
   });
 
-  // Fit to window function
-  const handleFitToWindow = useCallback(() => {
-    if (timelineRef.current) {
-      const containerWidth = timelineRef.current.clientWidth;
-      const optimalZoom = calculateFitToWindowZoom(containerWidth);
-      setZoomLevel(optimalZoom);
-    }
-  }, [calculateFitToWindowZoom]);
-
   // Timeline zoom functionality
   const { zoomLevel, setZoomLevel, handleWheel } = useTimelineZoom({
     containerRef: timelineRef,
     isInTimeline,
-    onFitToWindow: handleFitToWindow,
   });
 
   // Old marquee selection removed - using new SelectionBox component instead
@@ -152,13 +127,6 @@ export function Timeline() {
     rulerScrollRef,
     tracksScrollRef,
     playheadRef,
-  });
-
-  // Zoom actions
-  useTimelineZoomActions({
-    zoomLevel,
-    setZoomLevel,
-    onFitToWindow: handleFitToWindow,
   });
 
   // Selection box functionality
@@ -304,7 +272,7 @@ export function Timeline() {
         Math.min(
           duration,
           (mouseX + scrollLeft) /
-            (TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel)
+          (TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel)
         )
       );
 
@@ -446,142 +414,6 @@ export function Timeline() {
     onDrop: handleDrop,
   };
 
-  // Action handlers for toolbar
-  const handleSplitSelected = () => {
-    if (selectedElements.length === 0) {
-      toast.error("No elements selected");
-      return;
-    }
-    let splitCount = 0;
-    selectedElements.forEach(({ trackId, elementId }) => {
-      const track = tracks.find((t) => t.id === trackId);
-      const element = track?.elements.find((c) => c.id === elementId);
-      if (element && track) {
-        const effectiveStart = element.startTime;
-        const effectiveEnd =
-          element.startTime +
-          (element.duration - element.trimStart - element.trimEnd);
-
-        if (currentTime > effectiveStart && currentTime < effectiveEnd) {
-          const newElementId = splitElement(trackId, elementId, currentTime);
-          if (newElementId) splitCount++;
-        }
-      }
-    });
-    if (splitCount === 0) {
-      toast.error("Playhead must be within selected elements to split");
-    }
-  };
-
-  const handleDuplicateSelected = () => {
-    if (selectedElements.length === 0) {
-      toast.error("No elements selected");
-      return;
-    }
-    const canDuplicate = selectedElements.length === 1;
-    if (!canDuplicate) return;
-
-    const newSelections: { trackId: string; elementId: string }[] = [];
-
-    selectedElements.forEach(({ trackId, elementId }) => {
-      const track = tracks.find((t) => t.id === trackId);
-      const element = track?.elements.find((el) => el.id === elementId);
-
-      if (element) {
-        const newStartTime =
-          element.startTime +
-          (element.duration - element.trimStart - element.trimEnd) +
-          0.1;
-
-        // Create element without id (will be generated by store)
-        const { id, ...elementWithoutId } = element;
-
-        addElementToTrack(trackId, {
-          ...elementWithoutId,
-          startTime: newStartTime,
-        });
-
-        // We can't predict the new id, so just clear selection for now
-        // TODO: addElementToTrack could return the new element id
-      }
-    });
-
-    clearSelectedElements();
-  };
-
-  const handleFreezeSelected = () => {
-    toast.info("Freeze frame functionality coming soon!");
-  };
-
-  const handleSplitAndKeepLeft = () => {
-    if (selectedElements.length !== 1) {
-      toast.error("Select exactly one element");
-      return;
-    }
-    const { trackId, elementId } = selectedElements[0];
-    const track = tracks.find((t) => t.id === trackId);
-    const element = track?.elements.find((c) => c.id === elementId);
-    if (!element) return;
-    const effectiveStart = element.startTime;
-    const effectiveEnd =
-      element.startTime +
-      (element.duration - element.trimStart - element.trimEnd);
-    if (currentTime <= effectiveStart || currentTime >= effectiveEnd) {
-      toast.error("Playhead must be within selected element");
-      return;
-    }
-    splitAndKeepLeft(trackId, elementId, currentTime);
-  };
-
-  const handleSplitAndKeepRight = () => {
-    if (selectedElements.length !== 1) {
-      toast.error("Select exactly one element");
-      return;
-    }
-    const { trackId, elementId } = selectedElements[0];
-    const track = tracks.find((t) => t.id === trackId);
-    const element = track?.elements.find((c) => c.id === elementId);
-    if (!element) return;
-    const effectiveStart = element.startTime;
-    const effectiveEnd =
-      element.startTime +
-      (element.duration - element.trimStart - element.trimEnd);
-    if (currentTime <= effectiveStart || currentTime >= effectiveEnd) {
-      toast.error("Playhead must be within selected element");
-      return;
-    }
-    splitAndKeepRight(trackId, elementId, currentTime);
-  };
-
-  const handleSeparateAudio = () => {
-    if (selectedElements.length !== 1) {
-      toast.error("Select exactly one media element to separate audio");
-      return;
-    }
-    const { trackId, elementId } = selectedElements[0];
-    const track = tracks.find((t) => t.id === trackId);
-    if (!track || track.type !== "media") {
-      toast.error("Select a media element to separate audio");
-      return;
-    }
-    separateAudio(trackId, elementId);
-  };
-
-  const handleDeleteSelected = () => {
-    if (selectedElements.length === 0) {
-      toast.error("No elements selected");
-      return;
-    }
-    selectedElements.forEach(({ trackId, elementId }) => {
-      if (rippleEditingEnabled) {
-        removeElementFromTrackWithRipple(trackId, elementId);
-      } else {
-        removeElementFromTrack(trackId, elementId);
-      }
-    });
-    clearSelectedElements();
-  };
-
   // --- Scroll synchronization effect ---
   useEffect(() => {
     // Helper function to get scrollable viewport (Radix ScrollArea or native container)
@@ -690,201 +522,11 @@ export function Timeline() {
       onMouseEnter={() => setIsInTimeline(true)}
       onMouseLeave={() => setIsInTimeline(false)}
     >
-      {/* Toolbar */}
-      <div className="border-b flex items-center justify-between px-2 py-1">
-        <div className="flex items-center gap-1 w-full">
-          <TooltipProvider delayDuration={500}>
-            {/* Play/Pause Button */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="text"
-                  size="icon"
-                  onClick={toggle}
-                  className="mr-2"
-                >
-                  {isPlaying ? (
-                    <Pause className="h-4 w-4" />
-                  ) : (
-                    <Play className="h-4 w-4" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                {isPlaying ? "Pause (Space)" : "Play (Space)"}
-              </TooltipContent>
-            </Tooltip>
-            <div className="w-px h-6 bg-border mx-1" />
-            {/* Time Display */}
-            <div
-              className="text-xs text-muted-foreground font-mono px-2"
-              style={{ minWidth: "18ch", textAlign: "center" }}
-            >
-              {currentTime.toFixed(1)}s / {duration.toFixed(1)}s
-            </div>
-            {/* Test Clip Button - for debugging */}
-            {tracks.length === 0 && (
-              <>
-                <div className="w-px h-6 bg-border mx-1" />
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const trackId = addTrack("media");
-                        addElementToTrack(trackId, {
-                          type: "media",
-                          mediaId: "test",
-                          name: "Test Clip",
-                          duration: TIMELINE_CONSTANTS.DEFAULT_TEXT_DURATION,
-                          startTime: 0,
-                          trimStart: 0,
-                          trimEnd: 0,
-                        });
-                      }}
-                      className="text-xs"
-                    >
-                      Add Test Clip
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    Add a test clip to try playback
-                  </TooltipContent>
-                </Tooltip>
-              </>
-            )}
-            <div className="w-px h-6 bg-border mx-1" />
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="text"
-                  size="icon"
-                  onClick={handleSplitSelected}
-                >
-                  <Scissors className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Split element (Ctrl+S)</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="text"
-                  size="icon"
-                  onClick={handleSplitAndKeepLeft}
-                >
-                  <ArrowLeftToLine className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Split and keep left (Ctrl+Q)</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="text"
-                  size="icon"
-                  onClick={handleSplitAndKeepRight}
-                >
-                  <ArrowRightToLine className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Split and keep right (Ctrl+W)</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="text"
-                  size="icon"
-                  onClick={handleSeparateAudio}
-                >
-                  <SplitSquareHorizontal className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Separate audio (Ctrl+D)</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="text"
-                  size="icon"
-                  onClick={handleDuplicateSelected}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Duplicate element (Ctrl+D)</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="text"
-                  size="icon"
-                  onClick={handleFreezeSelected}
-                >
-                  <Snowflake className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Freeze frame (F)</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="text"
-                  size="icon"
-                  onClick={handleDeleteSelected}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Delete element (Delete)</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-        <div className="flex items-center gap-1">
-          <TooltipProvider delayDuration={500}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="text" size="icon" onClick={toggleSnapping}>
-                  {snappingEnabled ? (
-                    <LockOpen className="h-4 w-4 text-primary" />
-                  ) : (
-                    <Lock className="h-4 w-4" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Auto snapping</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="text"
-                  size="icon"
-                  onClick={toggleRippleEditing}
-                >
-                  <Link
-                    className={`h-4 w-4 ${rippleEditingEnabled ? "text-primary" : ""}`}
-                  />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                {rippleEditingEnabled
-                  ? "Disable Ripple Editing"
-                  : "Enable Ripple Editing"}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          
-          {/* Timeline Zoom Control */}
-          <div className="w-px h-6 bg-border mx-2" />
-          <TimelineZoomControl
-            zoomLevel={zoomLevel}
-            onZoomChange={setZoomLevel}
-            onFitToWindow={handleFitToWindow}
-            className="mr-2"
-          />
-        </div>
-      </div>
+      <TimelineToolbar 
+        zoomLevel={zoomLevel} 
+        setZoomLevel={setZoomLevel}
+        tracksScrollRef={tracksScrollRef}
+      />
 
       {/* Timeline Container */}
       <div
@@ -927,25 +569,35 @@ export function Timeline() {
 
           {/* Timeline Ruler */}
           <div
-            className="flex-1 relative overflow-x-auto overflow-y-hidden h-4"
-            onWheel={handleWheel}
+            className="flex-1 relative overflow-hidden h-6"
+            onWheel={(e) => {
+              // Check if this is horizontal scrolling - if so, don't handle it here
+              if (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+                return; // Let ScrollArea handle horizontal scrolling
+              }
+              handleWheel(e);
+            }}
             onMouseDown={handleSelectionMouseDown}
             onClick={handleTimelineContentClick}
             data-ruler-area
-            ref={rulerScrollRef}
             role="scrollbar"
             aria-orientation="horizontal"
             aria-label="Timeline ruler"
             tabIndex={0}
           >
-            <div
-              ref={rulerRef}
-              className="relative h-4 select-none cursor-default"
-              style={{
-                width: `${dynamicTimelineWidth}px`,
-              }}
-              onMouseDown={handleRulerMouseDown}
+            <ScrollArea 
+              className="w-full" 
+              ref={rulerScrollRef}
+              type="auto"
             >
+              <div
+                ref={rulerRef}
+                className="relative h-6 select-none cursor-default"
+                style={{
+                  width: `${dynamicTimelineWidth}px`,
+                }}
+                onMouseDown={handleRulerMouseDown}
+              >
                 {/* Time markers */}
                 {(() => {
                   // Calculate appropriate time interval based on zoom level
@@ -974,21 +626,19 @@ export function Timeline() {
                     return (
                       <div
                         key={i}
-                        className={`absolute top-0 bottom-0 ${
-                          isMainMarker
+                        className={`absolute top-0 bottom-0 ${isMainMarker
                             ? "border-l border-muted-foreground/40"
                             : "border-l border-muted-foreground/20"
-                        }`}
+                          }`}
                         style={{
                           left: `${time * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel}px`,
                         }}
                       >
                         <span
-                          className={`absolute top-1 left-1 text-[0.6rem] ${
-                            isMainMarker
+                          className={`absolute top-1 left-1 text-[0.6rem] ${isMainMarker
                               ? "text-muted-foreground font-medium"
                               : "text-muted-foreground/70"
-                          }`}
+                            }`}
                         >
                           {(() => {
                             const formatTime = (seconds: number) => {
@@ -1013,7 +663,8 @@ export function Timeline() {
                     );
                   }).filter(Boolean);
                 })()}
-            </div>
+              </div>
+            </ScrollArea>
           </div>
         </div>
 
@@ -1026,10 +677,7 @@ export function Timeline() {
               className="w-48 flex-shrink-0 border-r border-black overflow-y-auto"
               data-track-labels
             >
-              <ScrollArea
-                ref={trackLabelsScrollRef}
-                className="w-full h-full"
-              >
+              <ScrollArea className="w-full h-full" ref={trackLabelsScrollRef}>
                 <div className="flex flex-col gap-1">
                   {tracks.map((track) => (
                     <div
@@ -1054,8 +702,14 @@ export function Timeline() {
 
           {/* Timeline Tracks Content */}
           <div
-            className="flex-1 relative overflow-auto"
-            onWheel={handleWheel}
+            className="flex-1 relative overflow-hidden"
+            onWheel={(e) => {
+              // Check if this is horizontal scrolling - if so, don't handle it here
+              if (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+                return; // Let ScrollArea handle horizontal scrolling
+              }
+              handleWheel(e);
+            }}
             onMouseDown={(e) => {
               handleTimelineMouseDown(e);
               handleSelectionMouseDown(e);
@@ -1066,18 +720,21 @@ export function Timeline() {
             aria-label="Timeline tracks"
             tabIndex={0}
           >
-            <div
-              ref={tracksScrollRef}
+            <SelectionBox
+              startPos={selectionBox?.startPos || null}
+              currentPos={selectionBox?.currentPos || null}
+              containerRef={tracksContainerRef}
+              isActive={selectionBox?.isActive || false}
+            />
+            <ScrollArea
               className="w-full h-full"
               role="grid"
               aria-label="Timeline tracks content"
+              data-timeline-tracks
+              ref={tracksScrollRef}
+              showHorizontalScrollbar={true}
+              type="auto"
             >
-              <SelectionBox
-                startPos={selectionBox?.startPos || null}
-                currentPos={selectionBox?.currentPos || null}
-                containerRef={tracksContainerRef}
-                isActive={selectionBox?.isActive || false}
-              />
               <div
                 className="relative flex-1"
                 style={{
@@ -1131,7 +788,7 @@ export function Timeline() {
                   </>
                 )}
               </div>
-            </div>
+            </ScrollArea>
           </div>
         </div>
       </div>
@@ -1152,5 +809,374 @@ function TrackIcon({ track }: { track: TimelineTrack }) {
         <Music className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
       )}
     </>
+  );
+}
+
+function TimelineToolbar({
+  zoomLevel,
+  setZoomLevel,
+  tracksScrollRef,
+}: {
+  zoomLevel: number;
+  setZoomLevel: (zoom: number) => void;
+  tracksScrollRef: React.RefObject<HTMLDivElement>;
+}) {
+  const {
+    tracks,
+    addTrack,
+    addElementToTrack,
+    removeElementFromTrack,
+    removeElementFromTrackWithRipple,
+    selectedElements,
+    clearSelectedElements,
+    splitElement,
+    splitAndKeepLeft,
+    splitAndKeepRight,
+    separateAudio,
+    snappingEnabled,
+    toggleSnapping,
+    rippleEditingEnabled,
+    toggleRippleEditing,
+    getTotalDuration,
+  } = useTimelineStore();
+  const { currentTime, duration, isPlaying, toggle } = usePlaybackStore();
+
+  // Action handlers
+  const handleSplitSelected = () => {
+    if (selectedElements.length === 0) return;
+    let splitCount = 0;
+    selectedElements.forEach(({ trackId, elementId }) => {
+      const track = tracks.find((t) => t.id === trackId);
+      const element = track?.elements.find((c) => c.id === elementId);
+      if (element && track) {
+        const effectiveStart = element.startTime;
+        const effectiveEnd =
+          element.startTime +
+          (element.duration - element.trimStart - element.trimEnd);
+        if (currentTime > effectiveStart && currentTime < effectiveEnd) {
+          const newElementId = splitElement(trackId, elementId, currentTime);
+          if (newElementId) splitCount++;
+        }
+      }
+    });
+    if (splitCount === 0) {
+      toast.error("Playhead must be within selected elements to split");
+    }
+  };
+
+  const handleDuplicateSelected = () => {
+    if (selectedElements.length === 0) return;
+    const canDuplicate = selectedElements.length === 1;
+    if (!canDuplicate) return;
+
+    selectedElements.forEach(({ trackId, elementId }) => {
+      const track = tracks.find((t) => t.id === trackId);
+      const element = track?.elements.find((el) => el.id === elementId);
+      if (element) {
+        const newStartTime =
+          element.startTime +
+          (element.duration - element.trimStart - element.trimEnd) +
+          0.1;
+        const { id, ...elementWithoutId } = element;
+        addElementToTrack(trackId, {
+          ...elementWithoutId,
+          startTime: newStartTime,
+        });
+      }
+    });
+    clearSelectedElements();
+  };
+
+  const handleFreezeSelected = () => {
+    toast.info("Freeze frame functionality coming soon!");
+  };
+
+  const handleSplitAndKeepLeft = () => {
+    if (selectedElements.length !== 1) {
+      toast.error("Select exactly one element");
+      return;
+    }
+    const { trackId, elementId } = selectedElements[0];
+    const track = tracks.find((t) => t.id === trackId);
+    const element = track?.elements.find((c) => c.id === elementId);
+    if (!element) return;
+    const effectiveStart = element.startTime;
+    const effectiveEnd =
+      element.startTime +
+      (element.duration - element.trimStart - element.trimEnd);
+    if (currentTime <= effectiveStart || currentTime >= effectiveEnd) {
+      toast.error("Playhead must be within selected element");
+      return;
+    }
+    splitAndKeepLeft(trackId, elementId, currentTime);
+  };
+
+  const handleSplitAndKeepRight = () => {
+    if (selectedElements.length !== 1) {
+      toast.error("Select exactly one element");
+      return;
+    }
+    const { trackId, elementId } = selectedElements[0];
+    const track = tracks.find((t) => t.id === trackId);
+    const element = track?.elements.find((c) => c.id === elementId);
+    if (!element) return;
+    const effectiveStart = element.startTime;
+    const effectiveEnd =
+      element.startTime +
+      (element.duration - element.trimStart - element.trimEnd);
+    if (currentTime <= effectiveStart || currentTime >= effectiveEnd) {
+      toast.error("Playhead must be within selected element");
+      return;
+    }
+    splitAndKeepRight(trackId, elementId, currentTime);
+  };
+
+  const handleSeparateAudio = () => {
+    if (selectedElements.length !== 1) {
+      toast.error("Select exactly one media element to separate audio");
+      return;
+    }
+    const { trackId, elementId } = selectedElements[0];
+    const track = tracks.find((t) => t.id === trackId);
+    if (!track || track.type !== "media") {
+      toast.error("Select a media element to separate audio");
+      return;
+    }
+    separateAudio(trackId, elementId);
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedElements.length === 0) return;
+    selectedElements.forEach(({ trackId, elementId }) => {
+      if (rippleEditingEnabled) {
+        removeElementFromTrackWithRipple(trackId, elementId);
+      } else {
+        removeElementFromTrack(trackId, elementId);
+      }
+    });
+    clearSelectedElements();
+  };
+
+  // Zoom handlers
+  const handleZoomIn = () => {
+    setZoomLevel(Math.min(4, zoomLevel + 0.25));
+  };
+
+  const handleZoomOut = () => {
+    setZoomLevel(Math.max(0.25, zoomLevel - 0.25));
+  };
+
+  const handleZoomSliderChange = (values: number[]) => {
+    setZoomLevel(values[0]);
+  };
+
+  // Calculate fit to window zoom
+  const calculateFitToWindowZoom = () => {
+    const totalDuration = getTotalDuration();
+    if (totalDuration <= 0) return 1;
+    
+    // Get the timeline container width (tracks area width)
+    // Use the tracks scroll ref to get the actual scrollable area
+    const timelineContainer = tracksScrollRef.current;
+    if (!timelineContainer) return 1;
+    
+    // Get the actual scrollable viewport from ScrollArea
+    const viewport = timelineContainer.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+    const containerWidth = viewport ? viewport.clientWidth : timelineContainer.clientWidth;
+    
+    const pixelsPerSecond = TIMELINE_CONSTANTS.PIXELS_PER_SECOND;
+    const requiredWidth = totalDuration * pixelsPerSecond;
+    
+    console.log('Fit to Window Debug:', {
+      totalDuration,
+      containerWidth,
+      requiredWidth,
+      currentZoom: zoomLevel
+    });
+    
+    // Calculate zoom to fit content with some padding
+    const paddingFactor = 0.95; // 5% padding
+    const fitZoom = (containerWidth * paddingFactor) / requiredWidth;
+    
+    // Clamp to valid zoom range
+    return Math.max(0.25, Math.min(4, fitZoom));
+  };
+
+  const handleFitToWindow = () => {
+    const fitZoom = calculateFitToWindowZoom();
+    setZoomLevel(fitZoom);
+  };
+
+  return (
+    <div className="border-b flex items-center justify-between px-2 py-1">
+      <div className="flex items-center gap-1 w-full">
+        <TooltipProvider delayDuration={500}>
+          {/* Play/Pause Button */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="text"
+                size="icon"
+                onClick={toggle}
+                className="mr-2"
+              >
+                {isPlaying ? (
+                  <Pause className="h-4 w-4" />
+                ) : (
+                  <Play className="h-4 w-4" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {isPlaying ? "Pause (Space)" : "Play (Space)"}
+            </TooltipContent>
+          </Tooltip>
+          <div className="w-px h-6 bg-border mx-1" />
+          {/* Time Display */}
+          <div
+            className="text-xs text-muted-foreground font-mono px-2"
+            style={{ minWidth: "18ch", textAlign: "center" }}
+          >
+            {currentTime.toFixed(1)}s / {duration.toFixed(1)}s
+          </div>
+          {/* Test Clip Button - for debugging */}
+          {tracks.length === 0 && (
+            <>
+              <div className="w-px h-6 bg-border mx-1" />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const trackId = addTrack("media");
+                      addElementToTrack(trackId, {
+                        type: "media",
+                        mediaId: "test",
+                        name: "Test Clip",
+                        duration: TIMELINE_CONSTANTS.DEFAULT_TEXT_DURATION,
+                        startTime: 0,
+                        trimStart: 0,
+                        trimEnd: 0,
+                      });
+                    }}
+                    className="text-xs"
+                  >
+                    Add Test Clip
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Add a test clip to try playback</TooltipContent>
+              </Tooltip>
+            </>
+          )}
+          <div className="w-px h-6 bg-border mx-1" />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="text" size="icon" onClick={handleSplitSelected}>
+                <Scissors className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Split element (Ctrl+S)</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="text"
+                size="icon"
+                onClick={handleSplitAndKeepLeft}
+              >
+                <ArrowLeftToLine className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Split and keep left (Ctrl+Q)</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="text"
+                size="icon"
+                onClick={handleSplitAndKeepRight}
+              >
+                <ArrowRightToLine className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Split and keep right (Ctrl+W)</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="text" size="icon" onClick={handleSeparateAudio}>
+                <SplitSquareHorizontal className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Separate audio (Ctrl+D)</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="text"
+                size="icon"
+                onClick={handleDuplicateSelected}
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Duplicate element (Ctrl+D)</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="text" size="icon" onClick={handleFreezeSelected}>
+                <Snowflake className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Freeze frame (F)</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="text" size="icon" onClick={handleDeleteSelected}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Delete element (Delete)</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+      <div className="flex items-center gap-1">
+        <TooltipProvider delayDuration={500}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="text" size="icon" onClick={toggleSnapping}>
+                {snappingEnabled ? (
+                  <Magnet className="h-4 w-4 text-primary" />
+                ) : (
+                  <Magnet className="h-4 w-4" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Auto snapping</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="text" size="icon" onClick={toggleRippleEditing}>
+                <Link
+                  className={`h-4 w-4 ${rippleEditingEnabled ? "text-primary" : ""}`}
+                />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {rippleEditingEnabled
+                ? "Disable Ripple Editing"
+                : "Enable Ripple Editing"}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        <div className="w-px h-6 bg-border mx-2" />
+        <TimelineZoomControl
+          zoomLevel={zoomLevel}
+          onZoomChange={setZoomLevel}
+          onFitToWindow={handleFitToWindow}
+          className="mr-2"
+        />
+      </div>
+    </div>
   );
 }

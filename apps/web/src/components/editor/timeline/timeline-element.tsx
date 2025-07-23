@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "../ui/button";
+import { Button } from "../../ui/button";
 import {
   MoreVertical,
   Scissors,
@@ -17,7 +17,7 @@ import {
 import { useMediaStore } from "@/stores/media-store";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { usePlaybackStore } from "@/stores/playback-store";
-import AudioWaveform from "./audio-waveform";
+import AudioWaveform from "../audio-waveform";
 import { toast } from "sonner";
 import { TimelineElementProps, TrackType } from "@/types/timeline";
 import { useTimelineElementResize } from "@/hooks/use-timeline-element-resize";
@@ -35,14 +35,14 @@ import {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-} from "../ui/dropdown-menu";
+} from "../../ui/dropdown-menu";
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
   ContextMenuTrigger,
-} from "../ui/context-menu";
+} from "../../ui/context-menu";
 
 export function TimelineElement({
   element,
@@ -239,15 +239,15 @@ export function TimelineElement({
 
     if (mediaItem.type === "video" && mediaItem.thumbnailUrl) {
       const trackHeight = getTrackHeight(track.type);
-      const tileHeight = trackHeight - VIDEO_TILE_PADDING;
+      const tileHeight = trackHeight - 8; // Match image padding
       const tileWidth = tileHeight * TILE_ASPECT_RATIO;
 
       return (
-        <div className="w-full h-full flex items-center gap-2">
-          <div className="flex-1 h-full relative overflow-hidden">
+        <div className="w-full h-full flex items-center justify-center">
+          <div className="bg-[#004D52] py-3 w-full h-full relative">
             {/* Background with tiled thumbnails */}
             <div
-              className="absolute inset-0"
+              className="absolute top-3 bottom-3 left-0 right-0"
               style={{
                 backgroundImage: mediaItem.thumbnailUrl
                   ? `url(${mediaItem.thumbnailUrl})`
@@ -261,7 +261,7 @@ export function TimelineElement({
             />
             {/* Overlay with vertical borders */}
             <div
-              className="absolute inset-0 pointer-events-none"
+              className="absolute top-3 bottom-3 left-0 right-0 pointer-events-none"
               style={{
                 backgroundImage: `repeating-linear-gradient(
                   to right,
@@ -274,15 +274,6 @@ export function TimelineElement({
               }}
             />
           </div>
-          {elementWidth > tileWidth * OVERLAY_SPACE_MULTIPLIER ? (
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/70 text-white text-xs px-2 py-1 rounded pointer-events-none max-w-[40%] truncate">
-              {element.name}
-            </div>
-          ) : (
-            <span className="text-xs text-foreground/80 truncate flex-shrink-0 max-w-[120px]">
-              {element.name}
-            </span>
-          )}
         </div>
       );
     }

@@ -44,10 +44,6 @@ export type Action =
   | "select-all" // Select all elements
   | "duplicate-selected" // Duplicate selected element
   | "toggle-snapping" // Toggle snapping
-  | "zoom-in" // Zoom in timeline
-  | "zoom-out" // Zoom out timeline
-  | "zoom-reset" // Reset timeline zoom
-  | "zoom-fit" // Fit timeline to window
   | "undo" // Undo last action
   | "redo"; // Redo last undone action
 

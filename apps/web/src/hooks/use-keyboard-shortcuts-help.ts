@@ -60,10 +60,6 @@ const actionDescriptions: Record<
     category: "Selection",
   },
   "toggle-snapping": { description: "Toggle snapping", category: "Editing" },
-  "zoom-in": { description: "Zoom in timeline", category: "View" },
-  "zoom-out": { description: "Zoom out timeline", category: "View" },
-  "zoom-reset": { description: "Reset timeline zoom", category: "View" },
-  "zoom-fit": { description: "Fit timeline to window", category: "View" },
   undo: { description: "Undo", category: "History" },
   redo: { description: "Redo", category: "History" },
 };

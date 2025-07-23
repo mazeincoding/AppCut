@@ -19,28 +19,9 @@ const ZOOM_STORAGE_KEY = 'opencut-timeline-zoom';
 export function useTimelineZoom({
   containerRef,
   isInTimeline = false,
-  onFitToWindow,
+  onFitToWindow
 }: UseTimelineZoomProps): UseTimelineZoomReturn {
-  // Load initial zoom level from localStorage
-  const [zoomLevel, setZoomLevel] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(ZOOM_STORAGE_KEY);
-      if (stored) {
-        const parsed = parseFloat(stored);
-        if (!isNaN(parsed) && parsed >= MIN_ZOOM && parsed <= MAX_ZOOM) {
-          return parsed;
-        }
-      }
-    }
-    return 1;
-  });
-
-  // Save zoom level to localStorage whenever it changes
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(ZOOM_STORAGE_KEY, zoomLevel.toString());
-    }
-  }, [zoomLevel]);
+  const [zoomLevel, setZoomLevel] = useState(1);
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     // Only zoom if user is using pinch gesture (ctrlKey or metaKey is true)

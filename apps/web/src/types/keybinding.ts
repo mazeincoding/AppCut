@@ -20,7 +20,7 @@ export type Key =
   | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t"
   | "u" | "v" | "w" | "x" | "y" | "z" | "0" | "1" | "2" | "3"
   | "4" | "5" | "6" | "7" | "8" | "9" | "up" | "down" | "left"
-  | "right" | "/" | "?" | "." | "+" | "-" | "=" | "enter" | "tab" | "space"
+  | "right" | "/" | "?" | "." | "enter" | "tab" | "space"
   | "escape" | "esc" | "backspace" | "delete" | "home" | "end"
 /* eslint-enable */
 

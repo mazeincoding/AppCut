@@ -106,17 +106,20 @@ interface TimelineStore {
     trackId: string,
     elementId: string,
     trimStart: number,
-    trimEnd: number
+    trimEnd: number,
+    pushHistory?: boolean
   ) => void;
   updateElementDuration: (
     trackId: string,
     elementId: string,
-    duration: number
+    duration: number,
+    pushHistory?: boolean
   ) => void;
   updateElementStartTime: (
     trackId: string,
     elementId: string,
-    startTime: number
+    startTime: number,
+    pushHistory?: boolean
   ) => void;
   toggleTrackMute: (trackId: string) => void;
 
@@ -158,8 +161,7 @@ interface TimelineStore {
 
   // Computed values
   getTotalDuration: () => number;
-  getContentWidth: (zoomLevel: number) => number;
-  calculateFitToWindowZoom: (containerWidth: number) => number;
+  getProjectThumbnail: (projectId: string) => Promise<string | null>;
 
   // History actions
   undo: () => void;
@@ -548,6 +550,8 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
             : track
         )
       );
+
+      get().selectElement(trackId, newElement.id);
     },
 
     removeElementFromTrack: (trackId, elementId) => {
@@ -689,8 +693,14 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       updateTracksAndSave(newTracks);
     },
 
-    updateElementTrim: (trackId, elementId, trimStart, trimEnd) => {
-      get().pushHistory();
+    updateElementTrim: (
+      trackId,
+      elementId,
+      trimStart,
+      trimEnd,
+      pushHistory = true
+    ) => {
+      if (pushHistory) get().pushHistory();
       updateTracksAndSave(
         get()._tracks.map((track) =>
           track.id === trackId
@@ -707,8 +717,13 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       );
     },
 
-    updateElementDuration: (trackId, elementId, duration) => {
-      get().pushHistory();
+    updateElementDuration: (
+      trackId,
+      elementId,
+      duration,
+      pushHistory = true
+    ) => {
+      if (pushHistory) get().pushHistory();
       updateTracksAndSave(
         get()._tracks.map((track) =>
           track.id === trackId
@@ -723,8 +738,13 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       );
     },
 
-    updateElementStartTime: (trackId, elementId, startTime) => {
-      get().pushHistory();
+    updateElementStartTime: (
+      trackId,
+      elementId,
+      startTime,
+      pushHistory = true
+    ) => {
+      if (pushHistory) get().pushHistory();
       updateTracksAndSave(
         get()._tracks.map((track) =>
           track.id === trackId
@@ -1159,23 +1179,40 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       return Math.max(...trackEndTimes, 0);
     },
 
-    getContentWidth: (zoomLevel: number) => {
-      const totalDuration = get().getTotalDuration();
-      return totalDuration * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel;
-    },
+    getProjectThumbnail: async (projectId) => {
+      try {
+        const tracks = await storageService.loadTimeline(projectId);
+        const mediaItems = await storageService.loadAllMediaItems(projectId);
 
-    calculateFitToWindowZoom: (containerWidth: number) => {
-      const totalDuration = get().getTotalDuration();
-      if (totalDuration === 0) return 1;
-      
-      // Leave some padding (10% on each side)
-      const CONTAINER_PADDING_FACTOR = 0.8;
-      const availableWidth = containerWidth * CONTAINER_PADDING_FACTOR;
-      const requiredWidth = totalDuration * TIMELINE_CONSTANTS.PIXELS_PER_SECOND;
-      const calculatedZoom = availableWidth / requiredWidth;
-      
-      // Clamp between min and max zoom levels
-      return Math.max(TIMELINE_CONSTANTS.MIN_ZOOM, Math.min(TIMELINE_CONSTANTS.MAX_ZOOM, calculatedZoom));
+        if (!tracks || !mediaItems.length) return null;
+
+        const firstMediaElement = tracks
+          .flatMap((track) => track.elements)
+          .filter((element) => element.type === "media")
+          .sort((a, b) => a.startTime - b.startTime)[0];
+
+        if (!firstMediaElement) return null;
+
+        const mediaItem = mediaItems.find(
+          (item) => item.id === firstMediaElement.mediaId
+        );
+        if (!mediaItem) return null;
+
+        if (mediaItem.type === "video" && mediaItem.file) {
+          const { generateVideoThumbnail } = await import(
+            "@/stores/media-store"
+          );
+          const { thumbnailUrl } = await generateVideoThumbnail(mediaItem.file);
+          return thumbnailUrl;
+        } else if (mediaItem.type === "image" && mediaItem.url) {
+          return mediaItem.url;
+        }
+
+        return null;
+      } catch (error) {
+        console.error("Failed to get project thumbnail:", error);
+        return null;
+      }
     },
 
     redo: () => {
@@ -1319,8 +1356,9 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
 
     findOrCreateTrack: (trackType) => {
       // Always create new text track to allow multiple text elements
+      // Insert text tracks at the top
       if (trackType === "text") {
-        return get().addTrack(trackType);
+        return get().insertTrackAt(trackType, 0);
       }
 
       const existingTrack = get()._tracks.find((t) => t.type === trackType);
@@ -1358,7 +1396,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
     },
 
     addTextAtTime: (item, currentTime = 0) => {
-      const targetTrackId = get().addTrack("text"); // Always create new text track to allow multiple text elements
+      const targetTrackId = get().insertTrackAt("text", 0); // Always create new text track at the top
 
       get().addElementToTrack(targetTrackId, {
         type: "text",
@@ -1401,7 +1439,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
     },
 
     addTextToNewTrack: (item) => {
-      const targetTrackId = get().addTrack("text"); // Always create new text track to allow multiple text elements
+      const targetTrackId = get().insertTrackAt("text", 0); // Always create new text track at the top
 
       get().addElementToTrack(targetTrackId, {
         type: "text",

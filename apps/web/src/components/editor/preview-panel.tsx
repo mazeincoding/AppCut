@@ -16,8 +16,8 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Play, Pause, Expand } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { Play, Pause, Expand, SkipBack, SkipForward } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { formatTimeCode } from "@/lib/time";
 import { FONT_CLASS_MAP } from "@/lib/font-config";
@@ -31,9 +31,9 @@ interface ActiveElement {
 }
 
 export function PreviewPanel() {
-  const { tracks } = useTimelineStore();
+  const { tracks, getTotalDuration } = useTimelineStore();
   const { mediaItems } = useMediaStore();
-  const { currentTime } = usePlaybackStore();
+  const { currentTime, toggle, setCurrentTime, isPlaying } = usePlaybackStore();
   const { canvasSize } = useEditorStore();
   const previewRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -41,52 +41,51 @@ export function PreviewPanel() {
     width: 0,
     height: 0,
   });
+  const [isExpanded, setIsExpanded] = useState(false);
   const { activeProject } = useProjectStore();
 
-  // Calculate optimal preview size that fits in container while maintaining aspect ratio
   useEffect(() => {
     const updatePreviewSize = () => {
       if (!containerRef.current) return;
 
-      const container = containerRef.current.getBoundingClientRect();
-      const computedStyle = getComputedStyle(containerRef.current);
+      let availableWidth, availableHeight;
 
-      // Get padding values
-      const paddingTop = parseFloat(computedStyle.paddingTop);
-      const paddingBottom = parseFloat(computedStyle.paddingBottom);
-      const paddingLeft = parseFloat(computedStyle.paddingLeft);
-      const paddingRight = parseFloat(computedStyle.paddingRight);
+      if (isExpanded) {
+        const controlsHeight = 80;
+        const marginSpace = 24;
+        availableWidth = window.innerWidth - marginSpace;
+        availableHeight = window.innerHeight - controlsHeight - marginSpace;
+      } else {
+        const container = containerRef.current.getBoundingClientRect();
+        const computedStyle = getComputedStyle(containerRef.current);
+        const paddingTop = parseFloat(computedStyle.paddingTop);
+        const paddingBottom = parseFloat(computedStyle.paddingBottom);
+        const paddingLeft = parseFloat(computedStyle.paddingLeft);
+        const paddingRight = parseFloat(computedStyle.paddingRight);
+        const gap = parseFloat(computedStyle.gap) || 16;
+        const toolbar = containerRef.current.querySelector("[data-toolbar]");
+        const toolbarHeight = toolbar
+          ? toolbar.getBoundingClientRect().height
+          : 0;
 
-      // Get gap value (gap-4 = 1rem = 16px)
-      const gap = parseFloat(computedStyle.gap) || 16;
-
-      // Get toolbar height if it exists
-      const toolbar = containerRef.current.querySelector("[data-toolbar]");
-      const toolbarHeight = toolbar
-        ? toolbar.getBoundingClientRect().height
-        : 0;
-
-      // Calculate available space after accounting for padding, gap, and toolbar
-      const availableWidth = container.width - paddingLeft - paddingRight;
-      const availableHeight =
-        container.height -
-        paddingTop -
-        paddingBottom -
-        toolbarHeight -
-        (toolbarHeight > 0 ? gap : 0);
+        availableWidth = container.width - paddingLeft - paddingRight;
+        availableHeight =
+          container.height -
+          paddingTop -
+          paddingBottom -
+          toolbarHeight -
+          (toolbarHeight > 0 ? gap : 0);
+      }
 
       const targetRatio = canvasSize.width / canvasSize.height;
       const containerRatio = availableWidth / availableHeight;
-
       let width, height;
 
       if (containerRatio > targetRatio) {
-        // Container is wider - constrain by height
-        height = availableHeight;
+        height = availableHeight * (isExpanded ? 0.95 : 1);
         width = height * targetRatio;
       } else {
-        // Container is taller - constrain by width
-        width = availableWidth;
+        width = availableWidth * (isExpanded ? 0.95 : 1);
         height = width / targetRatio;
       }
 
@@ -94,16 +93,47 @@ export function PreviewPanel() {
     };
 
     updatePreviewSize();
-
     const resizeObserver = new ResizeObserver(updatePreviewSize);
     if (containerRef.current) {
       resizeObserver.observe(containerRef.current);
     }
+    if (isExpanded) {
+      window.addEventListener("resize", updatePreviewSize);
+    }
 
-    return () => resizeObserver.disconnect();
-  }, [canvasSize.width, canvasSize.height]);
+    return () => {
+      resizeObserver.disconnect();
+      if (isExpanded) {
+        window.removeEventListener("resize", updatePreviewSize);
+      }
+    };
+  }, [canvasSize.width, canvasSize.height, isExpanded]);
 
-  // Get active elements at current time
+  useEffect(() => {
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && isExpanded) {
+        setIsExpanded(false);
+      }
+    };
+
+    if (isExpanded) {
+      document.addEventListener("keydown", handleEscapeKey);
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleEscapeKey);
+      document.body.style.overflow = "";
+    };
+  }, [isExpanded]);
+
+  const toggleExpanded = useCallback(() => {
+    setIsExpanded((prev) => !prev);
+  }, []);
+
+  const hasAnyElements = tracks.some((track) => track.elements.length > 0);
   const getActiveElements = (): ActiveElement[] => {
     const activeElements: ActiveElement[] = [];
 
@@ -116,16 +146,13 @@ export function PreviewPanel() {
 
         if (currentTime >= elementStart && currentTime < elementEnd) {
           let mediaItem = null;
-
-          // Only get media item for media elements
           if (element.type === "media") {
             mediaItem =
               element.mediaId === "test"
-                ? null // Test elements don't have a real media item
+                ? null
                 : mediaItems.find((item) => item.id === element.mediaId) ||
                   null;
           }
-
           activeElements.push({ element, track, mediaItem });
         }
       });
@@ -135,9 +162,6 @@ export function PreviewPanel() {
   };
 
   const activeElements = getActiveElements();
-
-  // Check if there are any elements in the timeline at all
-  const hasAnyElements = tracks.some((track) => track.elements.length > 0);
 
   // Get media elements for blur background (video/image only)
   const getBlurBackgroundElements = (): ActiveElement[] => {
@@ -338,58 +362,334 @@ export function PreviewPanel() {
   };
 
   return (
-    <div className="h-full w-full flex flex-col min-h-0 min-w-0 bg-panel rounded-sm">
-      <div
-        ref={containerRef}
-        className="flex-1 flex flex-col items-center justify-center p-3 min-h-0 min-w-0"
-      >
-        <div className="flex-1"></div>
-        {hasAnyElements ? (
-          <div
-            ref={previewRef}
-            className="relative overflow-hidden border"
-            style={{
-              width: previewDimensions.width,
-              height: previewDimensions.height,
-              backgroundColor:
-                activeProject?.backgroundType === "blur"
-                  ? "transparent"
-                  : activeProject?.backgroundColor || "#000000",
-            }}
-          >
-            {renderBlurBackground()}
-            {activeElements.length === 0 ? (
-              <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                No elements at current time
-              </div>
-            ) : (
-              activeElements.map((elementData, index) =>
-                renderElement(elementData, index)
-              )
-            )}
-            {/* Show message when blur is selected but no media available */}
-            {activeProject?.backgroundType === "blur" &&
-              blurBackgroundElements.length === 0 &&
-              activeElements.length > 0 && (
-                <div className="absolute bottom-2 left-2 right-2 bg-black/70 text-white text-xs p-2 rounded">
-                  Add a video or image to use blur background
+    <>
+      <div className="h-full w-full flex flex-col min-h-0 min-w-0 bg-panel rounded-sm">
+        <div
+          ref={containerRef}
+          className="flex-1 flex flex-col items-center justify-center p-3 min-h-0 min-w-0"
+        >
+          <div className="flex-1"></div>
+          {hasAnyElements ? (
+            <div
+              ref={previewRef}
+              className="relative overflow-hidden border"
+              style={{
+                width: previewDimensions.width,
+                height: previewDimensions.height,
+                backgroundColor:
+                  activeProject?.backgroundType === "blur"
+                    ? "transparent"
+                    : activeProject?.backgroundColor || "#000000",
+              }}
+            >
+              {renderBlurBackground()}
+              {activeElements.length === 0 ? (
+                <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                  No elements at current time
                 </div>
+              ) : (
+                activeElements.map((elementData, index) =>
+                  renderElement(elementData, index)
+                )
               )}
-          </div>
-        ) : null}
+              {activeProject?.backgroundType === "blur" &&
+                blurBackgroundElements.length === 0 &&
+                activeElements.length > 0 && (
+                  <div className="absolute bottom-2 left-2 right-2 bg-black/70 text-white text-xs p-2 rounded">
+                    Add a video or image to use blur background
+                  </div>
+                )}
+            </div>
+          ) : null}
 
-        <div className="flex-1"></div>
+          <div className="flex-1"></div>
 
-        <PreviewToolbar hasAnyElements={hasAnyElements} />
+          <PreviewToolbar
+            hasAnyElements={hasAnyElements}
+            onToggleExpanded={toggleExpanded}
+            isExpanded={isExpanded}
+            currentTime={currentTime}
+            setCurrentTime={setCurrentTime}
+            toggle={toggle}
+            getTotalDuration={getTotalDuration}
+          />
+        </div>
+      </div>
+
+      {isExpanded && (
+        <FullscreenPreview
+          previewDimensions={previewDimensions}
+          activeProject={activeProject}
+          renderBlurBackground={renderBlurBackground}
+          activeElements={activeElements}
+          renderElement={renderElement}
+          blurBackgroundElements={blurBackgroundElements}
+          hasAnyElements={hasAnyElements}
+          toggleExpanded={toggleExpanded}
+          currentTime={currentTime}
+          setCurrentTime={setCurrentTime}
+          toggle={toggle}
+          getTotalDuration={getTotalDuration}
+        />
+      )}
+    </>
+  );
+}
+
+function FullscreenToolbar({
+  hasAnyElements,
+  onToggleExpanded,
+  currentTime,
+  setCurrentTime,
+  toggle,
+  getTotalDuration,
+}: {
+  hasAnyElements: boolean;
+  onToggleExpanded: () => void;
+  currentTime: number;
+  setCurrentTime: (time: number) => void;
+  toggle: () => void;
+  getTotalDuration: () => number;
+}) {
+  const { isPlaying } = usePlaybackStore();
+  const { activeProject } = useProjectStore();
+  const [isDragging, setIsDragging] = useState(false);
+
+  const totalDuration = getTotalDuration();
+  const progress = totalDuration > 0 ? (currentTime / totalDuration) * 100 : 0;
+
+  const handleTimelineClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!hasAnyElements) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const percentage = Math.max(0, Math.min(1, clickX / rect.width));
+    const newTime = percentage * totalDuration;
+    setCurrentTime(Math.max(0, Math.min(newTime, totalDuration)));
+  };
+
+  const handleTimelineDrag = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!hasAnyElements) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    setIsDragging(true);
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      moveEvent.preventDefault();
+      const dragX = moveEvent.clientX - rect.left;
+      const percentage = Math.max(0, Math.min(1, dragX / rect.width));
+      const newTime = percentage * totalDuration;
+      setCurrentTime(Math.max(0, Math.min(newTime, totalDuration)));
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+      document.body.style.userSelect = "";
+    };
+
+    document.body.style.userSelect = "none";
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+    handleMouseMove(e.nativeEvent);
+  };
+
+  const skipBackward = () => {
+    const newTime = Math.max(0, currentTime - 1);
+    setCurrentTime(newTime);
+  };
+
+  const skipForward = () => {
+    const newTime = Math.min(totalDuration, currentTime + 1);
+    setCurrentTime(newTime);
+  };
+
+  return (
+    <div
+      data-toolbar
+      className="flex items-center gap-2 p-1 pt-2 w-full text-white"
+    >
+      <div className="flex items-center gap-1 text-[0.70rem] tabular-nums text-white/90">
+        <span className="text-primary">
+          {formatTimeCode(currentTime, "HH:MM:SS:FF", activeProject?.fps || 30)}
+        </span>
+        <span className="opacity-50">/</span>
+        <span>
+          {formatTimeCode(
+            totalDuration,
+            "HH:MM:SS:FF",
+            activeProject?.fps || 30
+          )}
+        </span>
+      </div>
+
+      <div className="flex items-center gap-1">
+        <Button
+          variant="text"
+          size="icon"
+          onClick={skipBackward}
+          disabled={!hasAnyElements}
+          className="h-auto p-0 text-white hover:text-white/80"
+          title="Skip backward 1s"
+        >
+          <SkipBack className="h-3 w-3" />
+        </Button>
+        <Button
+          variant="text"
+          size="icon"
+          onClick={toggle}
+          disabled={!hasAnyElements}
+          className="h-auto p-0 text-white hover:text-white/80"
+        >
+          {isPlaying ? (
+            <Pause className="h-3 w-3" />
+          ) : (
+            <Play className="h-3 w-3" />
+          )}
+        </Button>
+        <Button
+          variant="text"
+          size="icon"
+          onClick={skipForward}
+          disabled={!hasAnyElements}
+          className="h-auto p-0 text-white hover:text-white/80"
+          title="Skip forward 1s"
+        >
+          <SkipForward className="h-3 w-3" />
+        </Button>
+      </div>
+
+      <div className="flex-1 flex items-center gap-2">
+        <div
+          className={cn(
+            "relative h-1 rounded-full cursor-pointer flex-1 bg-white/20",
+            !hasAnyElements && "opacity-50 cursor-not-allowed"
+          )}
+          onClick={hasAnyElements ? handleTimelineClick : undefined}
+          onMouseDown={hasAnyElements ? handleTimelineDrag : undefined}
+          style={{ userSelect: "none" }}
+        >
+          <div
+            className={cn(
+              "absolute top-0 left-0 h-full rounded-full bg-white",
+              !isDragging && "duration-100"
+            )}
+            style={{ width: `${progress}%` }}
+          />
+          <div
+            className="absolute top-1/2 w-3 h-3 rounded-full -translate-y-1/2 -translate-x-1/2 shadow-sm bg-white border border-black/20"
+            style={{ left: `${progress}%` }}
+          />
+        </div>
+      </div>
+
+      <Button
+        variant="text"
+        size="icon"
+        className="!size-4 text-white/80 hover:text-white"
+        onClick={onToggleExpanded}
+        title="Exit fullscreen (Esc)"
+      >
+        <Expand className="!size-4" />
+      </Button>
+    </div>
+  );
+}
+
+function FullscreenPreview({
+  previewDimensions,
+  activeProject,
+  renderBlurBackground,
+  activeElements,
+  renderElement,
+  blurBackgroundElements,
+  hasAnyElements,
+  toggleExpanded,
+  currentTime,
+  setCurrentTime,
+  toggle,
+  getTotalDuration,
+}: {
+  previewDimensions: { width: number; height: number };
+  activeProject: any;
+  renderBlurBackground: () => React.ReactNode;
+  activeElements: ActiveElement[];
+  renderElement: (elementData: ActiveElement, index: number) => React.ReactNode;
+  blurBackgroundElements: ActiveElement[];
+  hasAnyElements: boolean;
+  toggleExpanded: () => void;
+  currentTime: number;
+  setCurrentTime: (time: number) => void;
+  toggle: () => void;
+  getTotalDuration: () => number;
+}) {
+  return (
+    <div className="fixed inset-0 z-[9999] flex flex-col">
+      <div className="flex-1 flex items-center justify-center bg-background">
+        <div
+          className="relative overflow-hidden border border-border m-3"
+          style={{
+            width: previewDimensions.width,
+            height: previewDimensions.height,
+            backgroundColor:
+              activeProject?.backgroundType === "blur"
+                ? "#1a1a1a"
+                : activeProject?.backgroundColor || "#1a1a1a",
+          }}
+        >
+          {renderBlurBackground()}
+          {activeElements.length === 0 ? (
+            <div className="absolute inset-0 flex items-center justify-center text-white/60">
+              No elements at current time
+            </div>
+          ) : (
+            activeElements.map((elementData, index) =>
+              renderElement(elementData, index)
+            )
+          )}
+          {activeProject?.backgroundType === "blur" &&
+            blurBackgroundElements.length === 0 &&
+            activeElements.length > 0 && (
+              <div className="absolute bottom-2 left-2 right-2 bg-black/70 text-white text-xs p-2 rounded">
+                Add a video or image to use blur background
+              </div>
+            )}
+        </div>
+      </div>
+      <div className="p-4 bg-black">
+        <FullscreenToolbar
+          hasAnyElements={hasAnyElements}
+          onToggleExpanded={toggleExpanded}
+          currentTime={currentTime}
+          setCurrentTime={setCurrentTime}
+          toggle={toggle}
+          getTotalDuration={getTotalDuration}
+        />
       </div>
     </div>
   );
 }
 
-function PreviewToolbar({ hasAnyElements }: { hasAnyElements: boolean }) {
-  const { isPlaying, toggle, currentTime } = usePlaybackStore();
+function PreviewToolbar({
+  hasAnyElements,
+  onToggleExpanded,
+  isExpanded,
+  currentTime,
+  setCurrentTime,
+  toggle,
+  getTotalDuration,
+}: {
+  hasAnyElements: boolean;
+  onToggleExpanded: () => void;
+  isExpanded: boolean;
+  currentTime: number;
+  setCurrentTime: (time: number) => void;
+  toggle: () => void;
+  getTotalDuration: () => number;
+}) {
+  const { isPlaying } = usePlaybackStore();
   const { setCanvasSize, setCanvasSizeToOriginal } = useEditorStore();
-  const { getTotalDuration } = useTimelineStore();
   const { activeProject } = useProjectStore();
   const {
     currentPreset,
@@ -407,6 +707,21 @@ function PreviewToolbar({ hasAnyElements }: { hasAnyElements: boolean }) {
     const aspectRatio = getOriginalAspectRatio();
     setCanvasSizeToOriginal(aspectRatio);
   };
+
+  if (isExpanded) {
+    return (
+      <FullscreenToolbar
+        {...{
+          hasAnyElements,
+          onToggleExpanded,
+          currentTime,
+          setCurrentTime,
+          toggle,
+          getTotalDuration,
+        }}
+      />
+    );
+  }
 
   return (
     <div
@@ -488,6 +803,8 @@ function PreviewToolbar({ hasAnyElements }: { hasAnyElements: boolean }) {
           variant="text"
           size="icon"
           className="!size-4 text-muted-foreground"
+          onClick={onToggleExpanded}
+          title="Enter fullscreen"
         >
           <Expand className="!size-4" />
         </Button>
