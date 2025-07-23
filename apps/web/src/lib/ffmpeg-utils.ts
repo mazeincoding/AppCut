@@ -7,10 +7,10 @@ export const initFFmpeg = async (): Promise<FFmpeg> => {
   if (ffmpeg) return ffmpeg;
 
   ffmpeg = new FFmpeg();
-  
+
   // Use locally hosted files instead of CDN
   const baseURL = '/ffmpeg';
-  
+
   await ffmpeg.load({
     coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
     wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
@@ -24,13 +24,13 @@ export const generateThumbnail = async (
   timeInSeconds: number = 1
 ): Promise<string> => {
   const ffmpeg = await initFFmpeg();
-  
+
   const inputName = 'input.mp4';
   const outputName = 'thumbnail.jpg';
-  
+
   // Write input file
   await ffmpeg.writeFile(inputName, new Uint8Array(await videoFile.arrayBuffer()));
-  
+
   // Generate thumbnail at specific time
   await ffmpeg.exec([
     '-i', inputName,
@@ -40,15 +40,15 @@ export const generateThumbnail = async (
     '-q:v', '2',
     outputName
   ]);
-  
+
   // Read output file
   const data = await ffmpeg.readFile(outputName);
   const blob = new Blob([data], { type: 'image/jpeg' });
-  
+
   // Cleanup
   await ffmpeg.deleteFile(inputName);
   await ffmpeg.deleteFile(outputName);
-  
+
   return URL.createObjectURL(blob);
 };
 
@@ -59,22 +59,22 @@ export const trimVideo = async (
   onProgress?: (progress: number) => void
 ): Promise<Blob> => {
   const ffmpeg = await initFFmpeg();
-  
+
   const inputName = 'input.mp4';
   const outputName = 'output.mp4';
-  
+
   // Set up progress callback
   if (onProgress) {
     ffmpeg.on('progress', ({ progress }) => {
       onProgress(progress * 100);
     });
   }
-  
+
   // Write input file
   await ffmpeg.writeFile(inputName, new Uint8Array(await videoFile.arrayBuffer()));
-  
+
   const duration = endTime - startTime;
-  
+
   // Trim video
   await ffmpeg.exec([
     '-i', inputName,
@@ -83,15 +83,15 @@ export const trimVideo = async (
     '-c', 'copy', // Use stream copy for faster processing
     outputName
   ]);
-  
+
   // Read output file
   const data = await ffmpeg.readFile(outputName);
   const blob = new Blob([data], { type: 'video/mp4' });
-  
+
   // Cleanup
   await ffmpeg.deleteFile(inputName);
   await ffmpeg.deleteFile(outputName);
-  
+
   return blob;
 };
 
@@ -164,20 +164,20 @@ export const convertToWebM = async (
   onProgress?: (progress: number) => void
 ): Promise<Blob> => {
   const ffmpeg = await initFFmpeg();
-  
+
   const inputName = 'input.mp4';
   const outputName = 'output.webm';
-  
+
   // Set up progress callback
   if (onProgress) {
     ffmpeg.on('progress', ({ progress }) => {
       onProgress(progress * 100);
     });
   }
-  
+
   // Write input file
   await ffmpeg.writeFile(inputName, new Uint8Array(await videoFile.arrayBuffer()));
-  
+
   // Convert to WebM
   await ffmpeg.exec([
     '-i', inputName,
@@ -187,15 +187,15 @@ export const convertToWebM = async (
     '-c:a', 'libopus',
     outputName
   ]);
-  
+
   // Read output file
   const data = await ffmpeg.readFile(outputName);
   const blob = new Blob([data], { type: 'video/webm' });
-  
+
   // Cleanup
   await ffmpeg.deleteFile(inputName);
   await ffmpeg.deleteFile(outputName);
-  
+
   return blob;
 };
 
@@ -204,13 +204,13 @@ export const extractAudio = async (
   format: 'mp3' | 'wav' = 'mp3'
 ): Promise<Blob> => {
   const ffmpeg = await initFFmpeg();
-  
+
   const inputName = 'input.mp4';
   const outputName = `output.${format}`;
-  
+
   // Write input file
   await ffmpeg.writeFile(inputName, new Uint8Array(await videoFile.arrayBuffer()));
-  
+
   // Extract audio
   await ffmpeg.exec([
     '-i', inputName,
@@ -218,14 +218,14 @@ export const extractAudio = async (
     '-acodec', format === 'mp3' ? 'libmp3lame' : 'pcm_s16le',
     outputName
   ]);
-  
+
   // Read output file
   const data = await ffmpeg.readFile(outputName);
   const blob = new Blob([data], { type: `audio/${format}` });
-  
+
   // Cleanup
   await ffmpeg.deleteFile(inputName);
   await ffmpeg.deleteFile(outputName);
-  
+
   return blob;
 };
