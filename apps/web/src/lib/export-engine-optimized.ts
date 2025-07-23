@@ -470,7 +470,7 @@ export class ExportEngine {
       if (!isShortVideo) {
         this.log('ImageBitmap not found in cache, falling back to regular rendering');
       }
-      return this.renderImageElement(element, this.calculateBounds(element));
+      return await this.renderImageElement(element, this.calculateBounds(element));
     }
 
     const bounds = this.calculateBounds(element);
@@ -764,8 +764,30 @@ export class ExportEngine {
   private async renderVideoElement(element: TimelineElement, bounds: any, timestamp: number): Promise<void> {
     // Original video rendering logic
     const mediaElement = element as any;
-    const video = this.preloadedVideos.get(mediaElement.mediaId);
-    if (!video) return;
+    let video = this.preloadedVideos.get(mediaElement.mediaId);
+    
+    // If video not preloaded (e.g., for short videos), create it on demand
+    if (!video) {
+      const mediaItem = this.getMediaItem(mediaElement.mediaId);
+      if (!mediaItem?.url) {
+        this.log('No media item or URL found for:', mediaElement.mediaId);
+        return;
+      }
+      
+      this.log('Creating video element on demand for short video');
+      video = document.createElement('video');
+      video.src = mediaItem.url;
+      video.crossOrigin = 'anonymous';
+      video.preload = 'auto';
+      
+      // Wait for video to load
+      await new Promise<void>((resolve, reject) => {
+        video!.onloadeddata = () => resolve();
+        video!.onerror = () => reject(new Error(`Failed to load video: ${mediaItem.url}`));
+        // Add timeout to prevent hanging
+        setTimeout(() => reject(new Error('Video load timeout')), 5000);
+      });
+    }
 
     const elementTime = timestamp - (element.startTime || 0);
     const trimmedTime = elementTime + (element.trimStart || 0);
@@ -773,7 +795,14 @@ export class ExportEngine {
     if (trimmedTime < 0 || trimmedTime > element.duration) return;
 
     video.currentTime = trimmedTime;
-    await video.play();
+    
+    // Wait for seek to complete
+    await new Promise<void>((resolve) => {
+      video!.onseeked = () => resolve();
+      video!.currentTime = trimmedTime;
+      // Fallback timeout
+      setTimeout(resolve, 100);
+    });
     
     this.renderer.save();
     
@@ -781,17 +810,27 @@ export class ExportEngine {
     
     this.renderer.drawImage(video, bounds.x, bounds.y, bounds.width, bounds.height);
     this.renderer.restore();
-    
-    video.pause();
   }
 
-  private renderImageElement(element: TimelineElement, bounds: any): void {
+  private async renderImageElement(element: TimelineElement, bounds: any): Promise<void> {
     const mediaElement = element as any;
     const mediaItem = this.getMediaItem(mediaElement.mediaId);
-    if (!mediaItem) return;
+    if (!mediaItem?.url) return;
 
     const img = new Image();
-    img.src = mediaItem.url || '';
+    img.crossOrigin = 'anonymous';
+    
+    // Wait for image to load
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => {
+        this.log('Failed to load image:', mediaItem.url);
+        reject(new Error(`Failed to load image: ${mediaItem.url}`));
+      };
+      // Add timeout to prevent hanging
+      setTimeout(() => reject(new Error('Image load timeout')), 5000);
+      img.src = mediaItem.url || '';
+    });
     
     this.renderer.save();
     
