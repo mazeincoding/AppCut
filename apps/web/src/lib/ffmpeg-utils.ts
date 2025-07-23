@@ -414,7 +414,7 @@ export const generateEnhancedThumbnails = async (
   const thumbnails: string[] = [];
   
   for (const timestamp of validTimestamps) {
-    const outputName = `thumb_${timestamp}.${format}`;
+    const outputName = `thumb_${Math.floor(timestamp * 1000)}.${format}`;
     
     await ffmpeg.exec([
       '-i', inputName,
