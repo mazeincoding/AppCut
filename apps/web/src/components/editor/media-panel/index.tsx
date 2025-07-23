@@ -4,6 +4,7 @@ import { TabBar } from "./tabbar";
 import { MediaView } from "./views/media";
 import { useMediaPanelStore, Tab } from "./store";
 import { TextView } from "./views/text";
+import { Text2ImageView } from "./views/text2image";
 import { AiView } from "./views/ai";
 import { AdjustmentView } from "./views/adjustment";
 import { debugLogger } from "@/lib/debug-logger";
@@ -24,6 +25,7 @@ export function MediaPanel() {
       <div className="p-4 text-muted-foreground">Audio view coming soon...</div>
     ),
     text: <TextView />,
+    text2image: <Text2ImageView />,
     stickers: (
       <div className="p-4 text-muted-foreground">
         Stickers view coming soon...

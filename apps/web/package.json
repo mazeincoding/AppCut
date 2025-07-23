@@ -22,6 +22,7 @@
     "@types/node": "^24.0.14",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
+    "@types/uuid": "^9.0.0",
     "autoprefixer": "^10.4.21",
     "cross-env": "^7.0.3",
     "electron": "37.2.3",
@@ -71,6 +72,7 @@
   "keywords": [],
   "license": "ISC",
   "dependencies": {
+    "@fal-ai/serverless-client": "^0.7.0",
     "@ffmpeg/ffmpeg": "^0.12.15",
     "@ffmpeg/util": "^0.12.2",
     "@playwright/test": "^1.54.1",
@@ -117,8 +119,9 @@
     "recharts": "^3.1.0",
     "sonner": "^2.0.6",
     "tailwind-merge": "^3.3.1",
+    "uuid": "^9.0.0",
     "vaul": "^1.1.2",
     "zustand": "^5.0.6",
-    "mp4-muxer": "^4.4.1"
+    "mp4-muxer": "^4.3.0"
   }
 }

@@ -10,6 +10,7 @@ import {
   LucideIcon,
   TypeIcon,
   BotIcon,
+  ImageIcon,
 } from "lucide-react";
 import { create } from "zustand";
 
@@ -17,6 +18,7 @@ export type Tab =
   | "media"
   | "audio"
   | "text"
+  | "text2image"
   | "stickers"
   | "effects"
   | "transitions"
@@ -45,6 +47,10 @@ export const tabs: { [key in Tab]: { icon: LucideIcon; label: string } } = {
   text: {
     icon: TypeIcon,
     label: "Text",
+  },
+  text2image: {
+    icon: ImageIcon,
+    label: "Text2Image",
   },
   stickers: {
     icon: StickerIcon,
