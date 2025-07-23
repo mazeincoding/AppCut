@@ -27,6 +27,7 @@ import { DraggableMediaItem } from "@/components/ui/draggable-item";
 import { useProjectStore } from "@/stores/project-store";
 import { useAdjustmentStore } from "@/stores/adjustment-store";
 import { useMediaPanelStore } from "../store";
+import { ExportAllButton } from "../export-all-button";
 
 export function MediaView() {
   const { mediaItems, addMediaItem, removeMediaItem } = useMediaStore();
@@ -238,6 +239,9 @@ export function MediaView() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
 
+            {/* Export All button */}
+            <ExportAllButton variant="outline" size="sm" />
+
             {/* Add media button */}
             <Button
               variant="outline"
@@ -310,8 +314,8 @@ export function MediaView() {
                           const mediaPanelStore = useMediaPanelStore.getState();
                           
                           // Set the image in adjustment store
-                          const imageUrl = item.source.startsWith('blob:') 
-                            ? item.source 
+                          const imageUrl = item.url && item.url.startsWith('blob:') 
+                            ? item.url 
                             : URL.createObjectURL(item.file);
                           adjustmentStore.setOriginalImage(item.file, imageUrl);
                           

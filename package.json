@@ -22,6 +22,8 @@
     "format": "turbo run format"
   },
   "dependencies": {
+    "@types/jszip": "^3.4.1",
+    "jszip": "^3.10.1",
     "next": "^15.3.4",
     "wavesurfer.js": "^7.9.8"
   }
