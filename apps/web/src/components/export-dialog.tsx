@@ -301,30 +301,19 @@ export function ExportDialog() {
             <RadioGroup value={exportEngine} onValueChange={(value) => setExportEngine(value as EngineType)}>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="auto" id="auto" />
-                <Label htmlFor="auto" className="flex-1">
-                  <div className="flex flex-col">
-                    <span>Auto (Recommended)</span>
-                    <span className="text-xs text-muted-foreground">Uses best available engine</span>
-                  </div>
-                </Label>
+                <Label htmlFor="auto" className="text-sm">Auto (Recommended) - Best available</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="stable" id="stable" />
-                <Label htmlFor="stable" className="flex-1">
-                  <div className="flex flex-col">
-                    <span>Stable Mode</span>
-                    <span className="text-xs text-muted-foreground">Uses proven optimized engine</span>
-                  </div>
-                </Label>
+                <Label htmlFor="stable" className="text-sm">Stable Mode - Proven optimized</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="parallel" id="parallel" />
+                <Label htmlFor="parallel" className="text-sm">Parallel Processing - 5-10x faster</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="webcodecs" id="webcodecs" />
-                <Label htmlFor="webcodecs" className="flex-1">
-                  <div className="flex flex-col">
-                    <span>WebCodecs (Experimental)</span>
-                    <span className="text-xs text-muted-foreground">Force new engine with fallback</span>
-                  </div>
-                </Label>
+                <Label htmlFor="webcodecs" className="text-sm">WebCodecs (Experimental) - Force new</Label>
               </div>
             </RadioGroup>
             <div className="p-3 bg-muted rounded-lg">

@@ -32,43 +32,20 @@ export function ModelSelector() {
                 )}
                 onClick={() => setSelectedModel(model.id as any)}
               >
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-start gap-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
                     <div className={cn(
-                      "w-2.5 h-2.5 rounded-full mt-0.5 transition-colors",
+                      "w-2.5 h-2.5 rounded-full transition-colors",
                       isSelected ? "bg-primary" : "bg-muted-foreground/30"
                     )}></div>
-                    <div>
-                      <h4 className="text-xs font-semibold">{model.name}</h4>
-                      <p className="text-[10px] text-muted-foreground font-medium">{model.provider}</p>
-                    </div>
+                    <h4 className="text-sm font-semibold">{model.name}</h4>
                   </div>
                   <Badge 
                     variant={isSelected ? "default" : "secondary"} 
-                    className={cn("text-[10px] font-medium h-4 px-1.5", isSelected && "bg-primary/20 text-primary-foreground")}
+                    className={cn("text-xs font-medium", isSelected && "bg-primary/20 text-primary-foreground")}
                   >
                     {model.estimatedCost}
                   </Badge>
-                </div>
-                
-                <p className="text-[10px] text-muted-foreground mb-2 leading-tight">
-                  {model.description}
-                </p>
-                
-                <div className="flex flex-wrap gap-1">
-                  {model.features.map((feature) => (
-                    <span
-                      key={feature}
-                      className={cn(
-                        "text-[9px] px-1.5 py-0.5 rounded-full font-medium transition-colors",
-                        isSelected 
-                          ? "bg-primary/15 text-primary-foreground/90"
-                          : "bg-muted/70 text-muted-foreground"
-                      )}
-                    >
-                      {feature}
-                    </span>
-                  ))}
                 </div>
               </div>
             );
