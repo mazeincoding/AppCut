@@ -45,7 +45,11 @@ export type Action =
   | "duplicate-selected" // Duplicate selected element
   | "toggle-snapping" // Toggle snapping
   | "undo" // Undo last action
-  | "redo"; // Redo last undone action
+  | "redo" // Redo last undone action
+  | "zoom-in" // Zoom in timeline
+  | "zoom-out" // Zoom out timeline
+  | "zoom-reset" // Reset timeline zoom
+  | "zoom-fit"; // Fit timeline to window
 
 /**
  * Defines the arguments, if present for a given type that is required to be passed on
