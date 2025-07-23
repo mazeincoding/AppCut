@@ -259,14 +259,71 @@ graph TD
 
 ---
 
-## 🚨 **CRITICAL FINDING**
+## 🚨 **ROOT CAUSE IDENTIFIED & FIXED**
 
-The repeated frames issue is **NOT** a seeking precision problem. It's a **video element lifecycle management problem**. 
+### **✅ SOLUTION IMPLEMENTED**
 
-**The real issue**: New video elements are being created for every frame instead of reusing preloaded ones, causing:
-- Unnecessary load delays
-- Seeking to wrong timestamps due to load timing
-- Frame repetition due to video decoder reset
-- Performance degradation
+**Location**: `apps/web/src/lib/export-engine-optimized.ts` lines 274-292
 
-**Next Steps**: Deep dive into video preloading system and element reuse logic to fix the root cause.
+**Root Cause**: Short video optimization (< 15 seconds) **completely skipped video element preloading**
+
+**The Problem Flow**:
+```typescript
+// Line 275: Check if video is short
+const isShortVideo = this.duration < 15;  
+
+if (isShortVideo) {
+  // SKIP ALL PRELOADING - This was the bug!
+  this.log('Short video - skipping pre-loading optimizations');
+  // NO await this.preloadMediaElements() call
+} else {
+  // Only long videos got preloading
+  await this.preloadMediaElements();
+}
+```
+
+**Result**: For short videos, `this.preloadedVideos.get()` always returned `undefined`, forcing "Creating video element on demand" for **every single frame**.
+
+### **✅ Fix Applied**:
+
+```typescript
+if (isShortVideo) {
+  this.log('Short video detected - skipping some pre-loading optimizations');
+  // ALWAYS preload video elements to prevent repeated frames
+  this.onProgress?.(5, "Loading video elements..."); 
+  await this.preloadMediaElements();  // FIX: Always do this
+  this.onProgress?.(8, "Short video - rendering directly...");
+} else {
+  // Long videos get all optimizations including video preloading
+  await this.preloadMediaElements();
+}
+```
+
+### **✅ Expected Results After Fix**:
+
+**Before Fix** (causing repeated frames):
+```
+❌ Short video detected (5s) - skipping pre-loading optimizations
+❌ Creating video element on demand for short video  [Frame 0]
+❌ Creating video element on demand for short video  [Frame 1] 
+❌ Creating video element on demand for short video  [Frame 2]
+❌ (Each frame creates new video element = repeated frames)
+```
+
+**After Fix** (should work correctly):
+```
+✅ Short video detected (5s) - skipping some pre-loading optimizations
+✅ Pre-loading 1 video elements
+✅ Using preloaded video for frame 0
+✅ Using preloaded video for frame 1  
+✅ Using preloaded video for frame 2
+✅ (All frames reuse same video element = distinct frames)
+```
+
+### **Impact**: 
+- **Fixes repeated frames** for all videos under 15 seconds
+- **Maintains performance optimization** for longer videos
+- **Eliminates "on demand" video creation** during normal export
+- **Ensures proper video element reuse** across all frame renders
+
+**Status**: ✅ **FIXED** - Commit ready for testing

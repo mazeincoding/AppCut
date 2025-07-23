@@ -275,7 +275,10 @@ export class ExportEngine {
       const isShortVideo = this.duration < 15;
       
       if (isShortVideo) {
-        this.log(`Short video detected (${this.duration}s) - skipping pre-loading optimizations`);
+        this.log(`Short video detected (${this.duration}s) - skipping some pre-loading optimizations`);
+        // Always preload video elements to prevent repeated frame issues
+        this.onProgress?.(5, "Loading video elements...");
+        await this.preloadMediaElements();
         this.onProgress?.(8, "Short video - rendering directly...");
       } else {
         // Phase 1 optimizations: Preload assets with detailed progress for longer videos
