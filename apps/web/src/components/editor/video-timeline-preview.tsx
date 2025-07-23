@@ -70,6 +70,13 @@ export function VideoTimelinePreview({
       setIsGenerating(true);
       setPreviewError(null);
       
+      // Set a timeout to prevent infinite loading
+      const timeoutId = setTimeout(() => {
+        console.warn('⏱️ Timeline preview generation timeout for:', element.name);
+        setPreviewError('Preview generation timed out');
+        setIsGenerating(false);
+      }, 30000); // 30 second timeout
+      
       console.log('🎬 Generating timeline previews for element:', element.id, {
         zoomLevel,
         elementDuration,
@@ -77,18 +84,29 @@ export function VideoTimelinePreview({
         density: getPreviewDensity(zoomLevel)
       });
 
-      generateTimelinePreviews(mediaElement.mediaId, {
+      const previewOptions = {
         quality: getPreviewQuality(zoomLevel),
         density: getPreviewDensity(zoomLevel),
         elementDuration,
         zoomLevel
-      })
+      };
+      
+      console.log('🎬 Starting timeline preview generation:', {
+        mediaId: mediaElement.mediaId,
+        options: previewOptions,
+        elementId: element.id,
+        elementName: element.name
+      });
+      
+      generateTimelinePreviews(mediaElement.mediaId, previewOptions)
         .then(() => {
-          console.log('✅ Timeline previews generated successfully');
+          console.log('✅ Timeline previews generated successfully for:', element.name);
+          clearTimeout(timeoutId);
           setIsGenerating(false);
         })
         .catch((error) => {
-          console.error('❌ Failed to generate timeline previews:', error);
+          console.error('❌ Failed to generate timeline previews for:', element.name, error);
+          clearTimeout(timeoutId);
           setPreviewError(error.message || 'Preview generation failed');
           setIsGenerating(false);
         });
@@ -110,6 +128,14 @@ export function VideoTimelinePreview({
     element.duration, 
     zoomLevel
   );
+  
+  console.log('📊 Thumbnail strip retrieved:', {
+    elementName: element.name,
+    thumbnailCount: thumbnailStrip.length,
+    isGenerating,
+    previewError,
+    mediaId: (element as MediaElement).mediaId
+  });
 
   // Calculate hover preview if mouse is over element
   const hoverPreview = isHovered && mousePosition && elementRef.current ? (() => {
@@ -137,8 +163,8 @@ export function VideoTimelinePreview({
     return null;
   })();
 
-  // Handle loading state
-  if (isGenerating) {
+  // Handle loading state - but still show thumbnails if available
+  if (isGenerating && thumbnailStrip.length === 0) {
     return (
       <div 
         ref={elementRef}

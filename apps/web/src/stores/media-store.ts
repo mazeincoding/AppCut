@@ -470,13 +470,23 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
         timestamps.push(0);
       }
       
+      console.log('📋 Timeline preview timestamps:', timestamps);
+      
       // Generate thumbnails using existing enhanced thumbnail system
+      console.log('🎬 Calling generateEnhancedThumbnails with:', {
+        timestamps: timestamps.length,
+        resolution: quality,
+        format: 'jpeg'
+      });
+      
       const { thumbnails } = await generateEnhancedThumbnails(item.file, {
         timestamps,
         resolution: quality,
         quality: 0.7, // Optimized for timeline display
         format: 'jpeg'
       });
+      
+      console.log('📸 Generated thumbnails:', thumbnails.length);
       
       // Cache each thumbnail individually for efficient retrieval
       for (let i = 0; i < thumbnails.length; i++) {
@@ -527,8 +537,8 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
         )
       }));
       
-      // Don't throw error to prevent UI crashes - let component handle gracefully
-      console.log('Timeline preview generation failed, component will show fallback UI');
+      // Re-throw error so component can handle it properly
+      throw new Error(errorMessage);
     }
   },
 
