@@ -131,7 +131,13 @@ export function Hero({ signupCount }: HeroProps) {
         <a href="/projects">
           <Button 
             variant="outline"
-            className="h-11 px-6 text-base"
+            className="h-24 px-20 text-base"
+            style={{ 
+              backgroundColor: 'white !important', 
+              color: 'black !important', 
+              borderColor: '#d1d5db !important',
+              borderRadius: '12px !important'
+            }}
           >
             Try early beta
             <ArrowRight className="ml-0.5 h-4 w-4" />
@@ -201,7 +207,13 @@ export function Hero({ signupCount }: HeroProps) {
             <a href="/projects">
               <Button 
                 variant="outline"
-                className="h-11 px-6 text-base"
+                className="h-24 px-20 text-base"
+                style={{ 
+                  backgroundColor: 'white !important', 
+                  color: 'black !important', 
+                  borderColor: '#d1d5db !important',
+                  borderRadius: '12px !important'
+                }}
               >
                 Try early beta
                 <ArrowRight className="ml-0.5 h-4 w-4" />
