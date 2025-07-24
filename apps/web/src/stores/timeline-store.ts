@@ -170,7 +170,7 @@ interface TimelineStore {
 
   // Persistence actions
   loadProjectTimeline: (projectId: string) => Promise<void>;
-  saveProjectTimeline: (projectId: string) => Promise<void>;
+  saveTimeline: (projectId: string) => Promise<void>;
   clearTimeline: () => void;
   updateTextElement: (
     trackId: string,
@@ -220,10 +220,16 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
 
   // Helper to auto-save timeline changes
   const autoSaveTimeline = async () => {
-    const activeProject = useProjectStore.getState().activeProject;
-    if (activeProject) {
+    // Use timeline manager to get the active timeline ID
+    const { useTimelineManagerStore } = await import(
+      "./timeline-manager-store"
+    );
+    const timelineManagerStore = useTimelineManagerStore.getState();
+    const activeTimeline = timelineManagerStore.activeTimeline;
+
+    if (activeTimeline) {
       try {
-        await storageService.saveTimeline(activeProject.id, get()._tracks);
+        await storageService.saveTimeline(activeTimeline.id, get()._tracks);
       } catch (error) {
         console.error("Failed to auto-save timeline:", error);
       }
@@ -1282,9 +1288,9 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
     },
 
     // Persistence methods
-    loadProjectTimeline: async (projectId) => {
+    loadProjectTimeline: async (timelineId) => {
       try {
-        const tracks = await storageService.loadTimeline(projectId);
+        const tracks = await storageService.loadTimeline(timelineId);
         if (tracks) {
           updateTracks(tracks);
         } else {
@@ -1303,9 +1309,9 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       }
     },
 
-    saveProjectTimeline: async (projectId) => {
+    saveTimeline: async (timelineId) => {
       try {
-        await storageService.saveTimeline(projectId, get()._tracks);
+        await storageService.saveTimeline(timelineId, get()._tracks);
       } catch (error) {
         console.error("Failed to save timeline:", error);
       }

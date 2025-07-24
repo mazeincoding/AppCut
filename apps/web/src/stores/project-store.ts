@@ -27,6 +27,7 @@ interface ProjectStore {
     options?: { backgroundColor?: string; blurIntensity?: number }
   ) => Promise<void>;
   updateProjectFps: (fps: number) => Promise<void>;
+  updateProject: (project: TProject) => Promise<void>;
 
   getFilteredAndSortedProjects: (
     searchQuery: string,
@@ -81,10 +82,16 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       if (project) {
         set({ activeProject: project });
 
+        // Initialize timeline manager first
+        const { useTimelineManagerStore } = await import(
+          "./timeline-manager-store"
+        );
+        const timelineManagerStore = useTimelineManagerStore.getState();
+
         // Load project-specific data in parallel
         await Promise.all([
           mediaStore.loadProjectMedia(id),
-          timelineStore.loadProjectTimeline(id),
+          timelineManagerStore.initializeTimelines(id),
         ]);
       } else {
         throw new Error(`Project with id ${id} not found`);
@@ -106,7 +113,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       const timelineStore = useTimelineStore.getState();
       await Promise.all([
         storageService.saveProject(activeProject),
-        timelineStore.saveProjectTimeline(activeProject.id),
+        timelineStore.saveTimeline(activeProject.id),
       ]);
       await get().loadAllProjects(); // Refresh the list
     } catch (error) {
@@ -318,6 +325,19 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     } catch (error) {
       console.error("Failed to update project FPS:", error);
       toast.error("Failed to update project FPS", {
+        description: "Please try again",
+      });
+    }
+  },
+
+  updateProject: async (project: TProject) => {
+    try {
+      await storageService.saveProject(project);
+      set({ activeProject: project });
+      await get().loadAllProjects(); // Refresh the list
+    } catch (error) {
+      console.error("Failed to update project:", error);
+      toast.error("Failed to update project", {
         description: "Please try again",
       });
     }
