@@ -76,3 +76,6 @@ apps/web/e2e/fixtures/*.webp
 
 # Screenshots
 screenshots/
+
+# Claude AI settings
+.claude/

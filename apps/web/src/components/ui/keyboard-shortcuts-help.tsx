@@ -267,7 +267,7 @@ export const KeyboardShortcutsHelp = () => {
         }}
       >
         <DialogHeader className="rounded-t-2xl -m-6 p-6 mb-6" style={{ backgroundColor: '#475569' }}>
-          <DialogTitle className="flex items-center gap-2 text-lg text-white font-semibold" style={{ paddingLeft: '16px' }}>
+          <DialogTitle className="flex items-center justify-center gap-2 text-lg text-white font-semibold">
             <Keyboard className="w-5 h-5" />
             Keyboard Shortcuts
           </DialogTitle>
