@@ -24,8 +24,8 @@ export function EditorHeader() {
         href="/projects"
         className="font-medium tracking-tight flex items-center gap-2 hover:opacity-80 transition-opacity relative shadow-lg hover:shadow-xl before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent no-underline"
         style={{
-          backgroundColor: '#3b82f6', 
-          color: 'white',
+          backgroundColor: 'white', 
+          color: 'black',
           height: '32px',
           borderRadius: '9999px',
           fontSize: '13px',
@@ -63,8 +63,8 @@ export function EditorHeader() {
         variant="text"
         size="sm"
         style={{ 
-          backgroundColor: '#3b82f6', 
-          color: 'white',
+          backgroundColor: 'white', 
+          color: 'black',
           height: '32px',
           borderRadius: '9999px',
           fontSize: '13px',
