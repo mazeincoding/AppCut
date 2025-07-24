@@ -105,11 +105,11 @@ export function EditorHeader() {
       <Button
         size="sm"
         variant="primary"
-        className="h-7 text-xs"
+        className="h-7 text-xs flex items-center gap-1"
         onClick={handleExport}
       >
-        <Download className="h-4 w-4" />
-        <span className="text-sm">Export</span>
+        <Download className="h-3 w-3" />
+        <span>Export</span>
       </Button>
     </nav>
   );

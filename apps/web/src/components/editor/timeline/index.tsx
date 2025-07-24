@@ -17,8 +17,6 @@ import {
   TypeIcon,
   Magnet,
   Link,
-  ZoomIn,
-  ZoomOut,
 } from "lucide-react";
 import {
   Tooltip,
@@ -56,8 +54,10 @@ import {
   getTotalTracksHeight,
   TIMELINE_CONSTANTS,
   snapTimeToFrame,
+  MIN_ZOOM,
+  MAX_ZOOM,
 } from "@/constants/timeline-constants";
-import { Slider } from "@/components/ui/slider";
+import { TimelineZoomControl } from "../timeline-zoom-control";
 
 export function Timeline() {
   // Timeline shows all tracks (video, audio, effects) and their elements.
@@ -254,19 +254,15 @@ export function Timeline() {
       let scrollLeft = 0;
 
       if (isRulerClick) {
-        // Calculate based on ruler position
-        const rulerContent = rulerScrollRef.current?.querySelector(
-          "[data-radix-scroll-area-viewport]"
-        ) as HTMLElement;
+        // Calculate based on ruler position - use direct container for native scroll
+        const rulerContent = rulerScrollRef.current;
         if (!rulerContent) return;
         const rect = rulerContent.getBoundingClientRect();
         mouseX = e.clientX - rect.left;
         scrollLeft = rulerContent.scrollLeft;
       } else {
-        // Calculate based on tracks content position
-        const tracksContent = tracksScrollRef.current?.querySelector(
-          "[data-radix-scroll-area-viewport]"
-        ) as HTMLElement;
+        // Calculate based on tracks content position - use direct container for native scroll
+        const tracksContent = tracksScrollRef.current;
         if (!tracksContent) return;
         const rect = tracksContent.getBoundingClientRect();
         mouseX = e.clientX - rect.left;
@@ -422,15 +418,32 @@ export function Timeline() {
 
   // --- Scroll synchronization effect ---
   useEffect(() => {
-    const rulerViewport = rulerScrollRef.current?.querySelector(
-      "[data-radix-scroll-area-viewport]"
-    ) as HTMLElement;
-    const tracksViewport = tracksScrollRef.current?.querySelector(
-      "[data-radix-scroll-area-viewport]"
-    ) as HTMLElement;
-    const trackLabelsViewport = trackLabelsScrollRef.current?.querySelector(
-      "[data-radix-scroll-area-viewport]"
-    ) as HTMLElement;
+    // Helper function to get scrollable viewport (Radix ScrollArea or native container)
+    const getScrollableViewport = (containerRef: React.RefObject<HTMLDivElement>): HTMLElement | null => {
+      if (!containerRef.current) return null;
+      
+      // First try to find Radix ScrollArea viewport
+      const radixViewport = containerRef.current.querySelector("[data-radix-scroll-area-viewport]") as HTMLElement;
+      if (radixViewport) return radixViewport;
+      
+      // Fallback to the container itself if it's scrollable
+      const container = containerRef.current;
+      const computedStyle = getComputedStyle(container);
+      const hasOverflow = container && (
+        computedStyle.overflow.includes('auto') ||
+        computedStyle.overflow.includes('scroll') ||
+        computedStyle.overflowX.includes('auto') ||
+        computedStyle.overflowX.includes('scroll') ||
+        computedStyle.overflowY.includes('auto') ||
+        computedStyle.overflowY.includes('scroll')
+      );
+      
+      return hasOverflow ? container : null;
+    };
+
+    const rulerViewport = getScrollableViewport(rulerScrollRef);
+    const tracksViewport = getScrollableViewport(tracksScrollRef);
+    const trackLabelsViewport = getScrollableViewport(trackLabelsScrollRef);
 
     if (!rulerViewport || !tracksViewport) return;
 
@@ -506,7 +519,11 @@ export function Timeline() {
       onMouseEnter={() => setIsInTimeline(true)}
       onMouseLeave={() => setIsInTimeline(false)}
     >
-      <TimelineToolbar zoomLevel={zoomLevel} setZoomLevel={setZoomLevel} />
+      <TimelineToolbar 
+        zoomLevel={zoomLevel} 
+        setZoomLevel={setZoomLevel}
+        tracksScrollRef={tracksScrollRef}
+      />
 
       {/* Timeline Container */}
       <div
@@ -549,7 +566,7 @@ export function Timeline() {
 
           {/* Timeline Ruler */}
           <div
-            className="flex-1 relative overflow-hidden h-4"
+            className="flex-1 relative overflow-hidden h-6"
             onWheel={(e) => {
               // Check if this is horizontal scrolling - if so, don't handle it here
               if (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
@@ -560,11 +577,19 @@ export function Timeline() {
             onMouseDown={handleSelectionMouseDown}
             onClick={handleTimelineContentClick}
             data-ruler-area
+            role="region"
+            aria-orientation="horizontal"
+            aria-label="Timeline ruler"
+            tabIndex={0}
           >
-            <ScrollArea className="w-full" ref={rulerScrollRef}>
+            <ScrollArea 
+              className="w-full" 
+              ref={rulerScrollRef}
+              type="auto"
+            >
               <div
                 ref={rulerRef}
-                className="relative h-4 select-none cursor-default"
+                className="relative h-6 select-none cursor-default"
                 style={{
                   width: `${dynamicTimelineWidth}px`,
                 }}
@@ -688,6 +713,9 @@ export function Timeline() {
             }}
             onClick={handleTimelineContentClick}
             ref={tracksContainerRef}
+            role="scrollbar"
+            aria-label="Timeline tracks"
+            tabIndex={0}
           >
             <SelectionBox
               startPos={selectionBox?.startPos || null}
@@ -697,9 +725,12 @@ export function Timeline() {
             />
             <ScrollArea
               className="w-full h-full"
+              role="grid"
+              aria-label="Timeline tracks content"
+              data-timeline-tracks
               ref={tracksScrollRef}
-              type="scroll"
-              showHorizontalScrollbar
+              showHorizontalScrollbar={true}
+              type="auto"
             >
               <div
                 className="relative flex-1"
@@ -781,9 +812,11 @@ function TrackIcon({ track }: { track: TimelineTrack }) {
 function TimelineToolbar({
   zoomLevel,
   setZoomLevel,
+  tracksScrollRef,
 }: {
   zoomLevel: number;
   setZoomLevel: (zoom: number) => void;
+  tracksScrollRef: React.RefObject<HTMLDivElement>;
 }) {
   const {
     tracks,
@@ -801,6 +834,7 @@ function TimelineToolbar({
     toggleSnapping,
     rippleEditingEnabled,
     toggleRippleEditing,
+    getTotalDuration,
   } = useTimelineStore();
   const { currentTime, duration, isPlaying, toggle } = usePlaybackStore();
 
@@ -932,6 +966,37 @@ function TimelineToolbar({
   const handleZoomSliderChange = (values: number[]) => {
     setZoomLevel(values[0]);
   };
+
+  // Calculate fit to window zoom
+  const calculateFitToWindowZoom = () => {
+    const totalDuration = getTotalDuration();
+    if (totalDuration <= 0) return 1;
+    
+    // Get the timeline container width (tracks area width)
+    // Use the tracks scroll ref to get the actual scrollable area
+    const timelineContainer = tracksScrollRef.current;
+    if (!timelineContainer) return 1;
+    
+    // Get the actual scrollable viewport from ScrollArea
+    const viewport = timelineContainer.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+    const containerWidth = viewport ? viewport.clientWidth : timelineContainer.clientWidth;
+    
+    const pixelsPerSecond = TIMELINE_CONSTANTS.PIXELS_PER_SECOND;
+    const requiredWidth = totalDuration * pixelsPerSecond;
+    
+    // Calculate zoom to fit content with some padding
+    const paddingFactor = 0.95; // 5% padding
+    const fitZoom = (containerWidth * paddingFactor) / requiredWidth;
+    
+    // Clamp to valid zoom range
+    return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, fitZoom));
+  };
+
+  const handleFitToWindow = () => {
+    const fitZoom = calculateFitToWindowZoom();
+    setZoomLevel(fitZoom);
+  };
+
   return (
     <div className="border-b flex items-center justify-between px-2 py-1">
       <div className="flex items-center gap-1 w-full">
@@ -1094,22 +1159,13 @@ function TimelineToolbar({
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-        <div className="flex items-center gap-1">
-          <Button variant="text" size="icon" onClick={handleZoomOut}>
-            <ZoomOut className="h-4 w-4" />
-          </Button>
-          <Slider
-            className="w-24"
-            value={[zoomLevel]}
-            onValueChange={handleZoomSliderChange}
-            min={0.25}
-            max={4}
-            step={0.25}
-          />
-          <Button variant="text" size="icon" onClick={handleZoomIn}>
-            <ZoomIn className="h-4 w-4" />
-          </Button>
-        </div>
+        <div className="w-px h-6 bg-border mx-2" />
+        <TimelineZoomControl
+          zoomLevel={zoomLevel}
+          onZoomChange={setZoomLevel}
+          onFitToWindow={handleFitToWindow}
+          className="mr-2"
+        />
       </div>
     </div>
   );
