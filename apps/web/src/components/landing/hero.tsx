@@ -117,8 +117,8 @@ export function Hero({ signupCount }: HeroProps) {
           </div>
         </a>
       </div>
-      <div className="inline-block font-bold tracking-tighter text-4xl md:text-[4rem]">
-        <h1>The Open Source</h1>
+      <div className="inline-block font-bold tracking-tighter text-5xl md:text-[5rem]">
+        <h1 className="text-[4rem] md:text-[7rem]">The Open Source</h1>
         <Handlebars>Video Editor</Handlebars>
       </div>
 
@@ -130,11 +130,11 @@ export function Hero({ signupCount }: HeroProps) {
       <div className="mt-8 flex gap-8 justify-center">
         <a href="/projects">
           <Button 
-            className="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 text-background shadow hover:bg-foreground/90 rounded-md px-6 h-11 text-base bg-foreground"
-            type="submit"
+            variant="outline"
+            className="h-11 px-6 text-base"
           >
             Try early beta
-            <ArrowRight className="relative z-10 ml-0.5 h-4 w-4 inline-block" />
+            <ArrowRight className="ml-0.5 h-4 w-4" />
           </Button>
         </a>
       </div>
@@ -176,8 +176,8 @@ export function Hero({ signupCount }: HeroProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.8 }}
           >
-            <div className="inline-block font-bold tracking-tighter text-4xl md:text-[4rem]">
-              <h1>The Open Source</h1>
+            <div className="inline-block font-bold tracking-tighter text-5xl md:text-[5rem]">
+              <h1 className="text-[4rem] md:text-[7rem]">The Open Source</h1>
               <Handlebars>Video Editor</Handlebars>
             </div>
           </motion.div>
@@ -200,11 +200,11 @@ export function Hero({ signupCount }: HeroProps) {
           >
             <a href="/projects">
               <Button 
-                className="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 text-background shadow hover:bg-foreground/90 rounded-md px-6 h-11 text-base bg-foreground"
-                type="submit"
+                variant="outline"
+                className="h-11 px-6 text-base"
               >
                 Try early beta
-                <ArrowRight className="relative z-10 ml-0.5 h-4 w-4 inline-block" />
+                <ArrowRight className="ml-0.5 h-4 w-4" />
               </Button>
             </a>
           </motion.div>
