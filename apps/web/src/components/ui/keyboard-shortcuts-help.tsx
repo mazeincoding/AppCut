@@ -62,7 +62,7 @@ const ShortcutItem = ({
   });
 
   return (
-    <div className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-gray-600 transition-colors">
+    <div className="flex items-center justify-between py-3 px-4 rounded-lg hover:bg-slate-600 transition-colors">
       <div className="flex items-center gap-3 flex-1">
         {shortcut.icon && (
           <div className="text-muted-foreground">{shortcut.icon}</div>
@@ -121,19 +121,22 @@ const EditableShortcutKey = ({
   };
 
   return (
-    <kbd
-      className={`inline-flex font-sans text-xs rounded px-2 min-w-[1.5rem] min-h-[1.5rem] leading-none items-center justify-center shadow-sm border mr-2 cursor-pointer hover:bg-opacity-80 ${
+    <Button
+      variant={isRecording ? "secondary" : "outline"}
+      size="sm"
+      className={`font-mono text-xs min-w-[2rem] min-h-[1.75rem] mr-3 transition-all hover:scale-105 !rounded-lg ${
         isRecording
-          ? "border-primary bg-primary/10"
-          : "border-white/10 bg-black/20"
+          ? "border-blue-400 bg-blue-500/20 text-blue-300"
+          : "border-slate-500 bg-slate-800 text-slate-200 hover:bg-slate-700"
       }`}
+      style={{ borderRadius: '8px' }}
       onClick={handleClick}
       title={
         isRecording ? "Press any key combination..." : "Click to edit shortcut"
       }
     >
       {children}
-    </kbd>
+    </Button>
   );
 };
 
@@ -231,23 +234,28 @@ export const KeyboardShortcutsHelp = () => {
         </Button>
       </DialogTrigger>
       <DialogContent 
-        className="w-[40vw] max-w-2xl max-h-[80vh] overflow-y-auto border-0 shadow-lg"
-        style={{ backgroundColor: '#374151' }}
+        className="w-[40vw] max-w-2xl max-h-[80vh] overflow-hidden border-0 shadow-2xl rounded-2xl"
+        style={{ 
+          backgroundColor: '#334155 !important',
+          background: '#334155 !important',
+          backgroundImage: 'none !important'
+        }}
       >
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-1.5 text-base text-white font-semibold">
-            <Keyboard className="w-4 h-4" />
-            Shortcuts
+        <DialogHeader className="bg-slate-600 rounded-t-2xl -m-6 p-6 mb-6" style={{ backgroundColor: '#475569' }}>
+          <DialogTitle className="flex items-center gap-2 text-lg text-white font-semibold">
+            <Keyboard className="w-5 h-5" />
+            Keyboard Shortcuts
           </DialogTitle>
-          <DialogDescription className="text-xs text-gray-300">
-            Speed up your workflow with keyboard shortcuts. Click any key to edit.
+          <DialogDescription className="text-sm text-slate-300">
+            Speed up your workflow with these keyboard shortcuts. Click any key to edit.
           </DialogDescription>
         </DialogHeader>
 
-            <div className="space-y-6">
+        <div className="px-6 pb-6 overflow-y-auto max-h-[60vh] bg-slate-700" style={{ backgroundColor: '#334155' }}>
+          <div className="space-y-6">
               {categories.map((category) => (
                 <div key={category} className="flex flex-col gap-1">
-                  <h3 className="text-xs uppercase tracking-wide font-medium text-gray-300">
+                  <h3 className="text-xs uppercase tracking-wide font-semibold text-slate-400 mb-3">
                     {category}
                   </h3>
                   <div className="space-y-2">
@@ -264,6 +272,7 @@ export const KeyboardShortcutsHelp = () => {
                   </div>
                 </div>
               ))}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
