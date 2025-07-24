@@ -53,35 +53,6 @@ interface GeneratedVideoResult {
 }
 
 export function AiView() {
-  // COMPLETELY DISABLE AI VIEW TO PREVENT VIDEO LOADING ERRORS
-  return (
-    <div className="p-4 h-full flex flex-col">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <BotIcon className="size-5 text-primary" />
-          <h3 className="text-sm font-medium">AI Video Generation</h3>
-        </div>
-      </div>
-      
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center space-y-3">
-          <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mx-auto">
-            <BotIcon className="h-8 w-8 text-muted-foreground" />
-          </div>
-          <p className="text-sm text-muted-foreground">
-            AI Video Generation temporarily disabled
-          </p>
-          <p className="text-xs text-muted-foreground/70">
-            Preventing HTML5 video loading errors in Electron environment
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ORIGINAL CODE DISABLED TO PREVENT VIDEO LOADING ERRORS
-/*
   const [prompt, setPrompt] = useState("");
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -117,16 +88,167 @@ export function AiView() {
 
   const isModelSelected = (modelId: string) => selectedModels.includes(modelId);
 
-  // 🧪 TESTING FUNCTION: Disabled to prevent video loading errors
+  // 🧪 TESTING FUNCTION: Test video download and media panel loading
   const handleTestDownloadAndMedia = async () => {
-    setError('Test disabled to prevent canvas thumbnail generation errors in Electron environment');
-    return;
+    if (selectedModels.length === 0) {
+      setError('Select at least one model to test download functionality');
+      return;
+    }
+
+    setIsGenerating(true);
+    setError(null);
+    setGeneratedVideos([]);
+    
+    try {
+      const testVideo = {
+        jobId: `test-${Date.now()}`,
+        videoUrl: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_5mb.mp4', // 5MB test video
+        videoPath: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_5mb.mp4',
+        fileSize: 5242880, // 5MB
+        duration: 30,
+        prompt: prompt.trim() || 'Test video download',
+        model: selectedModels[0]
+      };
+
+      setStatusMessage('Testing video download and media panel integration...');
+      
+      // Test the actual download and media panel logic
+      if (activeProject) {
+        const modelName = AI_MODELS.find(m => m.id === selectedModels[0])?.name || selectedModels[0];
+        const fileName = `test-${modelName.toLowerCase().replace(/\s+/g, '-')}-${testVideo.jobId.substring(0, 8)}.mp4`;
+        
+        setStatusMessage('Downloading test video...');
+        
+        try {
+          // Fetch the video
+          const videoResponse = await fetch(testVideo.videoUrl);
+          if (!videoResponse.ok) {
+            throw new Error(`Failed to fetch video: ${videoResponse.status}`);
+          }
+          
+          const blob = await videoResponse.blob();
+          const file = new File([blob], fileName, {
+            type: 'video/mp4',
+          });
+          
+          setStatusMessage('Adding to media panel...');
+          
+          // Add to media panel
+          await addMediaItem(activeProject.id, {
+            name: `TEST: ${testVideo.prompt.substring(0, 20)}...`,
+            type: "video",
+            file: file,
+            url: testVideo.videoUrl,
+            duration: testVideo.duration || 5,
+            width: 1280,
+            height: 720,
+          });
+          
+          setStatusMessage('Downloading to Downloads folder...');
+          
+          // Test download to Downloads folder
+          const downloadLink = document.createElement('a');
+          downloadLink.href = URL.createObjectURL(blob);
+          downloadLink.download = fileName;
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+          URL.revokeObjectURL(downloadLink.href);
+          
+          // Show success
+          setGeneratedVideos([{ modelId: selectedModels[0], video: testVideo }]);
+          addToHistory(testVideo);
+          setStatusMessage('✅ Test completed successfully!');
+          
+          debugLogger.log('AIView', 'TEST_DOWNLOAD_AND_MEDIA_SUCCESS', { 
+            fileName,
+            modelName,
+            projectId: activeProject.id,
+            fileSize: blob.size
+          });
+          
+        } catch (downloadError) {
+          console.error('Download/Media test error:', downloadError);
+          setError(`Download test failed: ${downloadError instanceof Error ? downloadError.message : 'Unknown error'}`);
+          
+          debugLogger.log('AIView', 'TEST_DOWNLOAD_AND_MEDIA_FAILED', { 
+            error: downloadError instanceof Error ? downloadError.message : 'Unknown error',
+            modelName,
+            projectId: activeProject.id 
+          });
+        }
+      } else {
+        setError('No active project found for testing media panel integration');
+      }
+      
+    } catch (error) {
+      setError('Test error: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      debugLogger.log('AIView', 'TEST_DOWNLOAD_GENERAL_ERROR', { 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
-  // 🧪 TESTING FUNCTION: Disabled to prevent video loading errors
+  // 🧪 TESTING FUNCTION: Mock generation without API calls (remove before production)
   const handleMockGenerate = async () => {
-    setError('Mock generation disabled to prevent canvas thumbnail generation errors in Electron environment');
-    return;
+    if (activeTab === "text") {
+      if (!prompt.trim() || selectedModels.length === 0) return;
+    } else {
+      if (!selectedImage || selectedModels.length === 0) return;
+    }
+    
+    setIsGenerating(true);
+    setError(null);
+    setJobId(null);
+    setGeneratedVideos([]);
+    
+    try {
+      const mockGenerations: GeneratedVideoResult[] = [];
+      
+      for (let i = 0; i < selectedModels.length; i++) {
+        const modelId = selectedModels[i];
+        const modelName = AI_MODELS.find(m => m.id === modelId)?.name;
+        
+        setStatusMessage(`🧪 Mock generating with ${modelName} (${i + 1}/${selectedModels.length})`);
+        
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        const mockVideo: GeneratedVideo = {
+          jobId: `mock-job-${Date.now()}-${i}`,
+          videoUrl: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4', // Free sample video
+          videoPath: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
+          fileSize: 1024000,
+          duration: 6,
+          prompt: prompt.trim(),
+          model: modelId
+        };
+        
+        mockGenerations.push({ modelId, video: mockVideo });
+        
+        // Mock history addition
+        addToHistory(mockVideo);
+        
+        debugLogger.log('AIView', 'MOCK_VIDEO_GENERATED', { 
+          modelName,
+          mockJobId: mockVideo.jobId,
+          modelId 
+        });
+      }
+      
+      setGeneratedVideos(mockGenerations);
+      setStatusMessage(`🧪 Mock generated ${mockGenerations.length} videos successfully!`);
+      
+    } catch (error) {
+      setError('Mock generation error: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      debugLogger.log('AIView', 'MOCK_GENERATION_FAILED', { 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   // DEBUG: Component lifecycle tracking
@@ -161,11 +283,19 @@ export function AiView() {
   const maxChars = 500;
   const remainingChars = maxChars - prompt.length;
 
-  // Load generation history from localStorage on component mount - Disabled to prevent video loading errors
+  // Load generation history from localStorage on component mount
   useEffect(() => {
-    // Clear any existing history that might contain problematic video URLs
-    localStorage.removeItem('ai-generation-history');
-    setGenerationHistory([]);
+    const savedHistory = localStorage.getItem('ai-generation-history');
+    if (savedHistory) {
+      try {
+        const parsedHistory = JSON.parse(savedHistory);
+        setGenerationHistory(parsedHistory);
+      } catch (error) {
+        debugLogger.log('AIView', 'PARSE_HISTORY_ERROR', { 
+          error: error instanceof Error ? error.message : 'Unknown error' 
+        });
+      }
+    }
   }, []);
 
   // Save generation history to localStorage
@@ -507,7 +637,7 @@ export function AiView() {
           <BotIcon className="size-5 text-primary" />
           <h3 className="text-sm font-medium">AI Video Generation</h3>
         </div>
-        {false && generationHistory.length > 0 && (
+        {generationHistory.length > 0 && (
           <Button
             type="button"
             size="sm"
@@ -899,7 +1029,7 @@ export function AiView() {
           </div>
         )}
         
-        {false && generatedVideos.length > 0 && (
+        {generatedVideos.length > 0 && (
           <div className="mt-4 space-y-3">
             <div className="flex items-center gap-2 mb-3">
               <Play className="size-4 text-green-600" />
@@ -982,7 +1112,7 @@ export function AiView() {
           </div>
         )}
         
-        {false && generatedVideo && generatedVideos.length === 0 && (
+        {generatedVideo && generatedVideos.length === 0 && (
           <div className="mt-4 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
             <div className="flex items-center gap-2 mb-3">
               <Play className="size-4 text-green-600" />
@@ -1021,8 +1151,7 @@ export function AiView() {
           </div>
         )}
         
-        {false && (
-          <AIHistoryPanel
+        <AIHistoryPanel
             isOpen={isHistoryPanelOpen}
             onClose={() => setIsHistoryPanelOpen(false)}
             generationHistory={generationHistory}
@@ -1033,8 +1162,7 @@ export function AiView() {
             onRemoveFromHistory={removeFromHistory}
             aiModels={AI_MODELS}
           />
-        )}
       </div>
     </div>
   );
-*/
+}
