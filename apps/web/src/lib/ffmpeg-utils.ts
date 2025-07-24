@@ -460,12 +460,31 @@ const generateThumbnailsViaCanvas = async (
   const { width: targetWidth, height: targetHeight } = resolutions[resolution];
   
   return new Promise((resolve, reject) => {
+    // Validate input file
+    if (!videoFile || !(videoFile instanceof File)) {
+      reject(new Error('Invalid video file provided for thumbnail generation'));
+      return;
+    }
+    
+    if (!videoFile.type.startsWith('video/')) {
+      reject(new Error(`Invalid file type for thumbnail generation: ${videoFile.type}`));
+      return;
+    }
+    
     const video = document.createElement('video');
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    const objectUrl = URL.createObjectURL(videoFile);
+    
+    let objectUrl: string;
+    try {
+      objectUrl = URL.createObjectURL(videoFile);
+    } catch (urlError) {
+      reject(new Error(`Failed to create object URL: ${urlError instanceof Error ? urlError.message : 'Unknown error'}`));
+      return;
+    }
     
     if (!ctx) {
+      URL.revokeObjectURL(objectUrl);
       reject(new Error('Failed to create canvas context'));
       return;
     }
@@ -545,9 +564,21 @@ const generateThumbnailsViaCanvas = async (
     });
     
     video.addEventListener('error', (e) => {
+      console.error('Video loading error details:', e);
+      console.error('Video error state:', {
+        error: video.error,
+        networkState: video.networkState,
+        readyState: video.readyState,
+        src: video.src
+      });
       cleanup();
-      reject(new Error(`Canvas thumbnail generation failed: Video loading error`));
+      reject(new Error(`Canvas thumbnail generation failed: Video loading error - ${video.error?.message || 'Unknown error'}`));
     });
+    
+    // Configure video element for thumbnail generation
+    video.crossOrigin = 'anonymous';
+    video.muted = true;
+    video.preload = 'metadata';
     
     video.src = objectUrl;
     video.load();
