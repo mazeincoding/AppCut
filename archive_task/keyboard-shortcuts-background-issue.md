@@ -116,9 +116,61 @@ Added consistent padding using inline styles:
 4. **Visual Debugging**: Using obvious colors (like red) during debugging helps identify when styles are actually being applied
 5. **Incremental Testing**: Making one change at a time and testing immediately helps isolate which solutions actually work
 
+## Issue 5: Header Title Centering and Icon Spacing
+
+### Root Cause
+The dialog title with keyboard icon was not properly centered and lacked adequate spacing:
+1. **Left Alignment**: Title was left-aligned with manual padding instead of centered
+2. **Icon Spacing**: Insufficient gap between keyboard icon and text
+3. **Flexbox Layout**: Gap property not working consistently due to CSS conflicts
+
+### Solution Applied
+Used flexbox centering with inline margin for reliable spacing:
+```tsx
+<DialogTitle className="flex items-center justify-center text-lg text-white font-semibold">
+  <Keyboard className="w-5 h-5" />
+  <span style={{ marginLeft: '12px' }}>Keyboard Shortcuts</span>
+</DialogTitle>
+```
+
+**Why it worked**: `justify-center` centers the entire title, while inline `marginLeft` ensures consistent spacing between icon and text.
+
+## Issue 6: Close Button Background Transparency
+
+### Root Cause
+Close button was showing background color despite attempts to make it transparent:
+1. **Hover Effects**: Default hover styles were overriding transparency
+2. **Multiple Background Properties**: CSS had various background-related properties set
+3. **Event-based Styling**: Hover states were reverting to default backgrounds
+
+### Solution Applied
+Comprehensive background removal with hover event handling:
+```tsx
+// Remove all background properties
+closeBtn.style.setProperty('background', 'transparent', 'important');
+closeBtn.style.setProperty('background-color', 'transparent', 'important');
+closeBtn.style.setProperty('background-image', 'none', 'important');
+closeBtn.style.setProperty('border', 'none', 'important');
+closeBtn.style.setProperty('box-shadow', 'none', 'important');
+
+// Maintain transparency on hover
+closeBtn.addEventListener('mouseenter', () => {
+  closeBtn.style.setProperty('background', 'transparent', 'important');
+  closeBtn.style.setProperty('background-color', 'transparent', 'important');
+});
+closeBtn.addEventListener('mouseleave', () => {
+  closeBtn.style.setProperty('background', 'transparent', 'important');
+  closeBtn.style.setProperty('background-color', 'transparent', 'important');
+});
+```
+
+**Why it worked**: Addressed all background-related CSS properties and added event listeners to prevent hover state changes.
+
 ## Final Implementation Status
 ✅ **Background Color**: Fixed with inline styles using dark gray (#334155)  
 ✅ **Rounded Corners**: Fixed with combined Tailwind (!rounded-2xl) and inline styles  
-✅ **Close Button**: Fixed with JavaScript DOM manipulation for reliable positioning  
+✅ **Close Button Positioning**: Fixed with JavaScript DOM manipulation for reliable positioning  
+✅ **Close Button Transparency**: Fixed with comprehensive background removal and hover handling  
 ✅ **Spacing/Layout**: Fixed with consistent inline style padding throughout  
+✅ **Header Centering**: Fixed with flexbox centering and inline margin for icon spacing  
 ✅ **Visual Hierarchy**: Improved with proper color contrast and spacing

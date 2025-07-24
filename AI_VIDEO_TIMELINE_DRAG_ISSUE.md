@@ -12,155 +12,523 @@ When dragging AI-generated videos from the media panel to the timeline, the appl
 4. ✅ FFmpeg fallback thumbnail generation works successfully
 5. ❌ Dragging video to timeline causes an error/bug
 
-## FFmpeg Processing Evidence
+## Key Files and Components
 
-From the logs, FFmpeg is processing the video correctly:
+### 1. Timeline Components
+- **Main Timeline**: `apps/web/src/components/editor/timeline.tsx`
+  - Drop handler: `handleDrop` function (lines 346-478)
+  - Error handling: lines 421-422, 472
+  - Media item lookup and validation
+
+- **Timeline Track**: `apps/web/src/components/editor/timeline-track.tsx`
+  - Track-specific drop handling: `handleTrackDrop` function (lines 499-879)
+  - Error handling: line 876
+  - Timeline element creation logic
+
+### 2. Media Panel Components
+- **Media View**: `apps/web/src/components/editor/media-panel/views/media.tsx`
+  - Draggable items source: lines 469-483
+  - Enhanced thumbnail generation: lines 259-271
+  - Media item rendering and state management
+
+- **Draggable Item**: `apps/web/src/components/ui/draggable-item.tsx`
+  - Drag initiation: `handleDragStart` function (lines 55-73)
+  - Drag data serialization
+
+### 3. State Management
+- **Media Store**: `apps/web/src/stores/media-store.ts`
+  - Media item storage and retrieval
+  - AI video metadata management
+  - Thumbnail generation state
+
+- **Timeline Store**: `apps/web/src/stores/timeline-store.ts`
+  - Timeline element creation
+  - Drop handling coordination
+
+### 4. Video Processing
+- **FFmpeg Utils**: `apps/web/src/lib/ffmpeg-utils.ts`
+  - Thumbnail generation fallback
+  - Video metadata extraction
+  - File processing utilities
+
+## Root Cause Analysis
+
+### 1. Asynchronous Processing Race Condition
+AI videos undergo multiple processing stages:
 ```
-🎬 FFMPEG-UTILS: Generating thumbnail 5/12 at 2s
-FFmpeg: Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'input.mp4':
-  Duration: 00:00:06.04, start: 0.000000, bitrate: 6772 kb/s
-  Stream #0:0[0x1](und): Video: h264 (High) (avc1 / 0x31637661), yuv420p(progressive), 1920x1088 [SAR 1:1 DAR 30:17], 6770 kb/s, 24 fps, 24 tbr, 90k tbn (default)
+AI Generation → Media Panel Add → Canvas Thumbnail (fails) → FFmpeg Thumbnail → Ready for Timeline
 ```
+The drag operation may occur before the FFmpeg thumbnail generation completes, leaving the media item in an inconsistent state.
 
-## Timeline Drag and Drop Architecture
-
-### Key Files Involved
-
-1. **Timeline Component** (`apps/web/src/components/editor/timeline.tsx`)
-   - Main drop handler: Lines 346-478 (`handleDrop` function)
-   - Error handling on lines 421-422 and 472
-
-2. **Timeline Track Component** (`apps/web/src/components/editor/timeline-track.tsx`)
-   - Track-specific drop handling: Lines 499-879 (`handleTrackDrop` function)
-   - Error handling on line 876
-
-3. **Media Panel View** (`apps/web/src/components/editor/media-panel/views/media.tsx`)
-   - Source of draggable items: Lines 469-483
-   - Enhanced thumbnail generation: Lines 259-271
-
-4. **Draggable Item Component** (`apps/web/src/components/ui/draggable-item.tsx`)
-   - Drag initiation: Lines 55-73 (`handleDragStart`)
-
-### Drag and Drop Flow
-
-1. **Media Processing** → Files processed and basic thumbnails generated
-2. **Enhanced Thumbnail Generation** → FFmpeg generates proper thumbnails (async)
-3. **Drag Initiation** → User drags from media panel with media item data
-4. **Drop Handling** → Timeline receives drop and looks up media item by ID
-5. **Timeline Element Creation** → New clip added to timeline track
-
-## Potential Root Causes
-
-### 1. Timing Issues
-- Enhanced thumbnail generation happens asynchronously after media item is added
-- Drag/drop might occur before thumbnail generation completes
-- Media item state might be inconsistent during thumbnail processing
-
-### 2. Media Item ID Resolution
+### 2. Media Item State Inconsistency
 ```typescript
+// Timeline drop handler tries to find media item
 const mediaItem = mediaItems.find((item) => item.id === dragData.id);
 if (!mediaItem) {
   toast.error("Media item not found");
   return;
 }
 ```
-- Media item might not be properly indexed after AI generation
-- ID mismatch between drag data and media store
+**Potential Issues**:
+- Media item ID mismatch between drag data and store
+- Item temporarily unavailable during thumbnail processing
+- Concurrent state updates causing lookup failures
 
-### 3. Duration/Metadata Issues
+### 3. Blob/File Reference Corruption
+AI videos use locally created File objects from external URLs:
 ```typescript
-duration: mediaItem.duration || 5,
+// File blob might become invalid during processing
+const file = new File([arrayBuffer], filename, { type: 'video/mp4' });
 ```
-- AI-generated videos might have missing or incorrect duration metadata
-- FFmpeg processing might not properly update media item metadata
+**Risk Factors**:
+- Blob URLs expiring during async operations
+- File references corrupted by garbage collection
+- Memory pressure affecting blob stability
 
-### 4. File/Blob Reference Issues
-- AI videos use local File blobs created from external URLs
-- Blob URLs might become invalid between media panel addition and timeline drag
-- File references might be corrupted during async thumbnail generation
+### 4. Missing Duration/Metadata
+```typescript
+// Timeline element creation with potential undefined values
+duration: mediaItem.duration || 5,  // Fallback may be insufficient
+```
+FFmpeg processing might not properly update media item metadata before drag occurs.
 
-## Error Handling Locations
+## Enhanced Debugging Strategy
 
-The codebase has three main error catching points:
-
-1. **Timeline Drop Errors** (timeline.tsx:421):
-   ```typescript
-   console.error("Error parsing dropped item data:", error);
-   ```
-
-2. **File Drop Errors** (timeline.tsx:472):
-   ```typescript
-   toast.error("Failed to process dropped files");
-   ```
-
-3. **Track Drop Errors** (timeline-track.tsx:876):
-   ```typescript
-   console.error("Error handling drop:", error);
-   ```
-
-## Debugging Steps
-
-### 1. Check Console Errors
-Look for any of the three error messages above in browser console when drag fails.
-
-### 2. Verify Media Item State
-```javascript
-// Check if media item exists and has correct properties
-console.log('Media items:', mediaItems);
+### 1. Timeline Drop Error Detection
+Add comprehensive logging in `apps/web/src/components/editor/timeline.tsx`:
+```typescript
+// In handleDrop function (around line 380)
+console.group('🎬 TIMELINE DROP DEBUG');
+console.log('Drop event:', event);
 console.log('Drag data:', dragData);
-console.log('Found item:', mediaItems.find(item => item.id === dragData.id));
+console.log('Available media items:', mediaItems.map(item => ({
+  id: item.id,
+  name: item.name,
+  duration: item.duration,
+  thumbnailCount: item.thumbnails?.length || 0,
+  fileValid: item.file instanceof File,
+  fileSize: item.file?.size
+})));
+
+const mediaItem = mediaItems.find((item) => item.id === dragData.id);
+console.log('Found media item:', mediaItem);
+console.log('Media item state:', {
+  hasThumbnails: mediaItem?.thumbnails?.length > 0,
+  duration: mediaItem?.duration,
+  fileType: mediaItem?.file?.type,
+  processingComplete: mediaItem?.processingComplete
+});
+console.groupEnd();
 ```
 
-### 3. Monitor Thumbnail Generation Status
-```javascript
-// Check thumbnail generation state
-console.log('Thumbnail generation complete:', item.thumbnails?.length > 0);
-console.log('Media item duration:', item.duration);
-```
-
-### 4. Validate File/Blob References
-```javascript
-// Check if file blob is still valid
-console.log('File valid:', item.file instanceof File);
-console.log('File size:', item.file?.size);
-```
-
-## Potential Solutions
-
-### 1. Add Timeline Drag State Checking
+### 2. Media Panel Drag State Monitoring
+Add logging in `apps/web/src/components/editor/media-panel/views/media.tsx`:
 ```typescript
-// Prevent drag until thumbnail generation completes
-const canDrag = mediaItem.thumbnails && mediaItem.thumbnails.length > 0;
+// Before drag initiation (around line 470)
+console.group('🎬 MEDIA PANEL DRAG START');
+console.log('Dragging item:', {
+  id: item.id,
+  name: item.name,
+  isAIGenerated: item.source === 'ai',
+  thumbnailsReady: item.thumbnails?.length > 0,
+  fileValid: item.file instanceof File,
+  duration: item.duration,
+  lastThumbnailGeneration: item.lastThumbnailUpdate
+});
+console.groupEnd();
 ```
 
-### 2. Improve Error Handling
-Add specific error handling for AI-generated videos in timeline drop handlers.
+### 3. FFmpeg Processing State Tracking
+Add state tracking in `apps/web/src/lib/ffmpeg-utils.ts`:
+```typescript
+// After thumbnail generation completes
+console.log('🎬 FFMPEG THUMBNAIL COMPLETE:', {
+  mediaItemId: mediaItem.id,
+  thumbnailCount: thumbnails.length,
+  duration: extractedDuration,
+  processingTime: Date.now() - startTime
+});
 
-### 3. Ensure Metadata Consistency
-Verify that AI video metadata (duration, dimensions) is properly set before allowing drag operations.
+// Update media store with processing completion flag
+mediaStore.updateMediaItem(mediaItem.id, {
+  processingComplete: true,
+  lastThumbnailUpdate: Date.now()
+});
+```
 
-### 4. Add Loading States
-Show loading indicator on media items until they're fully processed and ready for timeline use.
+### 4. Store State Validation
+Add validation in `apps/web/src/stores/media-store.ts`:
+```typescript
+// Add method to check media item readiness
+isMediaItemReady: (id: string) => {
+  const item = get().mediaItems.find(item => item.id === id);
+  return !!(item && 
+           item.file instanceof File && 
+           item.duration && 
+           item.thumbnails?.length > 0 &&
+           item.processingComplete);
+}
+```
 
-## Current Workaround
+## Error Recovery Patterns
 
-Until the issue is resolved, users can:
-1. Wait for thumbnail generation to complete before dragging
-2. Check browser console for specific error messages
-3. Refresh media panel if items appear corrupted
+### 1. Graceful Drag Prevention
+```typescript
+// In draggable-item.tsx
+const canDrag = useMemo(() => {
+  if (item.source === 'ai') {
+    return item.thumbnails?.length > 0 && item.processingComplete;
+  }
+  return true;
+}, [item]);
 
-## Next Steps
+// Disable drag if not ready
+<div 
+  draggable={canDrag}
+  className={canDrag ? '' : 'opacity-50 cursor-not-allowed'}
+>
+```
 
-1. Add console logging to identify which specific error is occurring
-2. Implement proper loading states for AI-generated videos
-3. Add validation checks before allowing drag operations
-4. Consider adding a "processing" indicator for videos undergoing thumbnail generation
+### 2. Timeline Drop Validation
+```typescript
+// Enhanced validation in timeline drop handler
+if (!mediaItem) {
+  console.error('Media item not found:', dragData.id);
+  toast.error("Media item not found - try refreshing the media panel");
+  return;
+}
+
+if (mediaItem.source === 'ai' && !mediaItem.processingComplete) {
+  toast.error("AI video is still processing - please wait");
+  return;
+}
+
+if (!mediaItem.file || !(mediaItem.file instanceof File)) {
+  console.error('Invalid file reference:', mediaItem);
+  toast.error("Media file is corrupted - try regenerating");
+  return;
+}
+```
+
+### 3. Loading State Indicators
+```typescript
+// In media panel item rendering
+{item.source === 'ai' && !item.processingComplete && (
+  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+    <div className="text-white text-xs">Processing...</div>
+  </div>
+)}
+```
+
+## Testing Protocol
+
+### 1. Reproduction Steps
+1. Generate AI video
+2. Wait for media panel display
+3. Immediately attempt drag to timeline (should fail gracefully)
+4. Wait for processing indicator to clear
+5. Attempt drag again (should succeed)
+
+### 2. Console Monitoring
+Watch for these specific error patterns:
+- `"Media item not found"` - ID lookup failure
+- `"Error parsing dropped item data"` - Drag data corruption
+- `"Failed to process dropped files"` - File processing error
+- `"Error handling drop"` - General drop handler failure
+
+### 3. State Validation
+Verify media item state before and after drag:
+- File blob validity
+- Thumbnail generation completion
+- Duration metadata presence
+- Processing completion flag
+
+## Implementation Plan
+
+### Phase 1: Enhanced Debugging and State Tracking (High Priority)
+
+#### 1.1 Media Store Enhancement (`apps/web/src/stores/media-store.ts`)
+```typescript
+// Add processing state tracking
+interface MediaItem {
+  // ... existing properties
+  processingComplete?: boolean;
+  lastThumbnailUpdate?: number;
+  processingStage?: 'uploading' | 'thumbnail-canvas' | 'thumbnail-ffmpeg' | 'complete' | 'error';
+}
+
+// Add validation method
+isMediaItemReady: (id: string) => {
+  const item = get().mediaItems.find(item => item.id === id);
+  return !!(item && 
+           item.file instanceof File && 
+           item.duration && 
+           item.thumbnails?.length > 0 &&
+           item.processingComplete);
+},
+
+// Add processing stage update method
+updateProcessingStage: (id: string, stage: MediaItem['processingStage']) => {
+  set(state => ({
+    mediaItems: state.mediaItems.map(item =>
+      item.id === id 
+        ? { 
+            ...item, 
+            processingStage: stage,
+            processingComplete: stage === 'complete',
+            lastThumbnailUpdate: Date.now()
+          }
+        : item
+    )
+  }));
+}
+```
+
+#### 1.2 FFmpeg Utils State Updates (`apps/web/src/lib/ffmpeg-utils.ts`)
+```typescript
+// At start of thumbnail generation
+mediaStore.getState().updateProcessingStage(mediaItem.id, 'thumbnail-ffmpeg');
+
+// After successful thumbnail generation
+console.log('🎬 FFMPEG THUMBNAIL COMPLETE:', {
+  mediaItemId: mediaItem.id,
+  thumbnailCount: thumbnails.length,
+  duration: extractedDuration,
+  processingTime: Date.now() - startTime
+});
+
+mediaStore.getState().updateProcessingStage(mediaItem.id, 'complete');
+
+// On error
+mediaStore.getState().updateProcessingStage(mediaItem.id, 'error');
+```
+
+#### 1.3 Timeline Drop Debug Logging (`apps/web/src/components/editor/timeline.tsx`)
+```typescript
+// In handleDrop function, before media item lookup
+console.group('🎬 TIMELINE DROP DEBUG');
+console.log('Drop event type:', event.type);
+console.log('Drag data:', dragData);
+
+// Log all media items for comparison
+console.log('Available media items:', mediaItems.map(item => ({
+  id: item.id,
+  name: item.name,
+  duration: item.duration,
+  thumbnailCount: item.thumbnails?.length || 0,
+  fileValid: item.file instanceof File,
+  fileSize: item.file?.size,
+  processingStage: item.processingStage,
+  processingComplete: item.processingComplete
+})));
+
+const mediaItem = mediaItems.find((item) => item.id === dragData.id);
+console.log('Found media item:', mediaItem);
+
+if (mediaItem) {
+  console.log('Media item detailed state:', {
+    hasThumbnails: mediaItem.thumbnails?.length > 0,
+    duration: mediaItem.duration,
+    fileType: mediaItem.file?.type,
+    processingComplete: mediaItem.processingComplete,
+    processingStage: mediaItem.processingStage,
+    isFileValid: mediaItem.file instanceof File
+  });
+} else {
+  console.error('❌ Media item not found - ID mismatch or item not in store');
+  console.log('Attempted ID:', dragData.id);
+  console.log('Available IDs:', mediaItems.map(item => item.id));
+}
+console.groupEnd();
+```
+
+#### 1.4 Media Panel Drag State (`apps/web/src/components/editor/media-panel/views/media.tsx`)
+```typescript
+// Before DraggableItem component
+console.group('🎬 MEDIA PANEL ITEM RENDER');
+console.log('Item state:', {
+  id: item.id,
+  name: item.name,
+  isAIGenerated: item.source === 'ai',
+  thumbnailsReady: item.thumbnails?.length > 0,
+  fileValid: item.file instanceof File,
+  duration: item.duration,
+  processingStage: item.processingStage,
+  processingComplete: item.processingComplete
+});
+console.groupEnd();
+```
+
+### Phase 2: Drag Prevention and UI Indicators (High Priority)
+
+#### 2.1 Draggable Item Enhancement (`apps/web/src/components/ui/draggable-item.tsx`)
+```typescript
+// Add processing state check
+const canDrag = useMemo(() => {
+  if (item.source === 'ai') {
+    const isReady = item.thumbnails?.length > 0 && 
+                   item.processingComplete && 
+                   item.processingStage === 'complete';
+    console.log('🎬 AI Item drag check:', { id: item.id, canDrag: isReady, stage: item.processingStage });
+    return isReady;
+  }
+  return true;
+}, [item]);
+
+// Update drag start handler
+const handleDragStart = (e: React.DragEvent) => {
+  if (!canDrag) {
+    e.preventDefault();
+    console.log('🚫 Drag prevented - item not ready:', item.id);
+    return;
+  }
+  
+  console.group('🎬 DRAG START');
+  console.log('Dragging item:', {
+    id: item.id,
+    canDrag,
+    processingStage: item.processingStage
+  });
+  console.groupEnd();
+  
+  // ... existing drag logic
+};
+
+// Update component render
+<div 
+  draggable={canDrag}
+  onDragStart={handleDragStart}
+  className={cn(
+    className,
+    !canDrag && 'opacity-50 cursor-not-allowed'
+  )}
+  title={!canDrag ? 'Processing - please wait' : undefined}
+>
+```
+
+#### 2.2 Processing Indicator (`apps/web/src/components/editor/media-panel/views/media.tsx`)
+```typescript
+// Add processing overlay
+{item.source === 'ai' && item.processingStage !== 'complete' && (
+  <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded">
+    <div className="text-white text-xs text-center">
+      <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mx-auto mb-1" />
+      <div>
+        {item.processingStage === 'thumbnail-canvas' && 'Generating Thumbnails...'}
+        {item.processingStage === 'thumbnail-ffmpeg' && 'Processing Video...'}
+        {item.processingStage === 'uploading' && 'Uploading...'}
+        {!item.processingStage && 'Processing...'}
+      </div>
+    </div>
+  </div>
+)}
+```
+
+### Phase 3: Enhanced Error Handling (Medium Priority)
+
+#### 3.1 Timeline Drop Validation (`apps/web/src/components/editor/timeline.tsx`)
+```typescript
+// Enhanced validation in handleDrop
+if (!mediaItem) {
+  console.error('❌ Timeline Drop Failed - Media item not found:', {
+    dragDataId: dragData.id,
+    availableIds: mediaItems.map(item => item.id),
+    totalItems: mediaItems.length
+  });
+  toast.error("Media item not found - try refreshing the media panel");
+  return;
+}
+
+// AI-specific validation
+if (mediaItem.source === 'ai') {
+  if (!mediaItem.processingComplete || mediaItem.processingStage !== 'complete') {
+    console.log('⏳ AI video still processing:', {
+      id: mediaItem.id,
+      stage: mediaItem.processingStage,
+      complete: mediaItem.processingComplete
+    });
+    toast.error("AI video is still processing - please wait");
+    return;
+  }
+  
+  if (!mediaItem.thumbnails || mediaItem.thumbnails.length === 0) {
+    console.error('❌ AI video missing thumbnails:', mediaItem.id);
+    toast.error("Video processing incomplete - thumbnails missing");
+    return;
+  }
+}
+
+// File validation
+if (!mediaItem.file || !(mediaItem.file instanceof File)) {
+  console.error('❌ Invalid file reference:', {
+    id: mediaItem.id,
+    hasFile: !!mediaItem.file,
+    isFileInstance: mediaItem.file instanceof File,
+    fileType: typeof mediaItem.file
+  });
+  toast.error("Media file is corrupted - try regenerating the video");
+  return;
+}
+
+// Duration validation
+if (!mediaItem.duration || mediaItem.duration <= 0) {
+  console.warn('⚠️ Missing or invalid duration, using fallback:', {
+    id: mediaItem.id,
+    duration: mediaItem.duration
+  });
+}
+```
+
+### Phase 4: Monitoring and Analytics (Low Priority)
+
+#### 4.1 Error Tracking
+```typescript
+// Add error tracking to media store
+trackDragError: (error: string, mediaItemId: string, context: any) => {
+  console.error('🎬 DRAG ERROR TRACKED:', {
+    error,
+    mediaItemId,
+    context,
+    timestamp: new Date().toISOString()
+  });
+  
+  // Could integrate with error reporting service
+  // errorReporting.captureEvent('ai-video-drag-error', { error, mediaItemId, context });
+}
+```
+
+### Testing Checklist
+
+#### Phase 1 Testing
+- [ ] Console logs appear during AI video generation
+- [ ] Processing stages update correctly in media store
+- [ ] Timeline drop shows comprehensive debug info
+- [ ] Media item state tracking works properly
+
+#### Phase 2 Testing  
+- [ ] AI videos show processing indicator
+- [ ] Drag is prevented during processing
+- [ ] Drag works after processing completes
+- [ ] Visual feedback shows processing state
+
+#### Phase 3 Testing
+- [ ] Proper error messages for each failure case
+- [ ] No crashes when dragging incomplete items
+- [ ] Graceful handling of corrupted files
+- [ ] Clear user feedback for all error states
+
+### Implementation Order
+1. **Media Store Enhancement** - Add processing state tracking
+2. **FFmpeg State Updates** - Track processing completion
+3. **Debug Logging** - Add comprehensive logging
+4. **Drag Prevention** - Prevent premature dragging
+5. **UI Indicators** - Show processing state
+6. **Error Handling** - Graceful failure handling
 
 ---
 
-**Status**: Under Investigation  
+**Status**: Implementation Plan Ready  
 **Priority**: High  
-**Affected Component**: AI Video Generation → Timeline Integration  
-**FFmpeg Fallback**: Working ✅  
-**Media Panel Display**: Working ✅  
-**Timeline Drag**: Failing ❌
+**Root Cause**: Asynchronous processing race condition  
+**Primary Files**: `media-store.ts`, `ffmpeg-utils.ts`, `timeline.tsx`, `media.tsx`, `draggable-item.tsx`  
+**Next Action**: Begin Phase 1 implementation

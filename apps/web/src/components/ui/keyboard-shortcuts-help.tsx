@@ -159,6 +159,8 @@ export const KeyboardShortcutsHelp = () => {
           
           // Style the close button properly
           closeBtn.style.setProperty('background', 'transparent', 'important');
+          closeBtn.style.setProperty('background-color', 'transparent', 'important');
+          closeBtn.style.setProperty('background-image', 'none', 'important');
           closeBtn.style.setProperty('color', 'white', 'important');
           closeBtn.style.setProperty('position', 'absolute', 'important');
           closeBtn.style.setProperty('right', '16px', 'important');
@@ -166,6 +168,18 @@ export const KeyboardShortcutsHelp = () => {
           closeBtn.style.setProperty('z-index', '999', 'important');
           closeBtn.style.setProperty('display', 'block', 'important');
           closeBtn.style.setProperty('visibility', 'visible', 'important');
+          closeBtn.style.setProperty('border', 'none', 'important');
+          closeBtn.style.setProperty('box-shadow', 'none', 'important');
+          
+          // Remove hover effects
+          closeBtn.addEventListener('mouseenter', () => {
+            closeBtn.style.setProperty('background', 'transparent', 'important');
+            closeBtn.style.setProperty('background-color', 'transparent', 'important');
+          });
+          closeBtn.addEventListener('mouseleave', () => {
+            closeBtn.style.setProperty('background', 'transparent', 'important');
+            closeBtn.style.setProperty('background-color', 'transparent', 'important');
+          });
         }
       }, 500);
     }
@@ -267,9 +281,9 @@ export const KeyboardShortcutsHelp = () => {
         }}
       >
         <DialogHeader className="rounded-t-2xl -m-6 p-6 mb-6" style={{ backgroundColor: '#475569' }}>
-          <DialogTitle className="flex items-center justify-center gap-2 text-lg text-white font-semibold">
+          <DialogTitle className="flex items-center justify-center text-lg text-white font-semibold">
             <Keyboard className="w-5 h-5" />
-            Keyboard Shortcuts
+            <span style={{ marginLeft: '12px' }}>Keyboard Shortcuts</span>
           </DialogTitle>
           <DialogDescription className="text-sm text-slate-300 text-center">
             Speed up your workflow with these keyboard shortcuts.<br />Click any key to edit.

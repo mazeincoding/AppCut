@@ -26,6 +26,11 @@ export interface MediaItem {
   color?: string; // Text color
   backgroundColor?: string; // Background color
   textAlign?: "left" | "center" | "right"; // Text alignment
+  // AI Video Processing state tracking
+  processingComplete?: boolean;
+  lastThumbnailUpdate?: number;
+  processingStage?: 'uploading' | 'thumbnail-canvas' | 'thumbnail-ffmpeg' | 'complete' | 'error';
+  source?: 'upload' | 'ai' | 'text2image';
   // Generated image metadata
   metadata?: {
     source?: "text2image" | "upload";
@@ -94,6 +99,11 @@ interface MediaStore {
   } | null;
   clearTimelinePreviews: (mediaId: string) => void;
   shouldRegenerateTimelinePreviews: (mediaId: string, currentZoomLevel: number, elementDuration: number) => boolean;
+  
+  // AI Video Processing methods
+  isMediaItemReady: (id: string) => boolean;
+  updateProcessingStage: (id: string, stage: MediaItem['processingStage']) => void;
+  updateMediaItem: (id: string, updates: Partial<MediaItem>) => void;
 }
 
 // Helper function to determine file type
@@ -681,5 +691,40 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     });
     
     return shouldRegenerate;
+  },
+
+  // AI Video Processing methods implementation
+  isMediaItemReady: (id: string) => {
+    const item = get().mediaItems.find(item => item.id === id);
+    return !!(item && 
+             item.file instanceof File && 
+             item.duration && 
+             item.thumbnails?.length > 0 &&
+             item.processingComplete);
+  },
+
+  updateProcessingStage: (id: string, stage: MediaItem['processingStage']) => {
+    set(state => ({
+      mediaItems: state.mediaItems.map(item =>
+        item.id === id 
+          ? { 
+              ...item, 
+              processingStage: stage,
+              processingComplete: stage === 'complete',
+              lastThumbnailUpdate: Date.now()
+            }
+          : item
+      )
+    }));
+  },
+
+  updateMediaItem: (id: string, updates: Partial<MediaItem>) => {
+    set(state => ({
+      mediaItems: state.mediaItems.map(item =>
+        item.id === id 
+          ? { ...item, ...updates }
+          : item
+      )
+    }));
   },
 }));
