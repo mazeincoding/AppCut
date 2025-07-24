@@ -122,9 +122,9 @@ export function Hero({ signupCount }: HeroProps) {
         <Handlebars>Video Editor</Handlebars>
       </div>
 
-      <p className="mt-10 text-base sm:text-xl text-muted-foreground font-light tracking-wide max-w-xl mx-auto">
-        A simple but powerful video editor that gets the job done. Works on
-        any platform.
+      <p className="mt-10 text-base sm:text-xl text-muted-foreground font-light tracking-wide max-w-md mx-auto">
+        A simple but powerful video editor that gets the job done.<br />
+        Works on any platform.
       </p>
 
       <div className="mt-8 flex gap-8 justify-center">
@@ -200,13 +200,13 @@ export function Hero({ signupCount }: HeroProps) {
           </motion.div>
 
           <motion.p
-            className="mt-10 text-base sm:text-xl text-muted-foreground font-light tracking-wide max-w-xl mx-auto"
+            className="mt-10 text-base sm:text-xl text-muted-foreground font-light tracking-wide max-w-md mx-auto"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.8 }}
           >
-            A simple but powerful video editor that gets the job done. Works on
-            any platform.
+            A simple but powerful video editor that gets the job done.<br />
+            Works on any platform.
           </motion.p>
 
           <motion.div
