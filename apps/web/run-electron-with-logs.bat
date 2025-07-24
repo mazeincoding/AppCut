@@ -12,14 +12,14 @@ echo Starting Electron with logging to %logfile%...
 echo # Electron App Logs > "%logfile%"
 echo. >> "%logfile%"
 echo **Date**: %date% %time% >> "%logfile%"
-echo **Command**: `bunx electron electron/main-simple.js` >> "%logfile%"
+echo **Command**: `bunx electron electron/main-simple_archive.js` >> "%logfile%"
 echo. >> "%logfile%"
 echo ## Console Output >> "%logfile%"
 echo. >> "%logfile%"
 echo ```console >> "%logfile%"
 
 :: Run Electron and capture output
-bunx electron electron/main-simple.js 2>&1 | powershell -Command "& {$input | Tee-Object -FilePath '%logfile%' -Append | Write-Host}"
+bunx electron electron/main-simple_archive.js 2>&1 | powershell -Command "& {$input | Tee-Object -FilePath '%logfile%' -Append | Write-Host}"
 
 :: Close markdown code block
 echo ``` >> "%logfile%"

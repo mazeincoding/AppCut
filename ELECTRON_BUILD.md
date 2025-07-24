@@ -17,7 +17,7 @@ cd apps/web
 bun run dev
 
 # Then in another terminal, start Electron with correct port
-bunx electron electron/main-dev.js --port=3001
+bunx electron electron/main.js --port=3001
 ```
 
 ## Available Scripts
