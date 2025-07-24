@@ -166,24 +166,56 @@ export default function ProjectsPage() {
         </Link>
         <div className="block md:hidden">
           {isSelectionMode ? (
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
+            <div className="flex flex-col gap-1 bg-white rounded-lg border border-gray-200 shadow-sm p-1">
+              <button
                 onClick={handleCancelSelection}
+                style={{
+                  backgroundColor: '#f8f9fa', 
+                  color: 'black',
+                  height: '40px',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  paddingLeft: '16px',
+                  paddingRight: '16px',
+                  border: '1px solid #e9ecef',
+                  cursor: 'pointer',
+                  opacity: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'flex-start',
+                  width: '150px'
+                }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
               >
-                <X className="!size-4" />
+                <X className="mr-2" style={{ width: '14px', height: '14px' }} />
                 Cancel
-              </Button>
+              </button>
               {selectedProjects.size > 0 && (
-                <Button
-                  variant="destructive"
-                  size="sm"
+                <button
                   onClick={() => setIsBulkDeleteDialogOpen(true)}
+                  style={{
+                    backgroundColor: '#f8f9fa', 
+                    color: 'black',
+                    height: '40px',
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    paddingLeft: '16px',
+                    paddingRight: '16px',
+                    border: '1px solid #e9ecef',
+                    cursor: 'pointer',
+                    opacity: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'flex-start',
+                    width: '150px'
+                  }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
                 >
-                  <Trash2 className="!size-4" />
+                  <Trash2 className="mr-2" style={{ width: '14px', height: '14px' }} />
                   Delete ({selectedProjects.size})
-                </Button>
+                </button>
               )}
             </div>
           ) : (
@@ -198,18 +230,18 @@ export default function ProjectsPage() {
                 style={{
                   backgroundColor: '#f8f9fa', 
                   color: 'black',
-                  height: '32px',
-                  borderRadius: '4px',
-                  fontSize: '12px',
-                  paddingLeft: '12px',
-                  paddingRight: '12px',
+                  height: '40px',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  paddingLeft: '16px',
+                  paddingRight: '16px',
                   border: '1px solid #e9ecef',
                   cursor: 'pointer',
                   opacity: 1,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'flex-start',
-                  width: '120px'
+                  width: '150px'
                 }}
                 onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
                 onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
@@ -219,41 +251,41 @@ export default function ProjectsPage() {
               <button style={{ 
                 backgroundColor: '#f8f9fa', 
                 color: 'black',
-                height: '32px',
-                borderRadius: '4px',
-                fontSize: '12px',
-                paddingLeft: '12px',
-                paddingRight: '12px',
+                height: '40px',
+                borderRadius: '6px',
+                fontSize: '14px',
+                paddingLeft: '16px',
+                paddingRight: '16px',
                 border: '1px solid #e9ecef',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'flex-start',
-                width: '120px',
+                width: '150px',
                 cursor: 'pointer'
               }}
               onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
               onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
               onClick={() => handleCreateProject()}
               >
-                <Plus className="mr-2" style={{ width: '12px', height: '12px' }} />
+                <Plus className="mr-2" style={{ width: '14px', height: '14px' }} />
                 New project
               </button>
               <button
                 style={{
                   backgroundColor: '#f8f9fa', 
                   color: 'black',
-                  height: '32px',
-                  borderRadius: '4px',
-                  fontSize: '12px',
-                  paddingLeft: '12px',
-                  paddingRight: '12px',
+                  height: '40px',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  paddingLeft: '16px',
+                  paddingRight: '16px',
                   border: '1px solid #e9ecef',
                   cursor: 'pointer',
                   opacity: 1,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'flex-start',
-                  width: '120px'
+                  width: '150px'
                 }}
                 onClick={() => {
                   if (savedProjects.length > 0) {
@@ -264,7 +296,7 @@ export default function ProjectsPage() {
                 onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
                 onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
               >
-                <Trash2 className="mr-2" style={{ width: '12px', height: '12px' }} />
+                <Trash2 className="mr-2" style={{ width: '14px', height: '14px' }} />
                 Delete All
               </button>
             </div>
@@ -289,19 +321,56 @@ export default function ProjectsPage() {
           </div>
           <div className="hidden md:block">
             {isSelectionMode ? (
-              <div className="flex items-center gap-2">
-                <Button variant="outline" onClick={handleCancelSelection}>
-                  <X className="!size-4" />
+              <div className="flex flex-col gap-1 bg-white rounded-lg border border-gray-200 shadow-sm p-1">
+                <button
+                  onClick={handleCancelSelection}
+                  style={{
+                    backgroundColor: '#f8f9fa', 
+                    color: 'black',
+                    height: '40px',
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    paddingLeft: '16px',
+                    paddingRight: '16px',
+                    border: '1px solid #e9ecef',
+                    cursor: 'pointer',
+                    opacity: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'flex-start',
+                    width: '180px'
+                  }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+                >
+                  <X className="mr-2" style={{ width: '14px', height: '14px' }} />
                   Cancel
-                </Button>
+                </button>
                 {selectedProjects.size > 0 && (
-                  <Button
-                    variant="destructive"
+                  <button
                     onClick={() => setIsBulkDeleteDialogOpen(true)}
+                    style={{
+                      backgroundColor: '#f8f9fa', 
+                      color: 'black',
+                      height: '40px',
+                      borderRadius: '6px',
+                      fontSize: '14px',
+                      paddingLeft: '16px',
+                      paddingRight: '16px',
+                      border: '1px solid #e9ecef',
+                      cursor: 'pointer',
+                      opacity: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'flex-start',
+                      width: '180px'
+                    }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
                   >
-                    <Trash2 className="!size-4" />
+                    <Trash2 className="mr-2" style={{ width: '14px', height: '14px' }} />
                     Delete Selected ({selectedProjects.size})
-                  </Button>
+                  </button>
                 )}
               </div>
             ) : (
@@ -324,18 +393,18 @@ export default function ProjectsPage() {
                     style={{
                       backgroundColor: '#f8f9fa', 
                       color: 'black',
-                      height: '32px',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      paddingLeft: '12px',
-                      paddingRight: '12px',
+                      height: '40px',
+                      borderRadius: '6px',
+                      fontSize: '14px',
+                      paddingLeft: '16px',
+                      paddingRight: '16px',
                       border: '1px solid #e9ecef',
                       cursor: 'pointer',
                       opacity: 1,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'flex-start',
-                      width: '120px'
+                      width: '150px'
                     }}
                     onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
                     onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
@@ -345,41 +414,41 @@ export default function ProjectsPage() {
                   <button style={{ 
                     backgroundColor: '#f8f9fa', 
                     color: 'black',
-                    height: '32px',
-                    borderRadius: '4px',
-                    fontSize: '12px',
-                    paddingLeft: '12px',
-                    paddingRight: '12px',
+                    height: '40px',
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    paddingLeft: '16px',
+                    paddingRight: '16px',
                     border: '1px solid #e9ecef',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'flex-start',
-                    width: '120px',
+                    width: '150px',
                     cursor: 'pointer'
                   }}
                   onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
                   onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
                   onClick={() => handleCreateProject()}
                   >
-                    <Plus className="mr-2" style={{ width: '12px', height: '12px' }} />
+                    <Plus className="mr-2" style={{ width: '14px', height: '14px' }} />
                     New project
                   </button>
                   <button
                     style={{
                       backgroundColor: '#f8f9fa', 
                       color: 'black',
-                      height: '32px',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      paddingLeft: '12px',
-                      paddingRight: '12px',
+                      height: '40px',
+                      borderRadius: '6px',
+                      fontSize: '14px',
+                      paddingLeft: '16px',
+                      paddingRight: '16px',
                       border: '1px solid #e9ecef',
                       cursor: 'pointer',
                       opacity: 1,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'flex-start',
-                      width: '120px'
+                      width: '150px'
                     }}
                     onClick={() => {
                       if (savedProjects.length > 0) {
@@ -390,7 +459,7 @@ export default function ProjectsPage() {
                     onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
                     onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
                   >
-                    <Trash2 className="mr-2" style={{ width: '12px', height: '12px' }} />
+                    <Trash2 className="mr-2" style={{ width: '14px', height: '14px' }} />
                     Delete All
                   </button>
                 </div>

@@ -1,12 +1,4 @@
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { SimpleDialog } from "@/components/simple-dialog";
 
 export function DeleteProjectDialog({
   isOpen,
@@ -18,36 +10,62 @@ export function DeleteProjectDialog({
   onConfirm: () => void;
 }) {
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent
-        onOpenAutoFocus={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-        }}
-      >
-        <DialogHeader>
-          <DialogTitle>Delete Project</DialogTitle>
-          <DialogDescription>
-            Are you sure you want to delete this project? This action cannot be
-            undone.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onOpenChange(false);
-            }}
-          >
-            Cancel
-          </Button>
-          <Button variant="destructive" onClick={onConfirm}>
-            Delete
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <SimpleDialog
+      isOpen={isOpen}
+      onClose={() => onOpenChange(false)}
+      title="Delete Project"
+      description="Are you sure you want to delete this project? This action cannot be undone."
+    >
+      <div className="flex flex-row gap-4 mt-4 justify-center">
+        <button
+          onClick={() => onOpenChange(false)}
+          style={{
+            backgroundColor: 'black', 
+            color: 'white',
+            height: '40px',
+            borderRadius: '6px',
+            fontSize: '14px',
+            paddingLeft: '16px',
+            paddingRight: '16px',
+            border: 'none',
+            cursor: 'pointer',
+            opacity: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '120px',
+            margin: '0'
+          }}
+          onMouseEnter={(e) => e.target.style.backgroundColor = '#333'}
+          onMouseLeave={(e) => e.target.style.backgroundColor = 'black'}
+        >
+          Cancel
+        </button>
+        <button 
+          onClick={onConfirm}
+          style={{
+            backgroundColor: '#dc2626', 
+            color: 'white',
+            height: '40px',
+            borderRadius: '6px',
+            fontSize: '14px',
+            paddingLeft: '16px',
+            paddingRight: '16px',
+            border: 'none',
+            cursor: 'pointer',
+            opacity: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '120px',
+            margin: '0'
+          }}
+          onMouseEnter={(e) => e.target.style.backgroundColor = '#b91c1c'}
+          onMouseLeave={(e) => e.target.style.backgroundColor = '#dc2626'}
+        >
+          Delete
+        </button>
+      </div>
+    </SimpleDialog>
   );
 }
