@@ -6,6 +6,7 @@ import { Input } from "../ui/input";
 import { ArrowRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { MagicCard } from "../magicui/magic-card";
 
 import Image from "next/image";
 import { Handlebars } from "./handlebars";
@@ -109,7 +110,12 @@ export function Hero({ signupCount }: HeroProps) {
           onSubmit={handleSubmit}
           className="flex gap-3 w-full max-w-lg flex-col sm:flex-row items-center"
         >
-          <div className="relative">
+          <MagicCard 
+            className="inline-block p-0"
+            gradientSize={150}
+            gradientFrom="#9333ea"
+            gradientTo="#3b82f6"
+          >
             <Input
               type="email"
               placeholder="Enter your email"
@@ -124,7 +130,7 @@ export function Hero({ signupCount }: HeroProps) {
               disabled={isSubmitting}
               required
             />
-          </div>
+          </MagicCard>
           <Button
             type="submit"
             className="relative shadow-lg hover:shadow-xl before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent no-underline flex-shrink-0"
@@ -216,7 +222,12 @@ export function Hero({ signupCount }: HeroProps) {
               onSubmit={handleSubmit}
               className="flex gap-3 w-full max-w-lg flex-col sm:flex-row items-center"
             >
-              <div className="relative">
+              <MagicCard 
+                className="inline-block p-0"
+                gradientSize={150}
+                gradientFrom="#9333ea"
+                gradientTo="#3b82f6"
+              >
                 <Input
                   type="email"
                   placeholder="Enter your email"
@@ -231,7 +242,7 @@ export function Hero({ signupCount }: HeroProps) {
                   disabled={isSubmitting}
                   required
                 />
-              </div>
+              </MagicCard>
               <Button
                 type="submit"
                 className="relative shadow-lg hover:shadow-xl before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent no-underline flex-shrink-0"

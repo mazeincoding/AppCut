@@ -453,7 +453,11 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     }
 
     try {
-      console.log('🎬 Generating timeline previews for:', mediaId, options);
+      console.log('🎬 MEDIA-STORE: Starting timeline preview generation for:', mediaId, {
+        fileName: item.file.name,
+        fileSize: item.file.size,
+        options
+      });
       
       // Calculate timestamps based on density and duration
       const { density = 2, elementDuration = item.duration || 10, quality = 'medium', zoomLevel = 1 } = options;
@@ -473,18 +477,28 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
       console.log('📋 Timeline preview timestamps:', timestamps);
       
       // Generate thumbnails using existing enhanced thumbnail system
-      console.log('🎬 Calling generateEnhancedThumbnails with:', {
-        timestamps: timestamps.length,
+      console.log('🎬 MEDIA-STORE: About to call generateEnhancedThumbnails with:', {
+        fileName: item.file.name,
+        timestampsCount: timestamps.length,
+        timestamps: timestamps.slice(0, 3), // Show first 3 timestamps for debugging
         resolution: quality,
         format: 'jpeg'
       });
       
-      const { thumbnails } = await generateEnhancedThumbnails(item.file, {
-        timestamps,
-        resolution: quality,
-        quality: 0.7, // Optimized for timeline display
-        format: 'jpeg'
-      });
+      let thumbnailResult;
+      try {
+        thumbnailResult = await generateEnhancedThumbnails(item.file, {
+          timestamps,
+          resolution: quality,
+          quality: 0.7, // Optimized for timeline display
+          format: 'jpeg'
+        });
+      } catch (error) {
+        console.error('🚨 MEDIA-STORE: generateEnhancedThumbnails threw error:', error);
+        throw error;
+      }
+      
+      const { thumbnails } = thumbnailResult;
       
       console.log('📸 Generated thumbnails:', thumbnails.length);
       
@@ -521,24 +535,36 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
       console.log('✅ Timeline previews generated:', thumbnails.length, 'thumbnails');
       
     } catch (error) {
-      console.error('❌ Failed to generate timeline previews:', error);
+      console.error('❌ MEDIA-STORE: Failed to generate timeline previews:', error);
       
       // Provide more helpful error message
       const errorMessage = error instanceof Error 
         ? error.message 
         : 'Unknown error occurred during timeline preview generation';
       
-      // Update item with error state
+      // Update item with error state but also provide empty timeline previews to prevent crashes
       set((state) => ({
         mediaItems: state.mediaItems.map(existing => 
           existing.id === mediaId 
-            ? { ...existing, thumbnailError: `Timeline preview generation failed: ${errorMessage}` }
+            ? { 
+                ...existing, 
+                thumbnailError: `Timeline preview generation failed: ${errorMessage}`,
+                timelinePreviews: {
+                  thumbnails: [], // Empty array instead of undefined
+                  timestamps: [],
+                  quality: 'medium',
+                  density: 2,
+                  elementDuration: existing.duration || 10,
+                  generatedAt: Date.now(),
+                  zoomLevel: 1
+                }
+              }
             : existing
         )
       }));
       
-      // Re-throw error so component can handle it properly
-      throw new Error(errorMessage);
+      // Don't re-throw error to prevent app crashes
+      console.warn('MEDIA-STORE: Timeline preview generation failed but continuing safely');
     }
   },
 
@@ -552,6 +578,14 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     // Return appropriate thumbnails based on zoom level and duration
     const { thumbnails, density, generatedAt } = item.timelinePreviews;
     
+    console.log('🔍 Timeline previews found:', {
+      mediaId,
+      thumbnailCount: thumbnails.length,
+      firstThumbnailUrl: thumbnails[0]?.substring(0, 50) + '...',
+      density,
+      zoomLevel
+    });
+    
     // Check if previews are stale (older than 5 minutes)
     const isStale = Date.now() - generatedAt > 5 * 60 * 1000;
     if (isStale) {
@@ -563,7 +597,13 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     const step = Math.max(1, Math.floor(thumbnails.length / targetDensity));
     
     const selectedThumbnails = thumbnails.filter((_, index) => index % step === 0);
-    console.log('📊 Timeline preview strip:', selectedThumbnails.length, 'thumbnails for zoom', zoomLevel);
+    console.log('📊 Timeline preview strip:', {
+      selectedCount: selectedThumbnails.length,
+      totalCount: thumbnails.length,
+      zoomLevel,
+      step,
+      sampleUrls: selectedThumbnails.slice(0, 2).map(url => url.substring(0, 50) + '...')
+    });
     
     return selectedThumbnails;
   },
@@ -614,7 +654,13 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     const item = get().mediaItems.find(item => item.id === mediaId);
     if (!item?.timelinePreviews) return true;
     
-    const { zoomLevel, elementDuration: cachedDuration, generatedAt } = item.timelinePreviews;
+    const { zoomLevel, elementDuration: cachedDuration, generatedAt, thumbnails } = item.timelinePreviews;
+    
+    // Always regenerate if no thumbnails
+    if (!thumbnails || thumbnails.length === 0) {
+      console.log('🔄 shouldRegenerateTimelinePreviews: true - no thumbnails exist');
+      return true;
+    }
     
     // Regenerate if zoom level changed significantly
     const zoomChanged = Math.abs((zoomLevel || 1) - currentZoomLevel) > 0.5;
@@ -625,6 +671,15 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     // Regenerate if previews are old (over 10 minutes)
     const isOld = Date.now() - generatedAt > 10 * 60 * 1000;
     
-    return zoomChanged || durationChanged || isOld;
+    const shouldRegenerate = zoomChanged || durationChanged || isOld;
+    console.log('🔄 shouldRegenerateTimelinePreviews:', shouldRegenerate, {
+      mediaId,
+      thumbnailCount: thumbnails.length,
+      zoomChanged,
+      durationChanged,
+      isOld
+    });
+    
+    return shouldRegenerate;
   },
 }));

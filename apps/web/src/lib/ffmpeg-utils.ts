@@ -145,15 +145,30 @@ export const getVideoInfo = async (videoFile: File): Promise<{
   const inputName = 'input.mp4';
 
   // Write input file
-  await ffmpeg.writeFile(inputName, new Uint8Array(await videoFile.arrayBuffer()));
+  console.log('Writing video file to FFmpeg:', videoFile.name, 'Size:', videoFile.size);
+  const fileBuffer = await videoFile.arrayBuffer();
+  console.log('File buffer size:', fileBuffer.byteLength);
+  await ffmpeg.writeFile(inputName, new Uint8Array(fileBuffer));
 
   // Capture FFmpeg stderr output with a one-time listener pattern
   let ffmpegOutput = '';
   let listening = true;
-  const listener = (data: string) => {
-    if (listening) ffmpegOutput += data;
+  const listener = (event: any) => {
+    if (listening) {
+      // Handle different log event structures
+      const message = event.message || event.data || event;
+      if (typeof message === 'string') {
+        ffmpegOutput += message + '\n';
+        console.log('FFmpeg log captured:', message);
+      }
+    }
   };
-  ffmpeg.on('log', ({ message }) => listener(message));
+  
+  try {
+    ffmpeg.on('log', listener);
+  } catch (e) {
+    console.warn('Could not set up FFmpeg log listener:', e);
+  }
 
   // Run ffmpeg to get info (stderr will contain the info)
   // Note: This command is expected to "fail" but will output video info to stderr
@@ -167,6 +182,11 @@ export const getVideoInfo = async (videoFile: File): Promise<{
 
   // Disable listener after exec completes
   listening = false;
+  try {
+    ffmpeg.off('log', listener);
+  } catch (e) {
+    console.warn('Could not remove FFmpeg log listener:', e);
+  }
 
   // Cleanup
   await ffmpeg.deleteFile(inputName);
@@ -374,6 +394,172 @@ export const getVideoFPS = async (videoFile: File): Promise<number> => {
   return info.fps;
 };
 
+// Fallback function to get video info using HTML5 video element
+const getVideoInfoViaHTML5 = async (videoFile: File): Promise<{
+  duration: number;
+  width: number;
+  height: number;
+  fps: number;
+}> => {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement('video');
+    const objectUrl = URL.createObjectURL(videoFile);
+    
+    const cleanup = () => {
+      URL.revokeObjectURL(objectUrl);
+      video.remove();
+    };
+    
+    video.addEventListener('loadedmetadata', () => {
+      const videoInfo = {
+        duration: video.duration || 10,
+        width: video.videoWidth || 1920,
+        height: video.videoHeight || 1080,
+        fps: 30 // HTML5 video doesn't provide FPS, use default
+      };
+      
+      cleanup();
+      resolve(videoInfo);
+    });
+    
+    video.addEventListener('error', (e) => {
+      cleanup();
+      reject(new Error(`HTML5 video loading failed: ${e}`));
+    });
+    
+    video.src = objectUrl;
+    video.load();
+    
+    // Timeout after 10 seconds
+    setTimeout(() => {
+      cleanup();
+      reject(new Error('HTML5 video info extraction timed out'));
+    }, 10000);
+  });
+};
+
+// Generate thumbnails using HTML5 Canvas (more reliable than FFmpeg for simple thumbnails)
+const generateThumbnailsViaCanvas = async (
+  videoFile: File,
+  options: EnhancedThumbnailOptions = {}
+): Promise<EnhancedThumbnailResult> => {
+  const {
+    timestamps = [1],
+    resolution = 'medium',
+    quality = 0.8,
+    format = 'jpeg'
+  } = options;
+  
+  // Resolution mapping
+  const resolutions = {
+    low: { width: 160, height: 120 },
+    medium: { width: 320, height: 240 },
+    high: { width: 480, height: 360 }
+  };
+  
+  const { width: targetWidth, height: targetHeight } = resolutions[resolution];
+  
+  return new Promise((resolve, reject) => {
+    const video = document.createElement('video');
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const objectUrl = URL.createObjectURL(videoFile);
+    
+    if (!ctx) {
+      reject(new Error('Failed to create canvas context'));
+      return;
+    }
+    
+    const thumbnails: string[] = [];
+    let currentIndex = 0;
+    
+    const cleanup = () => {
+      URL.revokeObjectURL(objectUrl);
+      video.remove();
+      canvas.remove();
+    };
+    
+    const captureFrame = () => {
+      if (currentIndex >= timestamps.length) {
+        // All thumbnails captured
+        cleanup();
+        resolve({
+          thumbnails,
+          metadata: {
+            duration: video.duration,
+            dimensions: { width: video.videoWidth, height: video.videoHeight },
+            fps: 30,
+            timestamps
+          }
+        });
+        return;
+      }
+      
+      const timestamp = timestamps[currentIndex];
+      console.log(`🎨 Canvas: Capturing thumbnail ${currentIndex + 1}/${timestamps.length} at ${timestamp}s`);
+      
+      // Set canvas size
+      const aspectRatio = video.videoWidth / video.videoHeight;
+      canvas.width = targetWidth;
+      canvas.height = targetWidth / aspectRatio;
+      
+      // Draw video frame to canvas
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      // Convert to blob/data URL
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          thumbnails.push(url);
+          console.log(`✅ Canvas: Thumbnail ${currentIndex + 1} captured successfully`);
+        } else {
+          console.warn(`⚠️ Canvas: Failed to create thumbnail ${currentIndex + 1}`);
+        }
+        
+        currentIndex++;
+        
+        // Capture next frame
+        if (currentIndex < timestamps.length) {
+          video.currentTime = Math.min(timestamps[currentIndex], video.duration - 0.1);
+        } else {
+          captureFrame(); // Finish up
+        }
+      }, `image/${format}`, quality);
+    };
+    
+    video.addEventListener('loadedmetadata', () => {
+      console.log('🎬 Canvas: Video metadata loaded:', {
+        duration: video.duration,
+        width: video.videoWidth,
+        height: video.videoHeight
+      });
+      
+      // Set first timestamp
+      if (timestamps.length > 0) {
+        video.currentTime = Math.min(timestamps[0], video.duration - 0.1);
+      }
+    });
+    
+    video.addEventListener('seeked', () => {
+      captureFrame();
+    });
+    
+    video.addEventListener('error', (e) => {
+      cleanup();
+      reject(new Error(`Canvas thumbnail generation failed: Video loading error`));
+    });
+    
+    video.src = objectUrl;
+    video.load();
+    
+    // Timeout after 30 seconds
+    setTimeout(() => {
+      cleanup();
+      reject(new Error('Canvas thumbnail generation timed out'));
+    }, 30000);
+  });
+};
+
 // Smart scene detection helper
 const detectSceneChanges = async (
   ffmpeg: FFmpeg,
@@ -393,29 +579,84 @@ export const generateEnhancedThumbnails = async (
   videoFile: File,
   options: EnhancedThumbnailOptions = {}
 ): Promise<EnhancedThumbnailResult> => {
-  const ffmpeg = await initFFmpeg();
+  console.log('🎬 FFMPEG-UTILS: generateEnhancedThumbnails called with:', {
+    fileName: videoFile.name,
+    fileSize: videoFile.size,
+    options
+  });
   
-  // Ensure FFmpeg is properly loaded
-  if (!ffmpeg || !isLoaded) {
-    throw new Error('FFmpeg failed to initialize properly');
-  }
-  
-  // Get video info first
-  let videoInfo;
+  // Try HTML5 Canvas method first (more reliable for thumbnails)
   try {
-    videoInfo = await getVideoInfo(videoFile);
-    console.log('Video info extracted successfully:', videoInfo);
-  } catch (error) {
-    console.error('Failed to extract video info:', error);
+    console.log('🎨 Attempting HTML5 Canvas thumbnail generation...');
+    return await generateThumbnailsViaCanvas(videoFile, options);
+  } catch (canvasError) {
+    console.error('❌ Canvas thumbnail generation failed:', canvasError);
     
-    // Fallback: try to generate thumbnails anyway with default values
-    console.log('Attempting thumbnail generation with fallback values...');
-    videoInfo = {
-      duration: 10, // Default 10 seconds
-      width: 1920,  // Default HD resolution
-      height: 1080,
-      fps: 30       // Default 30fps
-    };
+    // Try FFmpeg as fallback
+    try {
+      const ffmpeg = await initFFmpeg();
+      
+      // Ensure FFmpeg is properly loaded
+      if (!ffmpeg || !isLoaded) {
+        console.error('❌ FFMPEG-UTILS: FFmpeg not properly initialized');
+        throw new Error('FFmpeg failed to initialize properly');
+      }
+      
+      console.log('✅ FFMPEG-UTILS: FFmpeg initialized successfully');
+      
+      return await generateThumbnailsInternal(ffmpeg, videoFile, options);
+      
+    } catch (error) {
+      console.error('❌ FFMPEG-UTILS: generateEnhancedThumbnails failed:', error);
+      
+      // Return a safe fallback instead of crashing
+      return {
+        thumbnails: [],
+        metadata: {
+          duration: 10,
+          dimensions: { width: 1920, height: 1080 },
+          fps: 30,
+          timestamps: []
+        }
+      };
+    }
+  }
+};
+
+// Internal function to handle the actual thumbnail generation
+const generateThumbnailsInternal = async (
+  ffmpeg: FFmpeg,
+  videoFile: File,
+  options: EnhancedThumbnailOptions = {}
+): Promise<EnhancedThumbnailResult> => {
+  
+  // Get video info - prioritize HTML5 method for reliability
+  let videoInfo;
+  
+  // Try HTML5 video element first (more reliable)
+  console.log('Attempting to get video info via HTML5 video element...');
+  try {
+    videoInfo = await getVideoInfoViaHTML5(videoFile);
+    console.log('Video info extracted successfully via HTML5:', videoInfo);
+  } catch (html5Error) {
+    console.error('HTML5 video info extraction failed:', html5Error);
+    
+    // Try FFmpeg as fallback
+    console.log('Attempting to get video info via FFmpeg...');
+    try {
+      videoInfo = await getVideoInfo(videoFile);
+      console.log('Video info extracted successfully via FFmpeg:', videoInfo);
+    } catch (ffmpegError) {
+      console.error('FFmpeg video info extraction also failed:', ffmpegError);
+      // Final fallback with default values
+      console.log('Using default video info values...');
+      videoInfo = {
+        duration: 10, // Default 10 seconds
+        width: 1920,  // Default HD resolution
+        height: 1080,
+        fps: 30       // Default 30fps
+      };
+    }
   }
   
   // Use existing FFmpeg pipeline but generate multiple thumbnails
@@ -450,29 +691,80 @@ export const generateEnhancedThumbnails = async (
   // Generate multiple thumbnails
   const thumbnails: string[] = [];
   
-  for (const timestamp of validTimestamps) {
+  console.log('🎬 FFMPEG-UTILS: Starting thumbnail generation loop for', validTimestamps.length, 'timestamps');
+  
+  for (let i = 0; i < validTimestamps.length; i++) {
+    const timestamp = validTimestamps[i];
     const outputName = `thumb_${Math.floor(timestamp * 1000)}.${format}`;
     
-    await ffmpeg.exec([
-      '-i', inputName,
-      '-ss', timestamp.toString(),
-      '-vframes', '1',
-      '-vf', `scale=${width}:${height}`,
-      '-q:v', quality === 1 ? '1' : quality === 0.8 ? '2' : '5', // Map quality to FFmpeg q:v
-      '-f', format === 'jpeg' ? 'mjpeg' : format, // Use mjpeg for JPEG output
-      outputName
-    ]);
+    console.log(`🎬 FFMPEG-UTILS: Generating thumbnail ${i + 1}/${validTimestamps.length} at ${timestamp}s`);
     
-    const thumbData = await ffmpeg.readFile(outputName);
-    const blob = new Blob([thumbData], { type: `image/${format}` });
-    thumbnails.push(URL.createObjectURL(blob));
-    
-    // Cleanup individual thumbnail file
-    await ffmpeg.deleteFile(outputName);
+    try {
+      console.log(`🎬 FFMPEG-UTILS: Executing FFmpeg command for thumbnail ${i + 1}`);
+      
+      await ffmpeg.exec([
+        '-i', inputName,
+        '-ss', timestamp.toString(),
+        '-vframes', '1',
+        '-vf', `scale=${width}:${height}`,
+        '-q:v', quality === 1 ? '1' : quality === 0.8 ? '2' : '5', // Map quality to FFmpeg q:v
+        '-f', format === 'jpeg' ? 'mjpeg' : format, // Use mjpeg for JPEG output
+        outputName
+      ]);
+      
+      console.log(`✅ FFMPEG-UTILS: FFmpeg exec completed for thumbnail ${i + 1}`);
+      
+      // Check if output file exists before reading
+      try {
+        const thumbData = await ffmpeg.readFile(outputName);
+        console.log(`📁 FFMPEG-UTILS: Read thumbnail data:`, thumbData.length, 'bytes');
+        
+        if (thumbData.length > 0) {
+          const blob = new Blob([thumbData], { type: `image/${format}` });
+          const objectUrl = URL.createObjectURL(blob);
+          thumbnails.push(objectUrl);
+          
+          console.log(`🔗 FFMPEG-UTILS: Created object URL for thumbnail ${i + 1}:`, objectUrl.substring(0, 50) + '...');
+        } else {
+          console.warn(`⚠️ FFMPEG-UTILS: Thumbnail ${i + 1} has no data`);
+        }
+      } catch (readError) {
+        console.error(`❌ FFMPEG-UTILS: Failed to read thumbnail file ${outputName}:`, readError);
+      }
+      
+      // Cleanup individual thumbnail file (even if reading failed)
+      try {
+        await ffmpeg.deleteFile(outputName);
+        console.log(`🗑️ FFMPEG-UTILS: Cleaned up thumbnail file ${outputName}`);
+      } catch (deleteError) {
+        console.warn(`⚠️ FFMPEG-UTILS: Could not delete thumbnail file ${outputName}:`, deleteError);
+      }
+      
+    } catch (error) {
+      console.error(`❌ FFMPEG-UTILS: FFmpeg exec failed for thumbnail ${i + 1}:`, error);
+      
+      // Check if this is the FFmpeg abort error
+      if (error && error.toString().includes('Aborted')) {
+        console.error('💥 FFMPEG-UTILS: FFmpeg aborted - this might cause app instability');
+        // Try to continue but break out of loop to prevent more aborts
+        break;
+      }
+      
+      // Continue with other thumbnails for other errors
+      continue;
+    }
   }
+  
+  console.log('🎬 FFMPEG-UTILS: Completed thumbnail generation loop. Generated:', thumbnails.length, 'thumbnails');
   
   // Cleanup input file
   await ffmpeg.deleteFile(inputName);
+  
+  console.log('🎬 FFMPEG-UTILS: Returning enhanced thumbnails result:', {
+    thumbnailCount: thumbnails.length,
+    videoDuration: videoInfo.duration,
+    timestampCount: validTimestamps.length
+  });
   
   return {
     thumbnails,

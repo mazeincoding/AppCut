@@ -16,6 +16,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { GoogleIcon } from "@/components/icons";
 import { useLogin } from "@/hooks/auth/useLogin";
+import { MagicCard } from "@/components/magicui/magic-card";
 
 const LoginPage = () => {
   const router = useRouter();
@@ -90,15 +91,22 @@ const LoginPage = () => {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="m@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    disabled={isAnyLoading}
-                    className="h-11"
-                  />
+                  <MagicCard 
+                    className="p-0"
+                    gradientSize={150}
+                    gradientFrom="#9333ea"
+                    gradientTo="#3b82f6"
+                  >
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="m@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      disabled={isAnyLoading}
+                      className="h-11"
+                    />
+                  </MagicCard>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>

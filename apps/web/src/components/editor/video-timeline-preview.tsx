@@ -28,6 +28,13 @@ export function VideoTimelinePreview({
   isHovered = false,
   mousePosition
 }: VideoTimelinePreviewProps) {
+  console.log('🚀 VideoTimelinePreview function called with:', {
+    elementName: element.name,
+    mediaItemType: mediaItem.type,
+    elementWidth,
+    elementHeight
+  });
+
   const [isGenerating, setIsGenerating] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const elementRef = useRef<HTMLDivElement>(null);
@@ -58,6 +65,17 @@ export function VideoTimelinePreview({
 
     const mediaElement = element as MediaElement;
     const elementDuration = element.duration;
+    
+    console.log('🔍 VideoTimelinePreview useEffect checking:', {
+      mediaId: mediaElement.mediaId,
+      needsRegeneration: shouldRegenerateTimelinePreviews(
+        mediaElement.mediaId, 
+        zoomLevel, 
+        elementDuration
+      ),
+      isGenerating,
+      hasFile: !!mediaItem.file
+    });
     
     // Check if we need to generate/regenerate previews
     const needsRegeneration = shouldRegenerateTimelinePreviews(
@@ -129,12 +147,25 @@ export function VideoTimelinePreview({
     zoomLevel
   );
   
+  // Force re-render when thumbnails are generated
+  const [, forceUpdate] = useState({});
+  useEffect(() => {
+    if (!isGenerating && thumbnailStrip.length === 0) {
+      // Check again in a moment if thumbnails might be available
+      const timer = setTimeout(() => {
+        forceUpdate({});
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isGenerating, thumbnailStrip.length]);
+  
   console.log('📊 Thumbnail strip retrieved:', {
     elementName: element.name,
     thumbnailCount: thumbnailStrip.length,
     isGenerating,
     previewError,
-    mediaId: (element as MediaElement).mediaId
+    mediaId: (element as MediaElement).mediaId,
+    thumbnailUrls: thumbnailStrip.slice(0, 3) // Show first 3 URLs for debugging
   });
 
   // Calculate hover preview if mouse is over element
@@ -165,6 +196,7 @@ export function VideoTimelinePreview({
 
   // Handle loading state - but still show thumbnails if available
   if (isGenerating && thumbnailStrip.length === 0) {
+    console.log('🔄 VideoTimelinePreview: Returning loading state');
     return (
       <div 
         ref={elementRef}
@@ -180,6 +212,7 @@ export function VideoTimelinePreview({
 
   // Handle error state
   if (previewError) {
+    console.log('❌ VideoTimelinePreview: Returning error state:', previewError);
     return (
       <div 
         ref={elementRef}
@@ -195,6 +228,28 @@ export function VideoTimelinePreview({
 
   // Handle no previews available - fallback to gradient
   if (thumbnailStrip.length === 0) {
+    console.log('📭 VideoTimelinePreview: Returning no previews fallback', {
+      isGenerating,
+      previewError,
+      mediaId: (element as MediaElement).mediaId,
+      elementName: element.name
+    });
+    
+    // Show loading state if still generating
+    if (isGenerating) {
+      return (
+        <div 
+          ref={elementRef}
+          className="absolute inset-0 flex items-center justify-center bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20"
+        >
+          <div className="flex items-center gap-2 text-xs text-white">
+            <div className="w-3 h-3 border border-white/50 border-t-white rounded-full animate-spin" />
+            <span>Generating previews...</span>
+          </div>
+        </div>
+      );
+    }
+    
     return (
       <div 
         ref={elementRef}
@@ -207,20 +262,31 @@ export function VideoTimelinePreview({
     );
   }
 
+  console.log('🖼️ VideoTimelinePreview: About to render main component with thumbnails:', {
+    elementWidth,
+    elementHeight,
+    thumbnailCount: thumbnailStrip.length,
+    elementName: element.name
+  });
+
   return (
     <div ref={elementRef} className="absolute inset-0 overflow-hidden">
       {/* Background thumbnail strip */}
       <div className="absolute inset-0 flex">
         {thumbnailStrip.map((thumbnailUrl, index) => {
           const thumbnailWidth = elementWidth / thumbnailStrip.length;
-          const leftPosition = index * thumbnailWidth;
+          
+          console.log(`🖼️ Rendering thumbnail ${index}:`, {
+            thumbnailUrl: thumbnailUrl.substring(0, 50) + '...',
+            thumbnailWidth,
+            elementHeight
+          });
           
           return (
             <div
               key={index}
-              className="relative"
+              className="relative flex-shrink-0"
               style={{
-                left: `${leftPosition}px`,
                 width: `${thumbnailWidth}px`,
                 height: '100%'
               }}
@@ -228,12 +294,29 @@ export function VideoTimelinePreview({
               <img
                 src={thumbnailUrl}
                 alt={`Frame ${index}`}
-                className="w-full h-full object-cover"
+                className="absolute inset-0 w-full h-full object-cover border-2 border-yellow-400"
                 style={{ objectFit: 'cover' }}
+                onLoad={(e) => {
+                  const img = e.target as HTMLImageElement;
+                  console.log(`✅ Thumbnail ${index} loaded successfully:`, {
+                    naturalWidth: img.naturalWidth,
+                    naturalHeight: img.naturalHeight,
+                    width: img.width,
+                    height: img.height,
+                    complete: img.complete,
+                    src: img.src.substring(0, 50) + '...'
+                  });
+                }}
                 onError={(e) => {
+                  console.error(`❌ Thumbnail ${index} failed to load:`, thumbnailUrl);
                   // Fallback to gradient on image load error
                   const target = e.target as HTMLImageElement;
                   target.style.display = 'none';
+                  // Show fallback gradient
+                  const fallback = target.nextElementSibling as HTMLElement;
+                  if (fallback) {
+                    fallback.style.display = 'block';
+                  }
                 }}
               />
               {/* Fallback gradient if image fails */}
@@ -280,13 +363,15 @@ export function VideoTimelinePreview({
       )}
       
       {/* Element name overlay with improved contrast */}
-      <div className="absolute inset-0 flex items-center px-2 pointer-events-none">
-        <div className="bg-black/30 backdrop-blur-sm rounded px-2 py-1">
+      {/* Temporarily commented out to debug thumbnail visibility
+      <div className="absolute inset-0 flex items-center px-2 pointer-events-none" style={{ zIndex: 30 }}>
+        <div className="bg-black/10 backdrop-blur-sm rounded px-2 py-1">
           <span className="text-xs text-white font-medium truncate drop-shadow-sm">
             {element.name}
           </span>
         </div>
       </div>
+      */}
 
       {/* Selection indicator */}
       {isSelected && (

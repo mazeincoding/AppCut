@@ -323,6 +323,15 @@ export function TimelineElement({
     }
 
     if (mediaItem.type === "video") {
+      console.log('🎬 TIMELINE-ELEMENT: About to render VideoTimelinePreview for:', element.name, {
+        elementWidth,
+        elementHeight: TIMELINE_CONSTANTS.TRACK_HEIGHT,
+        mediaId: element.mediaId,
+        isSelected,
+        hasMediaItem: !!mediaItem,
+        mediaItemType: mediaItem.type
+      });
+      
       return (
         <VideoTimelinePreview
           element={element}
@@ -387,7 +396,7 @@ export function TimelineElement({
             ref={elementRef}
             className={`relative h-full rounded-[0.15rem] cursor-pointer overflow-hidden ${
               element.type === "media" && mediaItems.find((item) => item.id === element.mediaId)?.type === "video" 
-                ? "bg-transparent border-white/80" 
+                ? "bg-black border-white/80" 
                 : getTrackElementClasses(track.type)
             } border border-white/20 ${isSelected ? "border-foreground" : ""} ${
               isBeingDragged ? "z-50" : "z-10"

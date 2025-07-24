@@ -199,3 +199,13 @@
     transform: translateX(100%);
   }
 }
+
+/* Pulse animation for pulsating button */
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 var(--pulse-color);
+  }
+  50% {
+    box-shadow: 0 0 0 8px var(--pulse-color);
+  }
+}
