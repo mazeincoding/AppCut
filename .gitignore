@@ -73,3 +73,6 @@ apps/web/e2e/fixtures/*.png
 apps/web/e2e/fixtures/*.bmp
 apps/web/e2e/fixtures/*.gif
 apps/web/e2e/fixtures/*.webp
+
+# Screenshots
+screenshots/
