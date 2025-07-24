@@ -71,7 +71,12 @@ export function HeaderBase({
   }
 
   return (
-    <header className={cn("px-6 h-16 flex items-center relative", className)}>
+    <header
+      className={cn(
+        "px-6 h-16 flex justify-center items-center relative",
+        className
+      )}
+    >
       {/* Left Content */}
       <div className="flex items-center flex-shrink-0 z-10">{leftContent}</div>
 
@@ -83,7 +88,7 @@ export function HeaderBase({
       )}
 
       {/* Right Content */}
-      <div className="flex items-center ml-auto flex-shrink-0 z-10">
+      <div className="flex items-center justify-center ml-auto flex-shrink-0 z-10">
         {rightContent}
       </div>
     </header>
