@@ -1,14 +1,14 @@
-import { TProject } from "@/types/project";
 import { MediaItem } from "@/stores/media-store";
+import { TProject } from "@/types/project";
+import { TimelineTrack } from "@/types/timeline";
 import { IndexedDBAdapter } from "./indexeddb-adapter";
 import { OPFSAdapter } from "./opfs-adapter";
 import {
   MediaFileData,
-  StorageConfig,
   SerializedProject,
+  StorageConfig,
   TimelineData,
 } from "./types";
-import { TimelineTrack } from "@/types/timeline";
 
 class StorageService {
   private projectsAdapter: IndexedDBAdapter<SerializedProject>;
@@ -113,6 +113,12 @@ class StorageService {
       this.getProjectMediaAdapters(projectId);
 
     // Save file to project-specific OPFS
+    const hash = await this.getFileHash(mediaItem.file);
+    const fileExists = await this.checkFileExists(projectId, hash);
+    if (fileExists) {
+      throw new Error("File with the same content already exists in this project.");
+    }
+
     await mediaFilesAdapter.set(mediaItem.id, mediaItem.file);
 
     // Save metadata to project-specific IndexedDB
@@ -125,6 +131,7 @@ class StorageService {
       width: mediaItem.width,
       height: mediaItem.height,
       duration: mediaItem.duration,
+      hash
     };
 
     await mediaMetadataAdapter.set(mediaItem.id, metadata);
@@ -271,6 +278,25 @@ class StorageService {
 
   isFullySupported(): boolean {
     return this.isIndexedDBSupported() && this.isOPFSSupported();
+  }
+
+  async getFileHash(file: File): Promise<string> {
+    const arrayBuffer = await file.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+    return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  async checkFileExists(projectId: string, hash: string): Promise<boolean> {
+    const { mediaMetadataAdapter } = this.getProjectMediaAdapters(projectId);
+    // Check if a file with the same hash already exists
+    const mediaIds = await mediaMetadataAdapter.list();
+    for (const id of mediaIds) {
+      const metadata = await mediaMetadataAdapter.get(id);
+      if (metadata && metadata.hash === hash) {
+      return true;
+      }
+    }
+    return false;
   }
 }
 
