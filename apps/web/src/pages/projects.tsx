@@ -34,8 +34,8 @@ function CreateButton({ onClick, disabled = false }: { onClick: () => void; disa
     <Button 
       className="gap-2 relative shadow-lg hover:shadow-xl before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent no-underline"
       style={{
-        backgroundColor: '#3b82f6', 
-        color: 'white',
+        backgroundColor: 'white', 
+        color: 'black',
         height: '32px',
         borderRadius: '6px',
         fontSize: '12px',
@@ -50,7 +50,7 @@ function CreateButton({ onClick, disabled = false }: { onClick: () => void; disa
       onClick={onClick} 
       disabled={disabled}
     >
-      <Plus className="!size-4" />
+      <Plus className="!size-3" />
       {disabled ? "Creating..." : "New project"}
     </Button>
   );
@@ -153,20 +153,11 @@ export default function ProjectsPage() {
         <div className="pt-6 px-6 flex items-center justify-between w-full h-16">
         <Link
           href="/"
-          className="flex items-center gap-1 hover:text-muted-foreground transition-colors relative shadow-lg hover:shadow-xl before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent no-underline"
+          className="flex items-center gap-1 hover:text-muted-foreground transition-colors no-underline"
           style={{
-            backgroundColor: '#3b82f6', 
+            backgroundColor: 'transparent', 
             color: 'white',
-            height: '32px',
-            borderRadius: '6px',
-            fontSize: '12px',
-            position: 'relative',
-            overflow: 'hidden',
-            border: 'none',
-            outline: 'none',
-            boxShadow: 'none',
-            paddingLeft: '12px',
-            paddingRight: '12px'
+            textDecoration: 'none'
           }}
           prefetch={false}
         >
@@ -196,36 +187,86 @@ export default function ProjectsPage() {
               )}
             </div>
           ) : (
-            <div className="flex items-center gap-16">
-              <CreateButton onClick={handleCreateProject} disabled={isCreatingProject} />
-              <div className="w-px h-6 bg-gray-300"></div>
-              <Button
-                variant="destructive"
-                size="sm"
-                className="relative shadow-lg hover:shadow-xl before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent no-underline"
+            <div className="flex flex-col gap-1 bg-white rounded-lg border border-gray-200 shadow-sm p-1">
+              <button
+                onClick={() => {
+                  setIsSelectionMode(true);
+                  if (savedProjects.length > 0) {
+                    handleSelectAll(true);
+                  }
+                }}
                 style={{
-                  backgroundColor: '#3b82f6', 
-                  color: 'white',
+                  backgroundColor: '#f8f9fa', 
+                  color: 'black',
                   height: '32px',
-                  borderRadius: '6px',
+                  borderRadius: '4px',
                   fontSize: '12px',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  border: 'none',
-                  outline: 'none',
-                  boxShadow: 'none',
                   paddingLeft: '12px',
-                  paddingRight: '12px'
+                  paddingRight: '12px',
+                  border: '1px solid #e9ecef',
+                  cursor: 'pointer',
+                  opacity: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'flex-start',
+                  width: '120px'
+                }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+              >
+                Select All
+              </button>
+              <button style={{ 
+                backgroundColor: '#f8f9fa', 
+                color: 'black',
+                height: '32px',
+                borderRadius: '4px',
+                fontSize: '12px',
+                paddingLeft: '12px',
+                paddingRight: '12px',
+                border: '1px solid #e9ecef',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-start',
+                width: '120px',
+                cursor: 'pointer'
+              }}
+              onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
+              onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+              onClick={() => handleCreateProject()}
+              >
+                <Plus className="mr-2" style={{ width: '12px', height: '12px' }} />
+                New project
+              </button>
+              <button
+                style={{
+                  backgroundColor: '#f8f9fa', 
+                  color: 'black',
+                  height: '32px',
+                  borderRadius: '4px',
+                  fontSize: '12px',
+                  paddingLeft: '12px',
+                  paddingRight: '12px',
+                  border: '1px solid #e9ecef',
+                  cursor: 'pointer',
+                  opacity: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'flex-start',
+                  width: '120px'
                 }}
                 onClick={() => {
-                  setSelectedProjects(new Set(savedProjects.map(p => p.id)));
-                  setIsBulkDeleteDialogOpen(true);
+                  if (savedProjects.length > 0) {
+                    setSelectedProjects(new Set(savedProjects.map(p => p.id)));
+                    setIsBulkDeleteDialogOpen(true);
+                  }
                 }}
-                disabled={savedProjects.length === 0}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
               >
-                <Trash2 className="mr-1" style={{ width: '16px', height: '16px' }} />
+                <Trash2 className="mr-2" style={{ width: '12px', height: '12px' }} />
                 Delete All
-              </Button>
+              </button>
             </div>
           )}
         </div>
@@ -264,7 +305,7 @@ export default function ProjectsPage() {
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-4">
                 <Button
                   variant="outline"
                   onClick={() => setIsSelectionMode(true)}
@@ -272,7 +313,87 @@ export default function ProjectsPage() {
                 >
                   Select Projects
                 </Button>
-                <CreateButton onClick={handleCreateProject} disabled={isCreatingProject} />
+                <div className="flex flex-col gap-1 bg-white rounded-lg border border-gray-200 shadow-sm p-1">
+                  <button
+                    onClick={() => {
+                      setIsSelectionMode(true);
+                      if (savedProjects.length > 0) {
+                        handleSelectAll(true);
+                      }
+                    }}
+                    style={{
+                      backgroundColor: '#f8f9fa', 
+                      color: 'black',
+                      height: '32px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      paddingLeft: '12px',
+                      paddingRight: '12px',
+                      border: '1px solid #e9ecef',
+                      cursor: 'pointer',
+                      opacity: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'flex-start',
+                      width: '120px'
+                    }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+                  >
+                    Select All
+                  </button>
+                  <button style={{ 
+                    backgroundColor: '#f8f9fa', 
+                    color: 'black',
+                    height: '32px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    paddingLeft: '12px',
+                    paddingRight: '12px',
+                    border: '1px solid #e9ecef',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'flex-start',
+                    width: '120px',
+                    cursor: 'pointer'
+                  }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+                  onClick={() => handleCreateProject()}
+                  >
+                    <Plus className="mr-2" style={{ width: '12px', height: '12px' }} />
+                    New project
+                  </button>
+                  <button
+                    style={{
+                      backgroundColor: '#f8f9fa', 
+                      color: 'black',
+                      height: '32px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      paddingLeft: '12px',
+                      paddingRight: '12px',
+                      border: '1px solid #e9ecef',
+                      cursor: 'pointer',
+                      opacity: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'flex-start',
+                      width: '120px'
+                    }}
+                    onClick={() => {
+                      if (savedProjects.length > 0) {
+                        setSelectedProjects(new Set(savedProjects.map(p => p.id)));
+                        setIsBulkDeleteDialogOpen(true);
+                      }
+                    }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+                  >
+                    <Trash2 className="mr-2" style={{ width: '12px', height: '12px' }} />
+                    Delete All
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -312,7 +433,7 @@ export default function ProjectsPage() {
         ) : savedProjects.length === 0 ? (
           <NoProjects onCreateProject={handleCreateProject} disabled={isCreatingProject} />
         ) : (
-          <div className="grid grid-cols-4" style={{ gap: '20px' }}>
+          <div className="grid grid-cols-4 justify-center mx-auto max-w-5xl" style={{ gap: '20px' }}>
             {savedProjects.map((project) => {
               return (
                 <ProjectCard
@@ -364,13 +485,15 @@ function ProjectCard({ project, isSelected, onSelect }: ProjectCardProps) {
   return (
     <>
       <div 
-        className={`group bg-background rounded-2xl overflow-hidden transition-all duration-200 hover:scale-[1.02] relative ${
+        className={`group bg-background transition-all duration-200 hover:scale-[1.02] relative cursor-pointer ${
           isSelected 
             ? 'shadow-lg' 
             : 'hover:shadow-lg'
         }`}
         style={{
           border: '2px solid transparent',
+          borderRadius: '24px',
+          overflow: 'hidden',
           backgroundImage: isSelected 
             ? 'linear-gradient(hsl(var(--background)), hsl(var(--background))), linear-gradient(45deg, #3b82f6, #8b5cf6, #ec4899)'
             : 'linear-gradient(hsl(var(--background)), hsl(var(--background))), linear-gradient(45deg, #e5e7eb, #d1d5db)',
@@ -379,6 +502,10 @@ function ProjectCard({ project, isSelected, onSelect }: ProjectCardProps) {
           boxShadow: isSelected 
             ? '0 0 25px rgba(59, 130, 246, 0.4), 0 0 50px rgba(139, 92, 246, 0.2)' 
             : '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+        }}
+        onClick={() => {
+          console.log("🔗 [CLICK DEBUG] Click: Open Project:", project.id);
+          window.location.href = `/editor/project/${encodeURIComponent(project.id)}`;
         }}
         onMouseEnter={(e) => {
           if (!isSelected) {
@@ -393,7 +520,7 @@ function ProjectCard({ project, isSelected, onSelect }: ProjectCardProps) {
           }
         }}
       >
-        {/* Delete button overlay - positioned at top-right of entire card */}
+        {/* Delete button overlay - positioned at top-left of entire card */}
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -402,7 +529,7 @@ function ProjectCard({ project, isSelected, onSelect }: ProjectCardProps) {
               deleteProject(project.id);
             }
           }}
-          className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 z-30"
+          className="absolute top-3 left-3 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 z-40"
           style={{ 
             opacity: 1,
             backgroundColor: 'rgba(0, 0, 0, 0.3)',
@@ -423,6 +550,41 @@ function ProjectCard({ project, isSelected, onSelect }: ProjectCardProps) {
         >
           <Trash2 className="h-3 w-3" />
         </button>
+
+        {/* Select checkbox - positioned at top-right of entire card */}
+        <div 
+          className="absolute cursor-pointer z-40"
+          style={{
+            top: '6px',
+            right: '12px',
+            width: '20px',
+            height: '20px',
+            backgroundColor: isSelected ? '#3b82f6' : 'white',
+            border: '2px solid #3b82f6',
+            borderRadius: '4px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect(project.id, !isSelected);
+          }}
+        >
+          {isSelected && (
+            <svg 
+              width="12" 
+              height="12" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="white" 
+              strokeWidth="3"
+            >
+              <polyline points="20,6 9,17 4,12"></polyline>
+            </svg>
+          )}
+        </div>
 
         {/* Thumbnail Preview Area - Compact */}
         <div className="relative h-24 bg-gray-100 w-full">
@@ -490,47 +652,6 @@ function ProjectCard({ project, isSelected, onSelect }: ProjectCardProps) {
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-            <label className="flex items-center space-x-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={isSelected}
-                onChange={(e) => {
-                  e.stopPropagation();
-                  onSelect(project.id, e.target.checked);
-                }}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <span className="text-xs text-gray-600">Select</span>
-            </label>
-            
-            <button
-              onClick={() => {
-                console.log("🔗 [CLICK DEBUG] Click: Open Project:", project.id);
-                window.location.href = `/editor/project/${encodeURIComponent(project.id)}`;
-              }}
-              className="flex items-center space-x-1 px-3 py-1 text-xs rounded-md transition-colors"
-              style={{
-                backgroundColor: 'transparent',
-                color: 'white',
-                border: 'none',
-                outline: 'none',
-                boxShadow: 'none'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.8)';
-                e.currentTarget.style.transform = 'scale(1.05)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.transform = 'scale(1)';
-              }}
-            >
-              <span>▶</span>
-              <span>Open</span>
-            </button>
-          </div>
         </div>
       </div>
     </>

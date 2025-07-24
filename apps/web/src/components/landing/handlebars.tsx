@@ -85,7 +85,7 @@ export function Handlebars({
   };
 
   return (
-    <div className="flex justify-center gap-4 leading-[4rem] mt-0 md:mt-2">
+    <div className="flex justify-start gap-4 leading-[4rem] mt-0 md:mt-2 -ml-4 md:-ml-8">
       <div
         ref={measureRef}
         className="absolute -left-[9999px] top-0 invisible px-4 whitespace-nowrap font-[inherit]"
@@ -95,7 +95,7 @@ export function Handlebars({
 
       <div
         ref={containerRef}
-        className="relative -rotate-[2.76deg] max-w-[250px] md:max-w-[454px] mt-2"
+        className="relative -rotate-[2.76deg] max-w-[250px] md:max-w-[454px] -mt-4 md:-mt-8"
         style={{ width: contentWidth }}
       >
         <div className="absolute inset-0 w-full h-full rounded-2xl border border-yellow-500 flex justify-between">

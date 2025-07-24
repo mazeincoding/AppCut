@@ -119,7 +119,9 @@ export function Hero({ signupCount }: HeroProps) {
       </div>
       <div className="inline-block font-bold tracking-tighter text-5xl md:text-[5rem]">
         <h1 className="text-[4rem] md:text-[7rem]">The Open Source</h1>
-        <Handlebars>Video Editor</Handlebars>
+        <div className="-ml-8 md:-ml-16">
+          <Handlebars><span className="text-[4rem] md:text-[7rem]">Video Editor</span></Handlebars>
+        </div>
       </div>
 
       <p className="mt-10 text-base sm:text-xl text-muted-foreground font-light tracking-wide max-w-md mx-auto">
@@ -195,7 +197,9 @@ export function Hero({ signupCount }: HeroProps) {
           >
             <div className="inline-block font-bold tracking-tighter text-5xl md:text-[5rem]">
               <h1 className="text-[4rem] md:text-[7rem]">The Open Source</h1>
-              <Handlebars>Video Editor</Handlebars>
+              <div className="-ml-8 md:-ml-16">
+                <Handlebars><span className="text-[4rem] md:text-[7rem]">Video Editor</span></Handlebars>
+              </div>
             </div>
           </motion.div>
 
