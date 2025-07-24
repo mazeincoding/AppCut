@@ -256,7 +256,7 @@ export function ExportDialog() {
         </div>
         
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-6">
           {/* Format Selection */}
           <div className="space-y-3">
             <Label className="text-sm font-medium">Format</Label>
@@ -276,10 +276,8 @@ export function ExportDialog() {
             </RadioGroup>
           </div>
           
-          <div className="h-8"></div>
-          
           {/* Quality Selection */}
-          <div className="space-y-3">
+          <div className="space-y-3" style={{ marginTop: '10px' }}>
             <Label className="text-sm font-medium">Quality</Label>
             <RadioGroup value={quality} onValueChange={(value) => setQuality(value as ExportQuality)}>
               <div className="flex items-center space-x-2">
@@ -298,7 +296,7 @@ export function ExportDialog() {
           </div>
 
           {/* SAFETY: Export Engine Selection - implements mermaid diagram UI */}
-          <div className="space-y-3">
+          <div className="space-y-3" style={{ marginTop: '10px' }}>
             <Label className="text-sm font-medium">Export Engine</Label>
             <RadioGroup value={exportEngine} onValueChange={(value) => setExportEngine(value as EngineType)}>
               <div className="flex items-center space-x-2">
@@ -319,22 +317,19 @@ export function ExportDialog() {
               </div>
             </RadioGroup>
             <div className="p-3 bg-muted rounded-lg">
-              <div className="flex items-start space-x-2">
-                <Info className="h-4 w-4 mt-0.5 text-blue-500 flex-shrink-0" />
-                <div className="space-y-1">
-                  <p className="text-xs font-medium">Engine Status:</p>
-                  <p className="text-xs text-muted-foreground">{engineStatus}</p>
-                  {engineCapabilities && (
-                    <div className="text-xs text-muted-foreground space-y-1">
-                      {engineCapabilities.memoryStatus && (
-                        <div>Memory: {engineCapabilities.memoryStatus}</div>
-                      )}
-                      {engineCapabilities.hardwareAcceleration && (
-                        <div className="text-green-600">✅ Hardware acceleration available</div>
-                      )}
-                    </div>
-                  )}
-                </div>
+              <div className="space-y-1">
+                <p className="text-xs font-medium">Engine Status:</p>
+                <p className="text-xs text-muted-foreground">{engineStatus}</p>
+                {engineCapabilities && (
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    {engineCapabilities.memoryStatus && (
+                      <div>Memory: {engineCapabilities.memoryStatus}</div>
+                    )}
+                    {engineCapabilities.hardwareAcceleration && (
+                      <div className="text-green-600">✅ Hardware acceleration available</div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>

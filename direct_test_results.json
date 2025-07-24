@@ -1,0 +1,19 @@
+{
+  "timestamp": "2025-07-24T06:17:50.319Z",
+  "spacing_pixels": 132,
+  "red_spacer_found": false,
+  "format_position": {
+    "x": 1084.40625,
+    "y": 256,
+    "width": 52.921875,
+    "height": 20
+  },
+  "quality_position": {
+    "x": 1084.40625,
+    "y": 408,
+    "width": 52.96875,
+    "height": 20
+  },
+  "test_passed": true,
+  "export_dialog_opened": true
+}
