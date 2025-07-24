@@ -129,19 +129,30 @@ export function Hero({ signupCount }: HeroProps) {
 
       <div className="mt-8 flex gap-8 justify-center">
         <a href="/projects">
-          <Button 
-            variant="outline"
-            className="h-24 px-20 text-base"
+          <button
             style={{ 
-              backgroundColor: 'white !important', 
-              color: 'black !important', 
-              borderColor: '#d1d5db !important',
-              borderRadius: '12px !important'
+              backgroundColor: 'white',
+              color: 'black',
+              border: '1px solid #d1d5db',
+              borderRadius: '12px',
+              height: '96px',
+              paddingLeft: '80px',
+              paddingRight: '80px',
+              fontSize: '16px',
+              fontWeight: '500',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
             }}
+            onMouseEnter={(e) => e.target.style.backgroundColor = '#f9fafb'}
+            onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
           >
             Try early beta
             <ArrowRight className="ml-0.5 h-4 w-4" />
-          </Button>
+          </button>
         </a>
       </div>
 
@@ -205,19 +216,38 @@ export function Hero({ signupCount }: HeroProps) {
             transition={{ delay: 0.6, duration: 0.8 }}
           >
             <a href="/projects">
-              <Button 
-                variant="outline"
-                className="h-24 px-20 text-base"
+              <button
                 style={{ 
-                  backgroundColor: 'white !important', 
-                  color: 'black !important', 
-                  borderColor: '#d1d5db !important',
-                  borderRadius: '12px !important'
+                  backgroundColor: 'white',
+                  color: 'black',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '12px',
+                  height: '44px',
+                  paddingLeft: '20px',
+                  paddingRight: '20px',
+                  fontSize: '16px',
+                  fontWeight: '500',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = '#f3f4f6'
+                  e.target.style.transform = 'translateY(-2px)'
+                  e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)'
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = 'white'
+                  e.target.style.transform = 'translateY(0px)'
+                  e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
                 }}
               >
                 Try early beta
                 <ArrowRight className="ml-0.5 h-4 w-4" />
-              </Button>
+              </button>
             </a>
           </motion.div>
 
