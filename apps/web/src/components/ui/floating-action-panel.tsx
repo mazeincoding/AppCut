@@ -2,8 +2,8 @@
 
 import * as React from "react"
 import * as PopoverPrimitive from "@radix-ui/react-popover"
-import { Check } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Check } from "lucide-react"
 
 interface FloatingActionPanelContextValue {
   mode: "actions" | "note" | "selection" | null
@@ -280,21 +280,19 @@ export function FloatingActionPanelModelOption({
 }: FloatingActionPanelModelOptionProps) {
   return (
     <div className="flex items-center justify-between p-3 bg-transparent">
-      <div className="flex items-center space-x-3">
-        <FloatingActionPanelCheckbox
-          id={id}
-          checked={checked}
-          onCheckedChange={onCheckedChange}
-        />
-        <div>
-          <label 
-            className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 font-medium cursor-pointer" 
-            htmlFor={id}
-          >
-            {name}
-          </label>
-        </div>
+      <div>
+        <label 
+          className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 font-medium cursor-pointer" 
+          htmlFor={id}
+        >
+          {name}
+        </label>
       </div>
+      <FloatingActionPanelCheckbox
+        id={id}
+        checked={checked}
+        onCheckedChange={onCheckedChange}
+      />
     </div>
   )
 }

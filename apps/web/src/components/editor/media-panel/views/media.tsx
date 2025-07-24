@@ -444,7 +444,7 @@ export function MediaView() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-3 pt-0">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 pt-0 max-h-full scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
           {/* Show message if no media, otherwise show media grid */}
           {filteredMediaItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center h-full">

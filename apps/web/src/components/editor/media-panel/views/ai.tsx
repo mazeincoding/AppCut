@@ -769,6 +769,26 @@ export function AiView() {
           </TabsContent>
         </Tabs>
 
+        {/* Generate Button */}
+        <Button 
+          onClick={handleGenerate}
+          disabled={!canGenerate}
+          className="w-full"
+          size="lg"
+        >
+          {isGenerating ? (
+            <>
+              <Loader2 className="mr-2 size-4 animate-spin" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <BotIcon className="mr-2 size-4" />
+              Generate Video
+            </>
+          )}
+        </Button>
+
         {/* Model Selection */}
         <div className="space-y-2">
           <Label htmlFor="models" className="text-sm font-medium text-foreground">
@@ -863,27 +883,8 @@ export function AiView() {
           </div>
         )}
 
-        {/* Generate Button */}
+        {/* Testing Buttons */}
         <div className="mt-auto pt-4 space-y-2">
-          <Button 
-            onClick={handleGenerate}
-            disabled={!canGenerate}
-            className="w-full"
-            size="lg"
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="mr-2 size-4 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <BotIcon className="mr-2 size-4" />
-                Generate Video
-              </>
-            )}
-          </Button>
-          
           {/* 🧪 TESTING: Test Download & Media Panel */}
           <Button 
             onClick={handleTestDownloadAndMedia}

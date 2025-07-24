@@ -458,7 +458,7 @@ export function ExportDialog() {
               variant="outline"
               onClick={handleCancel}
               disabled={isExporting}
-              className="w-full h-11 text-sm font-medium"
+              className="w-full h-11 text-sm font-medium !bg-transparent hover:!bg-transparent"
             >
               <X className="h-4 w-4 mr-2.5" />
               Cancel

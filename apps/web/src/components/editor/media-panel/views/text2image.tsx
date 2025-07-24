@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Image as ImageIcon, Download, RefreshCw } from "lucide-react";
+import { Loader2, Image as ImageIcon, Download, RefreshCw, Wand2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useText2ImageStore } from "@/stores/text2image-store";
 import { TEXT2IMAGE_MODELS } from "@/lib/text2image-models";
@@ -90,8 +90,31 @@ export function Text2ImageView() {
 
   return (
     <div className="p-4 space-y-6">
+      {/* Generate Button */}
+      <Button
+        onClick={handleGenerate}
+        disabled={!prompt.trim() || selectedModelCount === 0 || isGenerating}
+        className="w-full"
+        size="lg"
+      >
+        {isGenerating ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Generating...
+          </>
+        ) : (
+          <>
+            <Wand2 className="w-4 h-4 mr-2" />
+            {generationMode === "single" 
+              ? "Generate Image" 
+              : `Generate with ${selectedModelCount} Model${selectedModelCount !== 1 ? 's' : ''}`
+            }
+          </>
+        )}
+      </Button>
+
       {/* Mode Selection */}
-      <Card>
+      <Card className="border-0 shadow-none" style={{ marginTop: '5px' }}>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm">Generation Mode</CardTitle>
         </CardHeader>
@@ -100,14 +123,15 @@ export function Text2ImageView() {
             value={generationMode}
             onValueChange={(value: "single" | "multi") => setGenerationMode(value)}
             className="flex gap-6"
+            style={{ marginBottom: '5px' }}
           >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="single" id="single" />
-              <Label htmlFor="single" className="text-sm">Single Model</Label>
+            <div className="flex items-center space-x-2 cursor-pointer">
+              <RadioGroupItem value="single" id="single" className="h-4 w-4" />
+              <Label htmlFor="single" className="text-sm cursor-pointer">Single Model</Label>
             </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="multi" id="multi" />
-              <Label htmlFor="multi" className="text-sm">Multi-Model Compare</Label>
+            <div className="flex items-center space-x-2 cursor-pointer">
+              <RadioGroupItem value="multi" id="multi" className="h-4 w-4" />
+              <Label htmlFor="multi" className="text-sm cursor-pointer">Multi-Model Compare</Label>
             </div>
           </RadioGroup>
         </CardContent>
@@ -127,7 +151,7 @@ export function Text2ImageView() {
                 <FloatingActionPanelTrigger 
                   mode="selection" 
                   title="Select AI Model(s)"
-                  className="w-full bg-zinc-900 text-white hover:bg-zinc-800"
+                  className="w-full !bg-transparent hover:!bg-transparent"
                 >
                   {selectedModelCount === 0 
                     ? "Choose Model(s)" 
@@ -139,7 +163,7 @@ export function Text2ImageView() {
 
                 {open && (
                   <div className="w-full border rounded-md bg-transparent max-h-[300px] overflow-y-auto">
-                    <div className="p-2 space-y-1">
+                    <div className="p-2 space-y-3">
                       {Object.entries(TEXT2IMAGE_MODELS).map(([key, model]) => (
                         <FloatingActionPanelModelOption
                           key={key}
@@ -172,7 +196,7 @@ export function Text2ImageView() {
       </Card>
 
       {/* Prompt Input */}
-      <Card>
+      <Card className="border-0 shadow-none" style={{ marginTop: '5px' }}>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm">Prompt</CardTitle>
         </CardHeader>
@@ -187,7 +211,7 @@ export function Text2ImageView() {
       </Card>
 
       {/* Settings */}
-      <Card>
+      <Card className="border-0 shadow-none" style={{ marginTop: '5px' }}>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm">Settings</CardTitle>
         </CardHeader>
@@ -196,10 +220,10 @@ export function Text2ImageView() {
             <div>
               <Label htmlFor="size" className="text-xs">Image Size</Label>
               <Select value={imageSize} onValueChange={setImageSize}>
-                <SelectTrigger id="size">
+                <SelectTrigger id="size" className="justify-between">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[100] bg-white border shadow-lg">
                   <SelectItem value="square">Square</SelectItem>
                   <SelectItem value="square_hd">Square HD</SelectItem>
                   <SelectItem value="landscape_4_3">Landscape (4:3)</SelectItem>
@@ -223,28 +247,6 @@ export function Text2ImageView() {
         </CardContent>
       </Card>
 
-      {/* Generate Button */}
-      <Button
-        onClick={handleGenerate}
-        disabled={!prompt.trim() || selectedModelCount === 0 || isGenerating}
-        className="w-full"
-        size="lg"
-      >
-        {isGenerating ? (
-          <>
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            Generating...
-          </>
-        ) : (
-          <>
-            <ImageIcon className="w-4 h-4 mr-2" />
-            {generationMode === "single" 
-              ? "Generate Image" 
-              : `Generate with ${selectedModelCount} Model${selectedModelCount !== 1 ? 's' : ''}`
-            }
-          </>
-        )}
-      </Button>
 
       {/* Results */}
       {hasResults && (
