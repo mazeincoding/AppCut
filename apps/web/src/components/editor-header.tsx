@@ -10,6 +10,7 @@ import { useProjectStore } from "@/stores/project-store";
 import { KeyboardShortcutsHelp } from "./keyboard-shortcuts-help";
 import { useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
+import { PanelPresetsDropdown } from "./panel-presets-dropdown";
 
 export function EditorHeader() {
   const { getTotalDuration } = useTimelineStore();
@@ -101,6 +102,7 @@ export function EditorHeader() {
 
   const rightContent = (
     <nav className="flex items-center gap-2">
+      <PanelPresetsDropdown />
       <KeyboardShortcutsHelp />
       <Button
         size="sm"

@@ -27,12 +27,12 @@ import { useProjectStore } from "@/stores/project-store";
 import { useTimelineStore } from "@/stores/timeline-store";
 
 export function MediaView() {
-  const { mediaItems, addMediaItem, removeMediaItem } = useMediaStore();
+  const { mediaItems, addMediaItem, removeMediaItem, searchQuery, setSearchQuery } =
+    useMediaStore();
   const { activeProject } = useProjectStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [searchQuery, setSearchQuery] = useState("");
   const [mediaFilter, setMediaFilter] = useState("all");
 
   const processFiles = async (files: FileList | File[]) => {
@@ -241,7 +241,7 @@ export function MediaView() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-3 pt-0">
+        <div className="flex-1 p-3 pt-0">
           {isDragOver || filteredMediaItems.length === 0 ? (
             <MediaDragOverlay
               isVisible={true}

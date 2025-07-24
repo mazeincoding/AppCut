@@ -1,42 +1,82 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { usePanelLayoutStore, PanelLayout } from "./panel-layout-store";
 
-const DEFAULT_PANEL_SIZES = {
-  toolsPanel: 45,
-  previewPanel: 75,
-  propertiesPanel: 20,
-  mainContent: 70,
-  timeline: 30,
-} as const;
-
-interface PanelState {
-  // Panel sizes as percentages
+type PanelSizes = {
   toolsPanel: number;
   previewPanel: number;
-  propertiesPanel: number;
   mainContent: number;
   timeline: number;
+  propertiesPanel: number;
+};
 
-  // Actions
-  setToolsPanel: (size: number) => void;
-  setPreviewPanel: (size: number) => void;
-  setPropertiesPanel: (size: number) => void;
-  setMainContent: (size: number) => void;
-  setTimeline: (size: number) => void;
+interface PanelState {
+  layouts: Record<PanelLayout, PanelSizes>;
+  resetCounter: number;
+  setPanelSize: (
+    panel: keyof PanelSizes,
+    size: number,
+    layout: PanelLayout
+  ) => void;
+  resetLayout: (layout: PanelLayout) => void;
 }
+
+const defaultLayoutSizes: Record<PanelLayout, PanelSizes> = {
+  default: {
+    toolsPanel: 20,
+    previewPanel: 60,
+    mainContent: 75,
+    timeline: 25,
+    propertiesPanel: 20,
+  },
+  media: {
+    toolsPanel: 33,
+    previewPanel: 70,
+    mainContent: 75,
+    timeline: 25,
+    propertiesPanel: 30,
+  },
+  properties: {
+    toolsPanel: 30,
+    previewPanel: 70,
+    mainContent: 75,
+    timeline: 25,
+    propertiesPanel: 33,
+  },
+  "vertical-preview": {
+    toolsPanel: 50,
+    previewPanel: 33,
+    mainContent: 75,
+    timeline: 25,
+    propertiesPanel: 50,
+  },
+};
 
 export const usePanelStore = create<PanelState>()(
   persist(
-    (set) => ({
-      // Default sizes - optimized for responsiveness
-      ...DEFAULT_PANEL_SIZES,
-
-      // Actions
-      setToolsPanel: (size) => set({ toolsPanel: size }),
-      setPreviewPanel: (size) => set({ previewPanel: size }),
-      setPropertiesPanel: (size) => set({ propertiesPanel: size }),
-      setMainContent: (size) => set({ mainContent: size }),
-      setTimeline: (size) => set({ timeline: size }),
+    (set, get) => ({
+      layouts: defaultLayoutSizes,
+      resetCounter: 0,
+      setPanelSize: (panel, size, layout) => {
+        set((state) => ({
+          layouts: {
+            ...state.layouts,
+            [layout]: {
+              ...state.layouts[layout],
+              [panel]: size,
+            },
+          },
+        }));
+      },
+      resetLayout: (layout) => {
+        set((state) => ({
+          layouts: {
+            ...state.layouts,
+            [layout]: defaultLayoutSizes[layout],
+          },
+          resetCounter: state.resetCounter + 1,
+        }));
+      },
     }),
     {
       name: "panel-sizes",

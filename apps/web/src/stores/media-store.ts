@@ -28,6 +28,8 @@ export interface MediaItem {
 interface MediaStore {
   mediaItems: MediaItem[];
   isLoading: boolean;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
 
   // Actions - now require projectId
   addMediaItem: (
@@ -159,6 +161,8 @@ export const getMediaAspectRatio = (item: MediaItem): number => {
 export const useMediaStore = create<MediaStore>((set, get) => ({
   mediaItems: [],
   isLoading: false,
+  searchQuery: "",
+  setSearchQuery: (query) => set({ searchQuery: query }),
 
   addMediaItem: async (projectId, item) => {
     const newItem: MediaItem = {
