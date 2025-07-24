@@ -1,6 +1,5 @@
 import type { Config } from "tailwindcss";
 
-
 export default {
   darkMode: ["class"],
   content: [
@@ -110,11 +109,11 @@ export default {
   plugins: [
     require("@tailwindcss/typography"),
     require("tailwindcss-animate"),
-    function ({
+    ({
       addUtilities,
     }: {
       addUtilities: (utilities: Record<string, any>) => void;
-    }) {
+    }) => {
       addUtilities({
         ".scrollbar-hidden": {
           "-ms-overflow-style": "none",

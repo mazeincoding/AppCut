@@ -368,7 +368,7 @@ export function PreviewPanel() {
           ref={containerRef}
           className="flex-1 flex flex-col items-center justify-center p-3 min-h-0 min-w-0"
         >
-          <div className="flex-1"></div>
+          <div className="flex-1" />
           {hasAnyElements ? (
             <div
               ref={previewRef}
@@ -402,7 +402,7 @@ export function PreviewPanel() {
             </div>
           ) : null}
 
-          <div className="flex-1"></div>
+          <div className="flex-1" />
 
           <PreviewToolbar
             hasAnyElements={hasAnyElements}
