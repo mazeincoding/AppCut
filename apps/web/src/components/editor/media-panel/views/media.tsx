@@ -1,19 +1,17 @@
 "use client";
 
-import { useDragDrop } from "@/hooks/use-drag-drop";
-import { processMediaFiles } from "@/lib/media-processing";
-import { useMediaStore, type MediaItem } from "@/stores/media-store";
 import { Image, Loader2, Music, Plus, Video } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { MediaDragOverlay } from "@/components/editor/media-panel/drag-overlay";
+import { Button } from "@/components/ui/button";
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
+import { DraggableMediaItem } from "@/components/ui/draggable-item";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -22,10 +20,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DraggableMediaItem } from "@/components/ui/draggable-item";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useDragDrop } from "@/hooks/use-drag-drop";
+import { processMediaFiles } from "@/lib/media-processing";
+import { type MediaItem, useMediaStore } from "@/stores/media-store";
 import { useProjectStore } from "@/stores/project-store";
 import { useTimelineStore } from "@/stores/timeline-store";
-import { Skeleton } from "@/components/ui/skeleton";
 
 export function MediaView() {
   const {
@@ -216,6 +216,7 @@ export function MediaView() {
           >
             {/* thumbnail skeletons */}
             {Array.from({ length: initialMediaCount }).map((_, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey:index can be used here since this is a loading state
               <div key={i} className="flex flex-col gap-2 w-28 h-28">
                 <Skeleton className="w-full aspect-video" />
                 <Skeleton className="w-full h-4" />
