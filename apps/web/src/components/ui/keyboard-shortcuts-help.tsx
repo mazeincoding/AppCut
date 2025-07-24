@@ -69,7 +69,7 @@ const ShortcutItem = ({
         )}
         <span className="text-sm text-slate-500" style={{ paddingLeft: '24px' }}>{shortcut.description}</span>
       </div>
-      <div className="flex items-center gap-1 flex-shrink-0 ml-4">
+      <div className="flex items-center gap-1 flex-shrink-0 ml-4" style={{ paddingRight: '16px' }}>
         {displayKeys.map((key: string, index: number) => (
           <div key={index} className="flex items-center gap-1">
             <div className="flex items-center gap-4">
@@ -146,6 +146,30 @@ export const KeyboardShortcutsHelp = () => {
   const [recordingShortcut, setRecordingShortcut] =
     useState<KeyboardShortcut | null>(null);
 
+  useEffect(() => {
+    if (open) {
+      setTimeout(() => {
+        const closeButtons = Array.from(document.querySelectorAll('button')).filter(btn => 
+          btn.className.includes('absolute') && btn.className.includes('right-4')
+        );
+        
+        if (closeButtons.length > 0) {
+          const closeBtn = closeButtons[0] as HTMLElement;
+          console.log('🔧 Forcing close button styles...');
+          
+          // Style the close button properly
+          closeBtn.style.setProperty('background', 'transparent', 'important');
+          closeBtn.style.setProperty('color', 'white', 'important');
+          closeBtn.style.setProperty('position', 'absolute', 'important');
+          closeBtn.style.setProperty('right', '16px', 'important');
+          closeBtn.style.setProperty('top', '16px', 'important');
+          closeBtn.style.setProperty('z-index', '999', 'important');
+          closeBtn.style.setProperty('display', 'block', 'important');
+          closeBtn.style.setProperty('visibility', 'visible', 'important');
+        }
+      }, 500);
+    }
+  }, [open]);
 
   const {
     updateKeybinding,
