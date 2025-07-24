@@ -13,7 +13,7 @@ interface HandlebarsProps {
 export function Handlebars({
   children,
   minWidth = 50,
-  maxWidth = 400,
+  maxWidth = 408,
   onRangeChange,
 }: HandlebarsProps) {
   const [leftHandle, setLeftHandle] = useState(0);
@@ -39,7 +39,7 @@ export function Handlebars({
     const measureContent = () => {
       if (measureRef.current) {
         const width = measureRef.current.scrollWidth;
-        const paddedWidth = width + 32;
+        const paddedWidth = Math.max(width + 32, maxWidth); // Ensure minimum width
         setContentWidth(paddedWidth);
         setRightHandle(paddedWidth);
         rightHandleX.set(paddedWidth);
@@ -47,10 +47,14 @@ export function Handlebars({
     };
 
     measureContent();
-    const timer = setTimeout(measureContent, 50);
+    const timer = setTimeout(measureContent, 100);
+    const timer2 = setTimeout(measureContent, 500); // Additional measurement after fonts load
 
-    return () => clearTimeout(timer);
-  }, [children, rightHandleX]);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(timer2);
+    };
+  }, [children, rightHandleX, maxWidth]);
 
   useEffect(() => {
     leftHandleX.set(leftHandle);

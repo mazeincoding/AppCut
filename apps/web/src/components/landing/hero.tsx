@@ -95,6 +95,28 @@ export function Hero({ signupCount }: HeroProps) {
 
   const contentJSX = (
     <>
+      <div className="mb-8 flex justify-center">
+        <a 
+          href="https://vercel.com/home?utm_source=opencut" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm hover:bg-white/10 hover:border-white/20 transition-all duration-200 group shadow-lg"
+        >
+          <span className="text-xs font-medium text-zinc-400 group-hover:text-zinc-300 transition-colors">
+            Sponsored by
+          </span>
+          <div className="flex items-center gap-1.5">
+            <div className="text-zinc-100 group-hover:text-white transition-colors">
+              <svg className="w-4 h-4" width="20" height="18" viewBox="0 0 76 65" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M37.5274 0L75.0548 65H0L37.5274 0Z" fill="currentColor"></path>
+              </svg>
+            </div>
+            <span className="text-xs font-medium text-zinc-100 group-hover:text-white transition-colors">
+              Vercel
+            </span>
+          </div>
+        </a>
+      </div>
       <div className="inline-block font-bold tracking-tighter text-4xl md:text-[4rem]">
         <h1>The Open Source</h1>
         <Handlebars>Video Editor</Handlebars>
@@ -105,58 +127,16 @@ export function Hero({ signupCount }: HeroProps) {
         any platform.
       </p>
 
-      <div className="mt-12 flex gap-8 justify-center">
-        <form
-          onSubmit={handleSubmit}
-          className="flex gap-3 w-full max-w-lg flex-col sm:flex-row items-center"
-        >
-          <MagicCard 
-            className="inline-block p-0"
-            gradientSize={150}
-            gradientFrom="#9333ea"
-            gradientTo="#3b82f6"
-          >
-            <Input
-              type="email"
-              placeholder="Enter your email"
-              className="h-8 text-sm"
-              style={{
-                width: '200px',
-                fontSize: '12px',
-                height: '32px'
-              }}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={isSubmitting}
-              required
-            />
-          </MagicCard>
-          <Button
+      <div className="mt-8 flex gap-8 justify-center">
+        <a href="/projects">
+          <Button 
+            className="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 text-background shadow hover:bg-foreground/90 rounded-md px-6 h-11 text-base bg-foreground"
             type="submit"
-            className="relative shadow-lg hover:shadow-xl before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent no-underline flex-shrink-0"
-            style={{
-              backgroundColor: '#3b82f6', 
-              color: 'white',
-              height: '32px',
-              borderRadius: '6px',
-              fontSize: '12px',
-              position: 'relative',
-              overflow: 'hidden',
-              border: 'none',
-              outline: 'none',
-              boxShadow: 'none',
-              paddingLeft: '12px',
-              paddingRight: '12px',
-              width: 'auto'
-            }}
-            disabled={isSubmitting}
           >
-            <span className="relative z-10">
-              {isSubmitting ? "Joining..." : "Join"}
-            </span>
-            <ArrowRight className="relative z-10 ml-0.5" style={{ width: '14px', height: '14px' }} />
+            Try early beta
+            <ArrowRight className="relative z-10 ml-0.5 h-4 w-4 inline-block" />
           </Button>
-        </form>
+        </a>
       </div>
 
       {signupCount > 0 && (
@@ -213,62 +193,20 @@ export function Hero({ signupCount }: HeroProps) {
           </motion.p>
 
           <motion.div
-            className="mt-12 flex gap-8 justify-center"
+            className="mt-8 flex gap-8 justify-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6, duration: 0.8 }}
           >
-            <form
-              onSubmit={handleSubmit}
-              className="flex gap-3 w-full max-w-lg flex-col sm:flex-row items-center"
-            >
-              <MagicCard 
-                className="inline-block p-0"
-                gradientSize={150}
-                gradientFrom="#9333ea"
-                gradientTo="#3b82f6"
-              >
-                <Input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="h-8 text-sm"
-                  style={{
-                    width: '200px',
-                    fontSize: '12px',
-                    height: '32px'
-                  }}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isSubmitting}
-                  required
-                />
-              </MagicCard>
-              <Button
+            <a href="/projects">
+              <Button 
+                className="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 text-background shadow hover:bg-foreground/90 rounded-md px-6 h-11 text-base bg-foreground"
                 type="submit"
-                className="relative shadow-lg hover:shadow-xl before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent no-underline flex-shrink-0"
-                style={{
-                  backgroundColor: '#3b82f6', 
-                  color: 'white',
-                  height: '32px',
-                  borderRadius: '6px',
-                  fontSize: '12px',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  border: 'none',
-                  outline: 'none',
-                  boxShadow: 'none',
-                  paddingLeft: '12px',
-                  paddingRight: '12px',
-                  width: 'auto'
-                }}
-                disabled={isSubmitting}
               >
-                <span className="relative z-10">
-                  {isSubmitting ? "Joining..." : "Join"}
-                </span>
-                <ArrowRight className="relative z-10 ml-0.5" style={{ width: '14px', height: '14px' }} />
+                Try early beta
+                <ArrowRight className="relative z-10 ml-0.5 h-4 w-4 inline-block" />
               </Button>
-            </form>
+            </a>
           </motion.div>
 
           {signupCount > 0 && (
