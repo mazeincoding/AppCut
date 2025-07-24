@@ -63,11 +63,11 @@ const ShortcutItem = ({
 
   return (
     <div className="flex items-center justify-between py-3 px-4 rounded-lg hover:bg-slate-600 transition-colors">
-      <div className="flex items-center gap-3 flex-1">
+      <div className="flex items-center gap-3 flex-1 pl-8">
         {shortcut.icon && (
           <div className="text-muted-foreground">{shortcut.icon}</div>
         )}
-        <span className="text-sm text-white">{shortcut.description}</span>
+        <span className="text-sm text-slate-500" style={{ paddingLeft: '24px' }}>{shortcut.description}</span>
       </div>
       <div className="flex items-center gap-1 flex-shrink-0 ml-4">
         {displayKeys.map((key: string, index: number) => (
@@ -243,12 +243,12 @@ export const KeyboardShortcutsHelp = () => {
         }}
       >
         <DialogHeader className="rounded-t-2xl -m-6 p-6 mb-6" style={{ backgroundColor: '#475569' }}>
-          <DialogTitle className="flex items-center gap-2 text-lg text-white font-semibold">
+          <DialogTitle className="flex items-center gap-2 text-lg text-white font-semibold" style={{ paddingLeft: '16px' }}>
             <Keyboard className="w-5 h-5" />
             Keyboard Shortcuts
           </DialogTitle>
-          <DialogDescription className="text-sm text-slate-300">
-            Speed up your workflow with these keyboard shortcuts. Click any key to edit.
+          <DialogDescription className="text-sm text-slate-300 text-center">
+            Speed up your workflow with these keyboard shortcuts.<br />Click any key to edit.
           </DialogDescription>
         </DialogHeader>
 
@@ -256,7 +256,7 @@ export const KeyboardShortcutsHelp = () => {
           <div className="space-y-6">
               {categories.map((category) => (
                 <div key={category} className="flex flex-col gap-1">
-                  <h3 className="text-xs uppercase tracking-wide font-semibold text-slate-400 mb-3">
+                  <h3 className="text-xs uppercase tracking-wide font-semibold text-slate-400 mb-3" style={{ paddingLeft: '16px' }}>
                     {category}
                   </h3>
                   <div className="space-y-2">
