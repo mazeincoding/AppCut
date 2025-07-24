@@ -48,7 +48,7 @@ export function SnapIndicator({
         width: "2px",
       }}
     >
-      <div className={`w-0.5 h-full bg-primary/40 opacity-80`} />
+      <div className={"w-0.5 h-full bg-primary/40 opacity-80"} />
     </div>
   );
 }

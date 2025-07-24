@@ -100,7 +100,7 @@ function ColorView({
 }) {
   return (
     <div className="w-full h-full">
-      <div className="absolute top-8 left-0 w-[calc(100%-1rem)] h-12 bg-gradient-to-b from-popover to-transparent pointer-events-none"></div>
+      <div className="absolute top-8 left-0 w-[calc(100%-1rem)] h-12 bg-gradient-to-b from-popover to-transparent pointer-events-none" />
       <div className="grid grid-cols-4 gap-2 w-full h-full p-3 pt-0 overflow-auto">
         <div className="w-full aspect-square rounded-sm cursor-pointer border border-foreground/15 hover:border-primary flex items-center justify-center">
           <PipetteIcon className="size-4" />

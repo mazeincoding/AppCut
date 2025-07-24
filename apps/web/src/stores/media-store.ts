@@ -219,15 +219,19 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
         mediaItems.map(async (item) => {
           if (item.type === "video" && item.file) {
             try {
-              const { thumbnailUrl, width, height } = await generateVideoThumbnail(item.file);
+              const { thumbnailUrl, width, height } =
+                await generateVideoThumbnail(item.file);
               return {
                 ...item,
                 thumbnailUrl,
                 width: width || item.width,
-                height: height || item.height
+                height: height || item.height,
               };
             } catch (error) {
-              console.error(`Failed to regenerate thumbnail for video ${item.id}:`, error);
+              console.error(
+                `Failed to regenerate thumbnail for video ${item.id}:`,
+                error
+              );
               return item;
             }
           }
