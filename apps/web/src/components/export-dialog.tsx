@@ -335,7 +335,7 @@ export function ExportDialog() {
           </div>
 
           {/* Resolution & Size Info */}
-          <div className="space-y-3">
+          <div className="space-y-3" style={{ marginTop: '10px' }}>
             <Label className="text-sm font-medium">Resolution & Size</Label>
             <div className="p-3 bg-muted rounded-lg space-y-2">
               <div className="flex justify-between items-center">
@@ -374,7 +374,7 @@ export function ExportDialog() {
           </div>
 
           {/* Duration Info */}
-          <div className="space-y-3">
+          <div className="space-y-3" style={{ marginTop: '10px' }}>
             <Label className="text-sm font-medium">Export Duration</Label>
             <div className="p-3 bg-muted rounded-lg">
               <div className="flex justify-between items-center">
