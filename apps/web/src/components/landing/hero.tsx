@@ -133,14 +133,17 @@ function TitleComponent({ signupCount }: { signupCount: number }) {
       />
       
       <div className="max-w-5xl mx-auto w-full flex-1 flex flex-col justify-center">
-        <div className="mb-8 flex justify-center">
+        <div className="mb-8 flex justify-center" style={{ marginTop: '20px' }}>
           <a 
             href="https://vercel.com/home?utm_source=opencut" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm hover:bg-white/10 hover:border-white/20 transition-all duration-200 group shadow-lg no-underline"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-white/5 backdrop-blur-sm hover:bg-white/10 transition-all duration-200 group shadow-lg no-underline"
           >
-            <span className="text-xs font-medium text-zinc-400 group-hover:text-zinc-300 transition-colors">
+            <span 
+              className="text-xs font-medium transition-colors"
+              style={{ color: 'white' }}
+            >
               Sponsored by
             </span>
             <div className="flex items-center gap-1.5">
@@ -149,7 +152,10 @@ function TitleComponent({ signupCount }: { signupCount: number }) {
                   <path d="M37.5274 0L75.0548 65H0L37.5274 0Z" fill="currentColor"></path>
                 </svg>
               </div>
-              <span className="text-xs font-medium text-zinc-100 group-hover:text-white transition-colors">
+              <span 
+                className="text-xs font-medium transition-colors"
+                style={{ color: 'white' }}
+              >
                 Vercel
               </span>
             </div>
@@ -368,8 +374,8 @@ function OpenSourceSlider({ width: initialWidth, height = 70, handleSize = 18, o
             aria-label={handle === "left" ? "Adjust start" : "Adjust end"}
             onPointerDown={(e) => startDrag(handle, e)}
             onKeyDown={nudgeHandle(handle)}
-            className={`z-20 absolute top-0 h-full w-4 rounded-full bg-[#262626] border border-yellow-500 flex items-center justify-center cursor-ew-resize focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-transform duration-150 ease-in-out opacity-100 ${scaleClass}`}
-            style={{ left: x, touchAction: "none" }}
+            className={`z-20 absolute top-0 h-full w-4 rounded-full bg-[#262626] border-2 border-yellow-500 flex items-center justify-center cursor-ew-resize focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-transform duration-150 ease-in-out opacity-100 ${scaleClass}`}
+            style={{ left: x, touchAction: "none", boxShadow: '0 0 0 2px #262626, 0 0 0 4px #eab308' }}
           >
             <span className="w-3 h-5 rounded-full bg-yellow-500" />
           </button>
