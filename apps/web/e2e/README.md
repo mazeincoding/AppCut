@@ -115,8 +115,21 @@ bun run test:e2e:headed
 # Debug mode (step through tests)
 bun run test:e2e:debug
 
+# Run specific test categories
+npx playwright test export-tests/
+npx playwright test ai-tests/
+npx playwright test timeline-tests/
+npx playwright test media-tests/
+npx playwright test navigation-tests/
+npx playwright test ui-tests/
+
 # Run specific test file
-bun run test:e2e setup-verification.spec.ts
+npx playwright test export-tests/basic-export.spec.ts
+npx playwright test ai-tests/manual-video-generation-test.spec.js
+
+# Run performance tests
+cd performance-tests && npm run benchmark
+cd video-export-tests && ./run_tests.sh
 ```
 
 ## Test Environment Requirements
