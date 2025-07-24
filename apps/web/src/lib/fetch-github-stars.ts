@@ -1,14 +1,11 @@
 "use server";
 
+import { CACHE_DURATION_SECONDS, FALLBACK_STARS } from "@/constants/gh-stars";
 import { unstable_cache } from "next/cache";
 
 interface GitHubRepoData {
   stargazers_count: number;
 }
-
-// Constants for maintainability
-const FALLBACK_STARS = "28k";
-const CACHE_DURATION_SECONDS = 3600; // 1 hour
 
 function formatStarCount(count: number): string {
   if (count >= 1_000_000) {

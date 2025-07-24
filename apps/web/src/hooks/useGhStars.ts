@@ -2,6 +2,12 @@
 
 import { useState, useEffect, useTransition, useRef } from "react";
 import { refreshGitHubStars } from "@/lib/fetch-github-stars";
+import {
+  CLIENT_CACHE_DURATION,
+  FALLBACK_STARS,
+  MAX_POLL_RETRIES,
+  POLL_TIMEOUT,
+} from "@/constants/gh-stars";
 
 interface GitHubStarsState {
   stars: string;
@@ -13,11 +19,6 @@ interface CacheData {
   data: string | null;
   timestamp: number;
 }
-
-const CLIENT_CACHE_DURATION = 5 * 60 * 1000;
-const MAX_POLL_RETRIES = 50;
-const POLL_TIMEOUT = 10000;
-const FALLBACK_STARS = "28k";
 
 let fetchPromise: Promise<string> | null = null;
 

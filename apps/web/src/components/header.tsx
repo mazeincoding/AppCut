@@ -14,6 +14,7 @@ import { HeaderBase } from "./header-base";
 import Image from "next/image";
 import { useState } from "react";
 import { useGitHubStars } from "@/hooks/useGhStars";
+import { FALLBACK_STARS } from "@/constants/gh-stars";
 
 interface HeaderProps {
   initialStars?: string;
@@ -71,7 +72,7 @@ export function Header({ initialStars }: HeaderProps) {
                 {isLoading ? (
                   <div className="w-8 h-4 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
                 ) : (
-                  `${isLoading ? "28k" : stars}+`
+                  `${isLoading ? FALLBACK_STARS : stars}+`
                 )}
               </span>
             </div>
@@ -84,7 +85,7 @@ export function Header({ initialStars }: HeaderProps) {
         <Link href="/projects">
           <Button
             size="sm"
-            className="text-sm font-medium border-0 rounded-full px-6 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 group"
+            className="text-sm font-medium border-0 rounded-sm px-4 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 group"
           >
             Projects
             <RiArrowRightFill className="h-4 w-4 ml-1 group-hover:translate-x-0.5 transition-transform" />
@@ -159,7 +160,7 @@ export function Header({ initialStars }: HeaderProps) {
                     href="/projects"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    <Button className="w-full rounded-full">
+                    <Button className="w-full rounded-sm">
                       Projects
                       <RiArrowRightLine className="h-4 w-4 ml-2" />
                     </Button>
