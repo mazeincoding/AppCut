@@ -88,10 +88,10 @@ export function AiView() {
 
   const isModelSelected = (modelId: string) => selectedModels.includes(modelId);
 
-  // 🧪 TESTING FUNCTION: Test video download and media panel loading
+  // 🧪 TESTING FUNCTION: Test video fetching and media panel loading
   const handleTestDownloadAndMedia = async () => {
     if (selectedModels.length === 0) {
-      setError('Select at least one model to test download functionality');
+      setError('Select at least one model to test media panel functionality');
       return;
     }
 
@@ -106,18 +106,18 @@ export function AiView() {
         videoPath: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_5mb.mp4',
         fileSize: 5242880, // 5MB
         duration: 30,
-        prompt: prompt.trim() || 'Test video download',
+        prompt: prompt.trim() || 'Test video fetch',
         model: selectedModels[0]
       };
 
-      setStatusMessage('Testing video download and media panel integration...');
+      setStatusMessage('Testing video fetch and media panel integration...');
       
       // Test the actual download and media panel logic
       if (activeProject) {
         const modelName = AI_MODELS.find(m => m.id === selectedModels[0])?.name || selectedModels[0];
         const fileName = `test-${modelName.toLowerCase().replace(/\s+/g, '-')}-${testVideo.jobId.substring(0, 8)}.mp4`;
         
-        setStatusMessage('Downloading test video...');
+        setStatusMessage('Fetching test video...');
         
         try {
           // Fetch the video
@@ -144,17 +144,6 @@ export function AiView() {
             height: 720,
           });
           
-          setStatusMessage('Downloading to Downloads folder...');
-          
-          // Test download to Downloads folder
-          const downloadLink = document.createElement('a');
-          downloadLink.href = URL.createObjectURL(blob);
-          downloadLink.download = fileName;
-          document.body.appendChild(downloadLink);
-          downloadLink.click();
-          document.body.removeChild(downloadLink);
-          URL.revokeObjectURL(downloadLink.href);
-          
           // Show success
           setGeneratedVideos([{ modelId: selectedModels[0], video: testVideo }]);
           addToHistory(testVideo);
@@ -169,9 +158,9 @@ export function AiView() {
           
         } catch (downloadError) {
           console.error('Download/Media test error:', downloadError);
-          setError(`Download test failed: ${downloadError instanceof Error ? downloadError.message : 'Unknown error'}`);
+          setError(`Media panel test failed: ${downloadError instanceof Error ? downloadError.message : 'Unknown error'}`);
           
-          debugLogger.log('AIView', 'TEST_DOWNLOAD_AND_MEDIA_FAILED', { 
+          debugLogger.log('AIView', 'TEST_MEDIA_PANEL_FAILED', { 
             error: downloadError instanceof Error ? downloadError.message : 'Unknown error',
             modelName,
             projectId: activeProject.id 
@@ -535,7 +524,7 @@ export function AiView() {
           // Add each video to history as it's generated
           addToHistory(newVideo);
           
-          // Automatically add to media panel and download to Downloads folder
+          // Automatically add to media panel
           if (activeProject) {
             try {
               const videoResponse = await fetch(newVideo.videoUrl);
@@ -557,16 +546,7 @@ export function AiView() {
                 height: 1080,
               });
               
-              // Automatically download to Downloads folder
-              const downloadLink = document.createElement('a');
-              downloadLink.href = URL.createObjectURL(blob);
-              downloadLink.download = fileName;
-              document.body.appendChild(downloadLink);
-              downloadLink.click();
-              document.body.removeChild(downloadLink);
-              URL.revokeObjectURL(downloadLink.href);
-              
-              debugLogger.log('AIView', 'VIDEO_ADDED_TO_MEDIA_PANEL_AND_DOWNLOADED', { 
+              debugLogger.log('AIView', 'VIDEO_ADDED_TO_MEDIA_PANEL', { 
                 videoUrl: newVideo.videoUrl,
                 modelName,
                 fileName,
@@ -890,7 +870,7 @@ export function AiView() {
               </>
             ) : (
               <>
-                📁 Test Download & Media Panel
+                📁 Test Media Panel
               </>
             )}
           </Button>
@@ -1039,8 +1019,7 @@ export function AiView() {
             </div>
             
             <div className="text-sm text-green-700 mb-3">
-              ✅ All videos automatically added to Media panel<br/>
-              📁 Videos downloaded to your Downloads folder
+              ✅ All videos automatically added to Media panel
             </div>
             
             <div className="space-y-2">
