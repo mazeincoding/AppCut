@@ -62,17 +62,17 @@ const ShortcutItem = ({
   });
 
   return (
-    <div className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-gray-200 transition-colors">
+    <div className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-gray-600 transition-colors">
       <div className="flex items-center gap-3 flex-1">
         {shortcut.icon && (
           <div className="text-muted-foreground">{shortcut.icon}</div>
         )}
-        <span className="text-sm">{shortcut.description}</span>
+        <span className="text-sm text-white">{shortcut.description}</span>
       </div>
       <div className="flex items-center gap-1 flex-shrink-0 ml-4">
         {displayKeys.map((key: string, index: number) => (
           <div key={index} className="flex items-center gap-1">
-            <div className="flex items-center">
+            <div className="flex items-center gap-4">
               {key.split("+").map((keyPart: string, partIndex: number) => {
                 const keyId = `${shortcut.id}-${index}-${partIndex}`;
                 return (
@@ -122,7 +122,7 @@ const EditableShortcutKey = ({
 
   return (
     <kbd
-      className={`inline-flex font-sans text-xs rounded px-2 min-w-[1.5rem] min-h-[1.5rem] leading-none items-center justify-center shadow-sm border mr-1 cursor-pointer hover:bg-opacity-80 ${
+      className={`inline-flex font-sans text-xs rounded px-2 min-w-[1.5rem] min-h-[1.5rem] leading-none items-center justify-center shadow-sm border mr-2 cursor-pointer hover:bg-opacity-80 ${
         isRecording
           ? "border-primary bg-primary/10"
           : "border-white/10 bg-black/20"
@@ -230,40 +230,24 @@ export const KeyboardShortcutsHelp = () => {
           <span className="hidden sm:inline text-xs">Shortcuts</span>
         </Button>
       </DialogTrigger>
-      <DialogPortal>
-        <DialogOverlay />
-        <DialogPrimitive.Content
-          className="fixed left-[50%] top-[50%] z-50 grid w-[40vw] max-w-2xl translate-x-[-50%] translate-y-[-50%] gap-4 border-0 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg"
-          style={{
-            backgroundColor: '#ff0000',
-            maxHeight: '80vh',
-            overflow: 'hidden'
-          }}
-        >
-          <div 
-            className="p-6 space-y-4 overflow-y-auto"
-            style={{ backgroundColor: '#ff0000' }}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="flex items-center gap-1.5 text-base text-gray-900 font-semibold">
-                  <Keyboard className="w-4 h-4" />
-                  Shortcuts
-                </h2>
-                <p className="text-xs text-gray-600 mt-2">
-                  Speed up your workflow with keyboard shortcuts. Click any key to edit.
-                </p>
-              </div>
-              <DialogPrimitive.Close className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
-                <X className="h-4 w-4" />
-                <span className="sr-only">Close</span>
-              </DialogPrimitive.Close>
-            </div>
+      <DialogContent 
+        className="w-[40vw] max-w-2xl max-h-[80vh] overflow-y-auto border-0 shadow-lg"
+        style={{ backgroundColor: '#374151' }}
+      >
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-1.5 text-base text-white font-semibold">
+            <Keyboard className="w-4 h-4" />
+            Shortcuts
+          </DialogTitle>
+          <DialogDescription className="text-xs text-gray-300">
+            Speed up your workflow with keyboard shortcuts. Click any key to edit.
+          </DialogDescription>
+        </DialogHeader>
 
             <div className="space-y-6">
               {categories.map((category) => (
                 <div key={category} className="flex flex-col gap-1">
-                  <h3 className="text-xs uppercase tracking-wide font-medium text-gray-600">
+                  <h3 className="text-xs uppercase tracking-wide font-medium text-gray-300">
                     {category}
                   </h3>
                   <div className="space-y-2">
@@ -280,10 +264,8 @@ export const KeyboardShortcutsHelp = () => {
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
-        </DialogPrimitive.Content>
-      </DialogPortal>
+        </div>
+      </DialogContent>
     </Dialog>
   );
 };
