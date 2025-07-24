@@ -217,7 +217,7 @@ export const KeyboardShortcutsHelp = () => {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button 
-          variant="ghost" 
+          variant="text" 
           size="sm" 
           className="gap-2 transition-all duration-200 !bg-transparent hover:!bg-transparent !border-transparent"
         >

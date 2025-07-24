@@ -86,14 +86,16 @@ export function Header() {
             boxShadow: 'rgba(0, 0, 0, 0.1) 0px 1px 3px'
           }}
           onMouseEnter={(e) => {
-            e.target.style.backgroundColor = '#f3f4f6'
-            e.target.style.transform = 'translateY(-2px)'
-            e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)'
+            const target = e.target as HTMLButtonElement;
+            target.style.backgroundColor = '#f3f4f6'
+            target.style.transform = 'translateY(-2px)'
+            target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)'
           }}
           onMouseLeave={(e) => {
-            e.target.style.backgroundColor = 'white'
-            e.target.style.transform = 'translateY(0px)'
-            e.target.style.boxShadow = 'rgba(0, 0, 0, 0.1) 0px 1px 3px'
+            const target = e.target as HTMLButtonElement;
+            target.style.backgroundColor = 'white'
+            target.style.transform = 'translateY(0px)'
+            target.style.boxShadow = 'rgba(0, 0, 0, 0.1) 0px 1px 3px'
           }}
         >
           Projects

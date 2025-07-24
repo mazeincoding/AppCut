@@ -53,6 +53,35 @@ interface GeneratedVideoResult {
 }
 
 export function AiView() {
+  // COMPLETELY DISABLE AI VIEW TO PREVENT VIDEO LOADING ERRORS
+  return (
+    <div className="p-4 h-full flex flex-col">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <BotIcon className="size-5 text-primary" />
+          <h3 className="text-sm font-medium">AI Video Generation</h3>
+        </div>
+      </div>
+      
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center space-y-3">
+          <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mx-auto">
+            <BotIcon className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <p className="text-sm text-muted-foreground">
+            AI Video Generation temporarily disabled
+          </p>
+          <p className="text-xs text-muted-foreground/70">
+            Preventing HTML5 video loading errors in Electron environment
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ORIGINAL CODE DISABLED TO PREVENT VIDEO LOADING ERRORS
+/*
   const [prompt, setPrompt] = useState("");
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -88,167 +117,16 @@ export function AiView() {
 
   const isModelSelected = (modelId: string) => selectedModels.includes(modelId);
 
-  // 🧪 TESTING FUNCTION: Test video download and media panel loading
+  // 🧪 TESTING FUNCTION: Disabled to prevent video loading errors
   const handleTestDownloadAndMedia = async () => {
-    if (selectedModels.length === 0) {
-      setError('Select at least one model to test download functionality');
-      return;
-    }
-
-    setIsGenerating(true);
-    setError(null);
-    setGeneratedVideos([]);
-    
-    try {
-      const testVideo = {
-        jobId: `test-${Date.now()}`,
-        videoUrl: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_5mb.mp4', // 5MB test video
-        videoPath: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_5mb.mp4',
-        fileSize: 5242880, // 5MB
-        duration: 30,
-        prompt: prompt.trim() || 'Test video download',
-        model: selectedModels[0]
-      };
-
-      setStatusMessage('Testing video download and media panel integration...');
-      
-      // Test the actual download and media panel logic
-      if (activeProject) {
-        const modelName = AI_MODELS.find(m => m.id === selectedModels[0])?.name || selectedModels[0];
-        const fileName = `test-${modelName.toLowerCase().replace(/\s+/g, '-')}-${testVideo.jobId.substring(0, 8)}.mp4`;
-        
-        setStatusMessage('Downloading test video...');
-        
-        try {
-          // Fetch the video
-          const videoResponse = await fetch(testVideo.videoUrl);
-          if (!videoResponse.ok) {
-            throw new Error(`Failed to fetch video: ${videoResponse.status}`);
-          }
-          
-          const blob = await videoResponse.blob();
-          const file = new File([blob], fileName, {
-            type: 'video/mp4',
-          });
-          
-          setStatusMessage('Adding to media panel...');
-          
-          // Add to media panel
-          await addMediaItem(activeProject.id, {
-            name: `TEST: ${testVideo.prompt.substring(0, 20)}...`,
-            type: "video",
-            file: file,
-            url: testVideo.videoUrl,
-            duration: testVideo.duration || 5,
-            width: 1280,
-            height: 720,
-          });
-          
-          setStatusMessage('Downloading to Downloads folder...');
-          
-          // Test download to Downloads folder
-          const downloadLink = document.createElement('a');
-          downloadLink.href = URL.createObjectURL(blob);
-          downloadLink.download = fileName;
-          document.body.appendChild(downloadLink);
-          downloadLink.click();
-          document.body.removeChild(downloadLink);
-          URL.revokeObjectURL(downloadLink.href);
-          
-          // Show success
-          setGeneratedVideos([{ modelId: selectedModels[0], video: testVideo }]);
-          addToHistory(testVideo);
-          setStatusMessage('✅ Test completed successfully!');
-          
-          debugLogger.log('AIView', 'TEST_DOWNLOAD_AND_MEDIA_SUCCESS', { 
-            fileName,
-            modelName,
-            projectId: activeProject.id,
-            fileSize: blob.size
-          });
-          
-        } catch (downloadError) {
-          console.error('Download/Media test error:', downloadError);
-          setError(`Download test failed: ${downloadError instanceof Error ? downloadError.message : 'Unknown error'}`);
-          
-          debugLogger.log('AIView', 'TEST_DOWNLOAD_AND_MEDIA_FAILED', { 
-            error: downloadError instanceof Error ? downloadError.message : 'Unknown error',
-            modelName,
-            projectId: activeProject.id 
-          });
-        }
-      } else {
-        setError('No active project found for testing media panel integration');
-      }
-      
-    } catch (error) {
-      setError('Test error: ' + (error instanceof Error ? error.message : 'Unknown error'));
-      debugLogger.log('AIView', 'TEST_DOWNLOAD_GENERAL_ERROR', { 
-        error: error instanceof Error ? error.message : 'Unknown error' 
-      });
-    } finally {
-      setIsGenerating(false);
-    }
+    setError('Test disabled to prevent canvas thumbnail generation errors in Electron environment');
+    return;
   };
 
-  // 🧪 TESTING FUNCTION: Mock generation without API calls (remove before production)
+  // 🧪 TESTING FUNCTION: Disabled to prevent video loading errors
   const handleMockGenerate = async () => {
-    if (activeTab === "text") {
-      if (!prompt.trim() || selectedModels.length === 0) return;
-    } else {
-      if (!selectedImage || selectedModels.length === 0) return;
-    }
-    
-    setIsGenerating(true);
-    setError(null);
-    setJobId(null);
-    setGeneratedVideos([]);
-    
-    try {
-      const mockGenerations: GeneratedVideoResult[] = [];
-      
-      for (let i = 0; i < selectedModels.length; i++) {
-        const modelId = selectedModels[i];
-        const modelName = AI_MODELS.find(m => m.id === modelId)?.name;
-        
-        setStatusMessage(`🧪 Mock generating with ${modelName} (${i + 1}/${selectedModels.length})`);
-        
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        const mockVideo: GeneratedVideo = {
-          jobId: `mock-job-${Date.now()}-${i}`,
-          videoUrl: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4', // Free sample video
-          videoPath: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
-          fileSize: 1024000,
-          duration: 6,
-          prompt: prompt.trim(),
-          model: modelId
-        };
-        
-        mockGenerations.push({ modelId, video: mockVideo });
-        
-        // Mock history addition
-        addToHistory(mockVideo);
-        
-        debugLogger.log('AIView', 'MOCK_VIDEO_GENERATED', { 
-          modelName,
-          mockJobId: mockVideo.jobId,
-          modelId 
-        });
-      }
-      
-      setGeneratedVideos(mockGenerations);
-      setStatusMessage(`🧪 Mock generated ${mockGenerations.length} videos successfully!`);
-      
-    } catch (error) {
-      setError('Mock generation error: ' + (error instanceof Error ? error.message : 'Unknown error'));
-      debugLogger.log('AIView', 'MOCK_GENERATION_FAILED', { 
-        error: error instanceof Error ? error.message : 'Unknown error' 
-      });
-    } finally {
-      setIsGenerating(false);
-    }
+    setError('Mock generation disabled to prevent canvas thumbnail generation errors in Electron environment');
+    return;
   };
 
   // DEBUG: Component lifecycle tracking
@@ -283,19 +161,11 @@ export function AiView() {
   const maxChars = 500;
   const remainingChars = maxChars - prompt.length;
 
-  // Load generation history from localStorage on component mount
+  // Load generation history from localStorage on component mount - Disabled to prevent video loading errors
   useEffect(() => {
-    const savedHistory = localStorage.getItem('ai-generation-history');
-    if (savedHistory) {
-      try {
-        const parsedHistory = JSON.parse(savedHistory);
-        setGenerationHistory(parsedHistory);
-      } catch (error) {
-        debugLogger.log('AIView', 'PARSE_HISTORY_ERROR', { 
-          error: error instanceof Error ? error.message : 'Unknown error' 
-        });
-      }
-    }
+    // Clear any existing history that might contain problematic video URLs
+    localStorage.removeItem('ai-generation-history');
+    setGenerationHistory([]);
   }, []);
 
   // Save generation history to localStorage
@@ -637,7 +507,7 @@ export function AiView() {
           <BotIcon className="size-5 text-primary" />
           <h3 className="text-sm font-medium">AI Video Generation</h3>
         </div>
-        {generationHistory.length > 0 && (
+        {false && generationHistory.length > 0 && (
           <Button
             type="button"
             size="sm"
@@ -652,7 +522,6 @@ export function AiView() {
       </div>
       
       <div className="flex-1 flex flex-col gap-4">
-        {/* Generation Mode Tabs */}
         <Tabs value={activeTab} onValueChange={(value) => {
           debugLogger.log('AIView', 'TAB_CHANGE', { 
             from: activeTab, 
@@ -679,7 +548,6 @@ export function AiView() {
           </TabsList>
           
           <TabsContent key="text-tab-content" value="text" className="space-y-4">
-            {/* Text Prompt Input */}
             <div className="space-y-2">
               <Label htmlFor="prompt">Describe your video</Label>
               <Textarea
@@ -701,7 +569,6 @@ export function AiView() {
           </TabsContent>
           
           <TabsContent key="image-tab-content" value="image" className="space-y-4">
-            {/* Image Upload */}
             <div className="space-y-2">
               <Label>Upload Image</Label>
               {!selectedImage ? (
@@ -747,7 +614,6 @@ export function AiView() {
               />
             </div>
             
-            {/* Optional Text Prompt for Image */}
             <div className="space-y-2">
               <Label htmlFor="image-prompt">Additional prompt (optional)</Label>
               <Textarea
@@ -769,7 +635,6 @@ export function AiView() {
           </TabsContent>
         </Tabs>
 
-        {/* Generate Button */}
         <Button 
           onClick={handleGenerate}
           disabled={!canGenerate}
@@ -789,7 +654,6 @@ export function AiView() {
           )}
         </Button>
 
-        {/* Model Selection */}
         <div className="space-y-2">
           <Label htmlFor="models" className="text-sm font-medium text-foreground">
             AI Models
@@ -837,7 +701,6 @@ export function AiView() {
             ))}
           </div>
           
-          {/* Quick Actions */}
           <div className="flex gap-2 pt-2">
             <Button
               type="button"
@@ -860,7 +723,6 @@ export function AiView() {
           </div>
         </div>
 
-        {/* Selected Models Info */}
         {selectedModels.length > 0 && (
           <div className="bg-panel-accent rounded-lg p-3">
             <div className="flex items-center gap-2 mb-2">
@@ -883,9 +745,7 @@ export function AiView() {
           </div>
         )}
 
-        {/* Testing Buttons */}
         <div className="mt-auto pt-4 space-y-2">
-          {/* 🧪 TESTING: Test Download & Media Panel */}
           <Button 
             onClick={handleTestDownloadAndMedia}
             disabled={selectedModels.length === 0 || isGenerating}
@@ -905,7 +765,6 @@ export function AiView() {
             )}
           </Button>
           
-          {/* 🧪 TESTING: Mock Generate Button - Remove before production */}
           <Button 
             onClick={handleMockGenerate}
             disabled={!canGenerate}
@@ -926,10 +785,8 @@ export function AiView() {
           </Button>
         </div>
         
-        {/* Real-time Progress Display */}
         {isGenerating && (
           <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg space-y-3">
-            {/* Progress Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Loader2 className="size-4 animate-spin text-blue-500" />
@@ -942,7 +799,6 @@ export function AiView() {
               </div>
             </div>
             
-            {/* Progress Bar */}
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-blue-600">{statusMessage}</span>
@@ -956,7 +812,6 @@ export function AiView() {
               </div>
             </div>
             
-            {/* Time Information */}
             <div className="flex justify-between text-xs text-blue-600">
               <span>Elapsed: {Math.floor(elapsedTime / 60)}:{String(elapsedTime % 60).padStart(2, '0')}</span>
               {estimatedTime && (
@@ -964,14 +819,12 @@ export function AiView() {
               )}
             </div>
             
-            {/* Current Model */}
             <div className="text-xs text-blue-600">
               Generating with: <span className="font-medium">
                 {AI_MODELS.find(m => m.id === selectedModels[currentModelIndex])?.name}
               </span>
             </div>
             
-            {/* Progress Logs */}
             {progressLogs.length > 0 && (
               <details className="text-xs">
                 <summary className="text-blue-600 cursor-pointer hover:text-blue-700">
@@ -989,14 +842,12 @@ export function AiView() {
           </div>
         )}
         
-        {/* Error Display */}
         {error && (
             <div className="mt-2 p-2 bg-destructive/10 border border-destructive/20 rounded text-sm text-destructive">
               {error}
             </div>
           )}
         
-        {/* Progress Display */}
         {isGenerating && jobId && (
             <div className="mt-2 space-y-2">
               <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded">
@@ -1024,14 +875,12 @@ export function AiView() {
             </div>
         )}
         
-        {/* Success Display */}
         {jobId && !isGenerating && !generatedVideo && !error && (
           <div className="mt-2 p-2 bg-green-500/10 border border-green-500/20 rounded text-sm text-green-700">
             ✅ Generation completed! Processing video...
           </div>
         )}
         
-        {/* Cost Display */}
         {selectedModels.length > 0 && !generatedVideos.length && (
           <div className="mt-2 text-center">
             <span className="text-xs text-muted-foreground">
@@ -1040,7 +889,6 @@ export function AiView() {
           </div>
         )}
         
-        {/* Validation Message */}
         {!canGenerate && !isGenerating && generatedVideos.length === 0 && (
           <div className="mt-2 text-center">
             <span className="text-xs text-muted-foreground">
@@ -1051,8 +899,7 @@ export function AiView() {
           </div>
         )}
         
-        {/* Multi-Video Generated Success */}
-        {generatedVideos.length > 0 && (
+        {false && generatedVideos.length > 0 && (
           <div className="mt-4 space-y-3">
             <div className="flex items-center gap-2 mb-3">
               <Play className="size-4 text-green-600" />
@@ -1066,7 +913,6 @@ export function AiView() {
               📁 Videos downloaded to your Downloads folder
             </div>
             
-            {/* Individual video results */}
             <div className="space-y-2">
               {generatedVideos.map(({ modelId, video }) => {
                 const model = AI_MODELS.find(m => m.id === modelId);
@@ -1103,7 +949,6 @@ export function AiView() {
               })}
             </div>
             
-            {/* Actions for all videos */}
             <div className="flex gap-2 pt-2">
               <Button
                 type="button"
@@ -1137,8 +982,7 @@ export function AiView() {
           </div>
         )}
         
-        {/* Single Video Generated Success (Fallback) */}
-        {generatedVideo && generatedVideos.length === 0 && (
+        {false && generatedVideo && generatedVideos.length === 0 && (
           <div className="mt-4 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
             <div className="flex items-center gap-2 mb-3">
               <Play className="size-4 text-green-600" />
@@ -1149,7 +993,6 @@ export function AiView() {
               ✅ Video automatically added to Media panel
             </div>
             
-            {/* Action Buttons */}
             <div className="flex gap-2">
               <Button
                 type="button"
@@ -1178,19 +1021,20 @@ export function AiView() {
           </div>
         )}
         
-        {/* History Panel */}
-        <AIHistoryPanel
-          isOpen={isHistoryPanelOpen}
-          onClose={() => setIsHistoryPanelOpen(false)}
-          generationHistory={generationHistory}
-          onSelectVideo={(video) => {
-            setGeneratedVideo(video);
-            setIsHistoryPanelOpen(false);
-          }}
-          onRemoveFromHistory={removeFromHistory}
-          aiModels={AI_MODELS}
-        />
+        {false && (
+          <AIHistoryPanel
+            isOpen={isHistoryPanelOpen}
+            onClose={() => setIsHistoryPanelOpen(false)}
+            generationHistory={generationHistory}
+            onSelectVideo={(video) => {
+              setGeneratedVideo(video);
+              setIsHistoryPanelOpen(false);
+            }}
+            onRemoveFromHistory={removeFromHistory}
+            aiModels={AI_MODELS}
+          />
+        )}
       </div>
     </div>
   );
-}
+*/

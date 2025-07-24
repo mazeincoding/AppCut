@@ -149,8 +149,8 @@ export function Hero({ signupCount }: HeroProps) {
               cursor: 'pointer',
               transition: 'all 0.2s'
             }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = '#f9fafb'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+            onMouseEnter={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#f9fafb'}
+            onMouseLeave={(e) => (e.target as HTMLButtonElement).style.backgroundColor = 'white'}
           >
             Try early beta
             <ArrowRight className="ml-0.5 h-4 w-4" />
@@ -239,14 +239,16 @@ export function Hero({ signupCount }: HeroProps) {
                   transition: 'all 0.2s'
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = '#f3f4f6'
-                  e.target.style.transform = 'translateY(-2px)'
-                  e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)'
+                  const target = e.target as HTMLButtonElement;
+                  target.style.backgroundColor = '#f3f4f6'
+                  target.style.transform = 'translateY(-2px)'
+                  target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)'
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = 'white'
-                  e.target.style.transform = 'translateY(0px)'
-                  e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
+                  const target = e.target as HTMLButtonElement;
+                  target.style.backgroundColor = 'white'
+                  target.style.transform = 'translateY(0px)'
+                  target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
                 }}
               >
                 Try early beta

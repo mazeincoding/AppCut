@@ -186,8 +186,8 @@ export default function ProjectsPage() {
                   justifyContent: 'flex-start',
                   width: '150px'
                 }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+                onMouseEnter={(e) => (e.target as HTMLElement).style.backgroundColor = '#e9ecef'}
+                onMouseLeave={(e) => (e.target as HTMLElement).style.backgroundColor = '#f8f9fa'}
               >
                 <X className="mr-2" style={{ width: '14px', height: '14px' }} />
                 Cancel
@@ -211,8 +211,8 @@ export default function ProjectsPage() {
                     justifyContent: 'flex-start',
                     width: '150px'
                   }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+                  onMouseEnter={(e) => (e.target as HTMLElement).style.backgroundColor = '#e9ecef'}
+                  onMouseLeave={(e) => (e.target as HTMLElement).style.backgroundColor = '#f8f9fa'}
                 >
                   <Trash2 style={{ width: '14px', height: '14px', marginRight: '12px' }} />
                   Delete ({selectedProjects.size})
@@ -236,8 +236,8 @@ export default function ProjectsPage() {
                 width: '150px',
                 cursor: 'pointer'
               }}
-              onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+              onMouseEnter={(e) => (e.target as HTMLElement).style.backgroundColor = '#e9ecef'}
+              onMouseLeave={(e) => (e.target as HTMLElement).style.backgroundColor = '#f8f9fa'}
               onClick={() => handleCreateProject()}
               >
                 <Plus style={{ width: '14px', height: '14px', marginRight: '12px' }} />
@@ -266,8 +266,8 @@ export default function ProjectsPage() {
                   justifyContent: 'flex-start',
                   width: '150px'
                 }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+                onMouseEnter={(e) => (e.target as HTMLElement).style.backgroundColor = '#e9ecef'}
+                onMouseLeave={(e) => (e.target as HTMLElement).style.backgroundColor = '#f8f9fa'}
               >
                 <CheckSquare style={{ width: '14px', height: '14px', marginRight: '12px' }} />
                 Select All
@@ -295,8 +295,8 @@ export default function ProjectsPage() {
                     setIsBulkDeleteDialogOpen(true);
                   }
                 }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+                onMouseEnter={(e) => (e.target as HTMLElement).style.backgroundColor = '#e9ecef'}
+                onMouseLeave={(e) => (e.target as HTMLElement).style.backgroundColor = '#f8f9fa'}
               >
                 <Trash2 style={{ width: '14px', height: '14px', marginRight: '12px' }} />
                 Delete All
@@ -342,8 +342,8 @@ export default function ProjectsPage() {
                     justifyContent: 'flex-start',
                     width: '180px'
                   }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+                  onMouseEnter={(e) => (e.target as HTMLElement).style.backgroundColor = '#e9ecef'}
+                  onMouseLeave={(e) => (e.target as HTMLElement).style.backgroundColor = '#f8f9fa'}
                 >
                   <X className="mr-2" style={{ width: '14px', height: '14px' }} />
                   Cancel
@@ -367,8 +367,8 @@ export default function ProjectsPage() {
                       justifyContent: 'flex-start',
                       width: '180px'
                     }}
-                    onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
-                    onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+                    onMouseEnter={(e) => (e.target as HTMLElement).style.backgroundColor = '#e9ecef'}
+                    onMouseLeave={(e) => (e.target as HTMLElement).style.backgroundColor = '#f8f9fa'}
                   >
                     <Trash2 style={{ width: '14px', height: '14px', marginRight: '12px' }} />
                     Delete Selected ({selectedProjects.size})
@@ -400,8 +400,8 @@ export default function ProjectsPage() {
                     width: '150px',
                     cursor: 'pointer'
                   }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+                  onMouseEnter={(e) => (e.target as HTMLElement).style.backgroundColor = '#e9ecef'}
+                  onMouseLeave={(e) => (e.target as HTMLElement).style.backgroundColor = '#f8f9fa'}
                   onClick={() => handleCreateProject()}
                   >
                     <Plus style={{ width: '14px', height: '14px', marginRight: '12px' }} />
@@ -430,8 +430,8 @@ export default function ProjectsPage() {
                       justifyContent: 'flex-start',
                       width: '150px'
                     }}
-                    onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
-                    onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+                    onMouseEnter={(e) => (e.target as HTMLElement).style.backgroundColor = '#e9ecef'}
+                    onMouseLeave={(e) => (e.target as HTMLElement).style.backgroundColor = '#f8f9fa'}
                   >
                     <CheckSquare style={{ width: '14px', height: '14px', marginRight: '12px' }} />
                     Select All
@@ -459,8 +459,8 @@ export default function ProjectsPage() {
                         setIsBulkDeleteDialogOpen(true);
                       }
                     }}
-                    onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
-                    onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+                    onMouseEnter={(e) => (e.target as HTMLElement).style.backgroundColor = '#e9ecef'}
+                    onMouseLeave={(e) => (e.target as HTMLElement).style.backgroundColor = '#f8f9fa'}
                   >
                     <Trash2 style={{ width: '14px', height: '14px', marginRight: '12px' }} />
                       Delete All

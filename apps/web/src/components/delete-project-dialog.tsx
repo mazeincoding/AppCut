@@ -36,8 +36,8 @@ export function DeleteProjectDialog({
             width: '120px',
             margin: '0'
           }}
-          onMouseEnter={(e) => e.target.style.backgroundColor = '#333'}
-          onMouseLeave={(e) => e.target.style.backgroundColor = 'black'}
+          onMouseEnter={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#333'}
+          onMouseLeave={(e) => (e.target as HTMLButtonElement).style.backgroundColor = 'black'}
         >
           Cancel
         </button>
@@ -60,8 +60,8 @@ export function DeleteProjectDialog({
             width: '120px',
             margin: '0'
           }}
-          onMouseEnter={(e) => e.target.style.backgroundColor = '#b91c1c'}
-          onMouseLeave={(e) => e.target.style.backgroundColor = '#dc2626'}
+          onMouseEnter={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#b91c1c'}
+          onMouseLeave={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#dc2626'}
         >
           Delete
         </button>
