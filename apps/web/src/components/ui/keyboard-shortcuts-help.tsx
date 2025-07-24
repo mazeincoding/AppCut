@@ -146,6 +146,7 @@ export const KeyboardShortcutsHelp = () => {
   const [recordingShortcut, setRecordingShortcut] =
     useState<KeyboardShortcut | null>(null);
 
+
   const {
     updateKeybinding,
     removeKeybinding,
@@ -234,14 +235,14 @@ export const KeyboardShortcutsHelp = () => {
         </Button>
       </DialogTrigger>
       <DialogContent 
-        className="w-[40vw] max-w-2xl max-h-[80vh] overflow-hidden border-0 shadow-2xl rounded-2xl"
+        className="w-[40vw] max-w-2xl max-h-[80vh] overflow-hidden shadow-2xl !rounded-2xl"
         style={{ 
-          backgroundColor: '#334155 !important',
-          background: '#334155 !important',
-          backgroundImage: 'none !important'
+          backgroundColor: '#334155',
+          border: 'none',
+          borderRadius: '16px'
         }}
       >
-        <DialogHeader className="bg-slate-600 rounded-t-2xl -m-6 p-6 mb-6" style={{ backgroundColor: '#475569' }}>
+        <DialogHeader className="rounded-t-2xl -m-6 p-6 mb-6" style={{ backgroundColor: '#475569' }}>
           <DialogTitle className="flex items-center gap-2 text-lg text-white font-semibold">
             <Keyboard className="w-5 h-5" />
             Keyboard Shortcuts
