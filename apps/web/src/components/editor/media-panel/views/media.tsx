@@ -466,7 +466,22 @@ export function MediaView() {
               }}
             >
               {/* Render each media item as a draggable button */}
-              {filteredMediaItems.map((item) => (
+              {filteredMediaItems.map((item) => {
+                // Debug logging for media panel item rendering
+                console.group('🎬 MEDIA PANEL ITEM RENDER');
+                console.log('Item state:', {
+                  id: item.id,
+                  name: item.name,
+                  isAIGenerated: item.source === 'ai',
+                  thumbnailsReady: item.thumbnails?.length > 0,
+                  fileValid: item.file instanceof File,
+                  duration: item.duration,
+                  processingStage: item.processingStage,
+                  processingComplete: item.processingComplete
+                });
+                console.groupEnd();
+
+                return (
                 <ContextMenu key={item.id}>
                   <ContextMenuTrigger>
                     <DraggableMediaItem
@@ -512,9 +527,10 @@ export function MediaView() {
                     >
                       Delete
                     </ContextMenuItem>
-                  </ContextMenuContent>
-                </ContextMenu>
-              ))}
+                      </ContextMenuContent>
+                    </ContextMenu>
+                  );
+                })}
             </div>
           )}
         </div>

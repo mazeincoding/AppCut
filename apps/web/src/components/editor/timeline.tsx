@@ -389,7 +389,41 @@ export function Timeline() {
           });
         } else {
           // Handle media items
+          console.group('🎬 TIMELINE DROP DEBUG');
+          console.log('Drop event type:', e.type);
+          console.log('Drag data:', dragData);
+
+          // Log all media items for comparison
+          console.log('Available media items:', mediaItems.map(item => ({
+            id: item.id,
+            name: item.name,
+            duration: item.duration,
+            thumbnailCount: item.thumbnails?.length || 0,
+            fileValid: item.file instanceof File,
+            fileSize: item.file?.size,
+            processingStage: item.processingStage,
+            processingComplete: item.processingComplete
+          })));
+
           const mediaItem = mediaItems.find((item) => item.id === dragData.id);
+          console.log('Found media item:', mediaItem);
+
+          if (mediaItem) {
+            console.log('Media item detailed state:', {
+              hasThumbnails: mediaItem.thumbnails?.length > 0,
+              duration: mediaItem.duration,
+              fileType: mediaItem.file?.type,
+              processingComplete: mediaItem.processingComplete,
+              processingStage: mediaItem.processingStage,
+              isFileValid: mediaItem.file instanceof File
+            });
+          } else {
+            console.error('❌ Media item not found - ID mismatch or item not in store');
+            console.log('Attempted ID:', dragData.id);
+            console.log('Available IDs:', mediaItems.map(item => item.id));
+          }
+          console.groupEnd();
+
           if (!mediaItem) {
             toast.error("Media item not found");
             return;

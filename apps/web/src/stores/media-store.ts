@@ -354,6 +354,9 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     const item = get().mediaItems.find(item => item.id === mediaId);
     if (!item || !item.file || item.type !== 'video') return;
     
+    // Update processing stage at start
+    get().updateProcessingStage(mediaId, 'thumbnail-ffmpeg');
+    
     try {
       // Default options for enhanced thumbnails
       const defaultOptions: EnhancedThumbnailOptions = {
@@ -369,7 +372,15 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
         format: options.format || 'jpeg'
       };
 
+      const startTime = Date.now();
       const { thumbnails, metadata } = await generateEnhancedThumbnails(item.file, defaultOptions);
+      
+      console.log('🎬 FFMPEG THUMBNAIL COMPLETE:', {
+        mediaItemId: mediaId,
+        thumbnailCount: thumbnails.length,
+        duration: metadata.duration,
+        processingTime: Date.now() - startTime
+      });
       
       // Cache thumbnails
       for (let i = 0; i < thumbnails.length; i++) {
@@ -380,6 +391,9 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
           defaultOptions.resolution!
         );
       }
+      
+      // Update processing stage to complete
+      get().updateProcessingStage(mediaId, 'complete');
       
       set((state) => ({
         mediaItems: state.mediaItems.map(existing => 
@@ -402,6 +416,10 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
       }));
     } catch (error) {
       console.error('Failed to generate enhanced thumbnails:', error);
+      
+      // Update processing stage to error
+      get().updateProcessingStage(mediaId, 'error');
+      
       set((state) => ({
         mediaItems: state.mediaItems.map(existing => 
           existing.id === mediaId 
@@ -462,6 +480,9 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
       return;
     }
 
+    // Update processing stage at start  
+    get().updateProcessingStage(mediaId, 'thumbnail-ffmpeg');
+    
     try {
       console.log('🎬 MEDIA-STORE: Starting timeline preview generation for:', mediaId, {
         fileName: item.file.name,
@@ -522,6 +543,9 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
         );
       }
       
+      // Update processing stage to complete
+      get().updateProcessingStage(mediaId, 'complete');
+      
       // Update media item with timeline preview metadata
       set((state) => ({
         mediaItems: state.mediaItems.map(existing => 
@@ -546,6 +570,9 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
       
     } catch (error) {
       console.error('❌ MEDIA-STORE: Failed to generate timeline previews:', error);
+      
+      // Update processing stage to error
+      get().updateProcessingStage(mediaId, 'error');
       
       // Provide more helpful error message
       const errorMessage = error instanceof Error 
