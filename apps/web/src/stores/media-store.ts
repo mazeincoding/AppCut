@@ -726,7 +726,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     return !!(item && 
              item.file instanceof File && 
              item.duration && 
-             item.thumbnails?.length > 0 &&
+             (item.thumbnails?.length || 0) > 0 &&
              item.processingComplete);
   },
 

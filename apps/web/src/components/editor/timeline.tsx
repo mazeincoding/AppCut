@@ -399,7 +399,7 @@ export function Timeline() {
             name: item.name,
             duration: item.duration,
             thumbnailCount: (item.thumbnails?.length || 0),
-            fileValid: item.file instanceof File,
+            fileValid: item.file ? (item.file as any) instanceof File : false,
             fileSize: item.file?.size,
             processingStage: item.processingStage,
             processingComplete: item.processingComplete
@@ -415,7 +415,7 @@ export function Timeline() {
               fileType: mediaItem.file?.type,
               processingComplete: mediaItem.processingComplete,
               processingStage: mediaItem.processingStage,
-              isFileValid: mediaItem.file instanceof File
+              isFileValid: mediaItem.file ? (mediaItem.file as any) instanceof File : false
             });
           } else {
             console.error('❌ Media item not found - ID mismatch or item not in store');
@@ -458,7 +458,7 @@ export function Timeline() {
             console.error('❌ Invalid file reference:', {
               id: mediaItem.id,
               hasFile: !!mediaItem.file,
-              isFileInstance: mediaItem.file instanceof File,
+              isFileInstance: mediaItem.file ? (mediaItem.file as any) instanceof File : false,
               fileType: typeof mediaItem.file
             });
             toast.error("Media file is corrupted - try regenerating the video");

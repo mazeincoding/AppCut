@@ -474,7 +474,7 @@ export function MediaView() {
                   name: item.name,
                   isAIGenerated: item.source === 'ai',
                   thumbnailsReady: (item.thumbnails?.length || 0) > 0,
-                  fileValid: item.file instanceof File,
+                  fileValid: item.file ? (item.file as any) instanceof File : false,
                   duration: item.duration,
                   processingStage: item.processingStage,
                   processingComplete: item.processingComplete
