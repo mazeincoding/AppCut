@@ -70,7 +70,7 @@ export function Hero() {
               size="lg"
               className="px-6 h-11 text-base bg-foreground"
             >
-              Try early alpha
+              Try early beta
               <ArrowRight className="relative z-10 ml-0.5 h-4 w-4 inline-block" />
             </Button>
           </Link>

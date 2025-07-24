@@ -1,25 +1,29 @@
 import { Metadata } from "next";
 
-const title = "OpenCut";
-const description =
-  "A simple but powerful video editor that gets the job done. In your browser.";
-const openGraphImageUrl = "https://opencut.app/open-graph/default.jpg";
-const twitterImageUrl = "/open-graph/default.jpg";
+export const SITE_INFO = {
+  title: "OpenCut",
+  description:
+    "A simple but powerful video editor that gets the job done. In your browser.",
+  url: "https://opencut.app",
+  openGraphImage: "https://opencut.app/open-graph/default.jpg",
+  twitterImage: "/open-graph/default.jpg",
+  favicon: "/favicon.ico",
+};
 
 export const baseMetaData: Metadata = {
   metadataBase: new URL("https://opencut.app"),
-  title: title,
-  description: description,
+  title: SITE_INFO.title,
+  description: SITE_INFO.description,
   openGraph: {
-    title: title,
-    description: description,
+    title: SITE_INFO.title,
+    description: SITE_INFO.description,
     url: "https://opencut.app",
     siteName: "OpenCut",
     locale: "en_US",
     type: "website",
     images: [
       {
-        url: openGraphImageUrl,
+        url: SITE_INFO.openGraphImage,
         width: 1200,
         height: 630,
         alt: "OpenCut",
@@ -28,10 +32,10 @@ export const baseMetaData: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: title,
-    description: description,
+    title: SITE_INFO.title,
+    description: SITE_INFO.description,
     creator: "@opencutapp",
-    images: [twitterImageUrl],
+    images: [SITE_INFO.twitterImage],
   },
   pinterest: {
     richPin: false,
@@ -82,7 +86,7 @@ export const baseMetaData: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    title: title,
+    title: SITE_INFO.title,
   },
   manifest: "/manifest.json",
   other: {
