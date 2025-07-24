@@ -36,3 +36,15 @@ export function generateUUID(): string {
     hex.slice(10, 16).join('')
   );
 }
+
+/**
+ * Returns the platform-specific special key modifier
+ * On macOS: Cmd (⌘)
+ * On other platforms: Ctrl
+ */
+export function getPlatformSpecialKey(): string {
+  if (typeof navigator !== 'undefined' && navigator.platform) {
+    return navigator.platform.toLowerCase().includes('mac') ? 'Cmd' : 'Ctrl';
+  }
+  return 'Ctrl';
+}

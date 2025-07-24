@@ -8,6 +8,7 @@ import { HeaderBase } from "./header-base";
 import { formatTimeCode } from "@/lib/time";
 import { useProjectStore } from "@/stores/project-store";
 import { useExportStore } from "@/stores/export-store";
+import { KeyboardShortcutsHelp } from "./ui/keyboard-shortcuts-help";
 
 export function EditorHeader() {
   const { getTotalDuration } = useTimelineStore();
@@ -59,6 +60,7 @@ export function EditorHeader() {
 
   const rightContent = (
     <nav className="flex items-center gap-2">
+      <KeyboardShortcutsHelp />
       <Button
         variant="text"
         size="sm"

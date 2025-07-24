@@ -84,7 +84,7 @@ export function ExportAllButton({
         disabled={isEmpty || isExporting}
         data-testid="export-all-button"
         className={cn(
-          'gap-2 transition-all duration-200 min-w-[120px]',
+          'gap-2 transition-all duration-200 min-w-[120px] !bg-transparent hover:!bg-transparent !border-transparent',
           isExporting && 'cursor-not-allowed',
           className
         )}

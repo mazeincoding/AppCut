@@ -193,6 +193,7 @@ const ThumbnailControls = () => {
           variant="outline"
           onClick={() => handleRegenerateAll('low')}
           disabled={isGenerating}
+          className="!border-transparent !bg-transparent hover:!bg-transparent"
         >
           {isGenerating ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Low'}
         </Button>
@@ -201,6 +202,7 @@ const ThumbnailControls = () => {
           variant="outline"
           onClick={() => handleRegenerateAll('medium')}
           disabled={isGenerating}
+          className="!border-transparent !bg-transparent hover:!bg-transparent"
         >
           Medium
         </Button>
@@ -209,6 +211,7 @@ const ThumbnailControls = () => {
           variant="outline"
           onClick={() => handleRegenerateAll('high')}
           disabled={isGenerating}
+          className="!border-transparent !bg-transparent hover:!bg-transparent"
         >
           High
         </Button>
@@ -218,6 +221,7 @@ const ThumbnailControls = () => {
         size="sm"
         variant="outline"
         onClick={clearThumbnailCache}
+        className="!border-transparent !bg-transparent hover:!bg-transparent"
       >
         Clear Cache
       </Button>
@@ -421,7 +425,7 @@ export function MediaView() {
               size="sm"
               onClick={handleFileSelect}
               disabled={isProcessing}
-              className="flex-none bg-transparent min-w-[30px] whitespace-nowrap overflow-hidden px-2 justify-center items-center"
+              className="flex-none bg-transparent min-w-[30px] whitespace-nowrap overflow-hidden px-2 justify-center items-center !border-transparent"
             >
               {isProcessing ? (
                 <>

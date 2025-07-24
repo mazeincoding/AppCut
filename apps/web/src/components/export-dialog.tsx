@@ -276,6 +276,8 @@ export function ExportDialog() {
             </RadioGroup>
           </div>
           
+          <div className="h-8"></div>
+          
           {/* Quality Selection */}
           <div className="space-y-3">
             <Label className="text-sm font-medium">Quality</Label>

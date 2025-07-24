@@ -1,0 +1,18 @@
+export type Action = 
+  | "toggle-play"
+  | "stop-playback" 
+  | "seek-forward"
+  | "seek-backward"
+  | "frame-step-forward"
+  | "frame-step-backward"
+  | "jump-forward"
+  | "jump-backward"
+  | "goto-start"
+  | "goto-end"
+  | "split-element"
+  | "delete-selected"
+  | "select-all"
+  | "duplicate-selected"
+  | "toggle-snapping"
+  | "undo"
+  | "redo";

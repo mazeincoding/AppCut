@@ -47,7 +47,7 @@ export function PropertiesPanel() {
             value={(activeProject?.fps || 30).toString()}
             onValueChange={handleFpsChange}
           >
-            <SelectTrigger className="w-32 h-6 text-xs">
+            <SelectTrigger className="w-32 h-6 text-xs !border-transparent">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

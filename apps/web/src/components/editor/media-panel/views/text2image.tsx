@@ -14,6 +14,12 @@ import { Loader2, Image as ImageIcon, Download, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useText2ImageStore } from "@/stores/text2image-store";
 import { TEXT2IMAGE_MODELS } from "@/lib/text2image-models";
+import {
+  FloatingActionPanelRoot,
+  FloatingActionPanelTrigger,
+  FloatingActionPanelContent,
+  FloatingActionPanelModelOption,
+} from "@/components/ui/floating-action-panel";
 
 export function Text2ImageView() {
   console.log("Text2ImageView rendered");
@@ -114,86 +120,54 @@ export function Text2ImageView() {
             {generationMode === "single" ? "Select Model" : `Select Models (${selectedModelCount} chosen)`}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          {generationMode === "single" ? (
-            // Single model dropdown
-            <Select
-              value={selectedModels[0] || ""}
-              onValueChange={(value) => {
-                // Clear all selections and select only this one
-                selectedModels.forEach(model => toggleModel(model));
-                if (value) toggleModel(value);
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Choose a model" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(TEXT2IMAGE_MODELS).map(([key, model]) => (
-                  <SelectItem key={key} value={key}>
-                    <div className="flex items-center justify-between w-full">
-                      <span>{model.name}</span>
-                      <Badge variant="secondary" className="ml-2">{model.estimatedCost}</Badge>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : (
-            // Multi-model checkboxes
-            <div className="space-y-3">
-              {Object.entries(TEXT2IMAGE_MODELS).map(([key, model]) => (
-                <div key={key} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <Checkbox
-                      id={key}
-                      checked={selectedModels.includes(key)}
-                      onCheckedChange={() => toggleModel(key)}
-                    />
-                    <div>
-                      <Label htmlFor={key} className="font-medium">
-                        {model.name}
-                      </Label>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {model.description}
-                      </p>
-                      <div className="flex gap-2 mt-2">
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs">Quality:</span>
-                          <div className="flex gap-0.5">
-                            {Array(5).fill(0).map((_, i) => (
-                              <div
-                                key={i}
-                                className={cn(
-                                  "w-2 h-2 rounded-full",
-                                  i < model.qualityRating ? "bg-green-500" : "bg-gray-300"
-                                )}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs">Speed:</span>
-                          <div className="flex gap-0.5">
-                            {Array(5).fill(0).map((_, i) => (
-                              <div
-                                key={i}
-                                className={cn(
-                                  "w-2 h-2 rounded-full",
-                                  i < model.speedRating ? "bg-blue-500" : "bg-gray-300"
-                                )}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      </div>
+        <CardContent>
+          <FloatingActionPanelRoot defaultMode="selection">
+            {({ mode, open }) => (
+              <div className="space-y-2">
+                <FloatingActionPanelTrigger 
+                  mode="selection" 
+                  title="Select AI Model(s)"
+                  className="w-full bg-zinc-900 text-white hover:bg-zinc-800"
+                >
+                  {selectedModelCount === 0 
+                    ? "Choose Model(s)" 
+                    : generationMode === "single" && selectedModels[0]
+                    ? TEXT2IMAGE_MODELS[selectedModels[0]]?.name
+                    : `${selectedModelCount} Model${selectedModelCount !== 1 ? 's' : ''} Selected`
+                  }
+                </FloatingActionPanelTrigger>
+
+                {open && (
+                  <div className="w-full border rounded-md bg-transparent max-h-[300px] overflow-y-auto">
+                    <div className="p-2 space-y-1">
+                      {Object.entries(TEXT2IMAGE_MODELS).map(([key, model]) => (
+                        <FloatingActionPanelModelOption
+                          key={key}
+                          id={key}
+                          name={model.name}
+                          checked={selectedModels.includes(key)}
+                          onCheckedChange={(checked) => {
+                            if (generationMode === "single") {
+                              // Clear all selections and select only this one
+                              selectedModels.forEach(m => {
+                                if (m !== key) toggleModel(m);
+                              });
+                              if (checked && !selectedModels.includes(key)) {
+                                toggleModel(key);
+                              }
+                            } else {
+                              // Multi-model mode - just toggle
+                              toggleModel(key);
+                            }
+                          }}
+                        />
+                      ))}
                     </div>
                   </div>
-                  <Badge variant="outline">{model.estimatedCost}</Badge>
-                </div>
-              ))}
-            </div>
-          )}
+                )}
+              </div>
+            )}
+          </FloatingActionPanelRoot>
         </CardContent>
       </Card>
 
