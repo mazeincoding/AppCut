@@ -71,7 +71,7 @@ export function Header({ initialStars }: HeaderProps) {
                 {isLoading ? (
                   <div className="w-8 h-4 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
                 ) : (
-                  `${stars}+`
+                  `${isLoading ? "28k" : stars}+`
                 )}
               </span>
             </div>

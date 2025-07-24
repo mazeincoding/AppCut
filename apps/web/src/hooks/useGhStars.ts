@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect, useTransition, useRef } from "react";
 import { refreshGitHubStars } from "@/lib/fetch-github-stars";
 
 interface GitHubStarsState {
@@ -9,88 +9,130 @@ interface GitHubStarsState {
   error: boolean;
 }
 
-const FALLBACK_STARS = "28k";
-
-let clientCache: {
+interface CacheData {
   data: string | null;
   timestamp: number;
-  isLoading: boolean;
-} = {
-  data: null,
-  timestamp: 0,
-  isLoading: false,
-};
+}
 
 const CLIENT_CACHE_DURATION = 5 * 60 * 1000;
+const MAX_POLL_RETRIES = 50;
+const POLL_TIMEOUT = 10000;
+const FALLBACK_STARS = "28k";
 
-function isClientCacheValid(): boolean {
+let fetchPromise: Promise<string> | null = null;
+
+function isCacheValid(cache: CacheData): boolean {
   const now = Date.now();
-  return (
-    clientCache.data !== null &&
-    now - clientCache.timestamp < CLIENT_CACHE_DURATION
-  );
+  return cache.data !== null && now - cache.timestamp < CLIENT_CACHE_DURATION;
 }
 
 export function useGitHubStars(initialStars?: string) {
   const [isPending, startTransition] = useTransition();
   const [state, setState] = useState<GitHubStarsState>(() => ({
-    stars: initialStars || clientCache.data || FALLBACK_STARS,
+    stars: initialStars || FALLBACK_STARS,
     isLoading: false,
     error: false,
   }));
 
-  useEffect(() => {
-    let isMounted = true;
+  const cacheRef = useRef<CacheData>({
+    data: initialStars || null,
+    timestamp: initialStars ? Date.now() : 0,
+  });
 
-    if (isClientCacheValid() && clientCache.data) {
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isCacheValid(cacheRef.current) && cacheRef.current.data) {
       setState({
-        stars: clientCache.data,
+        stars: cacheRef.current.data,
         isLoading: false,
         error: false,
       });
       return;
     }
 
-    if (initialStars && !clientCache.data) {
-      clientCache.data = initialStars;
-      clientCache.timestamp = Date.now();
+    // If we have initial stars and no cache, set cache
+    if (initialStars && !cacheRef.current.data) {
+      cacheRef.current = {
+        data: initialStars,
+        timestamp: Date.now(),
+      };
       return;
     }
 
-    if (clientCache.isLoading) {
+    if (fetchPromise) {
       setState((prev) => ({ ...prev, isLoading: true }));
 
-      const checkCache = () => {
-        if (!clientCache.isLoading) {
-          if (isMounted) {
+      const pollStartTime = Date.now();
+      let pollRetries = 0;
+
+      const pollForResult = () => {
+        const elapsed = Date.now() - pollStartTime;
+
+        if (elapsed > POLL_TIMEOUT || pollRetries >= MAX_POLL_RETRIES) {
+          if (isMountedRef.current) {
             setState({
-              stars: clientCache.data || FALLBACK_STARS,
+              stars: cacheRef.current.data || FALLBACK_STARS,
               isLoading: false,
-              error: !clientCache.data,
+              error: true,
             });
           }
-        } else {
-          setTimeout(checkCache, 100);
+          return;
         }
+
+        if (!fetchPromise) {
+          if (isMountedRef.current) {
+            setState({
+              stars: cacheRef.current.data || FALLBACK_STARS,
+              isLoading: false,
+              error: !cacheRef.current.data,
+            });
+          }
+          return;
+        }
+
+        pollRetries++;
+        setTimeout(pollForResult, 100);
       };
-      checkCache();
+
+      pollForResult();
       return;
     }
 
+    // Start new fetch
     const fetchStars = async () => {
-      clientCache.isLoading = true;
-
       setState((prev) => ({ ...prev, isLoading: true, error: false }));
 
       startTransition(async () => {
         try {
-          const stars = await refreshGitHubStars();
+          if (fetchPromise) {
+            const stars = await fetchPromise;
+            if (isMountedRef.current) {
+              setState({
+                stars,
+                isLoading: false,
+                error: false,
+              });
+            }
+            return;
+          }
 
-          if (isMounted) {
-            // Update client cache
-            clientCache.data = stars;
-            clientCache.timestamp = Date.now();
-            clientCache.isLoading = false;
+          fetchPromise = refreshGitHubStars();
+          const stars = await fetchPromise;
+
+          if (isMountedRef.current) {
+            // Update component-level cache
+            cacheRef.current = {
+              data: stars,
+              timestamp: Date.now(),
+            };
 
             setState({
               stars,
@@ -100,23 +142,24 @@ export function useGitHubStars(initialStars?: string) {
           }
         } catch (error) {
           console.warn("Failed to refresh GitHub stars:", error);
-          clientCache.isLoading = false;
 
-          if (isMounted) {
+          if (isMountedRef.current) {
             setState({
-              stars: clientCache.data || FALLBACK_STARS,
+              stars: cacheRef.current.data || FALLBACK_STARS,
               isLoading: false,
               error: true,
             });
           }
+        } finally {
+          fetchPromise = null;
         }
       });
     };
 
+    // Small delay to avoid blocking initial render
     const timeoutId = setTimeout(fetchStars, 100);
 
     return () => {
-      isMounted = false;
       clearTimeout(timeoutId);
     };
   }, [initialStars]);
