@@ -28,7 +28,8 @@
         "noExcessiveCognitiveComplexity": "off",
         "noForEach": "off",
         "noUselessFragments": "off",
-        "useOptionalChain": "off"
+        "useOptionalChain": "off",
+        "useSimplifiedLogicExpression": "off"
       },
       "correctness": {
         "noUnusedFunctionParameters": "off",
@@ -84,6 +85,19 @@
       "security": {
         "noDangerouslySetInnerHtml": "off"
       }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "jsxQuoteStyle": "double",
+      "quoteProperties": "preserve",
+      "trailingCommas": "es5",
+      "semicolons": "asNeeded",
+      "arrowParentheses": "always",
+      "bracketSpacing": true,
+      "bracketSameLine": false,
+      "quoteStyle": "double",
+      "attributePosition": "auto"
     }
   }
 }
