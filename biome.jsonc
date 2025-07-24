@@ -69,7 +69,8 @@
         "useImportType": "off",
         "useNodejsImportProtocol": "off",
         "useShorthandAssign": "off",
-        "useTemplate": "off"
+        "useTemplate": "off",
+        "useNumberNamespace": "off"
       },
       "suspicious": {
         "noArrayIndexKey": "off",
@@ -92,12 +93,17 @@
       "jsxQuoteStyle": "double",
       "quoteProperties": "preserve",
       "trailingCommas": "es5",
-      "semicolons": "asNeeded",
       "arrowParentheses": "always",
+      "lineWidth": 80,
       "bracketSpacing": true,
       "bracketSameLine": false,
       "quoteStyle": "double",
       "attributePosition": "auto"
+    }
+  },
+  "json": {
+    "formatter": {
+      "indentWidth": 2
     }
   }
 }
