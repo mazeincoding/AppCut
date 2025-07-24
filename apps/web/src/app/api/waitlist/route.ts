@@ -32,7 +32,10 @@ async function validateCSRFToken(request: NextRequest): Promise<boolean> {
   const tokenTime = parseInt(timestamp);
   if (now - tokenTime > TOKEN_EXPIRY) return false;
 
-  const expectedSignature = crypto.createHmac("sha256", env.BETTER_AUTH_SECRET).update(`${token}:${timestamp}`).digest("hex");
+  const expectedSignature = crypto
+    .createHmac("sha256", env.BETTER_AUTH_SECRET)
+    .update(`${token}:${timestamp}`)
+    .digest("hex");
 
   return signature === expectedSignature;
 }
@@ -48,21 +51,34 @@ export async function POST(request: NextRequest) {
   const { success } = await waitlistRateLimit.limit(identifier);
 
   if (!success) {
-    return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429 }
+    );
   }
   const isValidToken = await validateCSRFToken(request);
   if (!isValidToken) {
-    return NextResponse.json({ error: "Invalid security token" }, { status: 403 });
+    return NextResponse.json(
+      { error: "Invalid security token" },
+      { status: 403 }
+    );
   }
 
   try {
     const body = await request.json();
     const { email } = waitlistSchema.parse(body);
 
-    const existingEmail = await db.select().from(waitlist).where(eq(waitlist.email, email.toLowerCase())).limit(1);
+    const existingEmail = await db
+      .select()
+      .from(waitlist)
+      .where(eq(waitlist.email, email.toLowerCase()))
+      .limit(1);
 
     if (existingEmail.length > 0) {
-      return NextResponse.json({ error: "Email already registered" }, { status: 409 });
+      return NextResponse.json(
+        { error: "Email already registered" },
+        { status: 409 }
+      );
     }
 
     await db.insert(waitlist).values({
@@ -70,7 +86,10 @@ export async function POST(request: NextRequest) {
       email: email.toLowerCase(),
     });
 
-    return NextResponse.json({ message: "Successfully joined waitlist!" }, { status: 201 });
+    return NextResponse.json(
+      { message: "Successfully joined waitlist!" },
+      { status: 201 }
+    );
   } catch (error) {
     if (error instanceof z.ZodError) {
       const firstError = error.errors[0];
@@ -78,6 +97,9 @@ export async function POST(request: NextRequest) {
     }
 
     console.error("Waitlist signup error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

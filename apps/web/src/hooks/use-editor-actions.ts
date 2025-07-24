@@ -28,52 +28,52 @@ export function useEditorActions() {
   // Playback actions
   useActionHandler("toggle-play", () => {
     toggle();
-  });
+  }, undefined);
 
   useActionHandler("stop-playback", () => {
     if (isPlaying) {
       toggle();
     }
     seek(0);
-  });
+  }, undefined);
 
   useActionHandler("seek-forward", (args) => {
     const seconds = args?.seconds ?? 1;
     seek(Math.min(duration, currentTime + seconds));
-  });
+  }, undefined);
 
   useActionHandler("seek-backward", (args) => {
     const seconds = args?.seconds ?? 1;
     seek(Math.max(0, currentTime - seconds));
-  });
+  }, undefined);
 
   useActionHandler("frame-step-forward", () => {
     const projectFps = activeProject?.fps || 30;
     seek(Math.min(duration, currentTime + 1 / projectFps));
-  });
+  }, undefined);
 
   useActionHandler("frame-step-backward", () => {
     const projectFps = activeProject?.fps || 30;
     seek(Math.max(0, currentTime - 1 / projectFps));
-  });
+  }, undefined);
 
   useActionHandler("jump-forward", (args) => {
     const seconds = args?.seconds ?? 5;
     seek(Math.min(duration, currentTime + seconds));
-  });
+  }, undefined);
 
   useActionHandler("jump-backward", (args) => {
     const seconds = args?.seconds ?? 5;
     seek(Math.max(0, currentTime - seconds));
-  });
+  }, undefined);
 
   useActionHandler("goto-start", () => {
     seek(0);
-  });
+  }, undefined);
 
   useActionHandler("goto-end", () => {
     seek(duration);
-  });
+  }, undefined);
 
   // Timeline editing actions
   useActionHandler("split-element", () => {
@@ -98,7 +98,7 @@ export function useEditorActions() {
         toast.error("Playhead must be within selected element");
       }
     }
-  });
+  }, undefined);
 
   useActionHandler("delete-selected", () => {
     if (selectedElements.length === 0) {
@@ -110,7 +110,7 @@ export function useEditorActions() {
       }
     );
     clearSelectedElements();
-  });
+  }, undefined);
 
   useActionHandler("select-all", () => {
     const allElements = tracks.flatMap((track: any) =>
@@ -120,7 +120,7 @@ export function useEditorActions() {
       }))
     );
     setSelectedElements(allElements);
-  });
+  }, undefined);
 
   useActionHandler("duplicate-selected", () => {
     if (selectedElements.length !== 1) {
@@ -144,18 +144,18 @@ export function useEditorActions() {
         startTime: newStartTime,
       });
     }
-  });
+  }, undefined);
 
   useActionHandler("toggle-snapping", () => {
     toggleSnapping();
-  });
+  }, undefined);
 
   // History actions
   useActionHandler("undo", () => {
     undo();
-  });
+  }, undefined);
 
   useActionHandler("redo", () => {
     redo();
-  });
+  }, undefined);
 }

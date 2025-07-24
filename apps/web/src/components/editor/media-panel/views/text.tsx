@@ -3,7 +3,7 @@ import { TIMELINE_CONSTANTS } from "@/constants/timeline-constants";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { type TextElement } from "@/types/timeline";
 
-let textData: TextElement = {
+const textData: TextElement = {
   id: "default-text",
   type: "text",
   name: "Default text",

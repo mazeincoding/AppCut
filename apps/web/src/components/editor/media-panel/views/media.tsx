@@ -57,10 +57,10 @@ export function MediaView() {
           toast.error(`Failed to process file ${item.name}`, { description: error.message });
         }
       }
-    } catch (error: any) {
+    } catch (error) {
       // Show error toast if processing fails
       console.error("Error processing files:", error);
-      toast.error("Failed to process files", { description: error.message });
+      toast.error("Failed to process files");
     } finally {
       setIsProcessing(false);
       setProgress(0);

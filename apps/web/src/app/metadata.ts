@@ -1,24 +1,15 @@
-import { Metadata } from "next";
-
-export const SITE_INFO = {
-  title: "OpenCut",
-  description:
-    "A simple but powerful video editor that gets the job done. In your browser.",
-  url: "https://opencut.app",
-  openGraphImage: "https://opencut.app/open-graph/default.jpg",
-  twitterImage: "/open-graph/default.jpg",
-  favicon: "/favicon.ico",
-};
+import type { Metadata } from "next";
+import { SITE_INFO, SITE_URL } from "@/constants/site";
 
 export const baseMetaData: Metadata = {
-  metadataBase: new URL("https://opencut.app"),
+  metadataBase: new URL(SITE_URL),
   title: SITE_INFO.title,
   description: SITE_INFO.description,
   openGraph: {
     title: SITE_INFO.title,
     description: SITE_INFO.description,
-    url: "https://opencut.app",
-    siteName: "OpenCut",
+    url: SITE_URL,
+    siteName: SITE_INFO.title,
     locale: "en_US",
     type: "website",
     images: [
@@ -26,7 +17,7 @@ export const baseMetaData: Metadata = {
         url: SITE_INFO.openGraphImage,
         width: 1200,
         height: 630,
-        alt: "OpenCut",
+        alt: "OpenCut Wordmark",
       },
     ],
   },

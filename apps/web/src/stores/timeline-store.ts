@@ -295,9 +295,8 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
                   { trackId, elementId },
                 ],
               };
-        } else {
-          return { selectedElements: [{ trackId, elementId }] };
         }
+        return { selectedElements: [{ trackId, elementId }] };
       });
     },
 
@@ -680,7 +679,8 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
                 (element) => element.id !== elementId
               ),
             };
-          } else if (track.id === toTrackId) {
+          }
+          if (track.id === toTrackId) {
             return {
               ...track,
               elements: [...track.elements, elementToMove],
@@ -1091,7 +1091,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
         if (!fileType) return false;
 
         // Process the new media file
-        let mediaData: any = {
+        const mediaData: any = {
           name: newFile.name,
           type: fileType,
           file: newFile,
@@ -1204,7 +1204,8 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
           );
           const { thumbnailUrl } = await generateVideoThumbnail(mediaItem.file);
           return thumbnailUrl;
-        } else if (mediaItem.type === "image" && mediaItem.url) {
+        }
+        if (mediaItem.type === "image" && mediaItem.url) {
           return mediaItem.url;
         }
 
