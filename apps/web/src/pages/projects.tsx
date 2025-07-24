@@ -13,6 +13,7 @@ import {
   X,
   Trash2,
   Pencil,
+  CheckSquare,
 } from "lucide-react";
 import { TProject } from "@/types/project";
 import Image from "next/image";
@@ -213,13 +214,35 @@ export default function ProjectsPage() {
                   onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
                   onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
                 >
-                  <Trash2 className="mr-2" style={{ width: '14px', height: '14px' }} />
+                  <Trash2 style={{ width: '14px', height: '14px', marginRight: '12px' }} />
                   Delete ({selectedProjects.size})
                 </button>
               )}
             </div>
           ) : (
             <div className="flex flex-col gap-1 bg-white rounded-lg border border-gray-200 shadow-sm p-1">
+              <button style={{ 
+                backgroundColor: '#f8f9fa', 
+                color: 'black',
+                height: '40px',
+                borderRadius: '6px',
+                fontSize: '14px',
+                paddingLeft: '16px',
+                paddingRight: '16px',
+                border: '1px solid #e9ecef',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-start',
+                width: '150px',
+                cursor: 'pointer'
+              }}
+              onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
+              onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+              onClick={() => handleCreateProject()}
+              >
+                <Plus style={{ width: '14px', height: '14px', marginRight: '12px' }} />
+                New project
+              </button>
               <button
                 onClick={() => {
                   setIsSelectionMode(true);
@@ -246,29 +269,8 @@ export default function ProjectsPage() {
                 onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
                 onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
               >
+                <CheckSquare style={{ width: '14px', height: '14px', marginRight: '12px' }} />
                 Select All
-              </button>
-              <button style={{ 
-                backgroundColor: '#f8f9fa', 
-                color: 'black',
-                height: '40px',
-                borderRadius: '6px',
-                fontSize: '14px',
-                paddingLeft: '16px',
-                paddingRight: '16px',
-                border: '1px solid #e9ecef',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'flex-start',
-                width: '150px',
-                cursor: 'pointer'
-              }}
-              onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
-              onClick={() => handleCreateProject()}
-              >
-                <Plus className="mr-2" style={{ width: '14px', height: '14px' }} />
-                New project
               </button>
               <button
                 style={{
@@ -296,7 +298,7 @@ export default function ProjectsPage() {
                 onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
                 onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
               >
-                <Trash2 className="mr-2" style={{ width: '14px', height: '14px' }} />
+                <Trash2 style={{ width: '14px', height: '14px', marginRight: '12px' }} />
                 Delete All
               </button>
             </div>
@@ -368,7 +370,7 @@ export default function ProjectsPage() {
                     onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
                     onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
                   >
-                    <Trash2 className="mr-2" style={{ width: '14px', height: '14px' }} />
+                    <Trash2 style={{ width: '14px', height: '14px', marginRight: '12px' }} />
                     Delete Selected ({selectedProjects.size})
                   </button>
                 )}
@@ -383,6 +385,28 @@ export default function ProjectsPage() {
                   Select Projects
                 </Button>
                 <div className="flex flex-col gap-1 bg-white rounded-lg border border-gray-200 shadow-sm p-1">
+                  <button style={{ 
+                    backgroundColor: '#f8f9fa', 
+                    color: 'black',
+                    height: '40px',
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    paddingLeft: '16px',
+                    paddingRight: '16px',
+                    border: '1px solid #e9ecef',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'flex-start',
+                    width: '150px',
+                    cursor: 'pointer'
+                  }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+                  onClick={() => handleCreateProject()}
+                  >
+                    <Plus style={{ width: '14px', height: '14px', marginRight: '12px' }} />
+                    New project
+                  </button>
                   <button
                     onClick={() => {
                       setIsSelectionMode(true);
@@ -409,29 +433,8 @@ export default function ProjectsPage() {
                     onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
                     onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
                   >
+                    <CheckSquare style={{ width: '14px', height: '14px', marginRight: '12px' }} />
                     Select All
-                  </button>
-                  <button style={{ 
-                    backgroundColor: '#f8f9fa', 
-                    color: 'black',
-                    height: '40px',
-                    borderRadius: '6px',
-                    fontSize: '14px',
-                    paddingLeft: '16px',
-                    paddingRight: '16px',
-                    border: '1px solid #e9ecef',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'flex-start',
-                    width: '150px',
-                    cursor: 'pointer'
-                  }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
-                  onClick={() => handleCreateProject()}
-                  >
-                    <Plus className="mr-2" style={{ width: '14px', height: '14px' }} />
-                    New project
                   </button>
                   <button
                     style={{
@@ -459,8 +462,8 @@ export default function ProjectsPage() {
                     onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
                     onMouseLeave={(e) => e.target.style.backgroundColor = '#f8f9fa'}
                   >
-                    <Trash2 className="mr-2" style={{ width: '14px', height: '14px' }} />
-                    Delete All
+                    <Trash2 style={{ width: '14px', height: '14px', marginRight: '12px' }} />
+                      Delete All
                   </button>
                 </div>
               </div>
