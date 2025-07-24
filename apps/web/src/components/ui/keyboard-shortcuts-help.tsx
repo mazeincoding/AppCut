@@ -9,7 +9,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogPortal,
+  DialogOverlay,
 } from "./dialog";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { cn } from "@/lib/utils";
+import { X } from "lucide-react";
 import { getPlatformSpecialKey } from "@/lib/utils";
 import { Keyboard } from "lucide-react";
 import {
@@ -57,7 +62,7 @@ const ShortcutItem = ({
   });
 
   return (
-    <div className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-gray-100 transition-colors">
+    <div className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-gray-200 transition-colors">
       <div className="flex items-center gap-3 flex-1">
         {shortcut.icon && (
           <div className="text-muted-foreground">{shortcut.icon}</div>
@@ -225,70 +230,60 @@ export const KeyboardShortcutsHelp = () => {
           <span className="hidden sm:inline text-xs">Shortcuts</span>
         </Button>
       </DialogTrigger>
-      <DialogContent 
-        className="w-[50vw] max-h-[80vh] overflow-y-auto border-0 shadow-lg"
-        style={{ 
-          backgroundColor: '#f3f4f6 !important', 
-          color: '#111827 !important',
-          border: 'none !important',
-          backgroundImage: 'none !important',
-          background: '#f3f4f6 !important'
-        }}
-      >
-        <style jsx>{`
-          .dialog-content * {
-            background-color: transparent !important;
-          }
-          .dialog-content {
-            background-color: #f3f4f6 !important;
-            background: #f3f4f6 !important;
-          }
-        `}</style>
-        <div 
-          className="dialog-content"
-          style={{ 
-            backgroundColor: '#f3f4f6 !important', 
-            background: '#f3f4f6 !important',
-            minHeight: '100%',
-            padding: '24px',
-            margin: '-24px',
-            color: '#111827'
+      <DialogPortal>
+        <DialogOverlay />
+        <DialogPrimitive.Content
+          className="fixed left-[50%] top-[50%] z-50 grid w-[40vw] max-w-2xl translate-x-[-50%] translate-y-[-50%] gap-4 border-0 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg"
+          style={{
+            backgroundColor: '#ff0000',
+            maxHeight: '80vh',
+            overflow: 'hidden'
           }}
         >
-          <DialogHeader style={{ backgroundColor: 'transparent' }}>
-            <DialogTitle className="flex items-center gap-2" style={{ color: '#111827' }}>
-              <Keyboard className="w-5 h-5" />
-              Keyboard Shortcuts
-            </DialogTitle>
-            <DialogDescription style={{ color: '#6b7280' }}>
-              Speed up your video editing workflow with these keyboard shortcuts.
-              Click any shortcut key to edit it.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-6 mt-6">
-          {categories.map((category) => (
-            <div key={category} className="flex flex-col gap-1">
-              <h3 className="text-xs uppercase tracking-wide font-medium" style={{ color: '#6b7280' }}>
-                {category}
-              </h3>
-              <div className="space-y-2">
-                {shortcuts
-                  .filter((shortcut) => shortcut.category === category)
-                  .map((shortcut, index) => (
-                    <ShortcutItem
-                      key={index}
-                      shortcut={shortcut}
-                      recordingKey={recordingKey}
-                      onStartRecording={handleStartRecording}
-                    />
-                  ))}
+          <div 
+            className="p-6 space-y-4 overflow-y-auto"
+            style={{ backgroundColor: '#ff0000' }}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="flex items-center gap-1.5 text-base text-gray-900 font-semibold">
+                  <Keyboard className="w-4 h-4" />
+                  Shortcuts
+                </h2>
+                <p className="text-xs text-gray-600 mt-2">
+                  Speed up your workflow with keyboard shortcuts. Click any key to edit.
+                </p>
               </div>
+              <DialogPrimitive.Close className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </DialogPrimitive.Close>
             </div>
-          ))}
+
+            <div className="space-y-6">
+              {categories.map((category) => (
+                <div key={category} className="flex flex-col gap-1">
+                  <h3 className="text-xs uppercase tracking-wide font-medium text-gray-600">
+                    {category}
+                  </h3>
+                  <div className="space-y-2">
+                    {shortcuts
+                      .filter((shortcut) => shortcut.category === category)
+                      .map((shortcut, index) => (
+                        <ShortcutItem
+                          key={index}
+                          shortcut={shortcut}
+                          recordingKey={recordingKey}
+                          onStartRecording={handleStartRecording}
+                        />
+                      ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </DialogContent>
+        </DialogPrimitive.Content>
+      </DialogPortal>
     </Dialog>
   );
 };
