@@ -473,7 +473,7 @@ export function MediaView() {
                   id: item.id,
                   name: item.name,
                   isAIGenerated: item.source === 'ai',
-                  thumbnailsReady: item.thumbnails?.length > 0,
+                  thumbnailsReady: (item.thumbnails?.length || 0) > 0,
                   fileValid: item.file instanceof File,
                   duration: item.duration,
                   processingStage: item.processingStage,
@@ -484,17 +484,33 @@ export function MediaView() {
                 return (
                 <ContextMenu key={item.id}>
                   <ContextMenuTrigger>
-                    <DraggableMediaItem
-                      name={item.name}
-                      preview={renderPreview(item)}
-                      dragData={{
-                        id: item.id,
-                        type: item.type,
-                        name: item.name,
-                      }}
-                      showPlusOnDrag={false}
-                      rounded={false}
-                    />
+                    <div className="relative">
+                      <DraggableMediaItem
+                        name={item.name}
+                        preview={renderPreview(item)}
+                        dragData={{
+                          id: item.id,
+                          type: item.type,
+                          name: item.name,
+                        }}
+                        showPlusOnDrag={false}
+                        rounded={false}
+                      />
+                      {/* Processing indicator overlay for AI videos */}
+                      {item.source === 'ai' && item.processingStage !== 'complete' && (
+                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded">
+                          <div className="text-white text-xs text-center">
+                            <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mx-auto mb-1" />
+                            <div>
+                              {item.processingStage === 'thumbnail-canvas' && 'Generating Thumbnails...'}
+                              {item.processingStage === 'thumbnail-ffmpeg' && 'Processing Video...'}
+                              {item.processingStage === 'uploading' && 'Uploading...'}
+                              {!item.processingStage && 'Processing...'}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </ContextMenuTrigger>
                   <ContextMenuContent>
                     {item.type === 'image' && (

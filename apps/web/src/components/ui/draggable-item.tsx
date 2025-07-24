@@ -49,7 +49,7 @@ export function DraggableMediaItem({
     if (!item) return true;
     
     if (item.source === 'ai') {
-      const isReady = item.thumbnails?.length > 0 && 
+      const isReady = (item.thumbnails?.length || 0) > 0 && 
                      item.processingComplete && 
                      item.processingStage === 'complete';
       console.log('🎬 AI Item drag check:', { id: item.id, canDrag: isReady, stage: item.processingStage });

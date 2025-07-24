@@ -398,7 +398,7 @@ export function Timeline() {
             id: item.id,
             name: item.name,
             duration: item.duration,
-            thumbnailCount: item.thumbnails?.length || 0,
+            thumbnailCount: (item.thumbnails?.length || 0),
             fileValid: item.file instanceof File,
             fileSize: item.file?.size,
             processingStage: item.processingStage,
@@ -410,7 +410,7 @@ export function Timeline() {
 
           if (mediaItem) {
             console.log('Media item detailed state:', {
-              hasThumbnails: mediaItem.thumbnails?.length > 0,
+              hasThumbnails: (mediaItem.thumbnails?.length || 0) > 0,
               duration: mediaItem.duration,
               fileType: mediaItem.file?.type,
               processingComplete: mediaItem.processingComplete,
@@ -425,8 +425,52 @@ export function Timeline() {
           console.groupEnd();
 
           if (!mediaItem) {
-            toast.error("Media item not found");
+            console.error('❌ Timeline Drop Failed - Media item not found:', {
+              dragDataId: dragData.id,
+              availableIds: mediaItems.map(item => item.id),
+              totalItems: mediaItems.length
+            });
+            toast.error("Media item not found - try refreshing the media panel");
             return;
+          }
+
+          // AI-specific validation
+          if (mediaItem.source === 'ai') {
+            if (!mediaItem.processingComplete || mediaItem.processingStage !== 'complete') {
+              console.log('⏳ AI video still processing:', {
+                id: mediaItem.id,
+                stage: mediaItem.processingStage,
+                complete: mediaItem.processingComplete
+              });
+              toast.error("AI video is still processing - please wait");
+              return;
+            }
+            
+            if (!mediaItem.thumbnails || mediaItem.thumbnails.length === 0) {
+              console.error('❌ AI video missing thumbnails:', mediaItem.id);
+              toast.error("Video processing incomplete - thumbnails missing");
+              return;
+            }
+          }
+
+          // File validation
+          if (!mediaItem.file || !(mediaItem.file instanceof File)) {
+            console.error('❌ Invalid file reference:', {
+              id: mediaItem.id,
+              hasFile: !!mediaItem.file,
+              isFileInstance: mediaItem.file instanceof File,
+              fileType: typeof mediaItem.file
+            });
+            toast.error("Media file is corrupted - try regenerating the video");
+            return;
+          }
+
+          // Duration validation
+          if (!mediaItem.duration || mediaItem.duration <= 0) {
+            console.warn('⚠️ Missing or invalid duration, using fallback:', {
+              id: mediaItem.id,
+              duration: mediaItem.duration
+            });
           }
 
           const trackType = dragData.type === "audio" ? "audio" : "media";
