@@ -471,6 +471,16 @@ const generateThumbnailsViaCanvas = async (
       return;
     }
     
+    // Check if file size is reasonable (not 0 bytes, not too large)
+    if (videoFile.size === 0) {
+      reject(new Error('Video file is empty (0 bytes)'));
+      return;
+    }
+    
+    if (videoFile.size > 500 * 1024 * 1024) { // 500MB limit
+      console.warn('Large video file detected:', videoFile.size, 'bytes. This may cause performance issues.');
+    }
+    
     const video = document.createElement('video');
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
@@ -492,7 +502,13 @@ const generateThumbnailsViaCanvas = async (
     const thumbnails: string[] = [];
     let currentIndex = 0;
     
+    let timeoutId: NodeJS.Timeout | null = null;
+    
     const cleanup = () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
       URL.revokeObjectURL(objectUrl);
       video.remove();
       canvas.remove();
@@ -569,10 +585,34 @@ const generateThumbnailsViaCanvas = async (
         error: video.error,
         networkState: video.networkState,
         readyState: video.readyState,
-        src: video.src
+        src: video.src,
+        fileType: videoFile.type,
+        fileSize: videoFile.size
       });
       cleanup();
-      reject(new Error(`Canvas thumbnail generation failed: Video loading error - ${video.error?.message || 'Unknown error'}`));
+      
+      // Check for specific error types and provide helpful messages
+      let errorMessage = 'Unknown error';
+      if (video.error) {
+        switch (video.error.code) {
+          case video.error.MEDIA_ERR_ABORTED:
+            errorMessage = 'Video playback was aborted';
+            break;
+          case video.error.MEDIA_ERR_NETWORK:
+            errorMessage = 'Network error while loading video';
+            break;
+          case video.error.MEDIA_ERR_DECODE:
+            errorMessage = 'Video decode error - file may be corrupted or in unsupported format';
+            break;
+          case video.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
+            errorMessage = 'Video format not supported by browser';
+            break;
+          default:
+            errorMessage = video.error.message || 'Unknown video error';
+        }
+      }
+      
+      reject(new Error(`Canvas thumbnail generation failed: Video loading error - ${errorMessage}`));
     });
     
     // Configure video element for thumbnail generation
@@ -583,11 +623,11 @@ const generateThumbnailsViaCanvas = async (
     video.src = objectUrl;
     video.load();
     
-    // Timeout after 30 seconds
-    setTimeout(() => {
+    // Timeout after 15 seconds (shorter timeout for faster fallback)
+    timeoutId = setTimeout(() => {
       cleanup();
-      reject(new Error('Canvas thumbnail generation timed out'));
-    }, 30000);
+      reject(new Error('Canvas thumbnail generation timed out - will try FFmpeg fallback'));
+    }, 15000);
   });
 };
 

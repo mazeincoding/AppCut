@@ -102,10 +102,10 @@ export function AiView() {
     try {
       const testVideo = {
         jobId: `test-${Date.now()}`,
-        videoUrl: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_5mb.mp4', // 5MB test video
-        videoPath: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_5mb.mp4',
-        fileSize: 5242880, // 5MB
-        duration: 30,
+        videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', // More reliable test video
+        videoPath: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+        fileSize: 2097152, // ~2MB
+        duration: 15,
         prompt: prompt.trim() || 'Test video fetch',
         model: selectedModels[0]
       };
@@ -206,10 +206,10 @@ export function AiView() {
         
         const mockVideo: GeneratedVideo = {
           jobId: `mock-job-${Date.now()}-${i}`,
-          videoUrl: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4', // Free sample video
-          videoPath: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
-          fileSize: 1024000,
-          duration: 6,
+          videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', // More reliable test video
+          videoPath: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+          fileSize: 2097152,
+          duration: 15,
           prompt: prompt.trim(),
           model: modelId
         };
