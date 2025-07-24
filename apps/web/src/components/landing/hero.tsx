@@ -176,13 +176,14 @@ function TitleComponent({ signupCount }: { signupCount: number }) {
         </span>
         
         {/* Range‑slider container */}
-        <div className="flex justify-center gap-4 mt-4 md:mt-6">
+        <div className="flex justify-center gap-4 mt-4 md:mt-6" style={{ marginTop: '-60px' }}>
           <OpenSourceSlider width={textWidth} />
         </div>
 
         {/* Subheading */}
         <p className="mt-8 text-lg md:text-xl max-w-2xl mx-auto text-gray-400">
-          An intuitive, powerful, and free video editor for everyone. Create stunning videos with professional tools, right from your browser.
+          An intuitive, powerful, and free video editor for everyone.<br />
+          Create stunning videos with professional tools, right from your browser.
         </p>
 
         <div className="mt-8 flex gap-8 justify-center">
@@ -192,16 +193,16 @@ function TitleComponent({ signupCount }: { signupCount: number }) {
                 backgroundColor: 'white',
                 color: 'black',
                 border: '1px solid #d1d5db',
-                borderRadius: '12px',
-                height: '96px',
-                paddingLeft: '80px',
-                paddingRight: '80px',
-                fontSize: '16px',
+                borderRadius: '8px',
+                height: '40px',
+                paddingLeft: '24px',
+                paddingRight: '24px',
+                fontSize: '12px',
                 fontWeight: '500',
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '8px',
+                gap: '4px',
                 cursor: 'pointer',
                 transition: 'all 0.2s'
               }}

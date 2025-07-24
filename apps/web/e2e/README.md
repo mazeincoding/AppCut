@@ -18,13 +18,63 @@ The E2E testing environment has been successfully configured with:
 
 ```
 e2e/
-├── fixtures/
-│   ├── test-data.ts          # Sample media files and test scenarios
-│   └── page-objects.ts       # Page Object Models for UI interactions
-├── helpers/
-│   └── test-helpers.ts       # Utility functions for tests
-├── setup-verification.spec.ts # Basic setup verification tests
-└── README.md                 # This file
+├── ai-tests/                           # AI video generation tests
+│   ├── ai-model-selection-bug-reproduction.spec.js
+│   ├── check-video-status.spec.js
+│   └── manual-video-generation-test.spec.js
+├── export-tests/                       # Video export functionality tests
+│   ├── audio-only-export.spec.ts
+│   ├── basic-export.spec.ts
+│   ├── export-cancellation.spec.ts
+│   ├── format-compatibility.spec.ts
+│   ├── long-video-export.spec.ts
+│   ├── mixed-media-export.spec.ts
+│   ├── progress-tracking.spec.ts
+│   ├── quality-presets.spec.ts
+│   └── video-only-export.spec.ts
+├── media-tests/                        # Media processing and thumbnails
+│   ├── enhanced-video-thumbnails.spec.ts
+│   ├── generation-test.spec.ts
+│   ├── image-adjustment-core.spec.ts
+│   ├── post-generation-debug.spec.ts
+│   ├── real-image-test.spec.ts
+│   ├── video-thumbnail-demo.spec.ts
+│   └── video-thumbnail-manual-test.spec.ts
+├── navigation-tests/                   # Navigation and routing tests
+│   ├── electron-navigation.spec.ts
+│   └── navigation-bug-fix-test.spec.ts
+├── timeline-tests/                     # Timeline functionality tests
+│   ├── debug-timeline.js
+│   ├── test-drag-to-timeline.js
+│   ├── test-existing-timeline.js
+│   ├── test-final-drag.js
+│   ├── test-find-media-item.js
+│   ├── test-timeline-gradient.js
+│   └── test-with-video.js
+├── ui-tests/                          # UI component and dialog tests
+│   ├── export-dialog-spacing.spec.ts
+│   ├── fullscreen-bug-test.spec.ts
+│   └── setup-verification.spec.ts
+├── video-export-tests/                # Comprehensive video export testing
+│   ├── docs/
+│   ├── input/
+│   ├── output/
+│   ├── scripts/
+│   └── README.md
+├── performance-tests/                 # Performance and benchmark tests
+│   ├── benchmarks/
+│   ├── parallel/
+│   ├── performance/
+│   ├── webcodecs/
+│   └── README.md
+├── fixtures/                          # Test data and page objects
+│   ├── test-data.ts
+│   └── page-objects.ts
+├── helpers/                           # Test utilities and debug scripts
+│   ├── debug-scripts/                 # Archived debugging utilities
+│   └── test-helpers.ts
+├── results/                           # Test execution results
+└── README.md                          # This file
 ```
 
 ## Key Features
@@ -90,61 +140,57 @@ docker-compose up -d
 
 ## Test Categories
 
-### 1. Setup Verification ✅
-- Basic page loading
-- Browser API availability
-- Responsive design
-- Performance checks
-- Error handling
-- Cleanup verification
+### 1. AI Tests (`ai-tests/`)
+- AI video generation workflows
+- Model selection and bug reproduction
+- Video generation status checking
+- Manual AI interaction testing
 
-### 2. Planned Test Suites
-Based on the task list, the following E2E tests will be implemented:
+### 2. Export Tests (`export-tests/`) ✅
+- **Basic Export Flow**: Opening dialog, setting options, triggering export
+- **Video-Only Export**: Timeline with video elements, format exports
+- **Audio-Only Export**: Audio mixing and output validation
+- **Mixed Media Export**: Complex timelines (video + audio + text)
+- **Quality Presets**: 1080p, 720p, 480p exports and validation
+- **Format Compatibility**: MP4, WebM, MOV cross-browser testing
+- **Progress Tracking**: Progress bar accuracy and real-time feedback
+- **Long Video Export**: 30+ second timelines with performance monitoring
+- **Export Cancellation**: Mid-export cancellation and cleanup
 
-#### 4.2 Basic Export Flow
-- Opening export dialog
-- Setting export options
-- Triggering export process
+### 3. Media Tests (`media-tests/`)
+- Video thumbnail generation and enhancement
+- Image processing and adjustment
+- Media file handling and validation
+- Real image testing scenarios
 
-#### 4.3 Video-Only Export
-- Timeline with video elements
-- Different format exports
-- Output file verification
+### 4. Navigation Tests (`navigation-tests/`)
+- Electron navigation functionality
+- Routing and page transitions
+- Navigation bug fixes and regression testing
 
-#### 4.4 Audio-Only Export
-- Timeline with audio elements
-- Audio mixing verification
-- Audio output validation
+### 5. Timeline Tests (`timeline-tests/`)
+- Drag-and-drop functionality
+- Timeline element manipulation
+- Video timeline interactions
+- Timeline gradient and visual effects
 
-#### 4.5 Mixed Media Export
-- Complex timelines (video + audio + text)
-- Multi-element rendering
-- Output quality verification
+### 6. UI Tests (`ui-tests/`)
+- Dialog spacing and layout
+- Fullscreen functionality
+- Setup verification and basic UI components
+- Responsive design testing
 
-#### 4.6 Quality Presets
-- 1080p, 720p, 480p exports
-- File size comparisons
-- Quality validation
+### 7. Performance Tests (`performance-tests/`)
+- WebCodecs performance benchmarking
+- Parallel processing tests
+- Video processing performance analysis
+- Memory usage and optimization testing
 
-#### 4.7 Format Compatibility
-- MP4, WebM, MOV exports
-- Cross-browser compatibility
-- Format-specific features
-
-#### 4.8 Progress Tracking
-- Progress bar accuracy
-- Status message updates
-- Real-time feedback
-
-#### 4.9 Long Video Export
-- 30+ second timelines
-- Performance monitoring
-- Memory usage tracking
-
-#### 4.10 Export Cancellation
-- Mid-export cancellation
-- Resource cleanup verification
-- UI state recovery
+### 8. Video Export Tests (`video-export-tests/`)
+- Comprehensive export testing suite
+- Performance analysis and reporting
+- Large file handling and stress testing
+- Export quality validation
 
 ## Configuration
 
