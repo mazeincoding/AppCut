@@ -65,12 +65,36 @@
   transition: all 0.2s ease-in-out;
 }
 
+/* Add vertical line indicator */
+.ai-resize-handle::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(-50%);
+  transition: all 0.2s ease;
+}
+
 .ai-resize-handle:hover {
   background: rgba(59, 130, 246, 0.1);
 }
 
+.ai-resize-handle:hover::before {
+  width: 2px;
+  background: rgba(59, 130, 246, 0.5);
+}
+
 .ai-resize-handle:active {
   background: rgba(59, 130, 246, 0.2);
+}
+
+.ai-resize-handle:active::before {
+  width: 3px;
+  background: rgba(59, 130, 246, 0.8);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
 }
 
 /* Responsive animation classes */

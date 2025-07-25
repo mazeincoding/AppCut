@@ -702,7 +702,7 @@ function ProjectCard({ project, isSelected, onSelect }: ProjectCardProps) {
                 />
               ) : (
                 <h3 
-                  className="font-semibold text-gray-900 text-sm line-clamp-1 cursor-pointer hover:text-blue-600 transition-colors"
+                  className="font-semibold text-gray-900 text-sm line-clamp-1 cursor-pointer hover:text-blue-600 transition-colors pl-[5px]"
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsEditing(true);
@@ -715,10 +715,10 @@ function ProjectCard({ project, isSelected, onSelect }: ProjectCardProps) {
               )}
             </div>
             <div className="space-y-0.5">
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 pl-[5px]">
                 Created: {project.createdAt.toLocaleDateString()}
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 pl-[5px]">
                 Last edited: {Math.floor((Date.now() - project.updatedAt.getTime()) / (1000 * 60 * 60 * 24))} days ago
               </p>
             </div>

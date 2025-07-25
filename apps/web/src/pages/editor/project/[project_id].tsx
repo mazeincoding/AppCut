@@ -9,6 +9,7 @@ import {
   ResizableHandle,
 } from "../../../components/ui/resizable";
 import { MediaPanel } from "../../../components/editor/media-panel";
+import { AiResizeHandle } from "../../../components/editor/media-panel/ai-resize-handle";
 import { PropertiesPanel } from "../../../components/editor/properties-panel";
 import { Timeline } from "../../../components/editor/timeline";
 import { PreviewPanel } from "../../../components/editor/preview-panel";
@@ -335,7 +336,7 @@ function EditorContent() {
                 </div>
               </ResizablePanel>
               
-              <ResizableHandle withHandle />
+              <AiResizeHandle />
               
               {/* Preview Panel */}
               <ResizablePanel 

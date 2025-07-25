@@ -1,5 +1,31 @@
 # AI Video Download Workflow Changes
 
+## Latest Error (January 2025)
+
+### Error Details
+```
+Runtime Error: Invalid file type for thumbnail generation: 
+src\lib\ffmpeg-utils.ts (673:11) @ generateEnhancedThumbnails
+
+671 |   // Validate file type
+672 |   if (!videoFile.type.startsWith('video/')) {
+673 |     throw new Error(`Invalid file type for thumbnail generation: ${videoFile.type}`);
+674 |   }
+```
+
+### Root Cause Analysis
+The error occurs because AI-generated videos are being added to the media store before they are fully downloaded, resulting in:
+1. Empty or invalid File objects with incorrect MIME types
+2. The `videoFile.type` property being empty or undefined
+3. FFmpeg thumbnail generation failing validation checks
+
+### Call Stack
+1. User clicks Generate in AI panel
+2. `ai.tsx` immediately creates a placeholder File object
+3. `media-store.ts:addMediaItem()` adds incomplete video
+4. `media.tsx:64` triggers `generateEnhancedThumbnails`
+5. `ffmpeg-utils.ts:673` throws error on invalid file type
+
 ## Current Workflow - Real Function Call Diagram
 
 ```mermaid
