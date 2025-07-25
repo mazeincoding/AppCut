@@ -3,6 +3,7 @@ import { toBlobURL } from '@ffmpeg/util';
 
 let ffmpeg: FFmpeg | null = null;
 let isLoaded = false;
+let initializationPromise: Promise<FFmpeg> | null = null;
 
 export const initFFmpeg = async (): Promise<FFmpeg> => {
   if (ffmpeg && isLoaded) {
@@ -10,10 +11,18 @@ export const initFFmpeg = async (): Promise<FFmpeg> => {
     return ffmpeg;
   }
 
+  // Return existing initialization if in progress
+  if (initializationPromise) {
+    console.log("⏳ FFmpeg initialization already in progress, waiting...");
+    return initializationPromise;
+  }
+
   console.log("🚀 Initializing FFmpeg.wasm...");
   
-  try {
-    ffmpeg = new FFmpeg();
+  // Start new initialization
+  initializationPromise = (async () => {
+    try {
+      ffmpeg = new FFmpeg();
     
     // Use locally hosted files instead of CDN
     const baseURL = '/ffmpeg';
@@ -42,14 +51,18 @@ export const initFFmpeg = async (): Promise<FFmpeg> => {
       console.log('FFmpeg logging not supported');
     }
     
-    console.log("✅ FFmpeg.wasm loaded successfully");
-    return ffmpeg;
-  } catch (error) {
-    console.error("❌ Failed to initialize FFmpeg:", error);
-    ffmpeg = null; // Reset on failure
-    isLoaded = false;
-    throw new Error(`FFmpeg initialization failed: ${error}`);
-  }
+      console.log("✅ FFmpeg.wasm loaded successfully");
+      return ffmpeg;
+    } catch (error) {
+      console.error("❌ Failed to initialize FFmpeg:", error);
+      ffmpeg = null; // Reset on failure
+      isLoaded = false;
+      initializationPromise = null; // Reset promise on error
+      throw new Error(`FFmpeg initialization failed: ${error}`);
+    }
+  })();
+  
+  return initializationPromise;
 };
 
 export const generateThumbnail = async (
@@ -145,9 +158,7 @@ export const getVideoInfo = async (videoFile: File): Promise<{
   const inputName = 'input.mp4';
 
   // Write input file
-  console.log('Writing video file to FFmpeg:', videoFile.name, 'Size:', videoFile.size);
   const fileBuffer = await videoFile.arrayBuffer();
-  console.log('File buffer size:', fileBuffer.byteLength);
   await ffmpeg.writeFile(inputName, new Uint8Array(fileBuffer));
 
   // Capture FFmpeg stderr output with a one-time listener pattern
@@ -159,7 +170,6 @@ export const getVideoInfo = async (videoFile: File): Promise<{
       const message = event.message || event.data || event;
       if (typeof message === 'string') {
         ffmpegOutput += message + '\n';
-        console.log('FFmpeg log captured:', message);
       }
     }
   };
@@ -197,7 +207,6 @@ export const getVideoInfo = async (videoFile: File): Promise<{
     throw new Error('Failed to extract video info. The file may be corrupted or in an unsupported format.');
   }
 
-  console.log('FFmpeg output for parsing:', ffmpegOutput);
 
   // Parse output for duration, resolution, and fps
   // Example: Duration: 00:00:10.00, start: 0.000000, bitrate: 1234 kb/s
@@ -531,7 +540,6 @@ const generateThumbnailsViaCanvas = async (
       }
       
       const timestamp = timestamps[currentIndex];
-      console.log(`🎨 Canvas: Capturing thumbnail ${currentIndex + 1}/${timestamps.length} at ${timestamp}s`);
       
       // Set canvas size
       const aspectRatio = video.videoWidth / video.videoHeight;
@@ -546,9 +554,6 @@ const generateThumbnailsViaCanvas = async (
         if (blob) {
           const url = URL.createObjectURL(blob);
           thumbnails.push(url);
-          console.log(`✅ Canvas: Thumbnail ${currentIndex + 1} captured successfully`);
-        } else {
-          console.warn(`⚠️ Canvas: Failed to create thumbnail ${currentIndex + 1}`);
         }
         
         currentIndex++;
@@ -563,11 +568,6 @@ const generateThumbnailsViaCanvas = async (
     };
     
     video.addEventListener('loadedmetadata', () => {
-      console.log('🎬 Canvas: Video metadata loaded:', {
-        duration: video.duration,
-        width: video.videoWidth,
-        height: video.videoHeight
-      });
       
       // Set first timestamp
       if (timestamps.length > 0) {
@@ -623,11 +623,11 @@ const generateThumbnailsViaCanvas = async (
     video.src = objectUrl;
     video.load();
     
-    // Timeout after 15 seconds (shorter timeout for faster fallback)
+    // Timeout after 5 seconds for faster fallback to FFmpeg
     timeoutId = setTimeout(() => {
       cleanup();
       reject(new Error('Canvas thumbnail generation timed out - will try FFmpeg fallback'));
-    }, 15000);
+    }, 5000);
   });
 };
 
@@ -650,15 +650,9 @@ export const generateEnhancedThumbnails = async (
   videoFile: File,
   options: EnhancedThumbnailOptions = {}
 ): Promise<EnhancedThumbnailResult> => {
-  console.log('🎬 FFMPEG-UTILS: generateEnhancedThumbnails called with:', {
-    fileName: videoFile.name,
-    fileSize: videoFile.size,
-    options
-  });
   
   // Try HTML5 Canvas method first (more reliable for thumbnails)
   try {
-    console.log('🎨 Attempting HTML5 Canvas thumbnail generation...');
     return await generateThumbnailsViaCanvas(videoFile, options);
   } catch (canvasError) {
     console.error('❌ Canvas thumbnail generation failed:', canvasError);
@@ -673,7 +667,6 @@ export const generateEnhancedThumbnails = async (
         throw new Error('FFmpeg failed to initialize properly');
       }
       
-      console.log('✅ FFMPEG-UTILS: FFmpeg initialized successfully');
       
       return await generateThumbnailsInternal(ffmpeg, videoFile, options);
       
@@ -705,22 +698,17 @@ const generateThumbnailsInternal = async (
   let videoInfo;
   
   // Try HTML5 video element first (more reliable)
-  console.log('Attempting to get video info via HTML5 video element...');
   try {
     videoInfo = await getVideoInfoViaHTML5(videoFile);
-    console.log('Video info extracted successfully via HTML5:', videoInfo);
   } catch (html5Error) {
     console.error('HTML5 video info extraction failed:', html5Error);
     
     // Try FFmpeg as fallback
-    console.log('Attempting to get video info via FFmpeg...');
     try {
       videoInfo = await getVideoInfo(videoFile);
-      console.log('Video info extracted successfully via FFmpeg:', videoInfo);
     } catch (ffmpegError) {
       console.error('FFmpeg video info extraction also failed:', ffmpegError);
       // Final fallback with default values
-      console.log('Using default video info values...');
       videoInfo = {
         duration: 10, // Default 10 seconds
         width: 1920,  // Default HD resolution
@@ -762,16 +750,12 @@ const generateThumbnailsInternal = async (
   // Generate multiple thumbnails
   const thumbnails: string[] = [];
   
-  console.log('🎬 FFMPEG-UTILS: Starting thumbnail generation loop for', validTimestamps.length, 'timestamps');
   
   for (let i = 0; i < validTimestamps.length; i++) {
     const timestamp = validTimestamps[i];
     const outputName = `thumb_${Math.floor(timestamp * 1000)}.${format}`;
     
-    console.log(`🎬 FFMPEG-UTILS: Generating thumbnail ${i + 1}/${validTimestamps.length} at ${timestamp}s`);
-    
     try {
-      console.log(`🎬 FFMPEG-UTILS: Executing FFmpeg command for thumbnail ${i + 1}`);
       
       await ffmpeg.exec([
         '-i', inputName,
@@ -783,21 +767,14 @@ const generateThumbnailsInternal = async (
         outputName
       ]);
       
-      console.log(`✅ FFMPEG-UTILS: FFmpeg exec completed for thumbnail ${i + 1}`);
-      
       // Check if output file exists before reading
       try {
         const thumbData = await ffmpeg.readFile(outputName);
-        console.log(`📁 FFMPEG-UTILS: Read thumbnail data:`, thumbData.length, 'bytes');
         
         if (thumbData.length > 0) {
           const blob = new Blob([thumbData], { type: `image/${format}` });
           const objectUrl = URL.createObjectURL(blob);
           thumbnails.push(objectUrl);
-          
-          console.log(`🔗 FFMPEG-UTILS: Created object URL for thumbnail ${i + 1}:`, objectUrl.substring(0, 50) + '...');
-        } else {
-          console.warn(`⚠️ FFMPEG-UTILS: Thumbnail ${i + 1} has no data`);
         }
       } catch (readError) {
         console.error(`❌ FFMPEG-UTILS: Failed to read thumbnail file ${outputName}:`, readError);
@@ -806,9 +783,8 @@ const generateThumbnailsInternal = async (
       // Cleanup individual thumbnail file (even if reading failed)
       try {
         await ffmpeg.deleteFile(outputName);
-        console.log(`🗑️ FFMPEG-UTILS: Cleaned up thumbnail file ${outputName}`);
       } catch (deleteError) {
-        console.warn(`⚠️ FFMPEG-UTILS: Could not delete thumbnail file ${outputName}:`, deleteError);
+        console.warn(`Could not delete thumbnail file ${outputName}:`, deleteError);
       }
       
     } catch (error) {
@@ -826,16 +802,10 @@ const generateThumbnailsInternal = async (
     }
   }
   
-  console.log('🎬 FFMPEG-UTILS: Completed thumbnail generation loop. Generated:', thumbnails.length, 'thumbnails');
   
   // Cleanup input file
   await ffmpeg.deleteFile(inputName);
   
-  console.log('🎬 FFMPEG-UTILS: Returning enhanced thumbnails result:', {
-    thumbnailCount: thumbnails.length,
-    videoDuration: videoInfo.duration,
-    timestampCount: validTimestamps.length
-  });
   
   return {
     thumbnails,

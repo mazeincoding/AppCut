@@ -5,6 +5,9 @@ import { generateUUID } from "@/lib/utils";
 import { generateEnhancedThumbnails, type EnhancedThumbnailOptions } from "@/lib/ffmpeg-utils";
 import { thumbnailCache } from "@/lib/thumbnail-cache";
 
+// Track ongoing thumbnail requests to prevent duplicates
+const thumbnailRequests = new Map<string, Promise<void>>();
+
 export type MediaType = "image" | "video" | "audio";
 
 export interface MediaItem {
@@ -354,10 +357,19 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     const item = get().mediaItems.find(item => item.id === mediaId);
     if (!item || !item.file || item.type !== 'video') return;
     
-    // Update processing stage at start
-    get().updateProcessingStage(mediaId, 'thumbnail-ffmpeg');
+    // Check for existing request
+    const existingRequest = thumbnailRequests.get(mediaId);
+    if (existingRequest) {
+      console.log(`⏳ Thumbnail generation already in progress for ${mediaId}, waiting...`);
+      return existingRequest;
+    }
     
-    try {
+    // Create new request
+    const request = (async () => {
+      // Update processing stage at start
+      get().updateProcessingStage(mediaId, 'thumbnail-ffmpeg');
+      
+      try {
       // Default options for enhanced thumbnails
       const defaultOptions: EnhancedThumbnailOptions = {
         resolution: options.resolution || 'medium',
@@ -414,20 +426,28 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
             : existing
         )
       }));
-    } catch (error) {
-      console.error('Failed to generate enhanced thumbnails:', error);
-      
-      // Update processing stage to error
-      get().updateProcessingStage(mediaId, 'error');
-      
-      set((state) => ({
-        mediaItems: state.mediaItems.map(existing => 
-          existing.id === mediaId 
-            ? { ...existing, thumbnailError: error instanceof Error ? error.message : 'Unknown error' }
-            : existing
-        )
-      }));
-    }
+      } catch (error) {
+        console.error('Failed to generate enhanced thumbnails:', error);
+        
+        // Update processing stage to error
+        get().updateProcessingStage(mediaId, 'error');
+        
+        set((state) => ({
+          mediaItems: state.mediaItems.map(existing => 
+            existing.id === mediaId 
+              ? { ...existing, thumbnailError: error instanceof Error ? error.message : 'Unknown error' }
+              : existing
+          )
+        }));
+      } finally {
+        // Clean up request tracking
+        thumbnailRequests.delete(mediaId);
+      }
+    })();
+    
+    // Store the request promise
+    thumbnailRequests.set(mediaId, request);
+    return request;
   },
 
   getThumbnailAtTime: (mediaId, timestamp) => {

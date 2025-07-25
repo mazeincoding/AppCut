@@ -65,6 +65,12 @@ export default function Document() {
                       stack: new Error().stack
                     });
                     
+                    // Allow FFmpeg files
+                    if (url && (url.includes('/ffmpeg/') || url.includes('ffmpeg-core'))) {
+                      console.log('✅ [ELECTRON] Allowing FFmpeg file:', url);
+                      return originalFetch.apply(this, arguments);
+                    }
+                    
                     // Block problematic .json requests but allow Next.js development files
                     if (url && (url.includes('.json') || url.includes('_next/data') || url.includes('.html.json'))) {
                       // Allow Next.js development middleware files

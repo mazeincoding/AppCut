@@ -18,7 +18,7 @@ const COS_THETA = Math.cos(THETA);
 const SIN_THETA = Math.sin(THETA);
 
 /** Utility */
-const clamp = (v, min, max) => Math.min(Math.max(v, min), max);
+const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max);
 
 interface HeroProps {
   signupCount: number;
@@ -41,7 +41,7 @@ function useIsElectron() {
  * always clips precisely, regardless of font‑loading or window size.
  */
 function TitleComponent({ signupCount }: { signupCount: number }) {
-  const measureRef = useRef(null);
+  const measureRef = useRef<HTMLSpanElement>(null);
   const [textWidth, setTextWidth] = useState(408); // sensible default until measured
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -164,7 +164,7 @@ function TitleComponent({ signupCount }: { signupCount: number }) {
 
         <h1 
           className="font-bold tracking-tighter text-black dark:text-white"
-          style={{ fontSize: 'clamp(2.5rem, 6vw, 6rem)' }}
+          style={{ fontSize: 'clamp(2.5rem, 6vw, 6rem)', marginTop: '-10px' }}
         >
           The Open Source
         </h1>
@@ -183,7 +183,7 @@ function TitleComponent({ signupCount }: { signupCount: number }) {
         
         {/* Range‑slider container */}
         <div className="flex justify-center gap-4 mt-4 md:mt-6" style={{ marginTop: '-60px' }}>
-          <OpenSourceSlider width={textWidth} />
+          <OpenSourceSlider width={textWidth} onChange={() => {}} />
         </div>
 
         {/* Subheading */}
@@ -237,19 +237,19 @@ function TitleComponent({ signupCount }: { signupCount: number }) {
  * The rotation angle now changes dynamically based on handle positions.
  * Dragging is projected on to this rotated axis so the handles feel natural.
  */
-function OpenSourceSlider({ width: initialWidth, height = 70, handleSize = 18, onChange }) {
+function OpenSourceSlider({ width: initialWidth, height = 70, handleSize = 18, onChange }: { width: number; height?: number; handleSize?: number; onChange?: (value: { left: number; right: number; range: number }) => void }) {
   // Adjusted width to be more compact
   const width = initialWidth > 0 ? initialWidth + 50 : 0;
   
   const [left, setLeft] = useState(0);
   const [right, setRight] = useState(width);
-  const [draggingHandle, setDraggingHandle] = useState(null);
+  const [draggingHandle, setDraggingHandle] = useState<string | null>(null);
   // State to hold the dynamic rotation angle
   const [dynamicRotation, setDynamicRotation] = useState(ROTATION_DEG);
 
   const leftRef = useRef(left);
   const rightRef = useRef(right);
-  const dragRef = useRef(null);
+  const dragRef = useRef<{ handle: string; startX: number; startY: number; initialLeft: number; initialRight: number } | null>(null);
 
   useEffect(() => {
     leftRef.current = left;
@@ -274,7 +274,7 @@ function OpenSourceSlider({ width: initialWidth, height = 70, handleSize = 18, o
 
   useEffect(() => setRight(width), [width]);
 
-  const startDrag = (handle, e) => {
+  const startDrag = (handle: string, e: React.PointerEvent) => {
     e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
     dragRef.current = {
@@ -288,7 +288,7 @@ function OpenSourceSlider({ width: initialWidth, height = 70, handleSize = 18, o
   };
 
   const moveDrag = useCallback(
-    (e) => {
+    (e: PointerEvent) => {
       if (!dragRef.current) return;
       const { handle, startX, startY, initialLeft, initialRight } = dragRef.current;
       const dX = e.clientX - startX;
@@ -322,7 +322,7 @@ function OpenSourceSlider({ width: initialWidth, height = 70, handleSize = 18, o
     };
   }, [moveDrag, endDrag]);
 
-  const nudgeHandle = (handle) => (e) => {
+  const nudgeHandle = (handle: string) => (e: React.KeyboardEvent) => {
     if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
     e.preventDefault();
     const delta = e.key === "ArrowLeft" ? -10 : 10;
