@@ -668,13 +668,31 @@ export const generateEnhancedThumbnails = async (
     throw new Error('Invalid or empty video file provided for thumbnail generation');
   }
 
-  // Validate file type
-  if (!videoFile.type.startsWith('video/')) {
-    throw new Error(`Invalid file type for thumbnail generation: ${videoFile.type}`);
+  // Validate file type - handle cases where MIME type might be missing
+  if (!videoFile || !videoFile.type) {
+    throw new Error(`Invalid file for thumbnail generation: file or MIME type is missing`);
+  }
+  
+  // If MIME type is empty or doesn't start with 'video/', try to infer from filename
+  let fileType = videoFile.type;
+  if (!fileType || !fileType.startsWith('video/')) {
+    const fileName = videoFile.name.toLowerCase();
+    if (fileName.endsWith('.mp4')) {
+      fileType = 'video/mp4';
+      console.warn(`Missing MIME type for ${videoFile.name}, inferred as video/mp4`);
+    } else if (fileName.endsWith('.webm')) {
+      fileType = 'video/webm';
+      console.warn(`Missing MIME type for ${videoFile.name}, inferred as video/webm`);
+    } else if (fileName.endsWith('.mov')) {
+      fileType = 'video/quicktime';
+      console.warn(`Missing MIME type for ${videoFile.name}, inferred as video/quicktime`);
+    } else {
+      throw new Error(`Invalid file type for thumbnail generation: ${videoFile.type || 'unknown'} (filename: ${videoFile.name})`);
+    }
   }
 
   // Skip canvas method for known problematic formats and go straight to FFmpeg
-  const skipCanvas = videoFile.type.includes('mp4') || videoFile.type.includes('h264');
+  const skipCanvas = fileType.includes('mp4') || fileType.includes('h264');
   
   if (!skipCanvas) {
     // Try HTML5 Canvas method first (fallback to FFmpeg if it fails)
