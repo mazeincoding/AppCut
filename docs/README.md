@@ -11,10 +11,12 @@ AI-related features and functionality documentation
 
 ### 📁 **debugging/**
 Debugging guides and troubleshooting documentation
+- `ai-video-no-timeline-preview-analysis.md` - AI video timeline preview analysis
 - `debug_video_no_show_preview.md` - Video preview debugging guide
 
 ### 📁 **features/**
 Feature specifications and implementation guides
+- `button.md` - Button component documentation
 - `remove-test-media-panel-button.md` - Media panel button removal guide
 - `video-timeline-preview-overlay-feature.md` - Timeline preview overlay feature
 
@@ -22,11 +24,6 @@ Feature specifications and implementation guides
 Known issues, bug reports, and analysis
 - `AI_VIDEO_TIMELINE_DRAG_ISSUE.md` - AI video timeline drag issue analysis
 - `ffmpeg-thumbnail-issues-analysis.md` - FFmpeg thumbnail generation issues
-
-### 📁 **project-info/**
-Project-level information and setup guides
-- `CLAUDE.md` - Claude AI integration documentation
-- `ELECTRON_BUILD.md` - Electron build configuration and setup
 
 ### 📁 **video-processing/**
 Video processing, export, and optimization documentation
@@ -46,12 +43,7 @@ Deployment and infrastructure documentation
 ### 📁 **packages/**
 Package-specific documentation
 - `auth_package_documentation.md` - Authentication package documentation
-- `components_documentation.md` - React components documentation
 - `db_package_documentation.md` - Database package documentation
-- `e2e_documentation.md` - End-to-end testing documentation
-- `lib_documentation.md` - Library functions documentation
-- `stores_documentation.md` - State management stores documentation
-- `types_documentation.md` - TypeScript types documentation
 
 ### 📁 **project-info/**
 Project-level information and configuration
@@ -66,11 +58,16 @@ Project-level information and configuration
 ### 📁 **technical/**
 Technical configuration and setup documentation
 - `biome_documentation.md` - Biome configuration documentation
+- `components_documentation.md` - React components documentation
+- `e2e_documentation.md` - End-to-end testing documentation
 - `electron_documentation.md` - Electron application documentation
 - `github_documentation.md` - GitHub configuration documentation
+- `lib_documentation.md` - Library functions documentation
 - `migrations_documentation.md` - Database migrations documentation
 - `scripts_documentation.md` - Build and development scripts documentation
+- `stores_documentation.md` - State management stores documentation
 - `turbo_documentation.md` - Turbo monorepo configuration documentation
+- `types_documentation.md` - TypeScript types documentation
 
 ## 🔍 **How to Use This Documentation**
 

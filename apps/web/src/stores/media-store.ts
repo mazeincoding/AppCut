@@ -531,11 +531,11 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     }
 
     // ✨ ENHANCED: Better file validation for AI videos
-    const videoFile = item.file;
+    const itemVideoFile = item.file;
     
     // Validate MIME type (important for AI videos)
-    if (!videoFile.type || !videoFile.type.startsWith('video/')) {
-      const fileName = videoFile.name.toLowerCase();
+    if (!itemVideoFile.type || !itemVideoFile.type.startsWith('video/')) {
+      const fileName = itemVideoFile.name.toLowerCase();
       let inferredType = '';
       
       if (fileName.endsWith('.mp4')) {
@@ -547,9 +547,9 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
       }
       
       if (inferredType) {
-        console.warn('TIMELINE-PREVIEWS: Missing MIME type, inferred:', inferredType, 'for file:', videoFile.name);
+        console.warn('TIMELINE-PREVIEWS: Missing MIME type, inferred:', inferredType, 'for file:', itemVideoFile.name);
         // Create new file with correct MIME type
-        const correctedFile = new File([videoFile], videoFile.name, { 
+        const correctedFile = new File([itemVideoFile], itemVideoFile.name, { 
           type: inferredType 
         });
         
@@ -562,7 +562,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
           )
         }));
       } else {
-        console.error('TIMELINE-PREVIEWS: Invalid file type for AI video:', videoFile.type, 'filename:', videoFile.name);
+        console.error('TIMELINE-PREVIEWS: Invalid file type for AI video:', itemVideoFile.type, 'filename:', itemVideoFile.name);
         return;
       }
     }
