@@ -50,7 +50,16 @@ function TitleComponent({ signupCount }: { signupCount: number }) {
 
   // Re‑measure whenever fonts load or the viewport resizes
   useEffect(() => {
-    const measure = () => setTextWidth(measureRef.current?.clientWidth ?? 408);
+    const measure = () => {
+      const newWidth = measureRef.current?.clientWidth ?? 408;
+      // Only update if width actually changed to prevent infinite loops
+      setTextWidth(prevWidth => {
+        if (Math.abs(prevWidth - newWidth) > 1) {
+          return newWidth;
+        }
+        return prevWidth;
+      });
+    };
     measure();
     window.addEventListener("resize", measure);
     const ro = new ResizeObserver(measure);
@@ -238,11 +247,11 @@ function TitleComponent({ signupCount }: { signupCount: number }) {
  * Dragging is projected on to this rotated axis so the handles feel natural.
  */
 function OpenSourceSlider({ width: initialWidth, height = 70, handleSize = 18, onChange }: { width: number; height?: number; handleSize?: number; onChange?: (value: { left: number; right: number; range: number }) => void }) {
-  // Adjusted width to be more compact
-  const width = initialWidth > 0 ? initialWidth + 50 : 0;
+  // Adjusted width to be more compact - use useMemo to prevent recalculation
+  const width = React.useMemo(() => initialWidth > 0 ? initialWidth + 50 : 0, [initialWidth]);
   
   const [left, setLeft] = useState(0);
-  const [right, setRight] = useState(width);
+  const [right, setRight] = useState(() => width); // Initialize with function to use initial width
   const [draggingHandle, setDraggingHandle] = useState<string | null>(null);
   // State to hold the dynamic rotation angle
   const [dynamicRotation, setDynamicRotation] = useState(ROTATION_DEG);
@@ -275,7 +284,10 @@ function OpenSourceSlider({ width: initialWidth, height = 70, handleSize = 18, o
     }
   }, [left, right, width]);
 
-  useEffect(() => setRight(width), [width]);
+  // Update right handle position when width changes, but only if it would exceed bounds
+  useEffect(() => {
+    setRight(prevRight => Math.min(prevRight, width));
+  }, [width]);
 
   const startDrag = (handle: string, e: React.PointerEvent) => {
     e.preventDefault();
