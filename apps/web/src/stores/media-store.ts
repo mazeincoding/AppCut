@@ -74,7 +74,7 @@ interface MediaStore {
   addMediaItem: (
     projectId: string,
     item: Omit<MediaItem, "id">
-  ) => Promise<void>;
+  ) => Promise<string>;
   removeMediaItem: (projectId: string, id: string) => Promise<void>;
   loadProjectMedia: (projectId: string) => Promise<void>;
   clearProjectMedia: (projectId: string) => Promise<void>;
@@ -245,6 +245,24 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     // Save to persistent storage in background
     try {
       await storageService.saveMediaItem(projectId, newItem);
+      
+      // ✨ AUTO-GENERATE TIMELINE PREVIEWS: Auto-generate timeline previews for video files
+      if (newItem.type === 'video' && newItem.file) {
+        console.log('🎬 Auto-generating timeline previews for new video:', newItem.name);
+        
+        // Generate timeline previews with default options
+        setTimeout(() => {
+          get().generateTimelinePreviews(newItem.id, {
+            density: 2,
+            quality: 'medium',
+            zoomLevel: 1,
+            elementDuration: newItem.duration || 10
+          }).catch(error => {
+            console.warn('Failed to auto-generate timeline previews:', error);
+          });
+        }, 500); // Small delay to ensure file is ready
+      }
+      
     } catch (error) {
       console.error("Failed to save media item:", error);
       // Remove from local state if save failed
@@ -252,6 +270,8 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
         mediaItems: state.mediaItems.filter((media) => media.id !== newItem.id),
       }));
     }
+    
+    return newItem.id; // Return media ID for external use
   },
 
   removeMediaItem: async (projectId, id: string) => {
@@ -501,8 +521,50 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
   generateTimelinePreviews: async (mediaId, options) => {
     const item = get().mediaItems.find(item => item.id === mediaId);
     if (!item || !item.file || item.type !== 'video') {
-      console.warn('Cannot generate timeline previews: invalid media item', { mediaId, type: item?.type });
+      console.warn('Cannot generate timeline previews: invalid media item', { 
+        mediaId, 
+        type: item?.type,
+        hasFile: !!item?.file,
+        fileName: item?.file?.name 
+      });
       return;
+    }
+
+    // ✨ ENHANCED: Better file validation for AI videos
+    const videoFile = item.file;
+    
+    // Validate MIME type (important for AI videos)
+    if (!videoFile.type || !videoFile.type.startsWith('video/')) {
+      const fileName = videoFile.name.toLowerCase();
+      let inferredType = '';
+      
+      if (fileName.endsWith('.mp4')) {
+        inferredType = 'video/mp4';
+      } else if (fileName.endsWith('.webm')) {
+        inferredType = 'video/webm';
+      } else if (fileName.endsWith('.mov')) {
+        inferredType = 'video/quicktime';
+      }
+      
+      if (inferredType) {
+        console.warn('TIMELINE-PREVIEWS: Missing MIME type, inferred:', inferredType, 'for file:', videoFile.name);
+        // Create new file with correct MIME type
+        const correctedFile = new File([videoFile], videoFile.name, { 
+          type: inferredType 
+        });
+        
+        // Update the media item with corrected file
+        set((state) => ({
+          mediaItems: state.mediaItems.map(existing => 
+            existing.id === mediaId 
+              ? { ...existing, file: correctedFile }
+              : existing
+          )
+        }));
+      } else {
+        console.error('TIMELINE-PREVIEWS: Invalid file type for AI video:', videoFile.type, 'filename:', videoFile.name);
+        return;
+      }
     }
 
     // Create a unique key for this request based on mediaId and options

@@ -34,37 +34,56 @@ Video processing, export, and optimization documentation
 - `video-export-optimization.md` - Video export optimization strategies
 - `video-thumbnail-implementation.md` - Video thumbnail generation implementation
 
-## 📋 **Root Level Documentation**
-Core project documentation files:
+### 📁 **archive_task/**
+Archived tasks and completed work documentation
 - `archive_task_documentation.md` - Archived tasks documentation
+
+### 📁 **deployment/**
+Deployment and infrastructure documentation
+- `docker_compose_documentation.md` - Docker Compose setup documentation
+- `netlify_documentation.md` - Netlify deployment documentation
+
+### 📁 **packages/**
+Package-specific documentation
 - `auth_package_documentation.md` - Authentication package documentation
-- `biome_documentation.md` - Biome configuration documentation
 - `components_documentation.md` - React components documentation
 - `db_package_documentation.md` - Database package documentation
-- `docker_compose_documentation.md` - Docker Compose setup documentation
 - `e2e_documentation.md` - End-to-end testing documentation
-- `electron_documentation.md` - Electron application documentation
-- `github_documentation.md` - GitHub configuration documentation
 - `lib_documentation.md` - Library functions documentation
+- `stores_documentation.md` - State management stores documentation
+- `types_documentation.md` - TypeScript types documentation
+
+### 📁 **project-info/**
+Project-level information and configuration
+- `CLAUDE.md` - Claude AI integration documentation
+- `ELECTRON_BUILD.md` - Electron build configuration and setup
 - `license_documentation.md` - License information
-- `migrations_documentation.md` - Database migrations documentation
-- `netlify_documentation.md` - Netlify deployment documentation
 - `package_json_documentation.md` - Package.json configuration documentation
 - `project_documentation.md` - Overall project structure documentation
 - `public_documentation.md` - Public assets documentation
+- `root_markdown_files_documentation.md` - Root markdown files documentation
+
+### 📁 **technical/**
+Technical configuration and setup documentation
+- `biome_documentation.md` - Biome configuration documentation
+- `electron_documentation.md` - Electron application documentation
+- `github_documentation.md` - GitHub configuration documentation
+- `migrations_documentation.md` - Database migrations documentation
 - `scripts_documentation.md` - Build and development scripts documentation
-- `stores_documentation.md` - State management stores documentation
 - `turbo_documentation.md` - Turbo monorepo configuration documentation
-- `types_documentation.md` - TypeScript types documentation
 
 ## 🔍 **How to Use This Documentation**
 
-1. **For Developers**: Start with `project_documentation.md` for project overview
+1. **For Developers**: Start with `project-info/project_documentation.md` for project overview
 2. **For Features**: Check the `features/` folder for specific feature implementations
 3. **For Issues**: Look in the `issues/` folder for known problems and solutions
 4. **For AI Features**: Explore the `ai-features/` folder for AI-related functionality
 5. **For Video Processing**: Check `video-processing/` for export and optimization guides
 6. **For Debugging**: Use the `debugging/` folder for troubleshooting guides
+7. **For Deployment**: Check `deployment/` for setup and deployment guides
+8. **For Packages**: Look in `packages/` for package-specific documentation
+9. **For Technical Setup**: Use `technical/` for configuration and technical guides
+10. **For Project Info**: Check `project-info/` for project-level information
 
 ## 📝 **Contributing to Documentation**
 
@@ -75,5 +94,9 @@ When adding new documentation:
 - Place video processing docs in `video-processing/`
 - Place debugging guides in `debugging/`
 - Place project-level info in `project-info/`
+- Place deployment guides in `deployment/`
+- Place package docs in `packages/`
+- Place technical configs in `technical/`
+- Place archived work in `archive_task/`
 
 Keep documentation up-to-date and well-organized for easy navigation and maintenance.

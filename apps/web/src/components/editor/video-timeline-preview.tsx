@@ -80,15 +80,22 @@ export function VideoTimelinePreview({
     const mediaElement = element as MediaElement;
     const elementDuration = element.duration;
     
-    console.log('🔍 VideoTimelinePreview useEffect checking:', {
+    console.log('🔧 TIMELINE-PREVIEW-DEBUG:', {
       mediaId: mediaElement.mediaId,
+      elementName: element.name,
       needsRegeneration: shouldRegenerateTimelinePreviews(
         mediaElement.mediaId, 
         zoomLevel, 
         elementDuration
       ),
       isGenerating,
-      hasFile: !!mediaItem.file
+      hasFile: !!mediaItem.file,
+      fileType: mediaItem.file?.type,
+      fileName: mediaItem.file?.name,
+      currentTimelinePreviews: !!mediaItem.timelinePreviews,
+      thumbnailCount: mediaItem.timelinePreviews?.thumbnails?.length || 0,
+      zoomLevel,
+      elementDuration
     });
     
     // Check if we need to generate/regenerate previews
