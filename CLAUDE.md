@@ -45,10 +45,14 @@ frontend: UI/UX and user-facing development
 - [apps/web/src/lib/export-engine.ts](mdc:apps/web/src/lib/export-engine.ts) - Main export pipeline
 - [apps/web/src/lib/canvas-renderer.ts](mdc:apps/web/src/lib/canvas-renderer.ts) - Canvas-based video rendering
 - [apps/web/src/lib/ffmpeg-video-recorder.ts](mdc:apps/web/src/lib/ffmpeg-video-recorder.ts) - FFmpeg integration
+- [apps/web/src/lib/ffmpeg-utils.ts](mdc:apps/web/src/lib/ffmpeg-utils.ts) - **FIXED**: FFmpeg utilities with race condition protection
 - [apps/web/src/lib/audio-mixer.ts](mdc:apps/web/src/lib/audio-mixer.ts) - Audio processing
+- [apps/web/src/lib/thumbnail-cache.ts](mdc:apps/web/src/lib/thumbnail-cache.ts) - Timeline preview caching
 
 ### UI Components
 - [apps/web/src/components/editor/](mdc:apps/web/src/components/editor/) - Editor-specific components
+- [apps/web/src/components/editor/video-timeline-preview.tsx](mdc:apps/web/src/components/editor/video-timeline-preview.tsx) - **FIXED**: Timeline preview with debouncing
+- [apps/web/src/components/landing/hero.tsx](mdc:apps/web/src/components/landing/hero.tsx) - **FIXED**: Landing page with slider component
 - [apps/web/src/components/ui/](mdc:apps/web/src/components/ui/) - Reusable UI components (shadcn/ui)
 - [apps/web/src/components/export-dialog.tsx](mdc:apps/web/src/components/export-dialog.tsx) - Export configuration
 
@@ -56,6 +60,7 @@ frontend: UI/UX and user-facing development
 - [apps/web/electron/main.js](mdc:apps/web/electron/main.js) - Electron main process
 - [apps/web/electron/preload.js](mdc:apps/web/electron/preload.js) - Preload script for IPC
 - [apps/web/src/lib/electron-detection.ts](mdc:apps/web/src/lib/electron-detection.ts) - Environment detection
+- [apps/web/src/pages/_document.tsx](mdc:apps/web/src/pages/_document.tsx) - **FIXED**: Fetch interception with FFmpeg whitelist
 
 ### Database & Auth
 - [packages/db/src/schema.ts](mdc:packages/db/src/schema.ts) - Database schema (Drizzle ORM)
@@ -92,8 +97,10 @@ Short and concise guide to Claude Code for OpenCut development.
 ## ⚡ Quick Commands
 ```bash
 # Setup: docker-compose up -d && cd apps/web && bun install && bun run dev
+# Build: cd apps/web && bun run build
 # Electron: bun run export:electron && npx electron electron/main-simple.js
 # Quality: bun run lint && bun run test
+# Commit: git add -A && git commit -m "message" && git push
 ```
 
 ## 🏗️ Architecture
@@ -101,8 +108,26 @@ Short and concise guide to Claude Code for OpenCut development.
 - `packages/` - Auth & DB packages
 - Key patterns: Zustand stores, compound components, Canvas→FFmpeg pipeline
 
-## 🔧 Recent: Windows Electron Build Fixed
+## 🔧 Recent Issues Fixed (January 2025)
+
+### ✅ FFmpeg Thumbnail Generation Issues
+- **Fixed**: Race conditions in FFmpeg initialization with mutex/promise tracking
+- **Fixed**: Canvas thumbnail timeout (reduced from 15s→5s→3s for faster FFmpeg fallback)
+- **Fixed**: Fetch interception blocking FFmpeg files (added `/ffmpeg/` whitelist)
+- **Fixed**: Timeline preview debouncing to prevent duplicate requests
+- **Fixed**: React infinite loops in hero component and video timeline preview
+
+### ✅ Build & TypeScript Issues  
+- **Fixed**: Syntax errors in ffmpeg-utils.ts (malformed try-catch blocks)
+- **Fixed**: TypeScript errors in media-store.ts (proper type safety for File objects)
+- **Fixed**: Build compilation errors and linting issues
+
+### ✅ Windows Electron Build 
 All issues resolved (see `task11.md`). Navigation, rendering, window positioning working.
+
+### 📋 Known Issues
+- AI video timeline previews timeout (see `ai-video-download-workflow-changes.md` for solution)
+- Canvas method consistently fails for H.264 videos (FFmpeg fallback working correctly)
 
 ---
 **Detailed guidance**: Always check `.cursor/rules/` files first for implementation patterns.
