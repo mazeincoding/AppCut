@@ -4,6 +4,12 @@ OpenCut Project Cleanup Script
 
 This script cleans up build directories, cache files, and temporary files
 to resolve development issues and free up disk space.
+
+Usage:
+  python cleanup.py                    # Auto-cleanup (default)
+  python cleanup.py --dry-run          # Preview what would be cleaned
+  python cleanup.py --confirm          # Ask for confirmation before cleanup
+  python cleanup.py --verbose          # Show detailed output
 """
 
 import os
@@ -123,6 +129,8 @@ def main():
     # Parse command line arguments
     dry_run = "--dry-run" in sys.argv or "-n" in sys.argv
     verbose = "--verbose" in sys.argv or "-v" in sys.argv
+    # Default to auto-yes unless explicitly disabled
+    auto_yes = not ("--no-auto" in sys.argv or "--confirm" in sys.argv)
     
     if dry_run:
         print("🔍 DRY RUN MODE - No files will be deleted")
@@ -150,12 +158,14 @@ def main():
     
     print(f"\n📊 Found {len(existing_items)} items totaling {format_size(total_size)}")
     
-    if not dry_run:
+    if not dry_run and not auto_yes:
         # Confirm before proceeding
         response = input("\n❓ Proceed with cleanup? (y/N): ").strip().lower()
         if response not in ['y', 'yes']:
             print("❌ Cleanup cancelled.")
             return
+    elif auto_yes and not dry_run:
+        print("\n🚀 Auto-proceeding with cleanup (default behavior, use --confirm to prompt)...")
     
     print(f"\n🚀 {'Simulating' if dry_run else 'Starting'} cleanup...")
     

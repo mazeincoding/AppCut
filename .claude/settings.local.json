@@ -66,7 +66,8 @@
       "Bash(git check-ignore:*)",
       "Bash(git rm:*)",
       "Bash(bun add:*)",
-      "Bash(move:*)"
+      "Bash(move:*)",
+      "Bash(timeout:*)"
     ],
     "deny": []
   }
