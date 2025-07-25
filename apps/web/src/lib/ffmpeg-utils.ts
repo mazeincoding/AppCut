@@ -568,6 +568,12 @@ const generateThumbnailsViaCanvas = async (
     };
     
     video.addEventListener('loadedmetadata', () => {
+      console.log('✅ Video metadata loaded successfully', {
+        duration: video.duration,
+        videoWidth: video.videoWidth,
+        videoHeight: video.videoHeight,
+        readyState: video.readyState
+      });
       
       // Set first timestamp
       if (timestamps.length > 0) {
@@ -620,14 +626,20 @@ const generateThumbnailsViaCanvas = async (
     video.muted = true;
     video.preload = 'metadata';
     
+    console.log('🎬 Starting video load for canvas thumbnails', {
+      fileType: videoFile.type,
+      fileSize: videoFile.size,
+      objectUrl: objectUrl.substring(0, 50) + '...'
+    });
+    
     video.src = objectUrl;
     video.load();
     
-    // Timeout after 5 seconds for faster fallback to FFmpeg
+    // Timeout after 3 seconds for faster fallback to FFmpeg
     timeoutId = setTimeout(() => {
       cleanup();
       reject(new Error('Canvas thumbnail generation timed out - will try FFmpeg fallback'));
-    }, 5000);
+    }, 3000);
   });
 };
 

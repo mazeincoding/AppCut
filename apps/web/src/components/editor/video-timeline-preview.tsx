@@ -135,7 +135,6 @@ export function VideoTimelinePreview({
     zoomLevel, 
     generateTimelinePreviews, 
     shouldRegenerateTimelinePreviews, 
-    isGenerating,
     getPreviewQuality,
     getPreviewDensity
   ]);

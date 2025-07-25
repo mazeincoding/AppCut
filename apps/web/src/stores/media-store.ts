@@ -7,6 +7,8 @@ import { thumbnailCache } from "@/lib/thumbnail-cache";
 
 // Track ongoing thumbnail requests to prevent duplicates
 const thumbnailRequests = new Map<string, Promise<void>>();
+// Track ongoing timeline preview requests to prevent duplicates
+const timelinePreviewRequests = new Map<string, Promise<void>>();
 
 export type MediaType = "image" | "video" | "audio";
 
@@ -503,13 +505,25 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
       return;
     }
 
+    // Create a unique key for this request based on mediaId and options
+    const requestKey = `${mediaId}-${options.zoomLevel || 1}-${options.quality || 'medium'}`;
+    
+    // Check for existing request
+    const existingRequest = timelinePreviewRequests.get(requestKey);
+    if (existingRequest) {
+      console.log(`⏳ Timeline preview generation already in progress for ${requestKey}, waiting...`);
+      return existingRequest;
+    }
+
     // Store file reference to ensure type safety
     const videoFile = item.file;
 
-    // Update processing stage at start  
-    get().updateProcessingStage(mediaId, 'thumbnail-ffmpeg');
-    
-    try {
+    // Create new request
+    const request = (async () => {
+      // Update processing stage at start  
+      get().updateProcessingStage(mediaId, 'thumbnail-ffmpeg');
+      
+      try {
       console.log('🎬 MEDIA-STORE: Starting timeline preview generation for:', mediaId, {
         fileName: videoFile.name,
         fileSize: videoFile.size,
@@ -626,9 +640,17 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
         )
       }));
       
-      // Don't re-throw error to prevent app crashes
-      console.warn('MEDIA-STORE: Timeline preview generation failed but continuing safely');
-    }
+        // Don't re-throw error to prevent app crashes
+        console.warn('MEDIA-STORE: Timeline preview generation failed but continuing safely');
+      } finally {
+        // Clean up request tracking
+        timelinePreviewRequests.delete(requestKey);
+      }
+    })();
+    
+    // Store the request promise
+    timelinePreviewRequests.set(requestKey, request);
+    return request;
   },
 
   getTimelinePreviewStrip: (mediaId, elementDuration, zoomLevel) => {
