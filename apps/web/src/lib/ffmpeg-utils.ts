@@ -671,7 +671,7 @@ export const generateEnhancedThumbnails = async (
     try {
       return await generateThumbnailsViaCanvas(videoFile, options);
     } catch (canvasError) {
-      console.log('⚠️ Canvas method failed, using FFmpeg fallback:', canvasError.message);
+      console.log('⚠️ Canvas method failed, using FFmpeg fallback:', canvasError instanceof Error ? canvasError.message : String(canvasError));
     }
   } else {
     console.log('⏭️ Skipping canvas method for this video format, using FFmpeg directly');
@@ -680,30 +680,28 @@ export const generateEnhancedThumbnails = async (
   // Use FFmpeg method (either as fallback or directly)
   try {
     const ffmpeg = await initFFmpeg();
-      
-      // Ensure FFmpeg is properly loaded
-      if (!ffmpeg || !isLoaded) {
-        console.error('❌ FFMPEG-UTILS: FFmpeg not properly initialized');
-        throw new Error('FFmpeg failed to initialize properly');
-      }
-      
-      
-      return await generateThumbnailsInternal(ffmpeg, videoFile, options);
-      
-    } catch (error) {
-      console.error('❌ FFMPEG-UTILS: generateEnhancedThumbnails failed:', error);
-      
-      // Return a safe fallback instead of crashing
-      return {
-        thumbnails: [],
-        metadata: {
-          duration: 10,
-          dimensions: { width: 1920, height: 1080 },
-          fps: 30,
-          timestamps: []
-        }
-      };
+    
+    // Ensure FFmpeg is properly loaded
+    if (!ffmpeg || !isLoaded) {
+      console.error('❌ FFMPEG-UTILS: FFmpeg not properly initialized');
+      throw new Error('FFmpeg failed to initialize properly');
     }
+    
+    return await generateThumbnailsInternal(ffmpeg, videoFile, options);
+    
+  } catch (error) {
+    console.error('❌ FFMPEG-UTILS: generateEnhancedThumbnails failed:', error);
+    
+    // Return a safe fallback instead of crashing
+    return {
+      thumbnails: [],
+      metadata: {
+        duration: 10,
+        dimensions: { width: 1920, height: 1080 },
+        fps: 30,
+        timestamps: []
+      }
+    };
   }
 };
 
