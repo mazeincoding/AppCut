@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { generateVideo, generateVideoFromImage, handleApiError, getGenerationStatus, ProgressCallback } from "@/lib/ai-video-client";
+import { AIVideoOutputManager } from "@/lib/ai-video-output";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { useMediaStore } from "@/stores/media-store";
 import { useProjectStore } from "@/stores/project-store";
@@ -61,6 +62,9 @@ export function AiView() {
   const [generatedVideo, setGeneratedVideo] = useState<GeneratedVideo | null>(null);
   const [generatedVideos, setGeneratedVideos] = useState<GeneratedVideoResult[]>([]);
   const [generationHistory, setGenerationHistory] = useState<GeneratedVideo[]>([]);
+  
+  // AI Video Output Manager for download workflow
+  const [outputManager] = useState(() => new AIVideoOutputManager('./ai-generated-videos'));
   
   // Image-to-video state
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -267,6 +271,48 @@ export function AiView() {
   
   // Store hooks
   const { addMediaItem } = useMediaStore();
+
+  // Helper function to download video to memory
+  const downloadVideoToMemory = async (videoUrl: string): Promise<Uint8Array> => {
+    console.log('📥 Starting video download from:', videoUrl);
+    
+    const response = await fetch(videoUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to download video: ${response.status} ${response.statusText}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('Response body is not readable');
+    }
+
+    const chunks: Uint8Array[] = [];
+    let receivedLength = 0;
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        chunks.push(value);
+        receivedLength += value.length;
+      }
+
+      // Combine all chunks into single Uint8Array
+      const totalData = new Uint8Array(receivedLength);
+      let position = 0;
+      for (const chunk of chunks) {
+        totalData.set(chunk, position);
+        position += chunk.length;
+      }
+
+      console.log(`✅ Download complete: ${totalData.length} bytes total`);
+      return totalData;
+
+    } finally {
+      reader.releaseLock();
+    }
+  };
 
   const maxChars = 500;
   const remainingChars = maxChars - prompt.length;
@@ -523,18 +569,32 @@ export function AiView() {
           // Add each video to history as it's generated
           addToHistory(newVideo);
           
-          // Automatically add to media panel
+          // Start download workflow instead of immediate media addition
           if (activeProject) {
             try {
-              const videoResponse = await fetch(newVideo.videoUrl);
-              const blob = await videoResponse.blob();
               const modelName = AI_MODELS.find(m => m.id === modelId)?.name || modelId;
-              const fileName = `ai-${modelName.toLowerCase().replace(/\s+/g, '-')}-${newVideo.jobId.substring(0, 8)}.mp4`;
-              const file = new File([blob], fileName, {
-                type: 'video/mp4',
-              });
               
-              // Add to media panel
+              // Start download tracking
+              const localPath = await outputManager.startDownload(
+                newVideo.jobId,
+                newVideo.prompt,
+                modelId
+              );
+              
+              console.log(`🚀 Started download tracking for ${modelName}: ${localPath}`);
+              
+              // Stream download the video data
+              setStatusMessage(`Downloading ${modelName} video...`);
+              const videoData = await downloadVideoToMemory(newVideo.videoUrl);
+              
+              // Complete download tracking
+              await outputManager.completeDownload(newVideo.jobId, newVideo.duration || 6);
+              
+              // Create File object from downloaded data
+              const fileName = `ai-${modelName.toLowerCase().replace(/\s+/g, '-')}-${newVideo.jobId.substring(0, 8)}.mp4`;
+              const file = await outputManager.createFileFromData(videoData, fileName);
+              
+              // Add to media panel with fully downloaded file
               await addMediaItem(activeProject.id, {
                 name: `AI (${modelName}): ${newVideo.prompt.substring(0, 20)}...`,
                 type: "video",
@@ -544,14 +604,16 @@ export function AiView() {
                 height: 1080,
               });
               
-              debugLogger.log('AIView', 'VIDEO_ADDED_TO_MEDIA_PANEL', { 
+              debugLogger.log('AIView', 'VIDEO_DOWNLOADED_AND_ADDED_TO_MEDIA_PANEL', { 
                 videoUrl: newVideo.videoUrl,
                 modelName,
                 fileName,
-                projectId: activeProject.id 
+                projectId: activeProject.id,
+                downloadSize: videoData.length 
               });
             } catch (addError) {
-              debugLogger.log('AIView', 'VIDEO_ADD_TO_MEDIA_PANEL_FAILED', { 
+              outputManager.markError(newVideo.jobId, addError instanceof Error ? addError.message : 'Unknown error');
+              debugLogger.log('AIView', 'VIDEO_DOWNLOAD_OR_ADD_TO_MEDIA_PANEL_FAILED', { 
                 error: addError instanceof Error ? addError.message : 'Unknown error',
                 modelName: AI_MODELS.find(m => m.id === modelId)?.name,
                 projectId: activeProject.id 

@@ -518,6 +518,30 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     // Store file reference to ensure type safety
     const videoFile = item.file;
 
+    // Add file readiness validation
+    if (!videoFile || videoFile.size === 0) {
+      console.warn('MEDIA-STORE: File not ready for timeline preview generation - empty or invalid file');
+      return;
+    }
+
+    // Check if file appears to be downloading or processing
+    if (item.processingStage?.includes('downloading')) {
+      console.warn('MEDIA-STORE: File still downloading, skipping timeline preview generation');
+      return;
+    }
+
+    // Try to access file to ensure it's actually ready
+    try {
+      const fileBuffer = await videoFile.arrayBuffer();
+      if (fileBuffer.byteLength === 0) {
+        console.warn('MEDIA-STORE: File appears to be empty, skipping timeline preview generation');
+        return;
+      }
+    } catch (error) {
+      console.warn('MEDIA-STORE: File not accessible for timeline preview generation:', error);
+      return;
+    }
+
     // Create new request
     const request = (async () => {
       // Update processing stage at start  

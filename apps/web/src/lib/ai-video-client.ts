@@ -75,7 +75,12 @@ export type ProgressCallback = (status: {
 
 export async function generateVideo(
   request: VideoGenerationRequest, 
-  onProgress?: ProgressCallback
+  onProgress?: ProgressCallback,
+  downloadOptions?: {
+    downloadToMemory?: boolean;
+    onDataReceived?: (data: Uint8Array) => void;
+    onComplete?: (totalData: Uint8Array) => void;
+  }
 ): Promise<VideoGenerationResponse> {
   try {
     if (!FAL_API_KEY) {
@@ -193,9 +198,19 @@ export async function generateVideo(
     if (requestId) {
       console.log('📋 Queue mode: polling for result...');
       // Step 2: Poll for status with progress updates
-      return await pollQueueStatus(requestId, endpoint, startTime, onProgress, jobId, request.model);
+      return await pollQueueStatus(requestId, endpoint, startTime, onProgress, jobId, request.model, downloadOptions);
     } else if (queueResult.video && queueResult.video.url) {
       console.log('⚡ Direct mode: video ready immediately');
+      
+      // Handle streaming download if requested
+      if (downloadOptions?.downloadToMemory) {
+        console.log('📥 Starting streaming download of video...');
+        const videoData = await streamVideoDownload(queueResult.video.url, downloadOptions);
+        if (downloadOptions.onComplete) {
+          downloadOptions.onComplete(videoData);
+        }
+      }
+      
       // Direct response - video is already ready
       if (onProgress) {
         onProgress({
@@ -237,6 +252,15 @@ export async function generateVideo(
       console.log('✅ Direct API result:', directResult);
       
       if (directResult.video && directResult.video.url) {
+        // Handle streaming download if requested
+        if (downloadOptions?.downloadToMemory) {
+          console.log('📥 Starting streaming download of direct video...');
+          const videoData = await streamVideoDownload(directResult.video.url, downloadOptions);
+          if (downloadOptions.onComplete) {
+            downloadOptions.onComplete(videoData);
+          }
+        }
+        
         if (onProgress) {
           onProgress({
             status: 'completed',
@@ -283,7 +307,12 @@ async function pollQueueStatus(
   startTime: number,
   onProgress?: ProgressCallback,
   jobId?: string,
-  modelName?: string
+  modelName?: string,
+  downloadOptions?: {
+    downloadToMemory?: boolean;
+    onDataReceived?: (data: Uint8Array) => void;
+    onComplete?: (totalData: Uint8Array) => void;
+  }
 ): Promise<VideoGenerationResponse> {
   const maxAttempts = 60; // 5 minutes max (5s intervals)
   let attempts = 0;
@@ -327,6 +356,15 @@ async function pollQueueStatus(
         if (resultResponse.ok) {
           const result = await resultResponse.json();
           console.log('✅ FAL Queue completed:', result);
+          
+          // Handle streaming download if requested
+          if (downloadOptions?.downloadToMemory && result.video?.url) {
+            console.log('📥 Starting streaming download of queued video...');
+            const videoData = await streamVideoDownload(result.video.url, downloadOptions);
+            if (downloadOptions.onComplete) {
+              downloadOptions.onComplete(videoData);
+            }
+          }
           
           if (onProgress) {
             onProgress({
@@ -733,4 +771,62 @@ export function handleApiError(error: unknown): string {
  */
 export async function isApiAvailable(): Promise<boolean> {
   return !!FAL_API_KEY;
+}
+
+/**
+ * Stream video download with progress tracking
+ */
+async function streamVideoDownload(
+  videoUrl: string,
+  downloadOptions: {
+    downloadToMemory?: boolean;
+    onDataReceived?: (data: Uint8Array) => void;
+    onComplete?: (totalData: Uint8Array) => void;
+  }
+): Promise<Uint8Array> {
+  console.log('🔗 Starting streaming download from:', videoUrl);
+  
+  const response = await fetch(videoUrl);
+  if (!response.ok) {
+    throw new Error(`Failed to download video: ${response.status} ${response.statusText}`);
+  }
+
+  const reader = response.body?.getReader();
+  if (!reader) {
+    throw new Error('Response body is not readable');
+  }
+
+  const chunks: Uint8Array[] = [];
+  let receivedLength = 0;
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      chunks.push(value);
+      receivedLength += value.length;
+
+      // Notify progress if callback provided
+      if (downloadOptions.onDataReceived) {
+        downloadOptions.onDataReceived(value);
+      }
+
+      console.log(`📊 Downloaded ${receivedLength} bytes...`);
+    }
+
+    // Combine all chunks into single Uint8Array
+    const totalData = new Uint8Array(receivedLength);
+    let position = 0;
+    for (const chunk of chunks) {
+      totalData.set(chunk, position);
+      position += chunk.length;
+    }
+
+    console.log(`✅ Download complete: ${totalData.length} bytes total`);
+    return totalData;
+
+  } finally {
+    reader.releaseLock();
+  }
 }
