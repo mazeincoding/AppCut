@@ -73,6 +73,7 @@ export function TextProperties({
         </PropertyItemValue>
       </PropertyItem>
 
+      {/* Text color update input */}
       <PropertyItem direction="row">
         <PropertyItemLabel>Color</PropertyItemLabel>
         <PropertyItemValue>
