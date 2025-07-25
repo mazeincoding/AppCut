@@ -93,96 +93,6 @@ export function AiView() {
 
   const isModelSelected = (modelId: string) => selectedModels.includes(modelId);
 
-  // 🧪 TESTING FUNCTION: Test video fetching and media panel loading
-  const handleTestDownloadAndMedia = async () => {
-    if (selectedModels.length === 0) {
-      setError('Select at least one model to test media panel functionality');
-      return;
-    }
-
-    setIsGenerating(true);
-    setError(null);
-    setGeneratedVideos([]);
-    
-    try {
-      const testVideo = {
-        jobId: `test-${Date.now()}`,
-        videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', // More reliable test video
-        videoPath: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-        fileSize: 2097152, // ~2MB
-        duration: 15,
-        prompt: prompt.trim() || 'Test video fetch',
-        model: selectedModels[0]
-      };
-
-      setStatusMessage('Testing video fetch and media panel integration...');
-      
-      // Test the actual download and media panel logic
-      if (activeProject) {
-        const modelName = AI_MODELS.find(m => m.id === selectedModels[0])?.name || selectedModels[0];
-        const fileName = `test-${modelName.toLowerCase().replace(/\s+/g, '-')}-${testVideo.jobId.substring(0, 8)}.mp4`;
-        
-        setStatusMessage('Fetching test video...');
-        
-        try {
-          // Fetch the video
-          const videoResponse = await fetch(testVideo.videoUrl);
-          if (!videoResponse.ok) {
-            throw new Error(`Failed to fetch video: ${videoResponse.status}`);
-          }
-          
-          const blob = await videoResponse.blob();
-          const file = new File([blob], fileName, {
-            type: 'video/mp4',
-          });
-          
-          setStatusMessage('Adding to media panel...');
-          
-          // Add to media panel
-          await addMediaItem(activeProject.id, {
-            name: `TEST: ${testVideo.prompt.substring(0, 20)}...`,
-            type: "video",
-            file: file,
-            duration: testVideo.duration || 5,
-            width: 1280,
-            height: 720,
-          });
-          
-          // Show success
-          setGeneratedVideos([{ modelId: selectedModels[0], video: testVideo }]);
-          addToHistory(testVideo);
-          setStatusMessage('✅ Test completed successfully!');
-          
-          debugLogger.log('AIView', 'TEST_DOWNLOAD_AND_MEDIA_SUCCESS', { 
-            fileName,
-            modelName,
-            projectId: activeProject.id,
-            fileSize: blob.size
-          });
-          
-        } catch (downloadError) {
-          console.error('Download/Media test error:', downloadError);
-          setError(`Media panel test failed: ${downloadError instanceof Error ? downloadError.message : 'Unknown error'}`);
-          
-          debugLogger.log('AIView', 'TEST_MEDIA_PANEL_FAILED', { 
-            error: downloadError instanceof Error ? downloadError.message : 'Unknown error',
-            modelName,
-            projectId: activeProject.id 
-          });
-        }
-      } else {
-        setError('No active project found for testing media panel integration');
-      }
-      
-    } catch (error) {
-      setError('Test error: ' + (error instanceof Error ? error.message : 'Unknown error'));
-      debugLogger.log('AIView', 'TEST_DOWNLOAD_GENERAL_ERROR', { 
-        error: error instanceof Error ? error.message : 'Unknown error' 
-      });
-    } finally {
-      setIsGenerating(false);
-    }
-  };
 
   // 🧪 TESTING FUNCTION: Mock generation without API calls (remove before production)
   const handleMockGenerate = async () => {
@@ -953,25 +863,6 @@ export function AiView() {
         )}
 
         <div className="mt-auto pt-4 space-y-2">
-          <Button 
-            onClick={handleTestDownloadAndMedia}
-            disabled={selectedModels.length === 0 || isGenerating}
-            className="w-full"
-            size="lg"
-            variant="secondary"
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="mr-2 size-4 animate-spin" />
-                Testing...
-              </>
-            ) : (
-              <>
-                📁 Test Media Panel
-              </>
-            )}
-          </Button>
-          
           <Button 
             onClick={handleMockGenerate}
             disabled={!canGenerate}

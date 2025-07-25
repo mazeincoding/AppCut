@@ -65,7 +65,8 @@
       "WebFetch(domain:fal.ai)",
       "Bash(git check-ignore:*)",
       "Bash(git rm:*)",
-      "Bash(bun add:*)"
+      "Bash(bun add:*)",
+      "Bash(move:*)"
     ],
     "deny": []
   }
