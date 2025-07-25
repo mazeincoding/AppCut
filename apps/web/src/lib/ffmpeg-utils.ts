@@ -663,6 +663,16 @@ export const generateEnhancedThumbnails = async (
   options: EnhancedThumbnailOptions = {}
 ): Promise<EnhancedThumbnailResult> => {
   
+  // Add file validation at function start
+  if (!videoFile || videoFile.size === 0) {
+    throw new Error('Invalid or empty video file provided for thumbnail generation');
+  }
+
+  // Validate file type
+  if (!videoFile.type.startsWith('video/')) {
+    throw new Error(`Invalid file type for thumbnail generation: ${videoFile.type}`);
+  }
+
   // Skip canvas method for known problematic formats and go straight to FFmpeg
   const skipCanvas = videoFile.type.includes('mp4') || videoFile.type.includes('h264');
   
@@ -685,6 +695,16 @@ export const generateEnhancedThumbnails = async (
     if (!ffmpeg || !isLoaded) {
       console.error('❌ FFMPEG-UTILS: FFmpeg not properly initialized');
       throw new Error('FFmpeg failed to initialize properly');
+    }
+    
+    // Add file accessibility test in FFmpeg section
+    try {
+      const testBuffer = await videoFile.arrayBuffer();
+      if (testBuffer.byteLength === 0) {
+        throw new Error('Video file appears to be empty');
+      }
+    } catch (error) {
+      throw new Error('Video file is not accessible or corrupted');
     }
     
     return await generateThumbnailsInternal(ffmpeg, videoFile, options);

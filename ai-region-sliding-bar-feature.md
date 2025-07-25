@@ -52,17 +52,67 @@ Add a draggable sliding bar/resizer that allows users to:
 
 ## Technical Specifications
 
-### Proposed File Locations
+### Current ResizablePanel System Integration
+The OpenCut editor already uses `@radix-ui/react-resizable-panels` for layout management. The AI sliding bar feature can leverage this existing system.
+
+### Relevant File Paths and Implementation Points
+
+#### **Main Layout File (ResizablePanel System)**
+**File**: `apps/web/src/pages/editor/project/[project_id].tsx`
+- **Line 304**: Main horizontal ResizablePanelGroup for editor layout
+- **Line 306-314**: Media Panel (AI panel) ResizablePanel configuration
+  ```typescript
+  <ResizablePanel 
+    defaultSize={toolsPanel}  // Currently from panel-store.ts
+    minSize={15} 
+    maxSize={35}
+    onResize={(size) => setToolsPanel(size)}
+  >
+  ```
+- **Line 315**: MediaPanel component integration
+- **Line 11**: MediaPanel import statement
+
+#### **Panel State Management**
+**File**: `apps/web/src/stores/panel-store.ts`
+- **Line 5**: DEFAULT_PANEL_SIZES configuration (toolsPanel: 45)
+- **Line 16**: toolsPanel property definition
+- **Line 25**: setToolsPanel action definition
+- **Need to Add**: AI-specific panel width state and constraints
+
+#### **AI Panel Components**
+**File**: `apps/web/src/components/editor/media-panel/index.tsx`
+- **Line 8**: AiView import
+- **Line 55**: AI view mapping in viewMap
+- **Line 59**: Main container div with styling classes
+- **Need to Add**: Resizer handle and dynamic width management
+
+#### **AI Tab Configuration**
+**File**: `apps/web/src/components/editor/media-panel/store.ts`
+- **Line 28**: "ai" tab definition
+- **Line 58**: AI tab icon configuration (BotIcon)
+- **Need to Add**: AI panel width state management
+
+#### **AI Content Component**
+**File**: `apps/web/src/components/editor/media-panel/views/ai.tsx`
+- **Line 612**: Main AiView component container div
+- **Line 615**: Header section with BotIcon
+- **Line 632**: Tab content area that needs responsive layout
+- **Line 746**: Generate button that should adapt to width
+- **Line 765**: AI models grid that needs responsive columns
+- **Need to Modify**: Add responsive layout based on panel width
+
+#### **Tab Bar System**
+**File**: `apps/web/src/components/editor/media-panel/tabbar.tsx`
+- **Current**: Fixed icon-only layout in collapsed state
+- **Need to Modify**: Show/hide tab labels based on panel width
+
+### Proposed New File Locations
 ```
-apps/web/src/components/editor/
-├── ai-panel/
-│   ├── ai-panel-resizer.tsx     # New resizer component
-│   ├── ai-panel-container.tsx   # Updated AI panel wrapper
-│   └── ai-panel-content.tsx     # AI tools content
-├── layout/
-│   └── editor-layout.tsx        # Update to handle dynamic sizing
-└── stores/
-    └── ui-store.ts              # Add AI panel width state
+apps/web/src/components/editor/media-panel/
+├── ai-panel-resizer.tsx         # New: Drag handle component
+├── resizable-ai-panel.tsx       # New: Enhanced AI panel with resizer
+└── hooks/
+    └── use-panel-resize.tsx     # New: Custom hook for resize logic
 ```
 
 ### Key Features
@@ -74,6 +124,61 @@ apps/web/src/components/editor/
 3. **Persistence**: Save user preference across sessions
 4. **Responsive**: Auto-collapse on mobile/small screens
 5. **Keyboard Support**: Arrow keys for accessibility
+
+### Implementation Strategy
+
+#### **Option 1: Enhance Existing ResizablePanel (Recommended)**
+Leverage the existing ResizablePanel system by:
+1. **Modifying ResizablePanel Props** in `[project_id].tsx:306-314`
+2. **Adding AI-specific width constraints** in `panel-store.ts`
+3. **Creating responsive AI content** in `ai.tsx`
+
+#### **Option 2: Custom Resizer Component**
+Create a dedicated AI panel resizer for more granular control.
+
+### ResizablePanel Integration Points
+
+#### **Current Media Panel Configuration** (`[project_id].tsx:306-314`)
+```typescript
+<ResizablePanel 
+  defaultSize={toolsPanel}     // From panel-store.ts (45%)
+  minSize={15}                 // Current minimum (15%)
+  maxSize={35}                 // Current maximum (35%)
+  onResize={(size) => setToolsPanel(size)}
+>
+```
+
+#### **Proposed AI-Specific Enhancement**
+```typescript
+<ResizablePanel 
+  defaultSize={toolsPanel}
+  minSize={aiPanelMinSize}     // New: Dynamic based on content
+  maxSize={aiPanelMaxSize}     // New: AI-specific constraints
+  onResize={(size) => {
+    setToolsPanel(size);
+    setAiPanelWidth(size);     // New: AI-specific tracking
+  }}
+>
+```
+
+### Panel Store Extensions Needed
+
+#### **Add to `panel-store.ts`**
+```typescript
+// Line 5: Add to DEFAULT_PANEL_SIZES
+aiPanelWidth: 280,           // Default AI panel width in px
+aiPanelMinWidth: 52,         // Collapsed state (icon only)
+aiPanelMaxWidth: 400,        // Expanded state
+
+// Line 16: Add to interface
+aiPanelWidth: number;
+aiPanelMinWidth: number;
+aiPanelMaxWidth: number;
+
+// Line 25: Add actions
+setAiPanelWidth: (width: number) => void;
+getAiPanelConstraints: () => { min: number; max: number };
+```
 
 ### CSS Classes Needed
 ```css
@@ -91,6 +196,20 @@ apps/web/src/components/editor/
 .ai-panel-resizing {
   user-select: none;
   pointer-events: none;
+}
+
+.ai-panel-content {
+  transition: width 0.2s ease-in-out;
+}
+
+.ai-panel-collapsed {
+  min-width: 52px;
+  max-width: 52px;
+}
+
+.ai-panel-expanded {
+  min-width: 280px;
+  max-width: 400px;
 }
 ```
 
@@ -118,4 +237,64 @@ This is a quality-of-life improvement that enhances the user experience but is n
 
 ---
 
-**Note**: This feature should integrate seamlessly with the existing Zustand state management and Tailwind CSS styling system already in use in the OpenCut project.
+## Implementation Checklist
+
+### Phase 1: Core ResizablePanel Enhancement
+- [ ] **Panel Store Updates** (`panel-store.ts:5,16,25`)
+  - [ ] Add AI panel width state properties
+  - [ ] Add AI panel constraint getters
+  - [ ] Add AI panel resize actions
+
+- [ ] **Main Layout Integration** (`[project_id].tsx:306-314`)
+  - [ ] Add AI-specific min/max size calculation
+  - [ ] Integrate AI panel resize handler
+  - [ ] Add conditional sizing based on active tab
+
+### Phase 2: Responsive AI Content
+- [ ] **AI View Responsiveness** (`ai.tsx:612,632,746,765`)
+  - [ ] Add width-based layout switching
+  - [ ] Implement responsive model grid
+  - [ ] Add compact/expanded button layouts
+  - [ ] Handle text truncation in narrow mode
+
+- [ ] **Tab Bar Adaptation** (`tabbar.tsx`)
+  - [ ] Add width-based label visibility
+  - [ ] Implement icon-only collapsed mode
+  - [ ] Add smooth label transitions
+
+### Phase 3: Advanced Features
+- [ ] **Custom Resize Hooks** (New: `hooks/use-panel-resize.tsx`)
+  - [ ] Implement drag gesture handling
+  - [ ] Add snap-to-position logic
+  - [ ] Create keyboard resize support
+
+- [ ] **Visual Enhancements**
+  - [ ] Add resize handle visual indicators
+  - [ ] Implement smooth transition animations
+  - [ ] Add resize preview during drag
+
+### Phase 4: Persistence & Settings
+- [ ] **User Preferences**
+  - [ ] Save AI panel width to localStorage
+  - [ ] Restore panel width on app load
+  - [ ] Add settings panel integration
+
+## Dependencies & Compatibility
+
+### Existing Dependencies (Already Available)
+- **@radix-ui/react-resizable-panels**: Core resizing functionality
+- **zustand**: State management with persistence
+- **tailwindcss**: CSS styling system
+- **lucide-react**: Icons for resize handles
+
+### No Additional Dependencies Required
+This feature leverages the existing OpenCut technology stack without requiring new external dependencies.
+
+### Browser Compatibility
+- **Desktop**: Full feature support
+- **Tablet**: Adaptive touch-friendly resize
+- **Mobile**: Auto-collapse to icon-only mode
+
+---
+
+**Note**: This feature integrates seamlessly with the existing Zustand state management, Tailwind CSS styling system, and @radix-ui ResizablePanel architecture already in use in the OpenCut project.

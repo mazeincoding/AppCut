@@ -63,6 +63,20 @@ export function VideoTimelinePreview({
   useEffect(() => {
     if (mediaItem.type !== 'video' || !mediaItem.file) return;
 
+    // Add file readiness validation
+    const isFileReady = mediaItem.file && 
+      mediaItem.file.size > 0 && 
+      !mediaItem.processingStage?.includes('downloading');
+
+    if (!isFileReady) {
+      console.log('VideoTimelinePreview: Skipping timeline preview - file not ready', {
+        hasFile: !!mediaItem.file,
+        fileSize: mediaItem.file?.size,
+        processingStage: mediaItem.processingStage
+      });
+      return;
+    }
+
     const mediaElement = element as MediaElement;
     const elementDuration = element.duration;
     

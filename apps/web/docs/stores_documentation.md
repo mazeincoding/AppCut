@@ -39,6 +39,50 @@ Manages all media items (images, videos, audio) within the project, including th
 *   **State:** `mediaItems`, `isLoading`.
 *   **Actions:** `addMediaItem`, `removeMediaItem`, `loadProjectMedia`, `clearProjectMedia`, `clearAllMedia`, `addGeneratedImages`, `generateEnhancedThumbnails`, `getThumbnailAtTime`, `setThumbnailQuality`, `clearThumbnailCache`, `generateTimelinePreviews`, `getTimelinePreviewStrip`, `getTimelinePreviewAtPosition`, `clearTimelinePreviews`, `shouldRegenerateTimelinePreviews`, `isMediaItemReady`, `updateProcessingStage`, `updateMediaItem`.
 
+#### High-Level Workflow: Media Item Processing
+
+This diagram illustrates the typical flow when a user adds a new media file to the application, including initial processing and thumbnail generation.
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant UI as Media Panel UI
+    participant MS as MediaStore
+    participant MP as MediaProcessing (lib/media-processing.ts)
+    participant FFMPEG as FFmpegUtils (lib/ffmpeg-utils.ts)
+    participant TC as ThumbnailCache (lib/thumbnail-cache.ts)
+    participant SS as StorageService (lib/storage/storage-service.ts)
+
+    User->>UI: Uploads media file(s)
+    UI->>MS: addMediaItem(projectId, file)
+    MS->>MP: processMediaFiles(file)
+    loop For each file
+        MP->>MP: getFileType(file)
+        alt If file is image
+            MP->>MP: getImageDimensions(file)
+        else If file is video
+            MP->>FFMPEG: getVideoInfo(file)
+            FFMPEG-->>MP: Video metadata (duration, dimensions, fps)
+            MP->>FFMPEG: generateThumbnail(file, 1)
+            FFMPEG-->>MP: Basic thumbnail URL
+        else If file is audio
+            MP->>MP: getMediaDuration(file)
+        end
+        MP-->>MS: Processed MediaItem data
+    end
+    MS->>SS: saveMediaItem(projectId, newItem) (in background)
+    SS-->>MS: Confirmation
+    MS->>UI: Updates mediaItems state (shows new item)
+
+    opt For video files (enhanced thumbnails)
+        MS->>MS: generateEnhancedThumbnails(mediaId)
+        MS->>FFMPEG: generateEnhancedThumbnails(videoFile, options)
+        FFMPEG-->>MS: Multiple thumbnail URLs and metadata
+        MS->>TC: cacheThumbnail(mediaId, timestamp, url, resolution)
+        MS->>UI: Updates mediaItem with enhanced thumbnails
+    end
+```
+
 ### `panel-store.ts`
 
 Manages the sizes and states of various UI panels within the editor, persisting these settings across sessions.

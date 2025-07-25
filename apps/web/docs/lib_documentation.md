@@ -2,6 +2,49 @@
 
 This document provides an overview of the utility functions, helper modules, and service integrations located in the `apps/web/src/lib/` directory. These modules encapsulate reusable logic and interact with external services or browser APIs.
 
+## High-Level Workflow: Video Export Process
+
+The video export process is a complex workflow involving several key components and their interactions. The `ExportEngineFactory` plays a central role in selecting the most optimal export engine based on browser capabilities and system resources.
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant UI as Export Dialog/Editor UI
+    participant EEF as ExportEngineFactory
+    participant EE as ExportEngine (or WebCodecs/Parallel)
+    participant CR as CanvasRenderer
+    participant VR as VideoRecorder (or FFmpegVideoRecorder)
+    participant AM as AudioMixer
+    participant MM as MemoryMonitor
+    participant FS as File System
+
+    User->>UI: Initiates video export
+    UI->>EEF: createOptimalEngine(options)
+    EEF->>MM: getMemoryStatus()
+    MM-->>EEF: Memory status
+    EEF->>EEF: Checks WebCodecsCompatibility
+    EEF-->>EE: Returns selected ExportEngine instance
+    UI->>EE: startExport()
+    EE->>EE: preloadMediaElements()
+    EE->>AM: initializeAudioTracks()
+    EE->>VR: startRecording()
+    loop For each frame
+        EE->>EE: getFrameData(frameNumber)
+        EE->>CR: renderSingleFrameOptimized(frameData)
+        CR->>CR: Draws elements (images, videos, text)
+        EE->>VR: addFrame(renderedFrame)
+        VR->>VR: Processes frame data
+        EE->>MM: checkMemoryDuringExport(frameNumber)
+        MM-->>EE: Memory status/warnings
+    end
+    EE->>VR: stopRecording()
+    VR-->>EE: Video Blob
+    EE->>AM: mixTracks() (if audio)
+    AM-->>EE: Audio Blob (if audio)
+    EE-->>UI: Final Video Blob
+    UI->>FS: Saves/Downloads Video
+```
+
 ## Files and Their Functionality
 
 ### `ai-video-client.ts`
