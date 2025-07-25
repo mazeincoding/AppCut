@@ -9,6 +9,10 @@ const DEFAULT_PANEL_SIZES = {
   timeline: 30,
   mainContentHeight: 75,
   timelineHeight: 25,
+  // AI Panel specific sizing (in percentage for ResizablePanel compatibility)
+  aiPanelWidth: 22,           // Default AI panel width as percentage (~280px equivalent)
+  aiPanelMinWidth: 4,         // Collapsed state (~52px equivalent) 
+  aiPanelMaxWidth: 30,        // Expanded state (~400px equivalent)
 } as const;
 
 interface PanelState {
@@ -20,6 +24,11 @@ interface PanelState {
   timeline: number;
   mainContentHeight: number;
   timelineHeight: number;
+  
+  // AI Panel specific sizing
+  aiPanelWidth: number;
+  aiPanelMinWidth: number;
+  aiPanelMaxWidth: number;
 
   // Actions
   setToolsPanel: (size: number) => void;
@@ -29,11 +38,16 @@ interface PanelState {
   setTimeline: (size: number) => void;
   setMainContentHeight: (size: number) => void;
   setTimelineHeight: (size: number) => void;
+  
+  // AI Panel actions
+  setAiPanelWidth: (width: number) => void;
+  getAiPanelConstraints: () => { min: number; max: number };
+  getAiPanelSizeForTab: (activeTab: string) => { defaultSize: number; minSize: number; maxSize: number };
 }
 
 export const usePanelStore = create<PanelState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       // Default sizes - optimized for responsiveness
       ...DEFAULT_PANEL_SIZES,
 
@@ -45,6 +59,35 @@ export const usePanelStore = create<PanelState>()(
       setTimeline: (size) => set({ timeline: size }),
       setMainContentHeight: (size) => set({ mainContentHeight: size }),
       setTimelineHeight: (size) => set({ timelineHeight: size }),
+      
+      // AI Panel actions
+      setAiPanelWidth: (width) => set({ aiPanelWidth: width }),
+      
+      getAiPanelConstraints: () => {
+        const state = get();
+        return {
+          min: state.aiPanelMinWidth,
+          max: state.aiPanelMaxWidth
+        };
+      },
+      
+      getAiPanelSizeForTab: (activeTab) => {
+        const state = get();
+        // When AI tab is active, use AI-specific sizing
+        if (activeTab === 'ai') {
+          return {
+            defaultSize: state.aiPanelWidth,
+            minSize: state.aiPanelMinWidth,
+            maxSize: state.aiPanelMaxWidth
+          };
+        }
+        // For other tabs, use standard panel sizing
+        return {
+          defaultSize: state.toolsPanel,
+          minSize: 15,
+          maxSize: 35
+        };
+      },
     }),
     {
       name: "panel-sizes",

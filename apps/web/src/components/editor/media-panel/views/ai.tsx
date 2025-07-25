@@ -12,6 +12,7 @@ import { AIVideoOutputManager } from "@/lib/ai-video-output";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { useMediaStore } from "@/stores/media-store";
 import { useProjectStore } from "@/stores/project-store";
+import { usePanelStore } from "@/stores/panel-store";
 import { useMediaPanelStore } from "../store";
 import { AIHistoryPanel } from "./ai-history-panel";
 import { debugLogger } from "@/lib/debug-logger";
@@ -271,6 +272,12 @@ export function AiView() {
   
   // Store hooks
   const { addMediaItem } = useMediaStore();
+  const { aiPanelWidth, aiPanelMinWidth } = usePanelStore();
+  
+  // Responsive layout calculations
+  const isCollapsed = aiPanelWidth <= (aiPanelMinWidth + 2); // Small buffer for collapsed state
+  const isCompact = aiPanelWidth < 18; // Less than ~230px equivalent
+  const isExpanded = aiPanelWidth > 25; // Greater than ~320px equivalent
 
   // Helper function to download video to memory
   const downloadVideoToMemory = async (videoUrl: string): Promise<Uint8Array> => {
@@ -671,27 +678,39 @@ export function AiView() {
 
 
   return (
-    <div className="p-4 h-full flex flex-col">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
+    <div className={`h-full flex flex-col transition-all duration-200 ${isCollapsed ? 'p-2' : isCompact ? 'p-3' : 'p-4'}`}>
+      <div className={`flex items-center mb-4 ${isCollapsed ? 'justify-center' : isCompact ? 'flex-col gap-1' : 'justify-between'}`}>
+        <div className={`flex items-center gap-2 ${isCompact && !isCollapsed ? 'flex-col' : ''}`}>
           <BotIcon className="size-5 text-primary" />
-          <h3 className="text-sm font-medium">AI Video Generation</h3>
+          {!isCollapsed && (
+            <h3 className={`text-sm font-medium ${isCompact ? 'text-center text-xs' : ''}`}>
+              {isCompact ? 'AI' : 'AI Video Generation'}
+            </h3>
+          )}
         </div>
-        {generationHistory.length > 0 && (
+        {generationHistory.length > 0 && !isCollapsed && (
           <Button
             type="button"
             size="sm"
             variant="text"
             onClick={() => setIsHistoryPanelOpen(true)}
-            className="h-8 px-2"
+            className={`h-8 ${isCompact ? 'px-1' : 'px-2'}`}
           >
             <History className="size-4 mr-1" />
-            History ({generationHistory.length})
+            {!isCompact && `History (${generationHistory.length})`}
+            {isCompact && generationHistory.length}
           </Button>
         )}
       </div>
       
-      <div className="flex-1 flex flex-col gap-4">
+      {/* Show collapsed state with just icon */}
+      {isCollapsed ? (
+        <div className="flex-1 flex flex-col items-center justify-center gap-2">
+          <BotIcon className="size-8 text-primary/50" />
+          <span className="text-[0.6rem] text-muted-foreground text-center">AI</span>
+        </div>
+      ) : (
+        <div className={`flex-1 flex flex-col ${isCompact ? 'gap-2' : 'gap-4'}`}>
         <Tabs value={activeTab} onValueChange={(value) => {
           debugLogger.log('AIView', 'TAB_CHANGE', { 
             from: activeTab, 
@@ -703,34 +722,38 @@ export function AiView() {
           <TabsList className="grid w-full grid-cols-2 bg-transparent">
             <TabsTrigger 
               value="text" 
-              className="flex items-center gap-2 bg-transparent text-white data-[state=active]:bg-transparent data-[state=active]:text-white border-0 shadow-none hover:text-blue-400 transition-colors duration-200"
+              className={`flex items-center bg-transparent text-white data-[state=active]:bg-transparent data-[state=active]:text-white border-0 shadow-none hover:text-blue-400 transition-colors duration-200 ${isCompact ? 'gap-1 text-xs p-2' : 'gap-2'}`}
             >
               <TypeIcon className="size-4" />
-              Text to Video
+              {isCompact ? 'Text' : 'Text to Video'}
             </TabsTrigger>
             <TabsTrigger 
               value="image" 
-              className="flex items-center gap-2 bg-transparent text-white data-[state=active]:bg-transparent data-[state=active]:text-white border-0 shadow-none hover:text-blue-400 transition-colors duration-200"
+              className={`flex items-center bg-transparent text-white data-[state=active]:bg-transparent data-[state=active]:text-white border-0 shadow-none hover:text-blue-400 transition-colors duration-200 ${isCompact ? 'gap-1 text-xs p-2' : 'gap-2'}`}
             >
               <ImageIcon className="size-4" />
-              Image to Video
+              {isCompact ? 'Image' : 'Image to Video'}
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent key="text-tab-content" value="text" className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="prompt">Describe your video</Label>
+          <TabsContent key="text-tab-content" value="text" className={isCompact ? "space-y-2" : "space-y-4"}>
+            <div className={isCompact ? "space-y-1" : "space-y-2"}>
+              <Label htmlFor="prompt" className={isCompact ? "text-xs" : ""}>
+                {isCompact ? "Prompt" : "Describe your video"}
+              </Label>
               <Textarea
                 id="prompt"
-                placeholder="Describe your video..."
+                placeholder={isCompact ? "Video prompt..." : "Describe your video..."}
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value.slice(0, maxChars))}
-                className="min-h-[80px] resize-none"
+                className={`resize-none ${isCompact ? "min-h-[60px] text-sm" : "min-h-[80px]"}`}
               />
-              <div className="flex justify-between items-center">
-                <p className="text-[0.65rem] text-muted-foreground">
-                  Be specific about scenes, actions, and style
-                </p>
+              <div className={`flex items-center ${isCompact ? 'flex-col gap-1' : 'justify-between'}`}>
+                {!isCompact && (
+                  <p className="text-[0.65rem] text-muted-foreground">
+                    Be specific about scenes, actions, and style
+                  </p>
+                )}
                 <span className={`text-xs ${remainingChars < 50 ? 'text-destructive' : 'text-muted-foreground'}`}>
                   {remainingChars}/{maxChars}
                 </span>
@@ -809,26 +832,26 @@ export function AiView() {
           onClick={handleGenerate}
           disabled={!canGenerate}
           className="w-full"
-          size="lg"
+          size={isCompact ? "sm" : "lg"}
         >
           {isGenerating ? (
             <>
               <Loader2 className="mr-2 size-4 animate-spin" />
-              Generating...
+              {isCompact ? "Gen..." : "Generating..."}
             </>
           ) : (
             <>
               <BotIcon className="mr-2 size-4" />
-              Generate Video
+              {isCompact ? "Generate" : "Generate Video"}
             </>
           )}
         </Button>
 
-        <div className="space-y-2">
-          <Label htmlFor="models" className="text-sm font-medium text-foreground">
-            AI Models
+        <div className={isCompact ? "space-y-1" : "space-y-2"}>
+          <Label htmlFor="models" className={`font-medium text-foreground ${isCompact ? "text-xs" : "text-sm"}`}>
+            {isCompact ? "Models" : "AI Models"}
           </Label>
-          <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto">
+          <div className={`grid grid-cols-1 gap-2 overflow-y-auto ${isCompact ? "max-h-32" : "max-h-48"}`}>
             {AI_MODELS.map((model) => (
               <Button
                 key={model.id}
@@ -837,15 +860,16 @@ export function AiView() {
                 size="sm"
                 onClick={() => toggleModel(model.id)}
                 className={`
-                  flex items-center justify-between p-3 h-auto text-left font-mono
+                  flex items-center justify-between h-auto text-left font-mono
                   transition-all duration-200 border-border/50 
+                  ${isCompact ? 'p-2' : 'p-3'}
                   ${isModelSelected(model.id) 
                     ? 'bg-blue-500/10 border-blue-500/50 text-blue-400' 
                     : 'bg-transparent hover:bg-accent/50 hover:border-border'
                   }
                 `}
               >
-                <div className="flex items-center gap-3">
+                <div className={`flex items-center ${isCompact ? 'gap-2' : 'gap-3'}`}>
                   <div className={`
                     w-4 h-4 rounded border flex items-center justify-center
                     ${isModelSelected(model.id) 
@@ -858,15 +882,26 @@ export function AiView() {
                     )}
                   </div>
                   <div className="flex flex-col">
-                    <span className="font-medium text-sm">{model.name}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {model.description}
+                    <span className={`font-medium ${isCompact ? 'text-xs' : 'text-sm'}`}>
+                      {isCompact ? model.name.split(' ')[0] : model.name}
                     </span>
+                    {!isCompact && (
+                      <span className="text-xs text-muted-foreground">
+                        {model.description}
+                      </span>
+                    )}
                   </div>
                 </div>
-                <span className="text-xs text-muted-foreground font-normal ml-6">
-                  USD {model.price} • {model.resolution}
-                </span>
+                {!isCompact && (
+                  <span className="text-xs text-muted-foreground font-normal ml-6">
+                    USD {model.price} • {model.resolution}
+                  </span>
+                )}
+                {isCompact && (
+                  <span className="text-xs text-muted-foreground font-normal">
+                    ${model.price}
+                  </span>
+                )}
               </Button>
             ))}
           </div>
@@ -1201,7 +1236,8 @@ export function AiView() {
             onRemoveFromHistory={removeFromHistory}
             aiModels={AI_MODELS}
           />
-      </div>
+        </div>
+      )}
     </div>
   );
 }

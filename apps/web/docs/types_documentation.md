@@ -68,6 +68,155 @@ Defines comprehensive types for text-to-image AI model interactions, generation 
 
 Defines types for the video timeline structure, including tracks, elements, and their properties.
 
+#### Type Relationships: Timeline Elements
+
+This class diagram illustrates the inheritance and composition of the core timeline element types.
+
+```mermaid
+classDiagram
+    class BaseTimelineElement{
+        +string id
+        +string name
+        +number duration
+        +number startTime
+        +number trimStart
+        +number trimEnd
+    }
+
+    class MediaElement{
+        +string type = "media"
+        +string mediaId
+    }
+
+    class TextElement{
+        +string type = "text"
+        +string content
+        +number fontSize
+        +string fontFamily
+        +string color
+        +string backgroundColor
+        +string textAlign
+        +string fontWeight
+        +string fontStyle
+        +string textDecoration
+        +number x
+        +number y
+        +number rotation
+        +number opacity
+    }
+
+    BaseTimelineElement <|-- MediaElement
+    BaseTimelineElement <|-- TextElement
+
+    class TimelineElement{
+        <<Union>>
+    }
+    TimelineElement <|-- MediaElement
+    TimelineElement <|-- TextElement
+
+    class TimelineTrack{
+        +string id
+        +string name
+        +TrackType type
+        +TimelineElement[] elements
+        +boolean muted
+        +boolean isMain
+    }
+
+    TimelineTrack "1" *-- "*" TimelineElement : contains
+
+    class CreateTimelineElement{
+        <<Union>>
+    }
+    CreateTimelineElement <|-- CreateMediaElement
+    CreateTimelineElement <|-- CreateTextElement
+
+    class CreateMediaElement{
+        -id: string
+        +string type = "media"
+        +string mediaId
+    }
+
+    class CreateTextElement{
+        -id: string
+        +string type = "text"
+        +string content
+        +number fontSize
+        +string fontFamily
+        +string color
+        +string backgroundColor
+        +string textAlign
+        +string fontWeight
+        +string fontStyle
+        +string textDecoration
+        +number x
+        +number y
+        +number rotation
+        +number opacity
+    }
+
+    CreateMediaElement <|-- MediaElement
+    CreateTextElement <|-- TextElement
+
+    class TrackType{
+        <<Enumeration>>
+        media
+        text
+        audio
+    }
+
+    TimelineTrack --> TrackType : has
+
+    class TimelineElementProps{
+        +TimelineElement element
+        +TimelineTrack track
+        +number zoomLevel
+        +boolean isSelected
+        +onElementMouseDown()
+        +onElementClick()
+    }
+
+    TimelineElementProps --> TimelineElement : uses
+    TimelineElementProps --> TimelineTrack : uses
+
+    class ResizeState{
+        +string elementId
+        +string side
+        +number startX
+        +number initialTrimStart
+        +number initialTrimEnd
+    }
+
+    class DragData{
+        <<Union>>
+    }
+    DragData <|-- MediaItemDragData
+    DragData <|-- TextItemDragData
+
+    class MediaItemDragData{
+        +string id
+        +MediaType type
+        +string name
+    }
+
+    class TextItemDragData{
+        +string id
+        +string type = "text"
+        +string name
+        +string content
+    }
+
+    MediaItemDragData --> MediaType : uses
+
+    class MediaType{
+        <<Enumeration>>
+        image
+        video
+        audio
+    }
+
+```
+
 *   `TrackType`: Union type for different track types (`"media" | "text" | "audio"`).
 *   `BaseTimelineElement`: Base interface for all timeline elements (`id`, `name`, `duration`, `startTime`, `trimStart`, `trimEnd`).
 *   `MediaElement`: Extends `BaseTimelineElement` for media items (`type: "media"`, `mediaId`).
@@ -90,4 +239,5 @@ Defines common UI component props and state interfaces, primarily for Shadcn UI 
 *   `UserPreferences`: Interface for user-specific UI settings.
 *   `DialogState`, `ToastState`, `ContextMenuState`, `ContextMenuItem`: Interfaces for managing UI state for dialogs, toasts, and context menus.
 *   `DropdownMenuItem`, `TabItem`, `SidebarItem`: Interfaces for common UI list items.
-*   `TooltipProps`, `ButtonProps`, `InputProps`, `SliderProps`, `SelectProps`, `CheckboxProps`, `SwitchProps`, `RadioGroupProps`, `ProgressProps`, `AlertDialogProps`, `DropzoneProps`, `ResizablePanelProps`, `ResizableHandleProps`, `ResizablePanelGroupProps`, `ScrollAreaProps`, `TabsProps`, `TabsListProps`, `TabsTriggerProps`, `TabsContentProps`, `PopoverProps`, `PopoverTriggerProps`, `PopoverContentProps`, `CommandProps`, `CommandInputProps`, `CommandListProps`, `CommandEmptyProps`, `CommandGroupProps`, `CommandItemProps`, `CommandSeparatorProps`, `CommandShortcutProps`, `DialogProps`, `DialogTriggerProps`, `DialogContentProps`, `DialogHeaderProps`, `DialogFooterProps`, `DialogTitleProps`, `DialogDescriptionProps`, `FormProps`, `FormFieldProps`, `FormItemProps`, `FormLabelProps`, `FormControlProps`, `FormDescriptionProps`, `FormMessageProps`, `LabelProps`, `TextareaProps`, `RadioGroupItemProps`, `SelectTriggerProps`, `SelectValueProps`, `SelectContentProps`, `SelectGroupProps`, `SelectLabelProps`, `SelectSeparatorProps`, `SeparatorProps`, `SheetProps`, `SheetTriggerProps`, `SheetContentProps`, `SheetHeaderProps`, `SheetFooterProps`, `SheetTitleProps`, `SheetDescriptionProps`, `SkeletonProps`, `TableProps`, `TableHeaderProps`, `TableBodyProps`, `TableFooterProps`, `TableRowProps`, `TableHeadProps`, `TableCellProps`, `TableCaptionProps`, `ToggleProps`, `ToggleGroupProps`, `ToggleGroupItemProps`, `AspectRatioProps`, `AvatarProps`, `AvatarImageProps`, `AvatarFallbackProps`, `BadgeProps`, `CalendarProps`, `CardProps`, `CardHeaderProps`, `CardTitleProps`, `CardDescriptionProps`, `CardContentProps`, `CardFooterProps`, `CollapsibleProps`, `CollapsibleTriggerProps`, `CollapsibleContentProps`, `CommandDialogProps`, `ContextMenuProps`, `ContextMenuTriggerProps`, `ContextMenuContentProps`, `ContextMenuItemProps`, `ContextMenuCheckboxItemProps`, `ContextMenuRadioItemProps`, `ContextMenuLabelProps`, `ContextMenuSeparatorProps`, `ContextMenuShortcutProps`, `ContextMenuSubProps`, `ContextMenuSubTriggerProps`, `ContextMenuSubContentProps`, `ContextMenuRadioGroupProps`, `DialogCloseProps`, `DropdownMenuProps`, `DropdownMenuTriggerProps`, `DropdownMenuContentProps`, `DropdownMenuItemProps`, `DropdownMenuCheckboxItemProps`, `DropdownMenuRadioItemProps`, `DropdownMenuLabelProps`, `DropdownMenuSeparatorProps`, `DropdownMenuShortcutProps`, `DropdownMenuGroupProps`, `DropdownMenuPortalProps`, `DropdownMenuSubProps`, `DropdownMenuSubTriggerProps`, `DropdownMenuSubContentProps`, `DropdownMenuRadioGroupProps`, `HoverCardProps`, `HoverCardTriggerProps`, `HoverCardContentProps`, `MenubarProps`, `MenubarMenuProps`, `MenubarTriggerProps`, `MenubarContentProps`, `MenubarItemProps`, `MenubarCheckboxItemProps`, `MenubarRadioItemProps`, `MenubarLabelProps`, `MenubarSeparatorProps`, `MenubarShortcutProps`, `MenubarGroupProps`, `MenubarPortalProps`, `MenubarSubProps`, `MenubarSubTriggerProps`, `MenubarSubContentProps`, `MenubarRadioGroupProps`, `NavigationMenuProps`, `NavigationMenuListProps`, `NavigationMenuItemProps`, `NavigationMenuTriggerProps`, `NavigationMenuContentProps`, `NavigationMenuLinkProps`, `NavigationMenuIndicatorProps`, `NavigationMenuViewportProps`, `PopoverAnchorProps`, `RadioGroupItemProps`, `ResizablePanelGroupProps`, `ScrollBarProps`, `SheetCloseProps`, `TableBodyProps`, `ToggleGroupItemProps`, `AlertDialogActionProps`, `AlertDialogCancelProps`, `AlertDialogContentProps`, `AlertDialogDescriptionProps`, `AlertDialogFooterProps`, `AlertDialogHeaderProps`, `AlertDialogOverlayProps`, `AlertDialogPortalProps`, `AlertDialogTitleProps`, `AlertDialogTriggerProps`, `AvatarRootProps`: Interfaces for various UI component properties and states.
+*   `TooltipProps`, `ButtonProps`, `InputProps`, `SliderProps`, `SelectProps`, `CheckboxProps`, `SwitchProps`, `RadioGroupProps`, `ProgressProps`, `AlertDialogProps`, `DropzoneProps`, `ResizablePanelProps`, `ResizableHandleProps`, `ResizablePanelGroupProps`, `ScrollAreaProps`, `TabsProps`, `TabsListProps`, `TabsTriggerProps`, `TabsContentProps`, `PopoverProps`, `PopoverTriggerProps`, `PopoverContentProps`, `CommandProps`, `CommandInputProps`, `CommandListProps`, `CommandEmptyProps`, `CommandGroupProps`, `CommandItemProps`, `CommandSeparatorProps`, `CommandShortcutProps`, `DialogProps`, `DialogTriggerProps`, `DialogContentProps`, `DialogHeaderProps`, `DialogFooterProps`, `DialogTitleProps`, `DialogDescriptionProps`, `FormProps`, `FormFieldProps`, `FormItemProps`, `FormLabelProps`, `FormControlProps`, `FormDescriptionProps`, `FormMessageProps`, `LabelProps`, `TextareaProps`, `RadioGroupItemProps`, `SelectTriggerProps`, `SelectValueProps`, `SelectContentProps`, `SelectGroupProps`, `SelectLabelProps`, `SelectSeparatorProps`, `SeparatorProps`, `SheetProps`, `SheetTriggerProps`, `SheetContentProps`, `SheetHeaderProps`, `SheetFooterProps`, `SheetTitleProps`, `SheetDescriptionProps`, `SkeletonProps`, `TableProps`, `TableHeaderProps`, `TableBodyProps`, `TableFooterProps`, `TableRowProps`, `TableHeadProps`, `TableCellProps`, `TableCaptionProps`, `ToggleProps`, `ToggleGroupProps`, `ToggleGroupItemProps`, `AspectRatioProps`, `AvatarProps`, `AvatarImageProps`, `AvatarFallbackProps`, `BadgeProps`, `CalendarProps`, `CardProps`, `CardHeaderProps`, `CardTitleProps`, `CardDescriptionProps`, `CardContentProps`, `CardFooterProps`, `CollapsibleProps`, `CollapsibleTriggerProps`, `CollapsibleContentProps`, `CommandDialogProps`, `ContextMenuProps`, `ContextMenuTriggerProps`, `ContextMenuContentProps`, `ContextMenuItemProps`, `ContextMenuCheckboxItemProps`, `ContextMenuRadioItemProps`, `ContextMenuLabelProps`, `ContextMenuSeparatorProps`, `ContextMenuShortcutProps`, `ContextMenuSubProps`, `... [truncated]
+

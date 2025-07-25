@@ -2,13 +2,19 @@
 
 import { cn } from "@/lib/utils";
 import { Tab, tabs, useMediaPanelStore } from "./store";
+import { usePanelStore } from "@/stores/panel-store";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 
 export function TabBar() {
   const { activeTab, setActiveTab } = useMediaPanelStore();
+  const { aiPanelWidth, aiPanelMinWidth } = usePanelStore();
   
+  // Responsive layout calculations for tab labels
+  const isCollapsed = aiPanelWidth <= (aiPanelMinWidth + 2); // Small buffer for collapsed state
+  const isCompact = aiPanelWidth < 18; // Less than ~230px equivalent
+  const showLabels = !isCollapsed && !isCompact; // Show labels only when there's enough space
   
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isAtEnd, setIsAtEnd] = useState(false);
@@ -66,14 +72,20 @@ export function TabBar() {
     <div className="border-timeline rounded-sm mb-8 mt-4">
       <div
         ref={scrollContainerRef}
-        className="h-18 bg-panel-accent px-6 py-2 flex justify-start items-center gap-12 overflow-x-auto scrollbar-x-hidden relative"
+        className={cn(
+          "h-18 bg-panel-accent py-2 flex justify-start items-center overflow-x-auto scrollbar-x-hidden relative transition-all duration-200",
+          showLabels ? "px-6 gap-12" : "px-3 gap-2"
+        )}
       >
         {(Object.keys(tabs) as Tab[]).map((tabKey) => {
           const tab = tabs[tabKey];
           return (
             <div
               className={cn(
-                "flex flex-col gap-2 items-center cursor-pointer px-3 pt-3 pb-2 mx-1 rounded-lg transition-all duration-200 hover:bg-white/10 flex-shrink-0 min-w-[52px] group",
+                "flex items-center cursor-pointer rounded-lg transition-all duration-200 hover:bg-white/10 flex-shrink-0 group",
+                // Responsive layout classes
+                showLabels ? "flex-col gap-2 px-3 pt-3 pb-2 mx-1 min-w-[52px]" : "justify-center p-2 mx-0.5 min-w-[40px]",
+                // Active/inactive states
                 activeTab === tabKey ? "text-primary bg-primary/10" : "text-muted-foreground bg-white/5"
               )}
               onClick={() => setActiveTab(tabKey)}
@@ -91,10 +103,16 @@ export function TabBar() {
               }}
             >
               <tab.icon className={cn(
-                "!size-[1.5rem] transition-all duration-200",
+                "transition-all duration-200",
+                showLabels ? "!size-[1.5rem]" : "!size-[1.2rem]",
                 activeTab !== tabKey && "group-hover:text-blue-500"
               )} />
-              <span className="text-[0.65rem] tracking-wide mt-1 leading-none">{tab.label}<br /><span className="text-[0.2rem] leading-none">&nbsp;</span></span>
+              {showLabels && (
+                <span className="text-[0.65rem] tracking-wide mt-1 leading-none">
+                  {tab.label}<br />
+                  <span className="text-[0.2rem] leading-none">&nbsp;</span>
+                </span>
+              )}
             </div>
           );
         })}

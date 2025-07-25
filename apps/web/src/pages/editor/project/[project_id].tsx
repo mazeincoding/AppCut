@@ -19,6 +19,7 @@ import { EditorProvider } from "@/components/editor-provider";
 import { usePlaybackControls } from "@/hooks/use-playback-controls";
 import { ExportDialog } from "@/components/export-dialog";
 import { useExportStore } from "@/stores/export-store";
+import { useMediaPanelStore } from "@/components/editor/media-panel/store";
 import { debugLogger } from "@/lib/debug-logger";
 
 function EditorContent() {
@@ -37,7 +38,11 @@ function EditorContent() {
     setMainContentHeight,
     timelineHeight,
     setTimelineHeight,
+    setAiPanelWidth,
+    getAiPanelSizeForTab,
   } = usePanelStore();
+
+  const { activeTab } = useMediaPanelStore();
 
   const { activeProject, loadProject, createNewProject } = useProjectStore();
   const { isDialogOpen } = useExportStore();
@@ -304,10 +309,16 @@ function EditorContent() {
             <ResizablePanelGroup direction="horizontal" className="h-full gap-6">
               {/* Media Panel */}
               <ResizablePanel 
-                defaultSize={toolsPanel} 
-                minSize={15} 
-                maxSize={35}
-                onResize={(size) => setToolsPanel(size)}
+                defaultSize={getAiPanelSizeForTab(activeTab).defaultSize} 
+                minSize={getAiPanelSizeForTab(activeTab).minSize} 
+                maxSize={getAiPanelSizeForTab(activeTab).maxSize}
+                onResize={(size) => {
+                  setToolsPanel(size);
+                  // Also update AI-specific width when AI tab is active
+                  if (activeTab === 'ai') {
+                    setAiPanelWidth(size);
+                  }
+                }}
               >
                 <div 
                   className="h-full rounded-xl overflow-hidden"

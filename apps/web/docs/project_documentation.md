@@ -178,6 +178,47 @@ C:/Users/zdhpe/Desktop/New folder/OpenCut/
 
 ## 2. File Purpose and High-Level Functionality
 
+### High-Level Workflow: Project Creation and Loading
+
+This diagram illustrates the sequence of function calls when a new project is created and subsequently loaded in the application.
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant UI as Project Management UI
+    participant PS as ProjectStore
+    participant SS as StorageService
+    participant MS as MediaStore
+    participant TS as TimelineStore
+
+    User->>UI: Clicks "Create New Project"
+    UI->>PS: createNewProject(name)
+    PS->>SS: saveProject(newProject)
+    SS-->>PS: Project saved
+    PS->>PS: loadAllProjects()
+    PS->>SS: loadAllProjects()
+    SS-->>PS: List of saved projects
+    PS-->>UI: New project created and listed
+
+    User->>UI: Selects a project to load
+    UI->>PS: loadProject(projectId)
+    PS->>MS: clearAllMedia()
+    PS->>TS: clearTimeline()
+    PS->>SS: loadProject(projectId)
+    SS-->>PS: Project data
+    PS->>MS: loadProjectMedia(projectId)
+    MS->>SS: loadAllMediaItems(projectId)
+    SS-->>MS: Media items data
+    PS->>TS: loadProjectTimeline(projectId)
+    TS->>SS: loadTimeline(projectId)
+    SS-->>TS: Timeline data
+    PS-->>UI: Project loaded and displayed
+```
+
+### `apps/web/src/app/api/text2image/generate/route.ts`
+
+This file likely defines an API route for generating images from text. It would handle incoming requests, process the text input, interact with an image generation service or library, and return the generated image or a reference to it.
+
 ### `apps/web/src/app/api/text2image/generate/route.ts`
 
 This file likely defines an API route for generating images from text. It would handle incoming requests, process the text input, interact with an image generation service or library, and return the generated image or a reference to it.

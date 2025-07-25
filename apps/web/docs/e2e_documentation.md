@@ -50,6 +50,35 @@ Similar to `export-tests/`, this directory specifically focuses on the end-to-en
 
 ## Individual Files and Their Functionality
 
+### High-Level Workflow: E2E Test Execution (Playwright)
+
+This diagram illustrates a simplified sequence of actions during an End-to-End test run using Playwright, from launching the browser to asserting UI elements.
+
+```mermaid
+sequenceDiagram
+    participant TestRunner as Playwright Test Runner
+    participant Browser as Browser Instance
+    participant Page as Page Object
+    participant App as OpenCut Web Application
+
+    TestRunner->>Browser: launch()
+    Browser->>Page: newPage()
+    Page->>App: goto(url)
+    App-->>Page: Renders UI
+
+    loop Test Steps
+        TestRunner->>Page: locator('#element').click()
+        Page->>App: User interaction (click)
+        App-->>Page: Updates UI
+        TestRunner->>Page: expect(locator('#result')).toBeVisible()
+        Page->>App: Query UI state
+        App-->>Page: Returns UI state
+        Page-->>TestRunner: Assertion result
+    end
+
+    TestRunner->>Browser: close()
+```
+
 ### `README.md`
 
 Provides essential information about the E2E test suite, including setup instructions, how to run tests, test conventions, and possibly an overview of the testing framework used (e.g., Playwright, Cypress).
