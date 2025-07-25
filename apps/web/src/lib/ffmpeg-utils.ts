@@ -608,7 +608,7 @@ const generateThumbnailsViaCanvas = async (
             errorMessage = 'Network error while loading video';
             break;
           case video.error.MEDIA_ERR_DECODE:
-            errorMessage = 'Video decode error - file may be corrupted or in unsupported format';
+            errorMessage = 'Browser cannot decode this video format (normal for some H.264 files)';
             break;
           case video.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
             errorMessage = 'Video format not supported by browser';
@@ -663,15 +663,23 @@ export const generateEnhancedThumbnails = async (
   options: EnhancedThumbnailOptions = {}
 ): Promise<EnhancedThumbnailResult> => {
   
-  // Try HTML5 Canvas method first (more reliable for thumbnails)
-  try {
-    return await generateThumbnailsViaCanvas(videoFile, options);
-  } catch (canvasError) {
-    console.error('❌ Canvas thumbnail generation failed:', canvasError);
-    
-    // Try FFmpeg as fallback
+  // Skip canvas method for known problematic formats and go straight to FFmpeg
+  const skipCanvas = videoFile.type.includes('mp4') || videoFile.type.includes('h264');
+  
+  if (!skipCanvas) {
+    // Try HTML5 Canvas method first (fallback to FFmpeg if it fails)
     try {
-      const ffmpeg = await initFFmpeg();
+      return await generateThumbnailsViaCanvas(videoFile, options);
+    } catch (canvasError) {
+      console.log('⚠️ Canvas method failed, using FFmpeg fallback:', canvasError.message);
+    }
+  } else {
+    console.log('⏭️ Skipping canvas method for this video format, using FFmpeg directly');
+  }
+    
+  // Use FFmpeg method (either as fallback or directly)
+  try {
+    const ffmpeg = await initFFmpeg();
       
       // Ensure FFmpeg is properly loaded
       if (!ffmpeg || !isLoaded) {
