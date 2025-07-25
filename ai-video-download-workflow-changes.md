@@ -1,6 +1,135 @@
 # AI Video Download Workflow Changes
 
-## Current Issue
+## Current Workflow - Real Function Call Diagram
+
+```mermaid
+sequenceDiagram
+    participant User as User
+    participant AI as ai.tsx::handleGenerate()
+    participant Client as ai-video-client.ts::generateVideo()
+    participant Store as media-store.ts::addMediaItem()
+    participant Timeline as video-timeline-preview.tsx
+    participant FFmpeg as ffmpeg-utils.ts::generateEnhancedThumbnails()
+
+    User->>AI: Click Generate Button
+    AI->>Client: generateVideo(request, onProgress)
+    Note over Client: FAL API call starts
+    Client-->>AI: Job submitted, but video not ready
+    AI->>Store: addMediaItem(projectId, {..., file: mockFile})
+    Note over Store: Line 537: Video added with placeholder
+    Store->>Timeline: shouldRegenerateTimelinePreviews() = true
+    Timeline->>Store: generateTimelinePreviews(mediaId, options)
+    Store->>FFmpeg: generateEnhancedThumbnails(videoFile, options)
+    Note over FFmpeg: Line 667: Canvas method tries incomplete file
+    FFmpeg-->>Store: ❌ Canvas timeout (3s) - Line 642
+    FFmpeg->>FFmpeg: FFmpeg fallback attempt
+    FFmpeg-->>Store: ❌ FFmpeg fails (file not ready)
+    Store-->>Timeline: ❌ "Preview generation timed out"
+    Timeline-->>User: ❌ Error state in timeline
+    
+    Note over User,Timeline: useEffect triggers re-render (Line 63-140)
+    Timeline->>Store: shouldRegenerateTimelinePreviews() = true
+    Store->>FFmpeg: generateEnhancedThumbnails() - RETRY
+    FFmpeg-->>Store: ❌ Still fails - same error cycle
+```
+
+## Proposed Workflow - Real Function Call Diagram
+
+```mermaid
+sequenceDiagram
+    participant User as User
+    participant AI as ai.tsx::handleGenerate()
+    participant Client as ai-video-client.ts::generateVideo()
+    participant Output as ai-video-output.ts::AIVideoOutputManager
+    participant Store as media-store.ts::addMediaItem()
+    participant Timeline as video-timeline-preview.tsx
+    participant FFmpeg as ffmpeg-utils.ts::generateEnhancedThumbnails()
+
+    User->>AI: Click Generate Button
+    AI->>Output: startDownload(videoId, prompt, model)
+    Output-->>AI: localPath string
+    AI->>Client: generateVideo(request, onProgress) 
+    Note over AI: Show download progress UI instead of adding to media
+    
+    loop Download Progress Stream
+        Client->>AI: onProgress(progress%)
+        AI->>Output: updateProgress(videoId, progress)
+        AI->>User: "Downloading: X% complete"
+    end
+    
+    Note over Client: Video generation complete
+    Client->>Output: writeFile(localPath, videoData)
+    Output->>AI: completeDownload(videoId, duration)
+    Output-->>AI: AIVideoOutput{status:'completed'}
+    AI->>AI: uploadToMedia(output)
+    
+    Note over AI: File is physically ready, create File object
+    AI->>Store: addMediaItem(projectId, {file: actualVideoFile})
+    Note over Store: Line 537: Now with REAL video file
+    Store->>Timeline: Video appears in timeline
+    Timeline->>Store: generateTimelinePreviews(mediaId, options)
+    Store->>FFmpeg: generateEnhancedThumbnails(videoFile, options)
+    Note over FFmpeg: Line 667: Canvas method with real file
+    FFmpeg->>FFmpeg: Skip canvas for MP4 (Line 667)
+    FFmpeg->>FFmpeg: FFmpeg fallback with real data
+    FFmpeg-->>Store: ✅ Thumbnails generated successfully
+    Store-->>Timeline: ✅ Timeline previews ready
+    Timeline-->>User: ✅ Video ready for editing - no errors
+```
+
+## Current Implementation Flow - Component Level
+
+```mermaid
+flowchart TD
+    A[User clicks Generate] --> B[AI Video Store]
+    B --> C{Video Generation}
+    C -->|Immediately| D[Add to Media Store]
+    D --> E[Video Timeline Preview Component]
+    E --> F[shouldRegenerateTimelinePreviews]
+    F -->|true| G[generateTimelinePreviews]
+    G --> H[generateEnhancedThumbnails]
+    H --> I[generateThumbnailsViaCanvas]
+    I -->|timeout 3s| J[❌ Canvas fails]
+    J --> K[FFmpeg fallback]
+    K -->|no file| L[❌ FFmpeg fails]
+    L --> M[Timeline shows error]
+    M --> N[Component re-renders]
+    N --> F
+    
+    style D fill:#ff9999
+    style J fill:#ff9999
+    style L fill:#ff9999
+    style M fill:#ff9999
+```
+
+## Proposed Implementation Flow - Component Level
+
+```mermaid
+flowchart TD
+    A[User clicks Generate] --> B[AI Video Store]
+    B --> C[AIVideoOutputManager.startDownload]
+    C --> D[Show Download Progress UI]
+    D --> E{Download Complete?}
+    E -->|No| F[Update Progress %]
+    F --> D
+    E -->|Yes| G[AIVideoOutputManager.completeDownload]
+    G --> H[uploadToMedia with File object]
+    H --> I[Add to Media Store]
+    I --> J[Video Timeline Preview Component]
+    J --> K[shouldRegenerateTimelinePreviews]
+    K -->|true| L[generateTimelinePreviews]
+    L --> M[generateEnhancedThumbnails]
+    M --> N[generateThumbnailsViaCanvas]
+    N -->|may timeout| O[FFmpeg fallback]
+    O -->|file ready| P[✅ FFmpeg succeeds]
+    P --> Q[Timeline shows previews]
+    
+    style I fill:#99ff99
+    style P fill:#99ff99
+    style Q fill:#99ff99
+```
+
+## Current Issue Analysis
 The AI-generated video "AI (Seedance v1 Lite): a supermodel walking..." is showing "Preview generation timed out" errors because the video is being added to the media panel before the AI generation is complete, causing thumbnail generation failures.
 
 ## Current Workflow Problems
@@ -8,23 +137,234 @@ The AI-generated video "AI (Seedance v1 Lite): a supermodel walking..." is showi
 2. Timeline preview generation attempts to process incomplete/unavailable video
 3. Multiple failed attempts to generate thumbnails for incomplete media
 4. Poor user experience with timeout errors
+5. Repeated function calls creating performance issues
 
-```
-Current Flow:
-AI Generate Request → Add to Media Panel → Timeline Processing (FAILS)
-                                      ↓
-                              Thumbnail Generation Timeout
+## Proposed Solution Benefits
+Implement a two-stage workflow where AI-generated videos are first downloaded to a local output folder, then uploaded to the media panel only after completion, ensuring clean function call flow and proper state management.
+
+---
+
+# 📋 Detailed File Modification Plan
+
+## Files to Create (New)
+
+### 1. **AI Video Output Manager**
+**File**: `apps/web/src/lib/ai-video-output.ts`
+**Purpose**: Manage local video downloads and progress tracking
+**Key Functions**:
+- `startDownload(videoId, prompt, model)` 
+- `updateProgress(videoId, progress)`
+- `completeDownload(videoId, duration)`
+- `getDownloadStatus(videoId)`
+
+---
+
+## Files to Modify (Existing)
+
+### 2. **AI Video Client** 
+**File**: `apps/web/src/lib/ai-video-client.ts`
+**Lines to Modify**: `76-120` (generateVideo function)
+
+**Current Code (Line 76)**:
+```typescript
+export async function generateVideo(
+  request: TextToVideoRequest,
+  onProgress?: (progress: number) => void
+): Promise<VideoGenerationResult>
 ```
 
-## Proposed Solution
-Implement a two-stage workflow where AI-generated videos are first downloaded to a local output folder, then uploaded to the media panel only after completion.
+**Modifications Needed**:
+- **Line 76**: Add `outputPath?: string` parameter
+- **Line 90-98**: Modify to stream video data to local file instead of returning blob
+- **Line 100-110**: Add file writing logic with progress callbacks
+- **Line 115**: Return file path instead of blob URL
 
+**Changes**:
+```typescript
+// Line 76 - Update function signature
+export async function generateVideo(
+  request: TextToVideoRequest,
+  onProgress?: (progress: number) => void,
+  outputPath?: string  // NEW PARAMETER
+): Promise<VideoGenerationResult>
+
+// Line 100-110 - Add streaming download logic
+if (outputPath) {
+  const response = await fetch(result.video_url);
+  const reader = response.body?.getReader();
+  // Stream to local file with progress tracking
+}
 ```
-New Flow:
-AI Generate Request → Download to Local Folder → Upload to Media Panel → Timeline Processing (SUCCESS)
-                                               ↓
-                                      Show Progress/Status
+
+### 3. **AI Component (Main UI)**
+**File**: `apps/web/src/components/editor/media-panel/views/ai.tsx`
+**Lines to Modify**: `455-560` (handleGenerate function and media integration)
+
+**Current Code (Line 455)**:
+```typescript
+const handleGenerate = async () => {
+  // ... existing generation logic
 ```
+
+**Current Code (Lines 526-560)**:
+```typescript
+// Line 537: Immediate media addition
+await addMediaItem(activeProject.id, {
+  id: generateUUID(),
+  name: `AI (${selectedModel}): ${prompt.substring(0, 30)}...`,
+  type: 'video' as const,
+  file: file,  // THIS IS THE PROBLEM - file not ready
+  url: videoUrl,
+  // ...
+});
+```
+
+**Modifications Needed**:
+- **Line 455-470**: Import and initialize `AIVideoOutputManager`
+- **Line 480-500**: Replace immediate `addMediaItem` with `startDownload`
+- **Line 510-530**: Add progress tracking UI updates
+- **Line 535-550**: Move `addMediaItem` to completion handler
+- **Line 555-560**: Add error handling for download failures
+
+**Changes**:
+```typescript
+// Line 455 - Add output manager
+const outputManager = new AIVideoOutputManager();
+
+// Line 480-500 - Replace immediate addition
+const localPath = await outputManager.startDownload(videoId, prompt, selectedModel);
+const result = await generateVideo(request, onProgress, localPath);
+
+// Line 535-550 - Move to completion
+const completedOutput = await outputManager.completeDownload(videoId, duration);
+if (completedOutput) {
+  await addMediaItem(activeProject.id, {
+    file: actualVideoFile,  // NOW with real file
+    // ...
+  });
+}
+```
+
+### 4. **Media Store** 
+**File**: `apps/web/src/stores/media-store.ts`
+**Lines to Modify**: `501-530` (generateTimelinePreviews function)
+
+**Current Code (Line 501)**:
+```typescript
+generateTimelinePreviews: async (mediaId, options) => {
+  const item = get().mediaItems.find(item => item.id === mediaId);
+  if (!item || !item.file || item.type !== 'video') {
+    console.warn('Cannot generate timeline previews: invalid media item');
+    return;
+  }
+```
+
+**Modifications Needed**:
+- **Line 505-510**: Add file readiness validation
+- **Line 515-520**: Add better error handling for incomplete files
+- **Line 525-530**: Skip generation if file is not physically ready
+
+**Changes**:
+```typescript
+// Line 505-510 - Add file validation
+if (!item.file || item.file.size === 0) {
+  console.warn('File not ready for timeline preview generation');
+  return;
+}
+
+// Line 515-520 - Check file accessibility
+try {
+  const fileBuffer = await item.file.arrayBuffer();
+  if (fileBuffer.byteLength === 0) {
+    console.warn('File appears to be empty, skipping preview generation');
+    return;
+  }
+} catch (error) {
+  console.warn('File not accessible:', error);
+  return;
+}
+```
+
+### 5. **Video Timeline Preview Component**
+**File**: `apps/web/src/components/editor/video-timeline-preview.tsx`
+**Lines to Modify**: `63-140` (useEffect hook)
+
+**Current Code (Line 81)**:
+```typescript
+const needsRegeneration = shouldRegenerateTimelinePreviews(
+  mediaElement.mediaId, 
+  zoomLevel, 
+  elementDuration
+);
+```
+
+**Modifications Needed**:
+- **Line 75-80**: Add file readiness check before regeneration
+- **Line 85-90**: Skip regeneration if file is not ready
+- **Line 95-100**: Add better loading states
+
+**Changes**:
+```typescript
+// Line 75-80 - Add file readiness check
+const isFileReady = mediaItem.file && 
+  mediaItem.file.size > 0 && 
+  !mediaItem.processingStage?.includes('downloading');
+
+// Line 85-90 - Skip if not ready
+if (!isFileReady) {
+  console.log('Skipping timeline preview - file not ready');
+  return;
+}
+```
+
+### 6. **FFmpeg Utils** 
+**File**: `apps/web/src/lib/ffmpeg-utils.ts`
+**Lines to Modify**: `667-680` (generateEnhancedThumbnails function)
+
+**Current Code (Line 667)**:
+```typescript
+const skipCanvas = videoFile.type.includes('mp4') || videoFile.type.includes('h264');
+```
+
+**Modifications Needed**:
+- **Line 665-670**: Add file validation before processing
+- **Line 675-680**: Better error messages for invalid files
+
+**Changes**:
+```typescript
+// Line 665-670 - Add file validation
+if (!videoFile || videoFile.size === 0) {
+  throw new Error('Invalid or empty video file provided');
+}
+
+// Test file accessibility
+try {
+  await videoFile.arrayBuffer();
+} catch (error) {
+  throw new Error('Video file is not accessible or corrupted');
+}
+```
+
+---
+
+## Summary of Changes by Priority
+
+### **Priority 1: Core Download Logic**
+1. **Create** `ai-video-output.ts` - New download manager
+2. **Modify** `ai-video-client.ts:76-120` - Add streaming download
+3. **Modify** `ai.tsx:455-560` - Replace immediate media addition
+
+### **Priority 2: Validation & Error Handling** 
+4. **Modify** `media-store.ts:501-530` - File readiness validation
+5. **Modify** `video-timeline-preview.tsx:63-140` - Skip if file not ready
+6. **Modify** `ffmpeg-utils.ts:667-680` - Better file validation
+
+### **Priority 3: UI/UX Improvements**
+7. Add download progress UI components
+8. Add settings panel for output folder configuration
+9. Add error recovery mechanisms
+
+This detailed plan provides exact line numbers and specific code changes needed to implement the download-first workflow.
 
 ## Implementation Plan
 
