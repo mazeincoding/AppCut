@@ -168,9 +168,9 @@ Implement a two-stage workflow where AI-generated videos are first downloaded to
 **Current Code (Line 76)**:
 ```typescript
 export async function generateVideo(
-  request: TextToVideoRequest,
-  onProgress?: (progress: number) => void
-): Promise<VideoGenerationResult>
+  request: VideoGenerationRequest, 
+  onProgress?: ProgressCallback
+): Promise<VideoGenerationResponse>
 ```
 
 **Modifications Needed**:
@@ -208,23 +208,27 @@ const handleGenerate = async () => {
 
 **Current Code (Lines 526-560)**:
 ```typescript
-// Line 537: Immediate media addition
+// Line 529-545: Immediate media addition after fetch
+const videoResponse = await fetch(newVideo.videoUrl);
+const blob = await videoResponse.blob();
+const file = new File([blob], fileName, { type: 'video/mp4' });
+
+// Line 538-545: THIS IS THE PROBLEM - adds to media immediately
 await addMediaItem(activeProject.id, {
-  id: generateUUID(),
-  name: `AI (${selectedModel}): ${prompt.substring(0, 30)}...`,
-  type: 'video' as const,
-  file: file,  // THIS IS THE PROBLEM - file not ready
-  url: videoUrl,
+  name: `AI (${modelName}): ${newVideo.prompt.substring(0, 20)}...`,
+  type: "video",
+  file: file,  // File from fresh fetch, but may not be fully ready
+  duration: newVideo.duration || 5,
   // ...
 });
 ```
 
 **Modifications Needed**:
 - **Line 455-470**: Import and initialize `AIVideoOutputManager`
-- **Line 480-500**: Replace immediate `addMediaItem` with `startDownload`
-- **Line 510-530**: Add progress tracking UI updates
-- **Line 535-550**: Move `addMediaItem` to completion handler
-- **Line 555-560**: Add error handling for download failures
+- **Line 526-545**: Replace immediate fetch+addMediaItem with download workflow
+- **Line 529-534**: Remove immediate fetch and File creation
+- **Line 538-545**: Move `addMediaItem` to completion handler after download
+- **Line 553-560**: Update error handling for download failures
 
 **Changes**:
 ```typescript
@@ -254,27 +258,27 @@ if (completedOutput) {
 generateTimelinePreviews: async (mediaId, options) => {
   const item = get().mediaItems.find(item => item.id === mediaId);
   if (!item || !item.file || item.type !== 'video') {
-    console.warn('Cannot generate timeline previews: invalid media item');
+    console.warn('Cannot generate timeline previews: invalid media item', { mediaId, type: item?.type });
     return;
   }
 ```
 
 **Modifications Needed**:
-- **Line 505-510**: Add file readiness validation
-- **Line 515-520**: Add better error handling for incomplete files
-- **Line 525-530**: Skip generation if file is not physically ready
+- **Line 508-520**: Add file readiness validation after debouncing check
+- **Line 525-535**: Add better error handling for incomplete files
+- **Line 540-550**: Skip generation if file is not physically ready
 
 **Changes**:
 ```typescript
-// Line 505-510 - Add file validation
-if (!item.file || item.file.size === 0) {
+// Line 519-525 - Add file validation after existing checks
+if (!videoFile || videoFile.size === 0) {
   console.warn('File not ready for timeline preview generation');
   return;
 }
 
-// Line 515-520 - Check file accessibility
+// Line 526-535 - Check file accessibility before processing
 try {
-  const fileBuffer = await item.file.arrayBuffer();
+  const fileBuffer = await videoFile.arrayBuffer();
   if (fileBuffer.byteLength === 0) {
     console.warn('File appears to be empty, skipping preview generation');
     return;
@@ -291,6 +295,7 @@ try {
 
 **Current Code (Line 81)**:
 ```typescript
+// Check if we need to generate/regenerate previews
 const needsRegeneration = shouldRegenerateTimelinePreviews(
   mediaElement.mediaId, 
   zoomLevel, 
@@ -299,18 +304,20 @@ const needsRegeneration = shouldRegenerateTimelinePreviews(
 ```
 
 **Modifications Needed**:
-- **Line 75-80**: Add file readiness check before regeneration
-- **Line 85-90**: Skip regeneration if file is not ready
-- **Line 95-100**: Add better loading states
+- **Line 64-70**: Add file readiness check at start of useEffect
+- **Line 81-87**: Skip regeneration if file is not ready
+- **Line 87-95**: Add better loading states and error handling
 
 **Changes**:
 ```typescript
-// Line 75-80 - Add file readiness check
+// Line 64-70 - Add file readiness check at start
+if (mediaItem.type !== 'video' || !mediaItem.file) return;
+
+// Add file readiness validation
 const isFileReady = mediaItem.file && 
   mediaItem.file.size > 0 && 
   !mediaItem.processingStage?.includes('downloading');
 
-// Line 85-90 - Skip if not ready
 if (!isFileReady) {
   console.log('Skipping timeline preview - file not ready');
   return;
@@ -327,19 +334,22 @@ const skipCanvas = videoFile.type.includes('mp4') || videoFile.type.includes('h2
 ```
 
 **Modifications Needed**:
-- **Line 665-670**: Add file validation before processing
-- **Line 675-680**: Better error messages for invalid files
+- **Line 664-668**: Add file validation before canvas/FFmpeg processing  
+- **Line 679-685**: Better error messages for invalid files in FFmpeg section
 
 **Changes**:
 ```typescript
-// Line 665-670 - Add file validation
+// Line 664-668 - Add file validation at function start
 if (!videoFile || videoFile.size === 0) {
   throw new Error('Invalid or empty video file provided');
 }
 
-// Test file accessibility
+// Line 679-685 - Add file accessibility test in FFmpeg section
 try {
-  await videoFile.arrayBuffer();
+  const testBuffer = await videoFile.arrayBuffer();
+  if (testBuffer.byteLength === 0) {
+    throw new Error('Video file appears to be empty');
+  }
 } catch (error) {
   throw new Error('Video file is not accessible or corrupted');
 }
@@ -355,9 +365,9 @@ try {
 3. **Modify** `ai.tsx:455-560` - Replace immediate media addition
 
 ### **Priority 2: Validation & Error Handling** 
-4. **Modify** `media-store.ts:501-530` - File readiness validation
-5. **Modify** `video-timeline-preview.tsx:63-140` - Skip if file not ready
-6. **Modify** `ffmpeg-utils.ts:667-680` - Better file validation
+4. **Modify** `media-store.ts:501-540` - File readiness validation in timeline previews
+5. **Modify** `video-timeline-preview.tsx:63-90` - Skip generation if file not ready
+6. **Modify** `ffmpeg-utils.ts:664-685` - Better file validation
 
 ### **Priority 3: UI/UX Improvements**
 7. Add download progress UI components
