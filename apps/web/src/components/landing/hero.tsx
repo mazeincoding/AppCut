@@ -183,7 +183,7 @@ function TitleComponent({ signupCount }: { signupCount: number }) {
         
         {/* Range‑slider container */}
         <div className="flex justify-center gap-4 mt-4 md:mt-6" style={{ marginTop: '-60px' }}>
-          <OpenSourceSlider width={textWidth} onChange={() => {}} />
+          <OpenSourceSlider width={textWidth} />
         </div>
 
         {/* Subheading */}
@@ -254,8 +254,11 @@ function OpenSourceSlider({ width: initialWidth, height = 70, handleSize = 18, o
   useEffect(() => {
     leftRef.current = left;
     rightRef.current = right;
-    onChange?.({ left, right, range: right - left });
-  }, [left, right, onChange]);
+    // Only call onChange if it exists, and don't include it in deps to avoid loops
+    if (onChange) {
+      onChange({ left, right, range: right - left });
+    }
+  }, [left, right]);
   
   // Effect to calculate and set the dynamic rotation
   useEffect(() => {
