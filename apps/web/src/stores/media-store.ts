@@ -364,6 +364,9 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
       return existingRequest;
     }
     
+    // Store file reference to ensure type safety
+    const videoFile = item.file;
+    
     // Create new request
     const request = (async () => {
       // Update processing stage at start
@@ -385,7 +388,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
       };
 
       const startTime = Date.now();
-      const { thumbnails, metadata } = await generateEnhancedThumbnails(item.file, defaultOptions);
+      const { thumbnails, metadata } = await generateEnhancedThumbnails(videoFile, defaultOptions);
       
       console.log('🎬 FFMPEG THUMBNAIL COMPLETE:', {
         mediaItemId: mediaId,
@@ -500,13 +503,16 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
       return;
     }
 
+    // Store file reference to ensure type safety
+    const videoFile = item.file;
+
     // Update processing stage at start  
     get().updateProcessingStage(mediaId, 'thumbnail-ffmpeg');
     
     try {
       console.log('🎬 MEDIA-STORE: Starting timeline preview generation for:', mediaId, {
-        fileName: item.file.name,
-        fileSize: item.file.size,
+        fileName: videoFile.name,
+        fileSize: videoFile.size,
         options
       });
       
@@ -529,7 +535,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
       
       // Generate thumbnails using existing enhanced thumbnail system
       console.log('🎬 MEDIA-STORE: About to call generateEnhancedThumbnails with:', {
-        fileName: item.file.name,
+        fileName: videoFile.name,
         timestampsCount: timestamps.length,
         timestamps: timestamps.slice(0, 3), // Show first 3 timestamps for debugging
         resolution: quality,
@@ -538,7 +544,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
       
       let thumbnailResult;
       try {
-        thumbnailResult = await generateEnhancedThumbnails(item.file, {
+        thumbnailResult = await generateEnhancedThumbnails(videoFile, {
           timestamps,
           resolution: quality,
           quality: 0.7, // Optimized for timeline display
