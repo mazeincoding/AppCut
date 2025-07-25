@@ -26,8 +26,8 @@ Start-Sleep 10
 
 # Step 4: Open browser
 Write-Host "Step 3: Opening browser..." -ForegroundColor Yellow
-Start-Process "http://localhost:3000"
-Write-Host "✅ Browser opened!" -ForegroundColor Green
+Start-Process chrome "http://localhost:3000"
+Write-Host "✅ Chrome opened!" -ForegroundColor Green
 
 # Step 5: Start Electron
 Write-Host "Step 4: Starting Electron..." -ForegroundColor Yellow
