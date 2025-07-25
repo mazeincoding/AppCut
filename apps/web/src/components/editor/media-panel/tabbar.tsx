@@ -11,9 +11,11 @@ export function TabBar() {
   const { activeTab, setActiveTab } = useMediaPanelStore();
   const { aiPanelWidth, aiPanelMinWidth } = usePanelStore();
   
-  // Responsive layout calculations for tab labels
-  const isCollapsed = aiPanelWidth <= (aiPanelMinWidth + 2); // Small buffer for collapsed state
-  const isCompact = aiPanelWidth < 18; // Less than ~230px equivalent
+  // Responsive layout calculations for tab labels with safe defaults
+  const safeAiPanelWidth = typeof aiPanelWidth === 'number' ? aiPanelWidth : 22;
+  const safeAiPanelMinWidth = typeof aiPanelMinWidth === 'number' ? aiPanelMinWidth : 4;
+  const isCollapsed = safeAiPanelWidth <= (safeAiPanelMinWidth + 2); // Small buffer for collapsed state
+  const isCompact = safeAiPanelWidth < 18; // Less than ~230px equivalent
   const showLabels = !isCollapsed && !isCompact; // Show labels only when there's enough space
   
   const scrollContainerRef = useRef<HTMLDivElement>(null);

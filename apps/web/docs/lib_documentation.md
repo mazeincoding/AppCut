@@ -139,14 +139,25 @@ An optimized version of the video export engine, focusing on performance and mem
 
 ### `export-engine.ts`
 
-The base video export engine, providing core functionalities for rendering timeline elements to a canvas and recording the output.
-*   `startExport`: Initiates the video export process, including preloading media, preparing audio, and rendering frames.
-*   `cancelExport`: Stops the ongoing export.
-*   `renderFrames`, `renderFramesOffline`: Methods for rendering frames, either directly to a MediaRecorder stream or for offline FFmpeg processing.
-*   `renderSingleFrame`, `renderElement`: Functions for drawing individual frames and timeline elements.
-*   `preloadVideos`: Preloads video assets to improve rendering performance.
-*   `prepareAudioTracks`, `createAudioStream`: Handles audio mixing and streaming.
-*   `startMemoryMonitoring`, `checkMemoryStatus`: Integrates with the memory monitor to prevent crashes.
+This module defines the **core video export engine** responsible for orchestrating the entire video rendering and recording process. It acts as the central component that coordinates frame-by-frame rendering, media preloading, audio mixing, and integration with the chosen video recorder (MediaRecorder or FFmpeg.wasm).
+
+**Key Responsibilities:**
+*   **Orchestration:** Manages the entire export lifecycle, from initialization to final output.
+*   **Frame Rendering:** Iterates through the timeline, rendering each frame by drawing visible `TimelineElement`s (media, text) onto an off-screen HTML Canvas.
+*   **Media Preloading:** Efficiently loads and prepares video and image assets into memory (or caches) to ensure smooth and timely rendering during export.
+*   **Audio Integration:** Works with the `AudioMixer` to prepare and integrate audio tracks into the final video output.
+*   **Recording Integration:** Interfaces with either the browser's `MediaRecorder` (via `video-recorder.ts`) or `FFmpeg.wasm` (via `ffmpeg-video-recorder.ts`) to capture the rendered frames and encode them into a video file.
+*   **Memory Management:** Integrates tightly with `memory-monitor.ts` to monitor memory usage during the intensive export process, preventing crashes and adapting behavior (e.g., by reducing quality or triggering garbage collection) under memory pressure.
+*   **Error Handling:** Implements robust error handling to provide user-friendly messages and log detailed information for debugging.
+
+**Core Methods:**
+*   `startExport()`: The primary entry point to initiate the video export. It performs pre-flight checks, preloads media, initializes the recorder, renders all frames, and finalizes the video.
+*   `cancelExport()`: Allows for graceful cancellation of an ongoing export.
+*   `renderFrames()` / `renderFramesOffline()`: Internal methods for iterating and rendering each frame. `renderFramesOffline()` is used when FFmpeg.wasm is enabled for offline encoding.
+*   `renderSingleFrame(frameData)`: Renders a single frame to the canvas based on the provided timeline data.
+*   `preloadVideos()`: Asynchronously loads all video assets referenced in the timeline into `HTMLVideoElement`s for efficient access during rendering.
+*   `prepareAudioTracks()` / `createAudioStream()`: Prepares audio data and creates a `MediaStream` for the recorder.
+*   `checkMemoryStatus()`: Periodically called to assess memory usage and trigger optimizations or warnings.
 
 ### `export-errors.ts`
 
@@ -172,15 +183,28 @@ Fetches the number of stargazers for the OpenCut GitHub repository.
 
 ### `ffmpeg-utils.ts`
 
-Provides a wrapper around `ffmpeg.wasm` for client-side video processing tasks.
-*   `initFFmpeg`: Initializes the FFmpeg.wasm library.
-*   `generateThumbnail`: Extracts a thumbnail image from a video file.
-*   `trimVideo`: Trims a video file to a specified duration.
-*   `getVideoInfo`: Extracts metadata (duration, dimensions, FPS) from a video file.
-*   `convertToWebM`: Converts a video to WebM format.
-*   `extractAudio`: Extracts audio from a video file.
-*   `encodeImagesToVideo`: Encodes a sequence of images into a video.
-*   `generateEnhancedThumbnails`: Generates multiple thumbnails from a video, with options for resolution, quality, and scene detection (using HTML5 Canvas or FFmpeg as fallback).
+This module provides a comprehensive wrapper around the `ffmpeg.wasm` library, enabling powerful client-side video and audio processing directly within the browser. It abstracts the complexities of FFmpeg commands and file handling, offering a simplified API for common media manipulation tasks.
+
+**Key Capabilities:**
+*   **FFmpeg Initialization:** Manages the loading and initialization of the `ffmpeg.wasm` core, ensuring it's ready for use.
+*   **Thumbnail Generation:** Extracts high-quality thumbnails from video files at specified timestamps, with options for resolution, quality, and even scene detection for more intelligent thumbnail selection.
+*   **Video Manipulation:** Supports trimming video segments, converting video formats (e.g., to WebM), and extracting audio tracks.
+*   **Video Encoding from Images:** Can compile a sequence of image frames into a video file, which is crucial for offline rendering workflows.
+*   **Media Information Extraction:** Retrieves essential metadata from video files, such as duration, dimensions (width, height), and frame rate (FPS).
+*   **Error Handling & Fallbacks:** Includes mechanisms to handle FFmpeg errors and provides fallbacks (e.g., to HTML5 video element for basic info) for increased robustness.
+
+**Core Functions:**
+*   `initFFmpeg()`: Asynchronously loads and initializes the `ffmpeg.wasm` library. It ensures that FFmpeg is loaded only once and reuses the instance.
+*   `generateThumbnail(videoFile, timeInSeconds)`: Extracts a single JPEG thumbnail from `videoFile` at `timeInSeconds`.
+*   `generateEnhancedThumbnails(videoFile, options)`: A more advanced function that generates multiple thumbnails, supporting custom `timestamps`, `resolution` (`low`, `medium`, `high`), `quality`, `format` (`jpeg`, `png`, `webp`), and `sceneDetection`.
+*   `trimVideo(videoFile, startTime, endTime)`: Trims a portion of the `videoFile` from `startTime` to `endTime`.
+*   `getVideoInfo(videoFile)`: Returns a promise that resolves with the `duration`, `width`, `height`, and `fps` of the `videoFile`.
+*   `convertToWebM(videoFile)`: Converts the given `videoFile` to WebM format.
+*   `extractAudio(videoFile, format)`: Extracts the audio track from `videoFile` in the specified `format` (`mp3` or `wav`).
+*   `encodeImagesToVideo(frames, options)`: Takes an array of `ImageFrame` objects (PNG data) and encodes them into a video file at a specified `fps` and `format`.
+
+**Usage Context:**
+This module is heavily utilized by the `media-store.ts` for processing uploaded media, by the `export-engine.ts` for offline video rendering, and potentially by UI components requiring dynamic thumbnail generation or video previews.
 
 ### `ffmpeg-video-recorder.ts`
 

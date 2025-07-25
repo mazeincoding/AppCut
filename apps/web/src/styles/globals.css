@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* AI Panel Resizer Styles */
+@import './ai-panel-resizer.css';
+
 @layer base {
   :root {
     --background: 0 0% 100%;

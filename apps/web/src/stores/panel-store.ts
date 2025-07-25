@@ -61,7 +61,13 @@ export const usePanelStore = create<PanelState>()(
       setTimelineHeight: (size) => set({ timelineHeight: size }),
       
       // AI Panel actions
-      setAiPanelWidth: (width) => set({ aiPanelWidth: width }),
+      setAiPanelWidth: (width) => {
+        // Validate width is a number and within reasonable bounds
+        const validWidth = typeof width === 'number' && !isNaN(width) && width >= 0 && width <= 100 
+          ? width 
+          : DEFAULT_PANEL_SIZES.aiPanelWidth;
+        set({ aiPanelWidth: validWidth });
+      },
       
       getAiPanelConstraints: () => {
         const state = get();
@@ -73,20 +79,30 @@ export const usePanelStore = create<PanelState>()(
       
       getAiPanelSizeForTab: (activeTab) => {
         const state = get();
-        // When AI tab is active, use AI-specific sizing
-        if (activeTab === 'ai') {
+        try {
+          // When AI tab is active, use AI-specific sizing
+          if (activeTab === 'ai') {
+            return {
+              defaultSize: typeof state.aiPanelWidth === 'number' ? state.aiPanelWidth : DEFAULT_PANEL_SIZES.aiPanelWidth,
+              minSize: typeof state.aiPanelMinWidth === 'number' ? state.aiPanelMinWidth : DEFAULT_PANEL_SIZES.aiPanelMinWidth,
+              maxSize: typeof state.aiPanelMaxWidth === 'number' ? state.aiPanelMaxWidth : DEFAULT_PANEL_SIZES.aiPanelMaxWidth
+            };
+          }
+          // For other tabs, use standard panel sizing
           return {
-            defaultSize: state.aiPanelWidth,
-            minSize: state.aiPanelMinWidth,
-            maxSize: state.aiPanelMaxWidth
+            defaultSize: typeof state.toolsPanel === 'number' ? state.toolsPanel : DEFAULT_PANEL_SIZES.toolsPanel,
+            minSize: 15,
+            maxSize: 35
+          };
+        } catch (error) {
+          // Fallback to safe defaults if anything goes wrong
+          console.warn('Error in getAiPanelSizeForTab:', error);
+          return {
+            defaultSize: DEFAULT_PANEL_SIZES.aiPanelWidth,
+            minSize: DEFAULT_PANEL_SIZES.aiPanelMinWidth,
+            maxSize: DEFAULT_PANEL_SIZES.aiPanelMaxWidth
           };
         }
-        // For other tabs, use standard panel sizing
-        return {
-          defaultSize: state.toolsPanel,
-          minSize: 15,
-          maxSize: 35
-        };
       },
     }),
     {

@@ -274,10 +274,12 @@ export function AiView() {
   const { addMediaItem } = useMediaStore();
   const { aiPanelWidth, aiPanelMinWidth } = usePanelStore();
   
-  // Responsive layout calculations
-  const isCollapsed = aiPanelWidth <= (aiPanelMinWidth + 2); // Small buffer for collapsed state
-  const isCompact = aiPanelWidth < 18; // Less than ~230px equivalent
-  const isExpanded = aiPanelWidth > 25; // Greater than ~320px equivalent
+  // Responsive layout calculations with safe defaults
+  const safeAiPanelWidth = typeof aiPanelWidth === 'number' ? aiPanelWidth : 22;
+  const safeAiPanelMinWidth = typeof aiPanelMinWidth === 'number' ? aiPanelMinWidth : 4;
+  const isCollapsed = safeAiPanelWidth <= (safeAiPanelMinWidth + 2); // Small buffer for collapsed state
+  const isCompact = safeAiPanelWidth < 18; // Less than ~230px equivalent
+  const isExpanded = safeAiPanelWidth > 25; // Greater than ~320px equivalent
 
   // Helper function to download video to memory
   const downloadVideoToMemory = async (videoUrl: string): Promise<Uint8Array> => {

@@ -111,9 +111,32 @@ Manages the state for text-to-image generation, including the prompt, selected A
 *   **State:** `prompt`, `selectedModels`, `generationMode`, `isGenerating`, `generationResults`, `selectedResults`, `generationHistory`.
 *   **Actions:** `setPrompt`, `toggleModel`, `clearModelSelection`, `setGenerationMode`, `generateImages`, `addSelectedToMedia`, `clearResults`, `addToHistory`.
 
-### `timeline-store.ts`
+#### Detailed Workflow: Text-to-Image Generation
 
-Manages the core video timeline state, including tracks, elements, selection, and drag operations. It also handles history (undo/redo) and persistence of timeline data.
+This diagram illustrates the sequence of function calls when a user initiates text-to-image generation, including interaction with the FAL.ai client and media store.
 
-*   **State:** `_tracks` (internal storage), `history`, `redoStack`, `tracks` (sorted and ensured), `selectedElements`, `dragState`.
-*   **Actions:** `getSortedTracks`, `pushHistory`, `undo`, `redo`, `selectElement`, `deselectElement`, `clearSelectedElements`, `setSelectedElements`, `addTrack`, `insertTrackAt`, `removeTrack`, `addElementToTrack`, `removeElementFromTrack`, `moveElementToTrack`, `updateElementTrim`, `updateElementDuration`, `updateElementStartTime`, `toggleTrackMute`, `updateTextElement`, `splitElement`, `splitAndKeepLeft`, `splitAndKeepRight`, `separateAudio`, `replaceElementMedia`, `getTotalDuration`, `loadProjectTimeline`, `saveProjectTimeline`, `clearTimeline`, `setDragState`, `startDrag`, `updateDragTime`, `endDrag`.
+```mermaid
+sequenceDiagram
+    participant UI as Text2Image UI
+    participant T2IS as Text2ImageStore
+    participant FALC as FalAIClient (lib/fal-ai-client.ts)
+    participant MS as MediaStore
+
+    User->>UI: Enters prompt and selects models/settings
+    UI->>T2IS: generateImages(prompt, settings)
+    T2IS->>T2IS: set({ isGenerating: true, ... })
+    T2IS->>T2IS: Initialize loading state for selected models
+    T2IS->>FALC: generateWithMultipleModels(selectedModels, prompt, settings)
+    loop For each selected model
+        FALC->>FALC: makeRequest(model.endpoint, params)
+        FALC->>FALC: pollQueueStatus() (if queue mode)
+        FALC-->>T2IS: GenerationResult (success/error)
+    end
+    T2IS->>T2IS: Update generationResults with final status
+    T2IS->>T2IS: set({ isGenerating: false })
+    T2IS->>T2IS: Auto-select successful results
+    T2IS->>MS: addGeneratedImages(successfulResults)
+    MS->>MS: addMediaItem(projectId, newItem)
+    T2IS->>T2IS: addToHistory(prompt, models, results)
+    T2IS-->>UI: Generation complete / Results displayed
+```

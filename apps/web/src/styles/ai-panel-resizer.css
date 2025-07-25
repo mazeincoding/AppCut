@@ -1,0 +1,229 @@
+/* AI Panel Resizer Styles */
+
+.ai-panel-resizer {
+  width: 4px;
+  cursor: col-resize;
+  background: transparent;
+  transition: background-color 0.2s ease-in-out;
+  position: relative;
+}
+
+.ai-panel-resizer:hover {
+  background-color: rgba(59, 130, 246, 0.3); /* blue-500 with opacity */
+}
+
+.ai-panel-resizer:active {
+  background-color: rgba(59, 130, 246, 0.5); /* blue-500 with higher opacity */
+}
+
+.ai-panel-resizing {
+  user-select: none;
+  pointer-events: none;
+}
+
+.ai-panel-content {
+  transition: width 0.2s ease-in-out;
+}
+
+.ai-panel-collapsed {
+  min-width: 52px;
+  max-width: 52px;
+}
+
+.ai-panel-expanded {
+  min-width: 280px;
+  max-width: 400px;
+}
+
+/* Visual resize indicator */
+.ai-panel-resizer::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 24px;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.ai-panel-resizer:hover::after {
+  opacity: 0.6;
+}
+
+/* Smooth panel transitions */
+.resizable-panel-transition {
+  transition: width 0.2s ease-in-out;
+}
+
+/* Custom resize handle styling for better visibility */
+.ai-resize-handle {
+  position: relative;
+  background: transparent;
+  transition: all 0.2s ease-in-out;
+}
+
+.ai-resize-handle:hover {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.ai-resize-handle:active {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+/* Responsive animation classes */
+.ai-panel-smooth-resize {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ai-panel-quick-resize {
+  transition: all 0.1s ease-out;
+}
+
+/* Resize preview overlay */
+.ai-panel-resize-preview {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px dashed rgba(59, 130, 246, 0.5);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.1s ease-in-out;
+}
+
+.ai-panel-resize-preview.visible {
+  opacity: 1;
+}
+
+/* Icon-only mode specific styles */
+.ai-panel-icon-only {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.ai-panel-icon-only .ai-icon {
+  font-size: 24px;
+  opacity: 0.7;
+}
+
+.ai-panel-icon-only .ai-label {
+  font-size: 10px;
+  opacity: 0.6;
+  text-align: center;
+  line-height: 1;
+}
+
+/* Compact mode styles */
+.ai-panel-compact {
+  padding: 12px 8px;
+}
+
+.ai-panel-compact .form-label {
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
+.ai-panel-compact .button-text {
+  font-size: 12px;
+}
+
+.ai-panel-compact .model-card {
+  padding: 8px;
+  gap: 8px;
+}
+
+.ai-panel-compact .model-name {
+  font-size: 11px;
+}
+
+.ai-panel-compact .model-price {
+  font-size: 10px;
+}
+
+/* Expanded mode styles */
+.ai-panel-expanded {
+  padding: 16px;
+}
+
+.ai-panel-expanded .form-spacing {
+  gap: 16px;
+}
+
+.ai-panel-expanded .model-grid {
+  max-height: 250px;
+}
+
+/* Animation for panel state changes */
+@keyframes panelExpand {
+  from {
+    opacity: 0.5;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes panelCollapse {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
+}
+
+.ai-panel-expanding {
+  animation: panelExpand 0.2s ease-out;
+}
+
+.ai-panel-collapsing {
+  animation: panelCollapse 0.2s ease-in;
+}
+
+/* Hover effects for better UX */
+.ai-panel-tab:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ai-panel-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Focus states for accessibility */
+.ai-panel-resizer:focus {
+  outline: 2px solid rgba(59, 130, 246, 0.5);
+  outline-offset: 2px;
+}
+
+.ai-panel-tab:focus {
+  outline: 2px solid rgba(59, 130, 246, 0.5);
+  outline-offset: 2px;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .ai-panel-content,
+  .ai-panel-resizer,
+  .ai-resize-handle,
+  .ai-panel-smooth-resize,
+  .ai-panel-quick-resize,
+  .ai-panel-resize-preview,
+  .ai-panel-tab,
+  .ai-panel-button {
+    transition: none;
+    animation: none;
+  }
+}

@@ -309,14 +309,16 @@ function EditorContent() {
             <ResizablePanelGroup direction="horizontal" className="h-full gap-6">
               {/* Media Panel */}
               <ResizablePanel 
-                defaultSize={getAiPanelSizeForTab(activeTab).defaultSize} 
-                minSize={getAiPanelSizeForTab(activeTab).minSize} 
-                maxSize={getAiPanelSizeForTab(activeTab).maxSize}
+                defaultSize={getAiPanelSizeForTab(activeTab || 'media').defaultSize || 22} 
+                minSize={getAiPanelSizeForTab(activeTab || 'media').minSize || 4} 
+                maxSize={getAiPanelSizeForTab(activeTab || 'media').maxSize || 30}
                 onResize={(size) => {
-                  setToolsPanel(size);
+                  // Ensure size is a valid number
+                  const validSize = typeof size === 'number' && !isNaN(size) ? size : 22;
+                  setToolsPanel(validSize);
                   // Also update AI-specific width when AI tab is active
                   if (activeTab === 'ai') {
-                    setAiPanelWidth(size);
+                    setAiPanelWidth(validSize);
                   }
                 }}
               >
