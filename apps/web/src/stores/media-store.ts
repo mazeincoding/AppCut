@@ -248,19 +248,18 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
       
       // ✨ AUTO-GENERATE TIMELINE PREVIEWS: Auto-generate timeline previews for video files
       if (newItem.type === 'video' && newItem.file) {
-        console.log('🎬 Auto-generating timeline previews for new video:', newItem.name);
-        
-        // Generate timeline previews with default options
-        setTimeout(() => {
-          get().generateTimelinePreviews(newItem.id, {
-            density: 2,
-            quality: 'medium',
-            zoomLevel: 1,
-            elementDuration: newItem.duration || 10
-          }).catch(error => {
-            console.warn('Failed to auto-generate timeline previews:', error);
-          });
-        }, 500); // Small delay to ensure file is ready
+        console.log('🚫 Auto-generation of timeline previews disabled to prevent FFmpeg errors');
+        // Temporarily disabled auto-generation to prevent FFmpeg filesystem errors
+        // setTimeout(() => {
+        //   get().generateTimelinePreviews(newItem.id, {
+        //     density: 2,
+        //     quality: 'medium',
+        //     zoomLevel: 1,
+        //     elementDuration: newItem.duration || 10
+        //   }).catch(error => {
+        //     console.warn('Failed to auto-generate timeline previews:', error);
+        //   });
+        // }, 500); // Small delay to ensure file is ready
       }
       
     } catch (error) {
@@ -536,6 +535,10 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
 
   // Timeline preview methods
   generateTimelinePreviews: async (mediaId, options) => {
+    // Temporarily disabled to prevent FFmpeg errors and timeouts
+    console.log('🚫 MEDIA-STORE: Timeline preview generation disabled to prevent FFmpeg errors');
+    return;
+    
     const item = get().mediaItems.find(item => item.id === mediaId);
     if (!item || !item.file || item.type !== 'video') {
       console.warn('Cannot generate timeline previews: invalid media item', { 

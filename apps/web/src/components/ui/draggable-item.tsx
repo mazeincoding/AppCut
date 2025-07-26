@@ -73,6 +73,12 @@ export function DraggableMediaItem({
   }, [isDragging]);
 
   const handleDragStart = (e: React.DragEvent) => {
+    console.log('🚀 DRAG START TRIGGERED:', { 
+      id: dragData.id, 
+      name: dragData.name,
+      canDrag 
+    });
+    
     if (!canDrag) {
       e.preventDefault();
       console.log('🚫 Drag prevented - item not ready:', dragData.id);

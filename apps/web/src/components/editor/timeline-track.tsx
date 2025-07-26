@@ -289,6 +289,15 @@ export function TimelineTrackContent({
     const clickOffsetTime =
       clickOffsetX / (TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel);
 
+    console.log('🖱️ DRAG DEBUG: Starting drag action for element:', {
+      elementId: element.id,
+      trackId: track.id,
+      elementName: element.name,
+      startTime: element.startTime,
+      clickX: e.clientX,
+      clickOffsetTime
+    });
+    
     startDragAction(
       element.id,
       track.id,
@@ -915,7 +924,7 @@ export function TimelineTrackContent({
     >
       <div
         ref={timelineRef}
-        className="h-full relative track-elements-container min-w-full"
+        className="h-full relative track-elements-container min-w-full min-h-[85px]"
       >
         {track.elements.length === 0 ? (
           <div

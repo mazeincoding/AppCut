@@ -19,7 +19,7 @@ import { useMediaStore } from "@/stores/media-store";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { usePlaybackStore } from "@/stores/playback-store";
 import AudioWaveform from "./audio-waveform";
-import { VideoTimelinePreview } from "./video-timeline-preview";
+// import { VideoTimelinePreview } from "./video-timeline-preview"; // Temporarily disabled
 import { useVideoTimelinePreview } from "@/hooks/use-video-timeline-preview";
 import { toast } from "sonner";
 import { TimelineElementProps, TrackType } from "@/types/timeline";
@@ -146,6 +146,18 @@ export function TimelineElement({
       ? dragState.currentTime
       : element.startTime;
   const elementLeft = elementStartTime * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel;
+  
+  // Debug element positioning
+  console.log('🎬 ELEMENT POSITIONING DEBUG:', {
+    elementName: element.name,
+    elementId: element.id,
+    elementStartTime,
+    elementWidth,
+    elementLeft,
+    effectiveDuration,
+    zoomLevel,
+    isVisible: elementWidth > 0 && elementLeft >= 0
+  });
 
   const handleDeleteElement = () => {
     removeElementFromTrack(track.id, element.id);
@@ -333,26 +345,38 @@ export function TimelineElement({
     }
 
     if (mediaItem.type === "video") {
-      console.log('🎬 TIMELINE-ELEMENT: About to render VideoTimelinePreview for:', element.name, {
-        elementWidth,
-        elementHeight: TIMELINE_CONSTANTS.TRACK_HEIGHT,
-        mediaId: element.mediaId,
-        isSelected,
-        hasMediaItem: !!mediaItem,
-        mediaItemType: mediaItem.type
+      console.log('🎬 VIDEO ELEMENT RENDERING:', {
+        elementName: element.name,
+        elementId: element.id,
+        mediaItemId: mediaItem.id,
+        isSelected
       });
       
+      // Video element with colorful background and proper selection
       return (
-        <VideoTimelinePreview
-          element={element}
-          mediaItem={mediaItem}
-          zoomLevel={zoomLevel}
-          elementWidth={elementWidth}
-          elementHeight={TIMELINE_CONSTANTS.TRACK_HEIGHT}
-          isSelected={isSelected}
-          isHovered={videoPreview.isHovered}
-          mousePosition={videoPreview.mousePosition || undefined}
-        />
+        <div 
+          className="w-full h-full relative rounded shadow-lg"
+          style={{
+            backgroundColor: isSelected ? '#facc15' : '',
+            backgroundImage: isSelected ? 'none' : 'linear-gradient(to right, rgb(147 51 234), rgb(37 99 235), rgb(67 56 202))',
+            border: isSelected ? '4px solid #eab308' : '2px solid rgb(168 85 247)'
+          }}
+        >
+          <div 
+            className="absolute inset-0 flex items-center px-2"
+            style={{
+              backgroundColor: isSelected ? 'rgba(250, 204, 21, 0.9)' : '',
+              backgroundImage: isSelected ? 'none' : 'linear-gradient(to right, rgba(147, 51, 234, 0.8), rgba(37, 99, 235, 0.8), rgba(67, 56, 202, 0.8))'
+            }}
+          >
+            <span 
+              className="text-sm font-bold truncate drop-shadow-md"
+              style={{ color: isSelected ? '#000000' : '#ffffff' }}
+            >
+              🎬 {element.name}
+            </span>
+          </div>
+        </div>
       );
     }
 
@@ -379,6 +403,13 @@ export function TimelineElement({
   };
 
   const handleElementMouseDown = (e: React.MouseEvent) => {
+    console.log('🎯 ELEMENT: handleElementMouseDown called for:', element.name, {
+      hasOnElementMouseDown: !!onElementMouseDown,
+      elementId: element.id,
+      button: e.button
+    });
+    
+    e.stopPropagation(); // Prevent selection box from interfering with drag
     if (onElementMouseDown) {
       onElementMouseDown(e, element);
     }

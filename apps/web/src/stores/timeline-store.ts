@@ -960,6 +960,15 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       startElementTime,
       clickOffsetTime
     ) => {
+      console.log('🏪 TIMELINE-STORE: startDrag called:', {
+        elementId,
+        trackId,
+        startMouseX,
+        startElementTime,
+        clickOffsetTime,
+        isDragging: true
+      });
+      
       set({
         dragState: {
           isDragging: true,

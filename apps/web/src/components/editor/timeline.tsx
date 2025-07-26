@@ -176,12 +176,17 @@ export function Timeline() {
       );
 
       // Don't seek if this was a selection box operation
-      if (isSelecting || justFinishedSelecting) {
+      if (isSelecting) {
         return;
       }
 
       // Don't seek if clicking on timeline elements, but still deselect
       if ((e.target as HTMLElement).closest(".timeline-element")) {
+        return;
+      }
+
+      // Don't seek if we just finished selecting (but allow element interactions)
+      if (justFinishedSelecting) {
         return;
       }
 
@@ -330,6 +335,11 @@ export function Timeline() {
   // Old marquee system removed - using new SelectionBox component instead
 
   const handleDragEnter = (e: React.DragEvent) => {
+    console.log('🎯 TIMELINE: handleDragEnter triggered!', {
+      types: Array.from(e.dataTransfer.types),
+      hasMediaItem: e.dataTransfer.types.includes("application/x-media-item")
+    });
+    
     // When something is dragged over the timeline, show overlay
     e.preventDefault();
     // Don't show overlay for timeline elements - they're handled by tracks
@@ -343,6 +353,7 @@ export function Timeline() {
   };
 
   const handleDragOver = (e: React.DragEvent) => {
+    console.log('🎯 TIMELINE: handleDragOver triggered!');
     e.preventDefault();
   };
 
@@ -362,6 +373,11 @@ export function Timeline() {
 
   const handleDrop = async (e: React.DragEvent) => {
     // When media is dropped, add it as a new track/element
+    console.log('🎯 TIMELINE: handleDrop triggered!', {
+      dataTransferTypes: Array.from(e.dataTransfer.types),
+      hasMediaItem: e.dataTransfer.types.includes("application/x-media-item")
+    });
+    
     e.preventDefault();
     setIsDragOver(false);
     dragCounterRef.current = 0;
