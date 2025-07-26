@@ -1191,6 +1191,7 @@ export function Timeline() {
                 style={{
                   width: `${dynamicTimelineWidth}px`,
                   height: '28px',
+                  borderBottom: '3px solid #333333',
                 }}
                 onMouseDown={handleRulerMouseDown}
               >
@@ -1300,13 +1301,24 @@ export function Timeline() {
           </div>
         </div>
 
+        {/* Timeline ruler bottom border */}
+        <div 
+          style={{
+            width: '100%',
+            height: '3px',
+            backgroundColor: '#333333',
+            position: 'relative',
+            zIndex: 50
+          }}
+        />
+
         {/* Tracks Area */}
         <div className="flex-1 flex overflow-hidden">
           {/* Track Labels */}
           {tracks.length > 0 && (
             <div
               ref={trackLabelsRef}
-              className="w-80 flex-shrink-0 border-r bg-panel-accent overflow-y-auto"
+              className="w-80 flex-shrink-0 border-r border-r-transparent bg-panel-accent overflow-y-auto"
               data-track-labels
             >
               <ScrollArea className="w-full h-full" ref={trackLabelsScrollRef}>
@@ -1314,8 +1326,11 @@ export function Timeline() {
                   {tracks.map((track) => (
                     <div
                       key={track.id}
-                      className="flex items-start px-4 pr-24 border-b border-muted/30 group bg-foreground/5"
-                      style={{ height: `${getTrackHeight(track.type)}px` }}
+                      className="flex items-start px-4 pr-24 border-b-transparent group bg-foreground/5 relative"
+                      style={{ 
+                        height: `${getTrackHeight(track.type)}px`,
+                        borderRight: '2px solid transparent'
+                      }}
                     >
                       <div className="flex items-center flex-1 min-w-0 pl-4">
                         <TrackIcon track={track} />
@@ -1331,6 +1346,22 @@ export function Timeline() {
               </ScrollArea>
             </div>
           )}
+
+          {/* Extending top border for each track */}
+          {tracks.map((track, index) => (
+            <div 
+              key={`border-${track.id}`}
+              style={{
+                position: 'absolute',
+                top: `${getCumulativeHeightBefore(tracks, index)}px`,
+                left: '0px',
+                width: '100%',
+                height: '1px',
+                backgroundColor: '#666666',
+                zIndex: 100
+              }}
+            />
+          ))}
 
           {/* Timeline Tracks Content */}
           <div
@@ -1362,7 +1393,7 @@ export function Timeline() {
                       <ContextMenu key={track.id}>
                         <ContextMenuTrigger asChild>
                           <div
-                            className="absolute left-0 right-0 border-b border-muted/30 py-[0.05rem]"
+                            className="absolute left-0 right-0 border-b border-l border-muted/30 border-l-transparent py-[0.05rem]"
                             style={{
                               top: `${getCumulativeHeightBefore(tracks, index)}px`,
                               height: `${getTrackHeight(track.type)}px`,
