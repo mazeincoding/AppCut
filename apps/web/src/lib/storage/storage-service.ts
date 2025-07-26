@@ -114,10 +114,10 @@ class StorageService {
 
     // hash the file to check for duplicates
     const hash = await this.getFileHash(mediaItem.file);
-    const fileExists = await this.checkFileExists(projectId, hash);
-    if (fileExists) {
+    const existingFile = await this.checkFileExists(projectId, hash);
+    if (existingFile) {
       throw new Error(
-        "File with the same content already exists in this project."
+        `This file has already been added to the project as "${existingFile.name}".`
       );
     }
 
@@ -291,17 +291,24 @@ class StorageService {
       .join("");
   }
 
-  async checkFileExists(projectId: string, hash: string): Promise<boolean> {
+  /**
+   * Check if a file with the same hash already exists in the project.
+   * @returns `MediaFileData` if a file with the same hash exists, otherwise null.
+   */
+  async checkFileExists(
+    projectId: string,
+    hash: string
+  ): Promise<MediaFileData | null> {
     const { mediaMetadataAdapter } = this.getProjectMediaAdapters(projectId);
     // Check if a file with the same hash already exists
     const mediaIds = await mediaMetadataAdapter.list();
     for (const id of mediaIds) {
       const metadata = await mediaMetadataAdapter.get(id);
       if (metadata && metadata.hash === hash) {
-        return true;
+        return metadata;
       }
     }
-    return false;
+    return null;
   }
 }
 
