@@ -242,8 +242,8 @@ export function ExportDialog() {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
-            <h2 className="text-xl font-semibold">Export Video</h2>
-            <p className="text-sm text-muted-foreground mt-1">Configure your export settings and render your video.</p>
+            <h2 className="text-sm font-semibold">Export Video</h2>
+            <p className="text-[13px] text-muted-foreground mt-1">Configure your export settings and render your video.</p>
           </div>
           <Button
             variant="text"
@@ -259,69 +259,69 @@ export function ExportDialog() {
         <div className="flex-1 overflow-y-auto p-6">
           {/* Format Selection */}
           <div className="space-y-3">
-            <Label className="text-sm font-medium">Format</Label>
+            <Label className="text-[13px] font-medium">Format</Label>
             <RadioGroup value={format} onValueChange={(value) => setFormat(value as ExportFormat)}>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value={ExportFormat.MP4} id="mp4" />
-                <Label htmlFor="mp4">MP4 (Recommended)</Label>
+                <Label htmlFor="mp4" className="ml-2 text-[13px]">MP4 (Recommended)</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value={ExportFormat.WEBM} id="webm" />
-                <Label htmlFor="webm">WebM</Label>
+                <Label htmlFor="webm" className="ml-2 text-[13px]">WebM</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value={ExportFormat.MOV} id="mov" />
-                <Label htmlFor="mov">MOV</Label>
+                <Label htmlFor="mov" className="ml-2 text-[13px]">MOV</Label>
               </div>
             </RadioGroup>
           </div>
           
           {/* Quality Selection */}
           <div className="space-y-3" style={{ marginTop: '10px' }}>
-            <Label className="text-sm font-medium">Quality</Label>
+            <Label className="text-[13px] font-medium">Quality</Label>
             <RadioGroup value={quality} onValueChange={(value) => setQuality(value as ExportQuality)}>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value={ExportQuality.HIGH} id="1080p" />
-                <Label htmlFor="1080p">1080p (High Quality)</Label>
+                <Label htmlFor="1080p" className="ml-2 text-[13px]">1080p (High Quality)</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value={ExportQuality.MEDIUM} id="720p" />
-                <Label htmlFor="720p">720p (Medium Quality)</Label>
+                <Label htmlFor="720p" className="ml-2 text-[13px]">720p (Medium Quality)</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value={ExportQuality.LOW} id="480p" />
-                <Label htmlFor="480p">480p (Low Quality)</Label>
+                <Label htmlFor="480p" className="ml-2 text-[13px]">480p (Low Quality)</Label>
               </div>
             </RadioGroup>
           </div>
 
           {/* SAFETY: Export Engine Selection - implements mermaid diagram UI */}
           <div className="space-y-3" style={{ marginTop: '10px' }}>
-            <Label className="text-sm font-medium">Export Engine</Label>
+            <Label className="text-[13px] font-medium">Export Engine</Label>
             <RadioGroup value={exportEngine} onValueChange={(value) => setExportEngine(value as EngineType)}>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="auto" id="auto" />
-                <Label htmlFor="auto" className="text-sm">Auto (Recommended) - Best available</Label>
+                <Label htmlFor="auto" className="text-[13px] ml-2">Auto (Recommended) - Best available</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="stable" id="stable" />
-                <Label htmlFor="stable" className="text-sm">Stable Mode - Proven optimized</Label>
+                <Label htmlFor="stable" className="text-[13px] ml-2">Stable Mode - Proven optimized</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="parallel" id="parallel" />
-                <Label htmlFor="parallel" className="text-sm">Parallel Processing - 5-10x faster</Label>
+                <Label htmlFor="parallel" className="text-[13px] ml-2">Parallel Processing - 5-10x faster</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="webcodecs" id="webcodecs" />
-                <Label htmlFor="webcodecs" className="text-sm">WebCodecs (Experimental) - Force new</Label>
+                <Label htmlFor="webcodecs" className="text-[13px] ml-2">WebCodecs (Experimental) - Force new</Label>
               </div>
             </RadioGroup>
             <div className="p-3 bg-muted rounded-lg">
               <div className="space-y-1">
-                <p className="text-xs font-medium">Engine Status:</p>
-                <p className="text-xs text-muted-foreground">{engineStatus}</p>
+                <p className="text-[12px] font-medium">Engine Status:</p>
+                <p className="text-[12px] text-muted-foreground">{engineStatus}</p>
                 {engineCapabilities && (
-                  <div className="text-xs text-muted-foreground space-y-1">
+                  <div className="text-[12px] text-muted-foreground space-y-1">
                     {engineCapabilities.memoryStatus && (
                       <div>Memory: {engineCapabilities.memoryStatus}</div>
                     )}
@@ -336,26 +336,26 @@ export function ExportDialog() {
 
           {/* Resolution & Size Info */}
           <div className="space-y-3" style={{ marginTop: '10px' }}>
-            <Label className="text-sm font-medium">Resolution & Size</Label>
+            <Label className="text-[13px] font-medium">Resolution & Size</Label>
             <div className="p-3 bg-muted rounded-lg space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-xs font-medium">Resolution:</span>
-                <span className="text-xs">{resolution.label}</span>
+                <span className="text-[12px] font-medium">Resolution:</span>
+                <span className="text-[12px]">{resolution.label}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-xs font-medium">Est. size:</span>
-                <span className="text-xs text-muted-foreground">{estimatedSize}</span>
+                <span className="text-[12px] font-medium">Est. size:</span>
+                <span className="text-[12px] text-muted-foreground">{estimatedSize}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-xs font-medium">Memory:</span>
-                <span className="text-xs text-muted-foreground">{memoryMonitor.getMemorySummary()}</span>
+                <span className="text-[12px] font-medium">Memory:</span>
+                <span className="text-[12px] text-muted-foreground">{memoryMonitor.getMemorySummary()}</span>
               </div>
             </div>
           </div>
           
           {/* Filename Input */}
           <div className="space-y-3">
-            <Label className="text-sm font-medium" htmlFor="filename">Filename</Label>
+            <Label className="text-[13px] font-medium" htmlFor="filename">Filename</Label>
             <div className="flex items-center space-x-2">
               <Input
                 id="filename"
@@ -364,10 +364,10 @@ export function ExportDialog() {
                 placeholder="Enter filename"
                 className={!isValidFilename(filename) ? "border-red-500" : ""}
               />
-              <span className="text-xs text-muted-foreground">.{format}</span>
+              <span className="text-[12px] text-muted-foreground">.{format}</span>
             </div>
             {!isValidFilename(filename) && (
-              <p className="text-xs text-red-500">
+              <p className="text-[12px] text-red-500">
                 Invalid filename. Avoid special characters: &lt; &gt; : " / \ | ? *
               </p>
             )}
@@ -375,14 +375,14 @@ export function ExportDialog() {
 
           {/* Duration Info */}
           <div className="space-y-3" style={{ marginTop: '10px' }}>
-            <Label className="text-sm font-medium">Export Duration</Label>
+            <Label className="text-[13px] font-medium">Export Duration</Label>
             <div className="p-3 bg-muted rounded-lg">
               <div className="flex justify-between items-center">
-                <span className="text-xs font-medium">Timeline duration:</span>
-                <span className="text-xs">{timelineDuration.toFixed(2)}s</span>
+                <span className="text-[12px] font-medium">Timeline duration:</span>
+                <span className="text-[12px]">{timelineDuration.toFixed(2)}s</span>
               </div>
               {timelineDuration === 0 && (
-                <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs">
+                <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-[12px]">
                   <div className="flex items-start space-x-2">
                     <span className="text-red-600">❌</span>
                     <div className="text-red-800">
@@ -414,7 +414,7 @@ export function ExportDialog() {
                 ) : (
                   <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 )}
-                <AlertDescription className={`text-sm ${
+                <AlertDescription className={`text-[13px] ${
                   memoryLevel === 'error' ? 'text-red-800 dark:text-red-200' :
                   memoryLevel === 'critical' ? 'text-orange-800 dark:text-orange-200' :
                   memoryLevel === 'warning' ? 'text-yellow-800 dark:text-yellow-200' :
@@ -431,11 +431,11 @@ export function ExportDialog() {
             <div className="space-y-3">
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <Label className="text-sm font-medium">Export Progress</Label>
-                  <span className="text-xs text-muted-foreground">{exportProgress.toFixed(0)}%</span>
+                  <Label className="text-[13px] font-medium">Export Progress</Label>
+                  <span className="text-[12px] text-muted-foreground">{exportProgress.toFixed(0)}%</span>
                 </div>
                 <Progress value={exportProgress} className="w-full" />
-                <p className="text-xs text-muted-foreground">{exportStatus}</p>
+                <p className="text-[12px] text-muted-foreground">{exportStatus}</p>
               </div>
             </div>
           )}
@@ -458,7 +458,7 @@ export function ExportDialog() {
               variant="outline"
               onClick={handleCancel}
               disabled={isExporting}
-              className="w-full h-11 text-sm font-medium !bg-transparent hover:!bg-transparent"
+              className="w-full h-11 text-[13px] font-medium !bg-transparent hover:!bg-transparent"
             >
               <X className="h-4 w-4 mr-2.5" />
               Cancel
