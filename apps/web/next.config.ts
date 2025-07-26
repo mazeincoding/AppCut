@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
   },
+  experimental: {
+    useCache: true,
+  },
   reactStrictMode: true,
   productionBrowserSourceMaps: true,
   output: "standalone",
