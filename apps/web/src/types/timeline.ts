@@ -155,3 +155,58 @@ export function validateElementTrackCompatibility(
 
   return { isValid: true };
 }
+
+// SAFE: New types added at end of file, no existing types modified
+export interface SnapPoint {
+  position: number;
+  type: 'element-start' | 'element-end' | 'playhead' | 'grid';
+  strength: number;
+  elementId?: string;
+  trackId?: string;
+}
+
+export interface SnapResult {
+  snappedTime: number;
+  snapPoint?: SnapPoint;
+  didSnap: boolean;
+}
+
+// Feature flag interface
+export interface TimelineFeatureFlags {
+  enableSnapping?: boolean;
+  enableSnapVisualization?: boolean;
+  enableToolSelection?: boolean;
+  enableTimeDisplay?: boolean;
+}
+
+// SAFE: Create extended interface, don't modify existing
+export interface TimelineElementPropsWithSnapping extends TimelineElementProps {
+  isSnapping?: boolean;
+  onSnapChange?: (snapping: boolean) => void;
+}
+
+// For backward compatibility, components can use either interface
+
+// SAFE: New interface for enhanced toolbar, existing toolbar remains unchanged
+export interface EnhancedTimelineToolbarProps {
+  // Existing props
+  zoomLevel: number;
+  setZoomLevel: (level: number) => void;
+  
+  // New optional props with defaults
+  selectedTool?: 'select' | 'cut' | 'text';
+  setSelectedTool?: (tool: 'select' | 'cut' | 'text') => void;
+  isSnappingEnabled?: boolean;
+  setIsSnappingEnabled?: (enabled: boolean) => void;
+  featureFlags?: TimelineFeatureFlags;
+}
+
+// SAFE: Optional props interface that extends functionality
+export interface TimelineTrackContentEnhancedProps {
+  track: TimelineTrack;
+  zoomLevel: number;
+  // All new props are optional with defaults
+  onSnapPointChange?: (snapPoint: SnapPoint | null) => void;
+  isSnappingEnabled?: boolean;
+  featureFlags?: TimelineFeatureFlags;
+}

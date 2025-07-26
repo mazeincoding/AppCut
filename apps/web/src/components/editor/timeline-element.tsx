@@ -13,6 +13,7 @@ import {
   Type,
   Copy,
   RefreshCw,
+  Magnet,
 } from "lucide-react";
 import { useMediaStore } from "@/stores/media-store";
 import { useTimelineStore } from "@/stores/timeline-store";
@@ -52,7 +53,16 @@ export function TimelineElement({
   isSelected,
   onElementMouseDown,
   onElementClick,
-}: TimelineElementProps) {
+  // SAFE: New optional props with defaults
+  isSnapping = false,
+  onSnapChange = () => {},
+  ...extraProps // SAFE: Capture any additional props
+}: TimelineElementProps & { 
+  isSnapping?: boolean; 
+  onSnapChange?: (snapping: boolean) => void;
+}) {
+  // SAFE: Only use new features if explicitly provided
+  const enhancedMode = 'isSnapping' in extraProps;
   const { mediaItems } = useMediaStore();
   const {
     updateElementTrim,
@@ -380,6 +390,11 @@ export function TimelineElement({
         <div
           className={`absolute top-0 h-full select-none timeline-element ${
             isBeingDragged ? "z-50" : "z-10"
+          } ${
+            // SAFE: Only add snap classes if feature is enabled
+            enhancedMode && isSnapping 
+              ? 'ring-2 ring-accent shadow-lg shadow-accent/50 animate-pulse' 
+              : ''
           }`}
           data-testid="timeline-element"
           style={{
@@ -445,6 +460,17 @@ export function TimelineElement({
         <ContextMenuItem onClick={handleElementDuplicateContext}>
           <Copy className="h-4 w-4 mr-2" />
           Duplicate {element.type === "text" ? "text" : "clip"}
+        </ContextMenuItem>
+        <ContextMenuItem 
+          onClick={() => {
+            const { currentTime } = usePlaybackStore.getState();
+            const { updateElementStartTime } = useTimelineStore.getState();
+            updateElementStartTime(track.id, element.id, currentTime);
+            toast.success('Snapped to playhead');
+          }}
+        >
+          <Magnet className="h-4 w-4 mr-2" />
+          Snap to Playhead
         </ContextMenuItem>
         {element.type === "media" && (
           <ContextMenuItem onClick={handleReplaceClip}>

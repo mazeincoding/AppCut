@@ -44,13 +44,16 @@ import {
   SelectValue,
 } from "../ui/select";
 import { TimelineTrackContent } from "./timeline-track";
+import { TimelineTrackContentEnhanced } from "./timeline-track-enhanced";
 import {
   TimelinePlayhead,
   useTimelinePlayheadRuler,
 } from "./timeline-playhead";
+import { TimelinePlayheadEnhanced } from "./timeline-playhead-enhanced";
+import { TimelineToolbarEnhanced } from "./timeline-toolbar-enhanced";
 import { SelectionBox } from "./selection-box";
 import { useSelectionBox } from "@/hooks/use-selection-box";
-import type { DragData, TimelineTrack } from "@/types/timeline";
+import type { DragData, TimelineTrack, TimelineFeatureFlags, SnapPoint } from "@/types/timeline";
 import {
   getTrackHeight,
   getCumulativeHeightBefore,
@@ -90,6 +93,20 @@ export function Timeline() {
   const timelineRef = useRef<HTMLDivElement>(null);
   const rulerRef = useRef<HTMLDivElement>(null);
   const [isInTimeline, setIsInTimeline] = useState(false);
+
+  // SAFE: Feature flags for testing snapping system
+  const [featureFlags] = useState<TimelineFeatureFlags>({
+    enableSnapping: true, // TESTING: Enabled for snapping system testing
+    enableSnapVisualization: true, // TESTING: Show snap indicators
+    enableToolSelection: true, // TESTING: Show toolbar enhancements
+    enableTimeDisplay: true, // TESTING: Show time display on playhead
+  });
+
+  // SAFE: New states only used if features enabled
+  const [selectedTool, setSelectedTool] = useState<'select' | 'cut' | 'text'>('select');
+  const [isSnappingEnabled, setIsSnappingEnabled] = useState(false);
+  const [activeSnapPoint, setActiveSnapPoint] = useState<SnapPoint | null>(null);
+  const [elementSnapping, setElementSnapping] = useState<Map<string, boolean>>(new Map());
 
   // Timeline zoom functionality
   const { zoomLevel, setZoomLevel, handleWheel } = useTimelineZoom({
@@ -780,8 +797,9 @@ export function Timeline() {
       onMouseEnter={() => setIsInTimeline(true)}
       onMouseLeave={() => setIsInTimeline(false)}
     >
-      {/* Toolbar */}
-      <div className="border-b flex items-center px-2 py-1 pb-3 gap-1">
+      {/* Toolbar - render enhanced version if any enhanced features are enabled */}
+      {!(featureFlags.enableSnapping || featureFlags.enableToolSelection) && (
+        <div className="border-b flex items-center px-2 py-1 pb-3 gap-1">
         <TooltipProvider delayDuration={500}>
           {/* Play/Pause Button */}
           <Tooltip>
@@ -1046,26 +1064,73 @@ export function Timeline() {
             <TooltipContent>Delete element (Delete)</TooltipContent>
           </Tooltip>
         </TooltipProvider>
-      </div>
+        </div>
+      )}
+
+      {/* SAFE: Enhanced toolbar only if any feature is enabled */}
+      {(featureFlags.enableSnapping || featureFlags.enableToolSelection) && (
+        <TimelineToolbarEnhanced
+          zoomLevel={zoomLevel}
+          setZoomLevel={setZoomLevel}
+          selectedTool={selectedTool}
+          setSelectedTool={setSelectedTool}
+          isSnappingEnabled={isSnappingEnabled}
+          setIsSnappingEnabled={setIsSnappingEnabled}
+          featureFlags={featureFlags}
+          // Pass through required toolbar props
+          isPlaying={isPlaying}
+          currentTime={currentTime}
+          duration={duration}
+          speed={1}
+          tracks={tracks}
+          toggle={toggle}
+          setSpeed={() => {}}
+          addTrack={addTrack}
+          addClipToTrack={() => {}}
+          handleSplitSelected={() => {}}
+          handleDuplicateSelected={() => {}}
+          handleFreezeSelected={() => {}}
+          handleDeleteSelected={() => {}}
+        />
+      )}
 
       {/* Timeline Container */}
       <div
         className="flex-1 flex flex-col overflow-hidden relative"
         ref={timelineRef}
       >
-        <TimelinePlayhead
-          currentTime={currentTime}
-          duration={duration}
-          zoomLevel={zoomLevel}
-          tracks={tracks}
-          seek={seek}
-          rulerRef={rulerRef}
-          rulerScrollRef={rulerScrollRef}
-          tracksScrollRef={tracksScrollRef}
-          trackLabelsRef={trackLabelsRef}
-          timelineRef={timelineRef}
-          playheadRef={playheadRef}
-        />
+        {(featureFlags.enableTimeDisplay || (featureFlags.enableSnapping && activeSnapPoint?.type === 'playhead')) ? (
+          <TimelinePlayheadEnhanced
+            currentTime={currentTime}
+            duration={duration}
+            zoomLevel={zoomLevel}
+            tracks={tracks}
+            seek={seek}
+            rulerRef={rulerRef}
+            rulerScrollRef={rulerScrollRef}
+            tracksScrollRef={tracksScrollRef}
+            trackLabelsRef={trackLabelsRef}
+            timelineRef={timelineRef}
+            playheadRef={playheadRef}
+            isSnappingToPlayhead={activeSnapPoint?.type === 'playhead'}
+            showTimeDisplay={featureFlags.enableTimeDisplay}
+          />
+        ) : (
+          // SAFE: Existing playhead unchanged
+          <TimelinePlayhead
+            currentTime={currentTime}
+            duration={duration}
+            zoomLevel={zoomLevel}
+            tracks={tracks}
+            seek={seek}
+            rulerRef={rulerRef}
+            rulerScrollRef={rulerScrollRef}
+            tracksScrollRef={tracksScrollRef}
+            trackLabelsRef={trackLabelsRef}
+            timelineRef={timelineRef}
+            playheadRef={playheadRef}
+          />
+        )}
         {/* Timeline Header with Ruler */}
         <div className="flex bg-panel sticky top-0 z-10">
           {/* Track Labels Header */}
@@ -1255,10 +1320,21 @@ export function Timeline() {
                               }
                             }}
                           >
-                            <TimelineTrackContent
-                              track={track}
-                              zoomLevel={zoomLevel}
-                            />
+                            {featureFlags.enableSnapping ? (
+                              <TimelineTrackContentEnhanced
+                                track={track}
+                                zoomLevel={zoomLevel}
+                                onSnapPointChange={setActiveSnapPoint}
+                                isSnappingEnabled={isSnappingEnabled}
+                                featureFlags={featureFlags}
+                              />
+                            ) : (
+                              // SAFE: Existing track component unchanged
+                              <TimelineTrackContent
+                                track={track}
+                                zoomLevel={zoomLevel}
+                              />
+                            )}
                           </div>
                         </ContextMenuTrigger>
                         <ContextMenuContent>

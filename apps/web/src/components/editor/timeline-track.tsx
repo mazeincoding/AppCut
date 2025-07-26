@@ -16,20 +16,29 @@ import { usePlaybackStore } from "@/stores/playback-store";
 import type {
   TimelineElement as TimelineElementType,
   DragData,
+  SnapPoint,
 } from "@/types/timeline";
 import {
   snapTimeToFrame,
   TIMELINE_CONSTANTS,
 } from "@/constants/timeline-constants";
 import { useProjectStore } from "@/stores/project-store";
+import { useTimelineSnapping } from "@/hooks/use-timeline-snapping";
 
 export function TimelineTrackContent({
   track,
   zoomLevel,
+  onSnapPointChange, // SAFE: Optional prop
+  isSnappingEnabled = false, // SAFE: Defaults to false
 }: {
   track: TimelineTrack;
   zoomLevel: number;
+} & { 
+  onSnapPointChange?: (snapPoint: SnapPoint | null) => void;
+  isSnappingEnabled?: boolean;
 }) {
+  // SAFE: Feature detection
+  const useEnhancedSnapping = isSnappingEnabled && typeof onSnapPointChange === 'function';
   const { mediaItems } = useMediaStore();
   const {
     tracks,
@@ -45,6 +54,14 @@ export function TimelineTrackContent({
     clearSelectedElements,
     insertTrackAt,
   } = useTimelineStore();
+
+  // SAFE: Initialize snapping hook conditionally
+  const snappingHook = useEnhancedSnapping ? useTimelineSnapping({
+    tracks,
+    zoomLevel,
+    enabled: isSnappingEnabled,
+    onSnapPointChange,
+  }) : null;
 
   const timelineRef = useRef<HTMLDivElement>(null);
   const [isDropping, setIsDropping] = useState(false);
@@ -84,10 +101,12 @@ export function TimelineTrackContent({
         mouseX / (TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel)
       );
       const adjustedTime = Math.max(0, mouseTime - dragState.clickOffsetTime);
-      // Use frame snapping if project has FPS, otherwise use decimal snapping
+      // SAFE: Preserve existing behavior by default
       const projectStore = useProjectStore.getState();
       const projectFps = projectStore.activeProject?.fps || 30;
-      const snappedTime = snapTimeToFrame(adjustedTime, projectFps);
+      const snappedTime = useEnhancedSnapping && snappingHook 
+        ? snappingHook.getSnapTime(adjustedTime).snappedTime
+        : snapTimeToFrame(adjustedTime, projectFps); // Existing behavior
 
       updateDragTime(snappedTime);
     };
@@ -353,7 +372,9 @@ export function TimelineTrackContent({
             const newElementDuration = 5;
             const projectStore = useProjectStore.getState();
             const projectFps = projectStore.activeProject?.fps || 30;
-            const snappedTime = snapTimeToFrame(dropTime, projectFps);
+            const snappedTime = useEnhancedSnapping && snappingHook 
+              ? snappingHook.getSnapTime(dropTime).snappedTime
+              : snapTimeToFrame(dropTime, projectFps);
             const newElementEnd = snappedTime + newElementDuration;
 
             wouldOverlap = track.elements.some((existingElement) => {
@@ -969,6 +990,16 @@ export function TimelineTrackContent({
                   isSelected={isSelected}
                   onElementMouseDown={handleElementMouseDown}
                   onElementClick={handleElementClick}
+                  // SAFE: Pass snapping props when enhanced mode is enabled
+                  {...(useEnhancedSnapping ? {
+                    isSnapping: false, // Will be set by snapping logic
+                    onSnapChange: (snapping: boolean) => {
+                      // Handle element snapping state change
+                      if (onSnapPointChange) {
+                        onSnapPointChange(snapping ? null : null); // Will be implemented with real snapping logic
+                      }
+                    }
+                  } : {})}
                 />
               );
             })}

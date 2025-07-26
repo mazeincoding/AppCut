@@ -45,14 +45,17 @@ export const initFFmpeg = async (): Promise<FFmpeg> => {
     // Set up logging (if supported)
     try {
       ffmpeg.on('log', ({ message }) => {
-        console.log('FFmpeg:', message);
+        // Filter out excessive logging to prevent memory issues
+        if (!message.includes('frame=') && !message.includes('time=')) {
+          console.log('FFmpeg:', message);
+        }
       });
     } catch (e) {
       console.log('FFmpeg logging not supported');
     }
     
-      console.log("✅ FFmpeg.wasm loaded successfully");
-      return ffmpeg;
+    console.log("✅ FFmpeg.wasm loaded successfully");
+    return ffmpeg;
     } catch (error) {
       console.error("❌ Failed to initialize FFmpeg:", error);
       ffmpeg = null; // Reset on failure
@@ -330,6 +333,26 @@ export const encodeImagesToVideo = async (
 ): Promise<Blob> => {
   const ffmpeg = await initFFmpeg();
 
+  // Validate input frames
+  if (!frames || frames.length === 0) {
+    throw new Error('No frames provided for video encoding');
+  }
+
+  // Validate each frame
+  for (let i = 0; i < frames.length; i++) {
+    const frame = frames[i];
+    if (!frame.name || !frame.data || frame.data.length === 0) {
+      throw new Error(`Invalid frame at index ${i}: missing name or data`);
+    }
+    
+    // Check for reasonable frame size (prevent memory issues)
+    if (frame.data.length > 50 * 1024 * 1024) { // 50MB limit per frame
+      throw new Error(`Frame ${i} is too large: ${frame.data.length} bytes`);
+    }
+  }
+
+  console.log(`🎬 Encoding ${frames.length} frames to video (${options.fps} fps)`);
+
   const format = options.format ?? 'mp4';
   const outputName = `output.${format}`;
 
@@ -339,31 +362,68 @@ export const encodeImagesToVideo = async (
     });
   }
 
-  // Write frames to the virtual file system
-  for (const frame of frames) {
-    await ffmpeg.writeFile(frame.name, frame.data);
+  try {
+    // Write frames to the virtual file system with error handling
+    for (const frame of frames) {
+      try {
+        await ffmpeg.writeFile(frame.name, frame.data);
+      } catch (error) {
+        console.error(`Failed to write frame ${frame.name}:`, error);
+        throw new Error(`Failed to write frame ${frame.name}: ${error}`);
+      }
+    }
+
+    // Use more conservative encoding settings to avoid memory issues
+    const args = [
+      '-r', String(options.fps),
+      '-i', 'frame-%05d.png',
+      '-c:v', 'libx264',
+      '-preset', 'ultrafast', // Use fastest preset to reduce memory usage
+      '-crf', '23', // Reasonable quality
+      '-pix_fmt', 'yuv420p',
+      '-movflags', '+faststart', // Optimize for web streaming
+      '-max_muxing_queue_size', '1024', // Limit queue size
+      outputName,
+    ];
+
+    console.log('🔧 FFmpeg command:', args.join(' '));
+    await ffmpeg.exec(args);
+
+    const data = await ffmpeg.readFile(outputName);
+    if (!data || data.length === 0) {
+      throw new Error('FFmpeg produced empty output file');
+    }
+
+    const blob = new Blob([data], { type: `video/${format}` });
+    console.log(`✅ Video encoded successfully: ${blob.size} bytes`);
+
+    // Clean up with error handling
+    try {
+      for (const frame of frames) {
+        await ffmpeg.deleteFile(frame.name);
+      }
+      await ffmpeg.deleteFile(outputName);
+    } catch (cleanupError) {
+      console.warn('Cleanup warning (non-fatal):', cleanupError);
+    }
+
+    return blob;
+    
+  } catch (error) {
+    console.error('❌ Video encoding failed:', error);
+    
+    // Attempt cleanup on error
+    try {
+      for (const frame of frames) {
+        await ffmpeg.deleteFile(frame.name).catch(() => {});
+      }
+      await ffmpeg.deleteFile(outputName).catch(() => {});
+    } catch (cleanupError) {
+      console.warn('Cleanup failed:', cleanupError);
+    }
+    
+    throw error;
   }
-
-  const args = [
-    '-r', String(options.fps),
-    '-i', 'frame-%05d.png',
-    '-c:v', 'libx264',
-    '-pix_fmt', 'yuv420p',
-    outputName,
-  ];
-
-  await ffmpeg.exec(args);
-
-  const data = await ffmpeg.readFile(outputName);
-  const blob = new Blob([data], { type: `video/${format}` });
-
-  // Clean up
-  for (const frame of frames) {
-    await ffmpeg.deleteFile(frame.name);
-  }
-  await ffmpeg.deleteFile(outputName);
-
-  return blob;
 };
 
 // Enhanced thumbnail generation interfaces
@@ -675,7 +735,15 @@ export const generateEnhancedThumbnails = async (
       fileType: videoFile?.type,
       fileSize: videoFile?.size
     });
-    return [];
+    return {
+      thumbnails: [],
+      metadata: {
+        duration: 0,
+        dimensions: { width: 0, height: 0 },
+        fps: 0,
+        timestamps: [],
+      }
+    };
   }
   
   // If MIME type is empty or doesn't start with 'video/', try to infer from filename

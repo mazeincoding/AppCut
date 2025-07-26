@@ -41,6 +41,7 @@ interface TimelineToolbarProps {
   handleDuplicateSelected: () => void;
   handleFreezeSelected: () => void;
   handleDeleteSelected: () => void;
+  noWrapper?: boolean; // SAFE: Optional prop to render without wrapper
 }
 
 export function TimelineToolbar({
@@ -57,9 +58,10 @@ export function TimelineToolbar({
   handleDuplicateSelected,
   handleFreezeSelected,
   handleDeleteSelected,
+  noWrapper = false, // SAFE: Default to original behavior
 }: TimelineToolbarProps) {
-  return (
-    <div className="border-b flex items-center px-4 py-3 gap-4">
+  // SAFE: Conditional wrapper based on noWrapper prop
+  const toolbarContent = (
       <TooltipProvider delayDuration={500}>
         {/* Play/Pause Button */}
         <Tooltip>
@@ -89,11 +91,11 @@ export function TimelineToolbar({
           className="text-xs text-muted-foreground font-mono px-2"
           style={{ minWidth: "18ch", textAlign: "center" }}
         >
-          {currentTime.toFixed(1)}s / {duration.toFixed(1)}s
+          {(currentTime || 0).toFixed(1)}s / {(duration || 0).toFixed(1)}s
         </div>
 
         {/* Test Clip Button - for debugging */}
-        {tracks.length === 0 && (
+        {(tracks?.length || 0) === 0 && (
           <>
             <div className="w-px h-6 bg-border mx-1" />
             <Tooltip>
@@ -215,6 +217,12 @@ export function TimelineToolbar({
           <TooltipContent>Playback Speed</TooltipContent>
         </Tooltip>
       </TooltipProvider>
+  );
+
+  // SAFE: Return with or without wrapper based on prop
+  return noWrapper ? toolbarContent : (
+    <div className="border-b flex items-center px-4 py-3 gap-4">
+      {toolbarContent}
     </div>
   );
 }
