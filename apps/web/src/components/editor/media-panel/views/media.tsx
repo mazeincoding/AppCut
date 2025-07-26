@@ -3,7 +3,15 @@
 import { useDragDrop } from "@/hooks/use-drag-drop";
 import { processMediaFiles } from "@/lib/media-processing";
 import { useMediaStore, type MediaItem } from "@/stores/media-store";
-import { Image, Loader2, Music, Plus, Video } from "lucide-react";
+import {
+  Image,
+  Loader2,
+  Music,
+  Plus,
+  Video,
+  ZoomIn,
+  ZoomOut,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -26,6 +34,7 @@ import { DraggableMediaItem } from "@/components/ui/draggable-item";
 import { useProjectStore } from "@/stores/project-store";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Slider } from "@/components/ui/slider";
 
 export function MediaView() {
   const { mediaItems, addMediaItem, removeMediaItem } = useMediaStore();
@@ -35,6 +44,12 @@ export function MediaView() {
   const [progress, setProgress] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [mediaFilter, setMediaFilter] = useState("all");
+  // Get media size from localStorage or default to 3
+  const [mediaSize, setMediaSize] = useState(
+    localStorage.getItem("mediaSize")
+      ? parseInt(localStorage.getItem("mediaSize")!, 10)
+      : 3
+  );
 
   const processFiles = async (files: FileList | File[]) => {
     if (!files || files.length === 0) return;
@@ -62,6 +77,23 @@ export function MediaView() {
       setIsProcessing(false);
       setProgress(0);
     }
+  };
+
+  const handleMediaSizeChange = (size: number) => {
+    setMediaSize(size);
+    localStorage.setItem("mediaSize", size.toString());
+  };
+
+  const handleSizeIncrease = () => {
+    handleMediaSizeChange(Math.min(5, mediaSize + 1));
+  };
+
+  const handleSizeDecrease = () => {
+    handleMediaSizeChange(Math.max(1, mediaSize - 1));
+  };
+
+  const handleSizeSliderChange = (values: number[]) => {
+    handleMediaSizeChange(values[0]);
   };
 
   const { isDragOver, dragProps } = useDragDrop({
@@ -95,6 +127,18 @@ export function MediaView() {
     const min = Math.floor(duration / 60);
     const sec = Math.floor(duration % 60);
     return `${min}:${sec.toString().padStart(2, "0")}`;
+  };
+
+  // Map size levels (1-5) to appropriate grid item widths
+  const getGridItemWidth = (size: number) => {
+    const sizeMap = {
+      1: 90,
+      2: 120,
+      3: 160,
+      4: 190,
+      5: 220,
+    };
+    return sizeMap[size as keyof typeof sizeMap] || 120;
   };
 
   const [filteredMediaItems, setFilteredMediaItems] = useState(mediaItems);
@@ -205,7 +249,7 @@ export function MediaView() {
         className={`h-full flex flex-col gap-1 transition-colors relative ${isDragOver ? "bg-accent/30" : ""}`}
         {...dragProps}
       >
-        <div className="p-3 pb-2 bg-panel">
+        <div className="p-3 pb-2 bg-panel flex justify-between">
           {/* Search and filter controls */}
           <div className="flex gap-2">
             <Select value={mediaFilter} onValueChange={setMediaFilter}>
@@ -240,6 +284,22 @@ export function MediaView() {
               )}
             </Button>
           </div>
+          <div className="flex items-center gap-1">
+            <Button variant="text" size="icon" onClick={handleSizeDecrease}>
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+            <Slider
+              className="w-16"
+              value={[mediaSize]}
+              onValueChange={handleSizeSliderChange}
+              min={1}
+              max={5}
+              step={1}
+            />
+            <Button variant="text" size="icon" onClick={handleSizeIncrease}>
+              <ZoomIn className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         <ScrollArea className="h-full">
@@ -254,9 +314,9 @@ export function MediaView() {
               />
             ) : (
               <div
-                className="grid gap-2"
+                className="grid gap-4"
                 style={{
-                  gridTemplateColumns: "repeat(auto-fill, 160px)",
+                  gridTemplateColumns: `repeat(auto-fill, minmax(${getGridItemWidth(mediaSize)}px, ${getGridItemWidth(mediaSize)}px))`,
                 }}
               >
                 {/* Render each media item as a draggable button */}
@@ -264,6 +324,7 @@ export function MediaView() {
                   <ContextMenu key={item.id}>
                     <ContextMenuTrigger>
                       <DraggableMediaItem
+                        size={mediaSize}
                         name={item.name}
                         preview={renderPreview(item)}
                         dragData={{
