@@ -65,8 +65,8 @@ export function EditorHeader() {
         variant="text"
         size="sm"
         style={{ 
-          backgroundColor: 'white', 
-          color: 'black',
+          backgroundColor: '#05c7c7', 
+          color: '#171717',
           height: '32px',
           borderRadius: '9999px',
           fontSize: '13px',
@@ -82,11 +82,11 @@ export function EditorHeader() {
         onClick={handleExport}
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = 'scale(1.05)';
-          e.currentTarget.style.backgroundColor = '#2563eb';
+          e.currentTarget.style.backgroundColor = '#05c7c7';
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.transform = 'scale(1)';
-          e.currentTarget.style.backgroundColor = '#3b82f6';
+          e.currentTarget.style.backgroundColor = '#05c7c7';
         }}
       >
         <Download className="align-text-bottom" style={{ width: '12px', height: '12px', marginRight: '8px' }} />

@@ -88,12 +88,13 @@ export function TabBar() {
                 // Responsive layout classes
                 showLabels ? "flex-col gap-2 px-3 pt-3 pb-2 mx-1 min-w-[52px]" : "justify-center p-2 mx-0.5 min-w-[40px]",
                 // Active/inactive states
-                activeTab === tabKey ? "text-primary bg-primary/10" : "text-muted-foreground bg-white/5"
+                activeTab === tabKey ? "bg-white/5" : "text-muted-foreground bg-white/5"
               )}
               onClick={() => setActiveTab(tabKey)}
               key={tabKey}
               style={{
-                transform: 'scale(1)'
+                transform: 'scale(1)',
+                color: activeTab === tabKey ? '#05c7c7' : undefined
               }}
               onMouseEnter={(e) => {
                 if (activeTab !== tabKey) {
@@ -108,7 +109,7 @@ export function TabBar() {
               <tab.icon className={cn(
                 "transition-all duration-200 mt-[5px]",
                 showLabels ? "!size-[1.5rem]" : "!size-[1.2rem]",
-                activeTab !== tabKey && "group-hover:text-blue-500"
+                activeTab !== tabKey && "group-hover:text-[#05c7c7]"
               )} />
               {showLabels && (
                 <span className="text-[0.65rem] tracking-wide mt-1 leading-none">

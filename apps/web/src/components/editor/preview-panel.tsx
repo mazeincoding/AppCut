@@ -440,7 +440,7 @@ function PreviewToolbar({ hasAnyElements }: { hasAnyElements: boolean }) {
             !hasAnyElements && "opacity-50"
           )}
         >
-          <span className="text-primary tabular-nums">
+          <span className="tabular-nums" style={{ color: '#05c7c7' }}>
             {formatTimeCode(
               currentTime,
               "HH:MM:SS:FF",
