@@ -629,13 +629,18 @@ export function TimelineTrackContent({
           const wouldOverlap = finalStartTime < existingEnd - ADJACENCY_TOLERANCE && 
             movingElementEnd > existingStart + ADJACENCY_TOLERANCE;
           
-          console.log('Overlap check:', {
-            finalStartTime,
-            movingElementEnd,
-            existingStart,
-            existingEnd,
+          // Calculate actual gap between videos
+          const gapBetweenVideos = Math.abs(finalStartTime - existingEnd);
+          const gapInMilliseconds = gapBetweenVideos * 1000;
+          
+          console.log('🎬 VIDEO GAP ANALYSIS:', {
+            video1End: existingEnd,
+            video2Start: finalStartTime,
+            actualGap: gapBetweenVideos,
+            gapInMs: gapInMilliseconds,
+            toleranceMs: ADJACENCY_TOLERANCE * 1000,
             wouldOverlap,
-            tolerance: ADJACENCY_TOLERANCE
+            elementNames: `${existingElement.name} -> Moving element`
           });
           
           return wouldOverlap;

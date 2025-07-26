@@ -145,19 +145,20 @@ export function TimelineElement({
     isBeingDragged && dragState.isDragging
       ? dragState.currentTime
       : element.startTime;
-  const elementLeft = elementStartTime * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel;
+  const elementLeft = 120 + (elementStartTime * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel);
   
   // Debug element positioning
-  console.log('🎬 ELEMENT POSITIONING DEBUG:', {
-    elementName: element.name,
-    elementId: element.id,
-    elementStartTime,
-    elementWidth,
-    elementLeft,
-    effectiveDuration,
-    zoomLevel,
-    isVisible: elementWidth > 0 && elementLeft >= 0
-  });
+  if (elementStartTime === 0) {
+    console.log('🎬 VIDEO AT 0.0s POSITION:', {
+      elementName: element.name,
+      elementStartTime,
+      pixelsPerSecond: TIMELINE_CONSTANTS.PIXELS_PER_SECOND,
+      zoomLevel,
+      offset: 320,
+      finalElementLeft: elementLeft,
+      shouldMatchRuler: true
+    });
+  }
 
   const handleDeleteElement = () => {
     removeElementFromTrack(track.id, element.id);

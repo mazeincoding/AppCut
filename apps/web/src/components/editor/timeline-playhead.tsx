@@ -58,8 +58,15 @@ export function TimelinePlayhead({
       ? trackLabelsRef.current.offsetWidth
       : 0;
   const leftPosition =
-    trackLabelsWidth + 180 +
+    325 +
     playheadPosition * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel;
+
+  console.log('🔴 PLAYHEAD HORIZONTAL POSITION:', {
+    leftPosition,
+    trackLabelsWidth,
+    playheadPosition,
+    currentTime
+  });
 
   return (
     <div

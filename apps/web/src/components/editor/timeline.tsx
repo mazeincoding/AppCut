@@ -1232,7 +1232,33 @@ export function Timeline() {
                             : "border-l border-muted-foreground/40"
                         }`}
                         style={{
-                          left: `${time * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel + 200}px`,
+                          left: `${(() => {
+                            const rulerPosition = time * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel + 320;
+                            if (time === 0) {
+                              console.log('📏 RULER 0.0s POSITION:', {
+                                time,
+                                pixelsPerSecond: TIMELINE_CONSTANTS.PIXELS_PER_SECOND,
+                                zoomLevel,
+                                offset: 320,
+                                finalPosition: rulerPosition
+                              });
+                              
+                              // Get actual page position after render
+                              setTimeout(() => {
+                                const rulerElement = document.querySelector('[style*="left: 320px"]');
+                                if (rulerElement) {
+                                  const rect = rulerElement.getBoundingClientRect();
+                                  console.log('📏 RULER 0.0s PAGE POSITION:', {
+                                    leftFromPageEdge: rect.left,
+                                    leftFromViewport: rect.x,
+                                    elementOffsetLeft: rulerElement.offsetLeft,
+                                    computedLeft: getComputedStyle(rulerElement).left
+                                  });
+                                }
+                              }, 100);
+                            }
+                            return rulerPosition;
+                          })()}px`,
                           top: '0px',
                           height: '32px',
                           zIndex: 1
@@ -1288,10 +1314,10 @@ export function Timeline() {
                   {tracks.map((track) => (
                     <div
                       key={track.id}
-                      className="flex items-center px-4 pr-16 border-b border-muted/30 group bg-foreground/5"
+                      className="flex items-start px-4 pr-24 border-b border-muted/30 group bg-foreground/5"
                       style={{ height: `${getTrackHeight(track.type)}px` }}
                     >
-                      <div className="flex items-center flex-1 min-w-0">
+                      <div className="flex items-center flex-1 min-w-0 pl-4">
                         <TrackIcon track={track} />
                       </div>
                       {track.muted && (
@@ -1394,16 +1420,16 @@ export function Timeline() {
 
 function TrackIcon({ track }: { track: TimelineTrack }) {
   return (
-    <>
+    <div className="flex items-center justify-start pl-2 pr-6 py-2 border-2 border-transparent rounded-md">
       {track.type === "media" && (
-        <Video className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+        <Video className="flex-shrink-0 text-muted-foreground" style={{ width: '200px', height: '24px', minWidth: '12px', minHeight: '24px', transform: 'translateX(-50px)' }} />
       )}
       {track.type === "text" && (
-        <TypeIcon className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+        <TypeIcon className="w-12 h-12 flex-shrink-0 text-muted-foreground" />
       )}
       {track.type === "audio" && (
-        <Music className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+        <Music className="w-12 h-12 flex-shrink-0 text-muted-foreground" />
       )}
-    </>
+    </div>
   );
 }
