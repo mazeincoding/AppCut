@@ -191,7 +191,7 @@ export function isActionBound(action: Action): boolean {
 export function useActionHandler<A extends Action>(
   action: A,
   handler: ActionFunc<A>,
-  isActive: MutableRefObject<boolean> | boolean | undefined = undefined
+  isActive: MutableRefObject<boolean> | boolean | undefined
 ) {
   const handlerRef = useRef(handler);
   const [isBound, setIsBound] = useState(false);

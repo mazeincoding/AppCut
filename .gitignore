@@ -27,6 +27,4 @@ node_modules
 *.env
 
 # cursor
-
-.cursor/
 bun.lockb

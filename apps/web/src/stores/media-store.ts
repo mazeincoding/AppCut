@@ -183,24 +183,58 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     }
   },
 
-  removeMediaItem: async (projectId, id: string) => {
+  removeMediaItem: async (projectId: string, id: string) => {
     const state = get();
     const item = state.mediaItems.find((media) => media.id === id);
 
     // Cleanup object URLs to prevent memory leaks
-    if (item && item.url) {
+    if (item?.url) {
       URL.revokeObjectURL(item.url);
       if (item.thumbnailUrl) {
         URL.revokeObjectURL(item.thumbnailUrl);
       }
     }
 
-    // Remove from local state immediately
+    // 1) Remove from local state immediately
     set((state) => ({
       mediaItems: state.mediaItems.filter((media) => media.id !== id),
     }));
 
-    // Remove from persistent storage
+    // 2) Cascade into the timeline: remove any elements using this media ID
+    const timeline = useTimelineStore.getState();
+    const {
+      tracks,
+      removeElementFromTrack,
+      removeElementFromTrackWithRipple,
+      rippleEditingEnabled,
+      pushHistory,
+    } = timeline;
+
+    // Find all elements that reference this media
+    const elementsToRemove: Array<{ trackId: string; elementId: string }> = [];
+    for (const track of tracks) {
+      for (const el of track.elements) {
+        if (el.type === "media" && el.mediaId === id) {
+          elementsToRemove.push({ trackId: track.id, elementId: el.id });
+        }
+      }
+    }
+
+    // If there are elements to remove, push history once before batch removal
+    if (elementsToRemove.length > 0) {
+      pushHistory();
+
+      // Remove all elements without pushing additional history entries
+      for (const { trackId, elementId } of elementsToRemove) {
+        if (rippleEditingEnabled) {
+          removeElementFromTrackWithRipple(trackId, elementId, false);
+        } else {
+          removeElementFromTrack(trackId, elementId, false);
+        }
+      }
+    }
+
+    // 3) Remove from persistent storage
     try {
       await storageService.deleteMediaItem(projectId, id);
     } catch (error) {
@@ -219,15 +253,19 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
         mediaItems.map(async (item) => {
           if (item.type === "video" && item.file) {
             try {
-              const { thumbnailUrl, width, height } = await generateVideoThumbnail(item.file);
+              const { thumbnailUrl, width, height } =
+                await generateVideoThumbnail(item.file);
               return {
                 ...item,
                 thumbnailUrl,
                 width: width || item.width,
-                height: height || item.height
+                height: height || item.height,
               };
             } catch (error) {
-              console.error(`Failed to regenerate thumbnail for video ${item.id}:`, error);
+              console.error(
+                `Failed to regenerate thumbnail for video ${item.id}:`,
+                error
+              );
               return item;
             }
           }
