@@ -1163,7 +1163,7 @@ export function Timeline() {
         </div>
 
         {/* Timeline Header with Ruler */}
-        <div className="flex bg-panel sticky top-0 z-10">
+        <div className="flex bg-panel sticky top-0 z-10" style={{ borderTop: '3px solid #333333' }}>
           {/* Track Labels Header */}
           <div className="w-80 flex-shrink-0 bg-muted/30 border-r flex items-center justify-between px-4 py-2">
             {/* Empty space */}
@@ -1181,7 +1181,7 @@ export function Timeline() {
             onClick={handleTimelineContentClick}
             data-ruler-area
             ref={(el) => {
-              // Ruler container ref (debug logging removed)
+              // Ruler container ref
             }}
           >
             <ScrollArea className="w-full" ref={rulerScrollRef}>
@@ -1191,7 +1191,6 @@ export function Timeline() {
                 style={{
                   width: `${dynamicTimelineWidth}px`,
                   height: '28px',
-                  borderBottom: '3px solid #333333',
                 }}
                 onMouseDown={handleRulerMouseDown}
               >
@@ -1213,7 +1212,6 @@ export function Timeline() {
                   const interval = getTimeInterval(zoomLevel);
                   const markerCount = Math.ceil(duration / interval) + 1;
 
-                  // Timeline ruler calculations (debug logging removed)
 
                   return Array.from({ length: markerCount }, (_, i) => {
                     const time = i * interval;
@@ -1222,7 +1220,6 @@ export function Timeline() {
                     const isMainMarker =
                       time % (interval >= 1 ? Math.max(1, interval) : 1) === 0;
 
-                    // Marker rendering (debug logging removed to prevent console spam)
 
                     return (
                       <div
@@ -1234,31 +1231,7 @@ export function Timeline() {
                         }`}
                         style={{
                           left: `${(() => {
-                            const rulerPosition = time * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel + 320;
-                            if (time === 0) {
-                              console.log('📏 RULER 0.0s POSITION:', {
-                                time,
-                                pixelsPerSecond: TIMELINE_CONSTANTS.PIXELS_PER_SECOND,
-                                zoomLevel,
-                                offset: 320,
-                                finalPosition: rulerPosition
-                              });
-                              
-                              // Get actual page position after render
-                              setTimeout(() => {
-                                const rulerElement = document.querySelector('[style*="left: 320px"]');
-                                if (rulerElement) {
-                                  const rect = rulerElement.getBoundingClientRect();
-                                  console.log('📏 RULER 0.0s PAGE POSITION:', {
-                                    leftFromPageEdge: rect.left,
-                                    leftFromViewport: rect.x,
-                                    elementOffsetLeft: rulerElement.offsetLeft,
-                                    computedLeft: getComputedStyle(rulerElement).left
-                                  });
-                                }
-                              }, 100);
-                            }
-                            return rulerPosition;
+                            return time * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel + 320;
                           })()}px`,
                           top: '0px',
                           height: '32px',
@@ -1444,6 +1417,17 @@ export function Timeline() {
             </ScrollArea>
           </div>
         </div>
+        
+        {/* Timeline tracks bottom border */}
+        <div 
+          style={{
+            width: '100%',
+            height: '3px',
+            backgroundColor: '#333333',
+            position: 'relative',
+            zIndex: 50
+          }}
+        />
       </div>
     </div>
   );
