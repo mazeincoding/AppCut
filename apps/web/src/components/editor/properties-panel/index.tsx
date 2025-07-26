@@ -32,7 +32,7 @@ export function PropertiesPanel() {
   };
 
   const emptyView = (
-    <div className="space-y-6 p-6 pt-8">
+    <div className="space-y-6 p-6 pt-8 bg-gray-800/50 rounded-lg">
       {/* Media Properties */}
       <div className="flex flex-col gap-3">
         <PropertyItem label="Name:" value={activeProject?.name || ""} />
@@ -80,7 +80,7 @@ export function PropertiesPanel() {
 
             if (element?.type === "text") {
               return (
-                <div key={elementId} className="p-6 pt-8">
+                <div key={elementId} className="p-6 pt-8 bg-gray-800/50 rounded-lg">
                   <TextProperties element={element} trackId={trackId} />
                 </div>
               );
@@ -92,14 +92,14 @@ export function PropertiesPanel() {
 
               if (mediaItem?.type === "audio") {
                 return (
-                  <div key={elementId} className="p-6 pt-8">
+                  <div key={elementId} className="p-6 pt-8 bg-gray-800/50 rounded-lg">
                     <AudioProperties element={element} />
                   </div>
                 );
               }
 
               return (
-                <div key={elementId} className="p-6 pt-8">
+                <div key={elementId} className="p-6 pt-8 bg-gray-800/50 rounded-lg">
                   <MediaProperties element={element} />
                 </div>
               );

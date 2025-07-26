@@ -79,7 +79,7 @@ export function TimelineToolbarEnhanced({
                       className="h-8 w-8"
                       style={{
                         backgroundColor: 'transparent',
-                        borderColor: selectedTool === 'cut' ? '#3b82f6' : undefined,
+                        borderColor: 'transparent',
                         color: selectedTool === 'cut' ? '#3b82f6' : undefined
                       }}
                     >
@@ -129,7 +129,7 @@ export function TimelineToolbarEnhanced({
                     className="h-8 w-8"
                     style={{
                       backgroundColor: 'transparent',
-                      borderColor: isSnappingEnabled ? '#3b82f6' : undefined,
+                      borderColor: 'transparent',
                       color: isSnappingEnabled ? '#3b82f6' : undefined
                     }}
                   >

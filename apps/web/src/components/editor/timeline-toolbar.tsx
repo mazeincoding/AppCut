@@ -71,7 +71,7 @@ export function TimelineToolbar({
               size="icon"
               onClick={toggle}
               className="mr-2"
-              style={{ backgroundColor: 'transparent' }}
+              style={{ backgroundColor: 'transparent', borderColor: 'transparent' }}
             >
               {isPlaying ? (
                 <Pause className="h-4 w-4" />
@@ -205,7 +205,7 @@ export function TimelineToolbar({
               value={speed.toFixed(1)}
               onValueChange={(value) => setSpeed(parseFloat(value))}
             >
-              <SelectTrigger className="w-[90px] h-8">
+              <SelectTrigger className="w-[90px] h-8" style={{ borderColor: 'transparent' }}>
                 <SelectValue placeholder="1.0x" />
               </SelectTrigger>
               <SelectContent>
