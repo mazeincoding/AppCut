@@ -291,7 +291,7 @@ export default function ProjectsPage() {
           />
         ) : (
           <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-            {sortedProjects.map((project) => (
+            {sortedProjects.slice(0, 5).map((project) => (
               <ProjectCard
                 key={project.id}
                 project={project}
