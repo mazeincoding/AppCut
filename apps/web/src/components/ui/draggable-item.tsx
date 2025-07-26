@@ -24,6 +24,10 @@ export interface DraggableMediaItemProps {
   showPlusOnDrag?: boolean;
   showLabel?: boolean;
   rounded?: boolean;
+  /**
+   * media item size
+   */
+  size?: number;
 }
 
 export function DraggableMediaItem({
@@ -37,6 +41,7 @@ export function DraggableMediaItem({
   showPlusOnDrag = true,
   showLabel = true,
   rounded = true,
+  size,
 }: DraggableMediaItemProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
@@ -88,7 +93,14 @@ export function DraggableMediaItem({
 
   return (
     <>
-      <div ref={dragRef} className="relative group w-28 h-28">
+      <div
+        ref={dragRef}
+        className={cn(
+          "relative group",
+          // size is provided for resizeable items, fill the width in that case
+          size ? "size-full" : "size-28"
+        )}
+      >
         <div
           className={`flex flex-col gap-1 p-0 h-auto w-full relative cursor-default ${className}`}
         >
