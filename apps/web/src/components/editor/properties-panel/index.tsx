@@ -42,12 +42,12 @@ export function PropertiesPanel() {
           value={`${canvasSize.width} × ${canvasSize.height}`}
         />
         <div className="flex justify-between items-center">
-          <Label className="text-xs text-muted-foreground">Frame rate:</Label>
+          <Label className="text-xs text-muted-foreground ml-[5px]">Frame rate:</Label>
           <Select
             value={(activeProject?.fps || 30).toString()}
             onValueChange={handleFpsChange}
           >
-            <SelectTrigger className="w-32 h-6 text-xs !border-transparent">
+            <SelectTrigger className="w-32 h-6 text-xs !border-transparent mr-[5px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -114,8 +114,8 @@ export function PropertiesPanel() {
 function PropertyItem({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between">
-      <Label className="text-xs text-muted-foreground">{label}</Label>
-      <span className="text-xs text-right">{value}</span>
+      <Label className="text-xs text-muted-foreground ml-[5px]">{label}</Label>
+      <span className="text-xs text-right mr-[5px]">{value}</span>
     </div>
   );
 }

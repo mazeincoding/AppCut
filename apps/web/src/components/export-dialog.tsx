@@ -400,7 +400,7 @@ export function ExportDialog() {
             <Alert className={`${
               memoryLevel === 'error' ? 'border-red-500 bg-red-50 dark:bg-red-950' :
               memoryLevel === 'critical' ? 'border-orange-500 bg-orange-50 dark:bg-orange-950' :
-              memoryLevel === 'warning' ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-950' :
+              memoryLevel === 'warning' ? 'border-red-500 bg-red-50 dark:bg-red-950' :
               'border-blue-500 bg-blue-50 dark:bg-blue-950'
             }`}>
               <div className="flex items-center space-x-2">
@@ -410,14 +410,14 @@ export function ExportDialog() {
                     'text-orange-600 dark:text-orange-400'
                   }`} />
                 ) : memoryLevel === 'warning' ? (
-                  <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                  <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
                 ) : (
                   <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 )}
                 <AlertDescription className={`text-[13px] ${
                   memoryLevel === 'error' ? 'text-red-800 dark:text-red-200' :
                   memoryLevel === 'critical' ? 'text-orange-800 dark:text-orange-200' :
-                  memoryLevel === 'warning' ? 'text-yellow-800 dark:text-yellow-200' :
+                  memoryLevel === 'warning' ? 'text-red-800 dark:text-red-200' :
                   'text-blue-800 dark:text-blue-200'
                 }`}>
                   {memoryWarning}

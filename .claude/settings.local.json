@@ -67,7 +67,11 @@
       "Bash(git rm:*)",
       "Bash(bun add:*)",
       "Bash(move:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:github.com)"
     ],
     "deny": []
   }
