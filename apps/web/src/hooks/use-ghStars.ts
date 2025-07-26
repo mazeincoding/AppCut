@@ -58,7 +58,7 @@ export function useGitHubStars(initialStars?: string) {
       setState((prev) => ({ ...prev, isLoading: true }));
 
       const checkCache = () => {
-        if (!clientCache.isLoading || isMounted) {
+        if (!clientCache.isLoading && isMounted) {
           setState({
             stars: clientCache.data || FALLBACK_STARS,
             isLoading: false,

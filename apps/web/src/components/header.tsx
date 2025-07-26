@@ -33,7 +33,7 @@ export function Header({ initialStars }: HeaderProps) {
           height={32}
           className="transition-transform duration-200 group-hover:scale-110"
         />
-        <div className="absolute rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-200 blur-sm"></div>
+        <div className="absolute inset-0 bg-blue-500 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-200 blur-sm"></div>
       </div>
       <span className="text-xl font-semibold hidden md:block">OpenCut</span>
     </Link>
