@@ -35,7 +35,7 @@ export function TimelineToolbarEnhanced({
   
   // Enhanced toolbar implementation - single row layout
   return (
-    <div className="border-b flex items-center px-4 py-3 gap-4">
+    <div className="border-b flex items-center px-4 py-[8px] gap-4">
       {/* SAFE: Original toolbar content without wrapper */}
       <TimelineToolbar {...existingToolbarProps} noWrapper={true} />
       
@@ -58,11 +58,11 @@ export function TimelineToolbarEnhanced({
                       className="h-8 w-8"
                       style={{
                         backgroundColor: 'transparent',
-                        borderColor: 'transparent',
+                        border: 'none',
                         color: selectedTool === 'select' ? '#ffffff' : undefined
                       }}
                     >
-                      <MousePointer className="h-4 w-4" />
+                      <MousePointer className="h-3 w-3" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
@@ -79,11 +79,11 @@ export function TimelineToolbarEnhanced({
                       className="h-8 w-8"
                       style={{
                         backgroundColor: 'transparent',
-                        borderColor: 'transparent',
+                        border: 'none',
                         color: selectedTool === 'cut' ? '#3b82f6' : undefined
                       }}
                     >
-                      <Scissors className="h-4 w-4" />
+                      <Scissors className="h-3 w-3" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
@@ -100,11 +100,11 @@ export function TimelineToolbarEnhanced({
                       className="h-8 w-8"
                       style={{
                         backgroundColor: 'transparent',
-                        borderColor: 'transparent',
+                        border: 'none',
                         color: selectedTool === 'text' ? '#3b82f6' : undefined
                       }}
                     >
-                      <Type className="h-4 w-4" />
+                      <Type className="h-3 w-3" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
@@ -133,7 +133,7 @@ export function TimelineToolbarEnhanced({
                       color: isSnappingEnabled ? '#3b82f6' : undefined
                     }}
                   >
-                    <Magnet className="h-4 w-4" />
+                    <Magnet className="h-3 w-3" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom">
@@ -154,9 +154,9 @@ export function TimelineToolbarEnhanced({
                   variant="outline" 
                   onClick={() => setZoomLevel(Math.max(0.1, zoomLevel - 0.1))}
                   className="h-8 w-8"
-                  style={{ backgroundColor: 'transparent' }}
+                  style={{ backgroundColor: 'transparent', border: 'none' }}
                 >
-                  <ZoomOut className="h-4 w-4" />
+                  <ZoomOut className="h-3 w-3" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom">
@@ -164,7 +164,7 @@ export function TimelineToolbarEnhanced({
               </TooltipContent>
             </Tooltip>
             
-            <span className="text-sm px-2 py-1 bg-background rounded border min-w-[60px] text-center">
+            <span className="text-sm px-2 py-1 bg-background rounded border min-w-[60px] text-center" style={{ border: 'none' }}>
               {Math.round(zoomLevel * 100)}%
             </span>
             
@@ -175,9 +175,9 @@ export function TimelineToolbarEnhanced({
                   variant="outline" 
                   onClick={() => setZoomLevel(Math.min(5, zoomLevel + 0.1))}
                   className="h-8 w-8"
-                  style={{ backgroundColor: 'transparent' }}
+                  style={{ backgroundColor: 'transparent', border: 'none' }}
                 >
-                  <ZoomIn className="h-4 w-4" />
+                  <ZoomIn className="h-3 w-3" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom">
