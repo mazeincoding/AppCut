@@ -877,7 +877,7 @@ export function AiView() {
               </>
             ) : (
               <>
-                🧪 Test Generate (No Cost)
+                Generate Preview
               </>
             )}
           </Button>

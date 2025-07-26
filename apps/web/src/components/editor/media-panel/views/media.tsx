@@ -61,10 +61,18 @@ const EnhancedVideoPreview = ({ item }: { item: MediaItem }) => {
   // Generate enhanced thumbnails if not available
   useEffect(() => {
     if (item.type === 'video' && !item.thumbnails && !item.thumbnailError) {
-      generateEnhancedThumbnails(item.id, {
-        resolution: 'medium',
-        sceneDetection: true
-      });
+      try {
+        generateEnhancedThumbnails(item.id, {
+          resolution: 'medium',
+          sceneDetection: true
+        });
+      } catch (error) {
+        console.error('Failed to generate thumbnails for media item:', {
+          itemId: item.id,
+          itemName: item.name,
+          error
+        });
+      }
     }
   }, [item.id, item.type, item.thumbnails, item.thumbnailError, generateEnhancedThumbnails]);
 

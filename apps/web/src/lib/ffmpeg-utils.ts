@@ -670,7 +670,12 @@ export const generateEnhancedThumbnails = async (
 
   // Validate file type - handle cases where MIME type might be missing
   if (!videoFile || !videoFile.type) {
-    throw new Error(`Invalid file for thumbnail generation: file or MIME type is missing`);
+    console.error(`Invalid file for thumbnail generation: file or MIME type is missing`, {
+      fileName: videoFile?.name,
+      fileType: videoFile?.type,
+      fileSize: videoFile?.size
+    });
+    return [];
   }
   
   // If MIME type is empty or doesn't start with 'video/', try to infer from filename

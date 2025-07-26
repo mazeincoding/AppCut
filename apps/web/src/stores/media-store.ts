@@ -410,14 +410,31 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
       };
 
       const startTime = Date.now();
-      const { thumbnails, metadata } = await generateEnhancedThumbnails(videoFile, defaultOptions);
+      let thumbnails: string[] = [];
+      let metadata: any = { timestamps: [], duration: 0 };
       
-      console.log('🎬 FFMPEG THUMBNAIL COMPLETE:', {
-        mediaItemId: mediaId,
-        thumbnailCount: thumbnails.length,
-        duration: metadata.duration,
-        processingTime: Date.now() - startTime
-      });
+      try {
+        const result = await generateEnhancedThumbnails(videoFile, defaultOptions);
+        thumbnails = result.thumbnails;
+        metadata = result.metadata;
+        
+        console.log('🎬 FFMPEG THUMBNAIL COMPLETE:', {
+          mediaItemId: mediaId,
+          thumbnailCount: thumbnails.length,
+          duration: metadata.duration,
+          processingTime: Date.now() - startTime
+        });
+      } catch (thumbnailError) {
+        console.error('❌ Thumbnail generation failed:', {
+          mediaId,
+          error: thumbnailError,
+          fileName: videoFile?.name,
+          fileType: videoFile?.type
+        });
+        // Continue with empty thumbnails rather than throwing
+        thumbnails = [];
+        metadata = { timestamps: [], duration: 0 };
+      }
       
       // Cache thumbnails
       for (let i = 0; i < thumbnails.length; i++) {
