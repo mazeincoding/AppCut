@@ -53,9 +53,14 @@ export function TimelineToolbarEnhanced({
                   <TooltipTrigger asChild>
                     <Button
                       size="sm"
-                      variant={selectedTool === 'select' ? 'default' : 'outline'}
+                      variant={selectedTool === 'select' ? 'outline' : 'outline'}
                       onClick={() => setSelectedTool('select')}
                       className="h-8 w-8"
+                      style={{
+                        backgroundColor: 'transparent',
+                        borderColor: 'transparent',
+                        color: selectedTool === 'select' ? '#ffffff' : undefined
+                      }}
                     >
                       <MousePointer className="h-4 w-4" />
                     </Button>
@@ -69,9 +74,14 @@ export function TimelineToolbarEnhanced({
                   <TooltipTrigger asChild>
                     <Button
                       size="sm"
-                      variant={selectedTool === 'cut' ? 'default' : 'outline'}
+                      variant="outline"
                       onClick={() => setSelectedTool('cut')}
                       className="h-8 w-8"
+                      style={{
+                        backgroundColor: 'transparent',
+                        borderColor: selectedTool === 'cut' ? '#3b82f6' : undefined,
+                        color: selectedTool === 'cut' ? '#3b82f6' : undefined
+                      }}
                     >
                       <Scissors className="h-4 w-4" />
                     </Button>
@@ -85,9 +95,14 @@ export function TimelineToolbarEnhanced({
                   <TooltipTrigger asChild>
                     <Button
                       size="sm"
-                      variant={selectedTool === 'text' ? 'default' : 'outline'}
+                      variant="outline"
                       onClick={() => setSelectedTool('text')}
                       className="h-8 w-8"
+                      style={{
+                        backgroundColor: 'transparent',
+                        borderColor: selectedTool === 'text' ? '#3b82f6' : undefined,
+                        color: selectedTool === 'text' ? '#3b82f6' : undefined
+                      }}
                     >
                       <Type className="h-4 w-4" />
                     </Button>
@@ -109,9 +124,14 @@ export function TimelineToolbarEnhanced({
                 <TooltipTrigger asChild>
                   <Button
                     size="sm"
-                    variant={isSnappingEnabled ? 'default' : 'outline'}
+                    variant="outline"
                     onClick={() => setIsSnappingEnabled(!isSnappingEnabled)}
                     className="h-8 w-8"
+                    style={{
+                      backgroundColor: 'transparent',
+                      borderColor: isSnappingEnabled ? '#3b82f6' : undefined,
+                      color: isSnappingEnabled ? '#3b82f6' : undefined
+                    }}
                   >
                     <Magnet className="h-4 w-4" />
                   </Button>
@@ -134,6 +154,7 @@ export function TimelineToolbarEnhanced({
                   variant="outline" 
                   onClick={() => setZoomLevel(Math.max(0.1, zoomLevel - 0.1))}
                   className="h-8 w-8"
+                  style={{ backgroundColor: 'transparent' }}
                 >
                   <ZoomOut className="h-4 w-4" />
                 </Button>
@@ -154,6 +175,7 @@ export function TimelineToolbarEnhanced({
                   variant="outline" 
                   onClick={() => setZoomLevel(Math.min(5, zoomLevel + 0.1))}
                   className="h-8 w-8"
+                  style={{ backgroundColor: 'transparent' }}
                 >
                   <ZoomIn className="h-4 w-4" />
                 </Button>

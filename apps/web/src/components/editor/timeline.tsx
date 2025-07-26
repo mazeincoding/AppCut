@@ -1147,6 +1147,25 @@ export function Timeline() {
             playheadRef={playheadRef}
           />
         )}
+        {/* Current Timeline Content Row */}
+        <div className="flex bg-panel border-b border-border/50 sticky top-0 z-10">
+          {/* Content Label */}
+          <div className="w-48 flex-shrink-0 bg-muted/20 border-r flex items-center justify-between px-3 py-2">
+            {/* Empty space */}
+          </div>
+
+          {/* Content Information Area */}
+          <div className="flex-1 relative overflow-hidden bg-background/50" style={{ height: '32px' }}>
+            <div className="flex items-center px-3 py-2 h-full">
+              {selectedElements.length > 0 && (
+                <span className="text-xs text-muted-foreground">
+                  {`${selectedElements.length} element${selectedElements.length === 1 ? '' : 's'} selected`}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Timeline Header with Ruler */}
         <div className="flex bg-panel sticky top-0 z-10">
           {/* Track Labels Header */}
@@ -1219,16 +1238,17 @@ export function Timeline() {
                         style={{
                           left: `${time * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel}px`,
                           top: '0px',
-                          height: '500px',
+                          height: '32px',
                           zIndex: 1
                         }}
                       >
                         <span
-                          className={`absolute top-0 left-1.5 text-[0.65rem] ${
+                          className={`absolute left-1.5 text-[0.65rem] ${
                             isMainMarker
                               ? "text-muted-foreground font-medium"
                               : "text-muted-foreground/70"
                           }`}
+                          style={{ top: '6px' }}
                         >
                           {(() => {
                             const formatTime = (seconds: number) => {

@@ -67,10 +67,11 @@ export function TimelineToolbar({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              variant="text"
+              variant="outline"
               size="icon"
               onClick={toggle}
               className="mr-2"
+              style={{ backgroundColor: 'transparent' }}
             >
               {isPlaying ? (
                 <Pause className="h-4 w-4" />
@@ -128,7 +129,7 @@ export function TimelineToolbar({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="text" size="icon" onClick={handleSplitSelected} className="mx-2">
+            <Button variant="outline" size="icon" onClick={handleSplitSelected} className="mx-2" style={{ backgroundColor: 'transparent' }}>
               <Scissors className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
@@ -137,7 +138,7 @@ export function TimelineToolbar({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="text" size="icon" className="mx-2">
+            <Button variant="outline" size="icon" className="mx-2" style={{ backgroundColor: 'transparent' }}>
               <ArrowLeftToLine className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
@@ -146,7 +147,7 @@ export function TimelineToolbar({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="text" size="icon" className="mx-2">
+            <Button variant="outline" size="icon" className="mx-2" style={{ backgroundColor: 'transparent' }}>
               <ArrowRightToLine className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
@@ -155,7 +156,7 @@ export function TimelineToolbar({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="text" size="icon" className="mx-2">
+            <Button variant="outline" size="icon" className="mx-2" style={{ backgroundColor: 'transparent' }}>
               <SplitSquareHorizontal className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
@@ -165,10 +166,11 @@ export function TimelineToolbar({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              variant="text"
+              variant="outline"
               size="icon"
               onClick={handleDuplicateSelected}
               className="mx-2"
+              style={{ backgroundColor: 'transparent' }}
             >
               <Copy className="h-4 w-4" />
             </Button>
@@ -178,7 +180,7 @@ export function TimelineToolbar({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="text" size="icon" onClick={handleFreezeSelected} className="mx-2">
+            <Button variant="outline" size="icon" onClick={handleFreezeSelected} className="mx-2" style={{ backgroundColor: 'transparent' }}>
               <Snowflake className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
@@ -187,7 +189,7 @@ export function TimelineToolbar({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="text" size="icon" onClick={handleDeleteSelected} className="mx-2">
+            <Button variant="outline" size="icon" onClick={handleDeleteSelected} className="mx-2" style={{ backgroundColor: 'transparent' }}>
               <Trash2 className="h-4 w-4" />
             </Button>
           </TooltipTrigger>

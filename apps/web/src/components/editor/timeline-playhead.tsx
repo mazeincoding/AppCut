@@ -74,10 +74,16 @@ export function TimelinePlayhead({
       onMouseDown={handlePlayheadMouseDown}
     >
       {/* The red line spanning full height */}
-      <div className="absolute left-0 w-2 bg-red-600 cursor-col-resize h-full shadow-xl shadow-red-600/80 border-l border-red-400" />
+      <div 
+        className="absolute left-0 cursor-col-resize h-full"
+        style={{
+          width: '2px',
+          backgroundColor: '#dc2626',
+          borderLeft: '1px solid #ef4444',
+          boxShadow: '0 0 15px rgba(220, 38, 38, 0.8), inset 0 0 5px rgba(220, 38, 38, 0.5)'
+        }}
+      />
 
-      {/* Red dot indicator at the top (in ruler area) */}
-      <div className="absolute top-1 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-red-600 rounded-full border-2 border-red-400 shadow-xl shadow-red-600/80" />
     </div>
   );
 }
