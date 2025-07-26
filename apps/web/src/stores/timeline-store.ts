@@ -96,7 +96,11 @@ interface TimelineStore {
   removeTrack: (trackId: string) => void;
   removeTrackWithRipple: (trackId: string) => void;
   addElementToTrack: (trackId: string, element: CreateTimelineElement) => void;
-  removeElementFromTrack: (trackId: string, elementId: string) => void;
+  removeElementFromTrack: (
+    trackId: string,
+    elementId: string,
+    pushHistory?: boolean
+  ) => void;
   moveElementToTrack: (
     fromTrackId: string,
     toTrackId: string,
@@ -156,7 +160,8 @@ interface TimelineStore {
   ) => void;
   removeElementFromTrackWithRipple: (
     trackId: string,
-    elementId: string
+    elementId: string,
+    pushHistory?: boolean
   ) => void;
 
   // Computed values
@@ -553,13 +558,13 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       get().selectElement(trackId, newElement.id);
     },
 
-    removeElementFromTrack: (trackId, elementId) => {
+    removeElementFromTrack: (trackId, elementId, pushHistory = true) => {
       const { rippleEditingEnabled } = get();
 
       if (rippleEditingEnabled) {
-        get().removeElementFromTrackWithRipple(trackId, elementId);
+        get().removeElementFromTrackWithRipple(trackId, elementId, pushHistory);
       } else {
-        get().pushHistory();
+        if (pushHistory) get().pushHistory();
         updateTracksAndSave(
           get()
             ._tracks.map((track) =>
@@ -577,12 +582,16 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       }
     },
 
-    removeElementFromTrackWithRipple: (trackId, elementId) => {
+    removeElementFromTrackWithRipple: (
+      trackId,
+      elementId,
+      pushHistory = true
+    ) => {
       const { _tracks, rippleEditingEnabled } = get();
 
       if (!rippleEditingEnabled) {
         // If ripple editing is disabled, use regular removal
-        get().removeElementFromTrack(trackId, elementId);
+        get().removeElementFromTrack(trackId, elementId, pushHistory);
         return;
       }
 
@@ -591,7 +600,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
 
       if (!element || !track) return;
 
-      get().pushHistory();
+      if (pushHistory) get().pushHistory();
 
       const elementStartTime = element.startTime;
       const elementDuration =
@@ -745,13 +754,16 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       pushHistory = true
     ) => {
       if (pushHistory) get().pushHistory();
+      const clampedStartTime = Math.max(0, startTime);
       updateTracksAndSave(
         get()._tracks.map((track) =>
           track.id === trackId
             ? {
                 ...track,
                 elements: track.elements.map((element) =>
-                  element.id === elementId ? { ...element, startTime } : element
+                  element.id === elementId
+                    ? { ...element, startTime: clampedStartTime }
+                    : element
                 ),
               }
             : track
@@ -790,8 +802,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
 
         const updatedElements = currentTrack.elements.map((currentElement) => {
           if (currentElement.id === elementId && currentTrack.id === trackId) {
-            // Update the moved element
-            return { ...currentElement, startTime: newStartTime };
+            return { ...currentElement, startTime: Math.max(0, newStartTime) };
           }
 
           // Only apply ripple effects if we should process this track

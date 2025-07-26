@@ -8,13 +8,15 @@ import { useKeybindingsStore } from "@/stores/keybindings-store";
  * the appropriate actions based on keybindings
  */
 export function useKeybindingsListener() {
-  const { keybindings, getKeybindingString, keybindingsEnabled } =
+  const { keybindings, getKeybindingString, keybindingsEnabled, isRecording } =
     useKeybindingsStore();
 
   useEffect(() => {
     const handleKeyDown = (ev: KeyboardEvent) => {
       // Do not check keybinds if the mode is disabled
       if (!keybindingsEnabled) return;
+      // ignore key events if user is changing keybindings
+      if (isRecording) return;
 
       const binding = getKeybindingString(ev);
       if (!binding) return;
@@ -45,7 +47,7 @@ export function useKeybindingsListener() {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [keybindings, getKeybindingString, keybindingsEnabled]);
+  }, [keybindings, getKeybindingString, keybindingsEnabled, isRecording]);
 }
 
 /**

@@ -23,6 +23,7 @@ import { formatTimeCode } from "@/lib/time";
 import { FONT_CLASS_MAP } from "@/lib/font-config";
 import { BackgroundSettings } from "../background-settings";
 import { useProjectStore } from "@/stores/project-store";
+import { TextElementDragState } from "@/types/editor";
 
 interface ActiveElement {
   element: TimelineElement;
@@ -31,7 +32,7 @@ interface ActiveElement {
 }
 
 export function PreviewPanel() {
-  const { tracks, getTotalDuration } = useTimelineStore();
+  const { tracks, getTotalDuration, updateTextElement } = useTimelineStore();
   const { mediaItems } = useMediaStore();
   const { currentTime, toggle, setCurrentTime, isPlaying } = usePlaybackStore();
   const { canvasSize } = useEditorStore();
@@ -43,6 +44,19 @@ export function PreviewPanel() {
   });
   const [isExpanded, setIsExpanded] = useState(false);
   const { activeProject } = useProjectStore();
+  const [dragState, setDragState] = useState<TextElementDragState>({
+    isDragging: false,
+    elementId: null,
+    trackId: null,
+    startX: 0,
+    startY: 0,
+    initialElementX: 0,
+    initialElementY: 0,
+    currentX: 0,
+    currentY: 0,
+    elementWidth: 0,
+    elementHeight: 0,
+  });
 
   useEffect(() => {
     const updatePreviewSize = () => {
@@ -128,6 +142,86 @@ export function PreviewPanel() {
       document.body.style.overflow = "";
     };
   }, [isExpanded]);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!dragState.isDragging) return;
+
+      const deltaX = e.clientX - dragState.startX;
+      const deltaY = e.clientY - dragState.startY;
+
+      const scaleRatio = previewDimensions.width / canvasSize.width;
+      const newX = dragState.initialElementX + deltaX / scaleRatio;
+      const newY = dragState.initialElementY + deltaY / scaleRatio;
+
+      const halfWidth = dragState.elementWidth / scaleRatio / 2;
+      const halfHeight = dragState.elementHeight / scaleRatio / 2;
+
+      const constrainedX = Math.max(
+        -canvasSize.width / 2 + halfWidth,
+        Math.min(canvasSize.width / 2 - halfWidth, newX)
+      );
+      const constrainedY = Math.max(
+        -canvasSize.height / 2 + halfHeight,
+        Math.min(canvasSize.height / 2 - halfHeight, newY)
+      );
+
+      setDragState((prev) => ({
+        ...prev,
+        currentX: constrainedX,
+        currentY: constrainedY,
+      }));
+    };
+
+    const handleMouseUp = () => {
+      if (dragState.isDragging && dragState.trackId && dragState.elementId) {
+        updateTextElement(dragState.trackId, dragState.elementId, {
+          x: dragState.currentX,
+          y: dragState.currentY,
+        });
+      }
+      setDragState((prev) => ({ ...prev, isDragging: false }));
+    };
+
+    if (dragState.isDragging) {
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+      document.body.style.cursor = "grabbing";
+      document.body.style.userSelect = "none";
+    }
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+  }, [dragState, previewDimensions, canvasSize, updateTextElement]);
+
+  const handleTextMouseDown = (
+    e: React.MouseEvent<HTMLDivElement>,
+    element: any,
+    trackId: string
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const rect = e.currentTarget.getBoundingClientRect();
+
+    setDragState({
+      isDragging: true,
+      elementId: element.id,
+      trackId: trackId,
+      startX: e.clientX,
+      startY: e.clientY,
+      initialElementX: element.x,
+      initialElementY: element.y,
+      currentX: element.x,
+      currentY: element.y,
+      elementWidth: rect.width,
+      elementHeight: rect.height,
+    });
+  };
 
   const toggleExpanded = useCallback(() => {
     setIsExpanded((prev) => !prev);
@@ -256,10 +350,13 @@ export function PreviewPanel() {
       return (
         <div
           key={element.id}
-          className="absolute flex items-center justify-center"
+          className="absolute flex items-center justify-center cursor-grab"
+          onMouseDown={(e) =>
+            handleTextMouseDown(e, element, elementData.track.id)
+          }
           style={{
-            left: `${50 + (element.x / canvasSize.width) * 100}%`,
-            top: `${50 + (element.y / canvasSize.height) * 100}%`,
+            left: `${50 + ((dragState.isDragging && dragState.elementId === element.id ? dragState.currentX : element.x) / canvasSize.width) * 100}%`,
+            top: `${50 + ((dragState.isDragging && dragState.elementId === element.id ? dragState.currentY : element.y) / canvasSize.height) * 100}%`,
             transform: `translate(-50%, -50%) rotate(${element.rotation}deg) scale(${scaleRatio})`,
             opacity: element.opacity,
             zIndex: 100 + index, // Text elements on top

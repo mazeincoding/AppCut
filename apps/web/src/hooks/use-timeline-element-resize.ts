@@ -133,8 +133,10 @@ export function useTimelineElementResize({
         if (canExtendElementDuration()) {
           // Text/Image: extend element to the left by moving startTime and increasing duration
           const extensionAmount = Math.abs(calculated);
-          const newStartTime = element.startTime - extensionAmount;
-          const newDuration = element.duration + extensionAmount;
+          const maxExtension = element.startTime;
+          const actualExtension = Math.min(extensionAmount, maxExtension);
+          const newStartTime = element.startTime - actualExtension;
+          const newDuration = element.duration + actualExtension;
 
           // Keep trimStart at 0 and extend the element
           updateElementTrim(
