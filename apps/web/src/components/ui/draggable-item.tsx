@@ -91,6 +91,19 @@ export function DraggableMediaItem({
     setIsDragging(false);
   };
 
+  const getMediaTitle = (
+    name: string
+  ): [fileName: string, extension: string] => {
+    const lastDotIndex = name.lastIndexOf(".");
+    if (lastDotIndex > 0 && name.length - lastDotIndex <= 5) {
+      // Split at the last dot if extension is 4 chars or less
+      return [name.substring(0, lastDotIndex), name.substring(lastDotIndex)];
+    }
+    // No extension or very long extension, return full name
+    return [name, ""];
+  };
+
+  const [fileName, extension] = getMediaTitle(name);
   return (
     <>
       <div
@@ -129,10 +142,8 @@ export function DraggableMediaItem({
               aria-label={name}
               title={name}
             >
-              <span className="truncate max-w-full">
-                {name.slice(0, name.length - 4)}
-              </span>
-              {name.slice(-4)}
+              <span className="truncate max-w-full">{fileName}</span>
+              {extension && extension}
             </span>
           )}
         </div>
