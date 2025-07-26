@@ -1157,11 +1157,7 @@ export function Timeline() {
           {/* Content Information Area */}
           <div className="flex-1 relative overflow-hidden bg-background/50" style={{ height: '32px' }}>
             <div className="flex items-center px-3 py-2 h-full">
-              {selectedElements.length > 0 && (
-                <span className="text-xs text-muted-foreground">
-                  {`${selectedElements.length} element${selectedElements.length === 1 ? '' : 's'} selected`}
-                </span>
-              )}
+              {/* Empty space */}
             </div>
           </div>
         </div>
@@ -1236,7 +1232,7 @@ export function Timeline() {
                             : "border-l border-muted-foreground/40"
                         }`}
                         style={{
-                          left: `${time * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel}px`,
+                          left: `${time * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel + 18}px`,
                           top: '0px',
                           height: '32px',
                           zIndex: 1
@@ -1292,7 +1288,7 @@ export function Timeline() {
                   {tracks.map((track) => (
                     <div
                       key={track.id}
-                      className="flex items-center px-3 border-b border-muted/30 group bg-foreground/5"
+                      className="flex items-center px-3 pr-8 border-b border-muted/30 group bg-foreground/5"
                       style={{ height: `${getTrackHeight(track.type)}px` }}
                     >
                       <div className="flex items-center flex-1 min-w-0">

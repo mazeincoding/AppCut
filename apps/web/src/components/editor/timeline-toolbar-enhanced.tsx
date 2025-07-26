@@ -100,7 +100,7 @@ export function TimelineToolbarEnhanced({
                       className="h-8 w-8"
                       style={{
                         backgroundColor: 'transparent',
-                        borderColor: selectedTool === 'text' ? '#3b82f6' : undefined,
+                        borderColor: 'transparent',
                         color: selectedTool === 'text' ? '#3b82f6' : undefined
                       }}
                     >

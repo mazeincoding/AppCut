@@ -129,7 +129,7 @@ export function TimelineToolbar({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="outline" size="icon" onClick={handleSplitSelected} className="mx-2" style={{ backgroundColor: 'transparent' }}>
+            <Button variant="outline" size="icon" onClick={handleSplitSelected} className="mx-2" style={{ backgroundColor: 'transparent', borderColor: 'transparent' }}>
               <Scissors className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
@@ -138,7 +138,7 @@ export function TimelineToolbar({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="outline" size="icon" className="mx-2" style={{ backgroundColor: 'transparent' }}>
+            <Button variant="outline" size="icon" className="mx-2" style={{ backgroundColor: 'transparent', borderColor: 'transparent' }}>
               <ArrowLeftToLine className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
@@ -147,7 +147,7 @@ export function TimelineToolbar({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="outline" size="icon" className="mx-2" style={{ backgroundColor: 'transparent' }}>
+            <Button variant="outline" size="icon" className="mx-2" style={{ backgroundColor: 'transparent', borderColor: 'transparent' }}>
               <ArrowRightToLine className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
@@ -156,7 +156,7 @@ export function TimelineToolbar({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="outline" size="icon" className="mx-2" style={{ backgroundColor: 'transparent' }}>
+            <Button variant="outline" size="icon" className="mx-2" style={{ backgroundColor: 'transparent', borderColor: 'transparent' }}>
               <SplitSquareHorizontal className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
@@ -180,7 +180,7 @@ export function TimelineToolbar({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="outline" size="icon" onClick={handleFreezeSelected} className="mx-2" style={{ backgroundColor: 'transparent' }}>
+            <Button variant="outline" size="icon" onClick={handleFreezeSelected} className="mx-2" style={{ backgroundColor: 'transparent', borderColor: 'transparent' }}>
               <Snowflake className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
