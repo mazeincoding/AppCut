@@ -744,13 +744,16 @@ export function Timeline() {
                             />
                           </div>
                         </ContextMenuTrigger>
-                        <ContextMenuContent>
+                        <ContextMenuContent className="z-[200]">
                           <ContextMenuItem
-                            onClick={() => toggleTrackMute(track.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleTrackMute(track.id);
+                            }}
                           >
                             {track.muted ? "Unmute Track" : "Mute Track"}
                           </ContextMenuItem>
-                          <ContextMenuItem>
+                          <ContextMenuItem onClick={(e) => e.stopPropagation()}>
                             Track settings (soon)
                           </ContextMenuItem>
                         </ContextMenuContent>

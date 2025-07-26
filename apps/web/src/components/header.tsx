@@ -15,17 +15,19 @@ export function Header() {
   );
 
   const rightContent = (
-    <nav className="flex items-center gap-3">
-      <Link href="/blog">
-        <Button variant="text" className="text-sm p-0">
-          Blog
-        </Button>
-      </Link>
-      <Link href="/contributors">
-        <Button variant="text" className="text-sm p-0">
-          Contributors
-        </Button>
-      </Link>
+    <nav className="flex items-center gap-1">
+      <div className="flex items-center gap-4">
+        <Link href="/blog">
+          <Button variant="text" className="text-sm p-0">
+            Blog
+          </Button>
+        </Link>
+        <Link href="/contributors">
+          <Button variant="text" className="text-sm p-0">
+            Contributors
+          </Button>
+        </Link>
+      </div>
       <Link href="/projects">
         <Button size="sm" className="text-sm ml-4">
           Projects
