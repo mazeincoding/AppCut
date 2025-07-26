@@ -39,11 +39,11 @@ export function TimelineToolbarEnhanced({
       {/* SAFE: Original toolbar content without wrapper */}
       <TimelineToolbar {...existingToolbarProps} noWrapper={true} />
       
-      {/* SAFE: Enhanced controls on same row */}
+      {/* SAFE: Enhanced controls moved to right corner */}
       {(featureFlags.enableToolSelection || featureFlags.enableSnapping) && (
         <>
-          <div className="w-px h-6 bg-border mx-2" />
-          <div className="flex items-center gap-2">
+          <div className="flex-1" />
+          <div className="flex items-center gap-2 ml-auto">
         <TooltipProvider delayDuration={500}>
           {/* Tool Selection */}
           {featureFlags.enableToolSelection && (

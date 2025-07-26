@@ -406,7 +406,7 @@ export function MediaView() {
           <div className="flex gap-2">
             {/* Search and filter controls */}
             <Select value={mediaFilter} onValueChange={setMediaFilter}>
-              <SelectTrigger className="w-[80px] h-full text-xs">
+              <SelectTrigger className="w-[80px] h-full text-xs rounded-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="">
@@ -419,7 +419,7 @@ export function MediaView() {
             <Input
               type="text"
               placeholder="Search media..."
-              className="min-w-[60px] flex-1 h-full text-xs border-subtle"
+              className="min-w-[60px] flex-1 h-full text-xs border-subtle rounded-full"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />

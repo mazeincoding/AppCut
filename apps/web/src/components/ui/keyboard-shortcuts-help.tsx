@@ -266,10 +266,10 @@ export const KeyboardShortcutsHelp = () => {
         <Button 
           variant="text" 
           size="sm" 
-          className="gap-2 transition-all duration-200 !bg-transparent hover:!bg-transparent !border-transparent"
+          className="gap-2 transition-all duration-200 !bg-transparent hover:!bg-transparent !border-transparent text-white hover:text-white"
         >
-          <Keyboard className="w-4 h-4" />
-          <span className="hidden sm:inline text-xs ml-2">Shortcuts</span>
+          <Keyboard className="w-4 h-4 text-white" />
+          <span className="hidden sm:inline text-xs ml-2 text-white">Shortcuts</span>
         </Button>
       </DialogTrigger>
       <DialogContent 
