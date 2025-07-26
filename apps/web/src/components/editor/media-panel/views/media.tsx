@@ -316,7 +316,7 @@ export function MediaView() {
               <div
                 className="grid gap-4"
                 style={{
-                  gridTemplateColumns: `repeat(auto-fill, minmax(${getGridItemWidth(mediaSize)}px, ${getGridItemWidth(mediaSize)}px))`,
+                  gridTemplateColumns: `repeat(auto-fill, ${getGridItemWidth(mediaSize)}px)`,
                 }}
               >
                 {/* Render each media item as a draggable button */}
