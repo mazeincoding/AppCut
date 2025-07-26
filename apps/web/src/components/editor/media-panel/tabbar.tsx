@@ -104,8 +104,9 @@ export function TabBar() {
                 e.currentTarget.style.transform = 'scale(1)';
               }}
             >
+
               <tab.icon className={cn(
-                "transition-all duration-200",
+                "transition-all duration-200 mt-[5px]",
                 showLabels ? "!size-[1.5rem]" : "!size-[1.2rem]",
                 activeTab !== tabKey && "group-hover:text-blue-500"
               )} />
@@ -143,6 +144,7 @@ function ScrollButton({
         className="rounded-[0.4rem] w-4 h-7 !bg-white/20 hover:!bg-white/30"
         onClick={onClick}
       >
+
         <Icon className="!size-4 text-foreground" />
       </Button>
     </div>
