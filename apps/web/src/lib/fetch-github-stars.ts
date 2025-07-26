@@ -50,7 +50,11 @@ async function fetchGitHubStarsInternal(): Promise<string> {
       throw new Error("Invalid stargazers_count from GitHub API");
     }
 
-    return formatStarCount(count);
+    if (count >= 1_000_000)
+      return (count / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
+    if (count >= 1000)
+      return (count / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+    return count.toString();
   } catch (error) {
     console.error("Failed to fetch GitHub stars:", error);
     return FALLBACK_STARS;

@@ -102,7 +102,8 @@ export function TimelineElement({
   // Element should always be positioned at startTime - trimStart only affects content, not position
   const elementLeft = elementStartTime * 50 * zoomLevel;
 
-  const handleElementSplitContext = () => {
+  const handleElementSplitContext = (e: React.MouseEvent) => {
+    e.stopPropagation();
     const effectiveStart = element.startTime;
     const effectiveEnd =
       element.startTime +
@@ -118,7 +119,8 @@ export function TimelineElement({
     }
   };
 
-  const handleElementDuplicateContext = () => {
+  const handleElementDuplicateContext = (e: React.MouseEvent) => {
+    e.stopPropagation();
     const { id, ...elementWithoutId } = element;
     addElementToTrack(track.id, {
       ...elementWithoutId,
@@ -130,7 +132,8 @@ export function TimelineElement({
     });
   };
 
-  const handleElementDeleteContext = () => {
+  const handleElementDeleteContext = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (rippleEditingEnabled) {
       removeElementFromTrackWithRipple(track.id, element.id);
     } else {
@@ -138,7 +141,8 @@ export function TimelineElement({
     }
   };
 
-  const handleReplaceClip = () => {
+  const handleReplaceClip = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (element.type !== "media") {
       toast.error("Replace is only available for media clips");
       return;
@@ -357,7 +361,7 @@ export function TimelineElement({
           </div>
         </div>
       </ContextMenuTrigger>
-      <ContextMenuContent>
+      <ContextMenuContent className="z-[200]">
         <ContextMenuItem onClick={handleElementSplitContext}>
           <Scissors className="h-4 w-4 mr-2" />
           Split at playhead
