@@ -8,6 +8,7 @@ import { HeaderBase } from "./header-base";
 import { formatTimeCode } from "@/lib/time";
 import { useProjectStore } from "@/stores/project-store";
 import { KeyboardShortcutsHelp } from "./keyboard-shortcuts-help";
+import { VideoExportDialog } from "./export/VideoExportDialog";
 import { useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -19,12 +20,6 @@ export function EditorHeader() {
   const [newName, setNewName] = useState(activeProject?.name || "");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleExport = () => {
-    // TODO: Implement export functionality
-    // NOTE: This is already being worked on
-    console.log("Export project");
-    window.open('https://youtube.com/watch?v=dQw4w9WgXcQ', '_blank');
-  };
 
   const handleNameClick = () => {
     if (!activeProject) return;
@@ -104,15 +99,16 @@ export function EditorHeader() {
   const rightContent = (
     <nav className="flex items-center gap-2">
       <KeyboardShortcutsHelp />
-      <Button
-        size="sm"
-        variant="primary"
-        className="h-7 text-xs"
-        onClick={handleExport}
-      >
-        <Download className="h-4 w-4" />
-        <span className="text-sm">Export</span>
-      </Button>
+      <VideoExportDialog>
+        <Button
+          size="sm"
+          variant="primary"
+          className="h-7 text-xs"
+        >
+          <Download className="h-4 w-4" />
+          <span className="text-sm">Export</span>
+        </Button>
+      </VideoExportDialog>
     </nav>
   );
 
