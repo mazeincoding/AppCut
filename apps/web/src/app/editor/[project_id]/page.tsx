@@ -32,39 +32,28 @@ export default function Editor() {
     setPropertiesPanel,
   } = usePanelStore();
 
-  const { activeProject, loadProject, createNewProject } = useProjectStore();
+  const { loadProject } = useProjectStore();
   const params = useParams();
   const router = useRouter();
   const projectId = params.project_id as string;
-  const handledProjectIds = useRef<Set<string>>(new Set());
 
   usePlaybackControls();
 
   useEffect(() => {
     const initProject = async () => {
-      if (!projectId) return;
-
-      if (activeProject?.id === projectId) {
-        return;
-      }
-
-      if (handledProjectIds.current.has(projectId)) {
-        return;
-      }
-
       try {
         await loadProject(projectId);
-      } catch (error) {
-        handledProjectIds.current.add(projectId);
-
-        const newProjectId = await createNewProject("Untitled Project");
-        router.replace(`/editor/${newProjectId}`);
+      } catch (error: any) {
+        // if the project is not found, go back to the projects page
+        if (error.message.includes("not found")) {
+          router.push("/projects");
+        }
         return;
       }
     };
 
     initProject();
-  }, [projectId, activeProject?.id, loadProject, createNewProject, router]);
+  }, [projectId, loadProject, router]);
 
   return (
     <EditorProvider>
