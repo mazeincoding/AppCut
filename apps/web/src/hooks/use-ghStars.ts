@@ -58,16 +58,16 @@ export function useGitHubStars(initialStars?: string) {
       setState((prev) => ({ ...prev, isLoading: true }));
 
       const checkCache = () => {
-        if (!clientCache.isLoading) {
-          if (isMounted) {
-            setState({
-              stars: clientCache.data || FALLBACK_STARS,
-              isLoading: false,
-              error: !clientCache.data,
-            });
-          }
+        if (!clientCache.isLoading || isMounted) {
+          setState({
+            stars: clientCache.data || FALLBACK_STARS,
+            isLoading: false,
+            error: !clientCache.data,
+          });
         } else {
-          setTimeout(checkCache, 100);
+          if (isMounted) {
+            setTimeout(checkCache, 100);
+          }
         }
       };
       checkCache();

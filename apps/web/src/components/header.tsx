@@ -14,7 +14,6 @@ import { HeaderBase } from "./header-base";
 import Image from "next/image";
 import { useState } from "react";
 import { useGitHubStars } from "@/hooks/use-ghStars";
-import { FALLBACK_STARS } from "@/constants/gh-vars";
 
 interface HeaderProps {
   initialStars?: string;
@@ -109,7 +108,7 @@ export function Header({ initialStars }: HeaderProps) {
               {isLoading ? (
                 <div className="w-8 h-4 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
               ) : (
-                `${isLoading ? FALLBACK_STARS : stars}+`
+                `${stars}+`
               )}
             </div>
           </span>
@@ -120,6 +119,7 @@ export function Header({ initialStars }: HeaderProps) {
           className="md:hidden p-2 rounded-full"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           aria-label="Toggle mobile menu"
+          aria-expanded={isMobileMenuOpen}
         >
           {isMobileMenuOpen ? (
             <RiMenuFold4Fill className="h-5 w-5" />
