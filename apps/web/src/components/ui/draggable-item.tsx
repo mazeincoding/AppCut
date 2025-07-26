@@ -125,13 +125,14 @@ export function DraggableMediaItem({
           </AspectRatio>
           {showLabel && (
             <span
-              className="text-[0.7rem] text-muted-foreground truncate w-full text-left"
+              className="text-[0.7rem] text-muted-foreground w-full text-left flex"
               aria-label={name}
               title={name}
             >
-              {name.length > 8
-                ? `${name.slice(0, 16)}...${name.slice(-3)}`
-                : name}
+              <span className="truncate max-w-full">
+                {name.slice(0, name.length - 4)}
+              </span>
+              {name.slice(-4)}
             </span>
           )}
         </div>
