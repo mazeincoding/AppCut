@@ -1150,7 +1150,7 @@ export function Timeline() {
         {/* Current Timeline Content Row */}
         <div className="flex bg-panel border-b border-border/50 sticky top-0 z-10">
           {/* Content Label */}
-          <div className="w-48 flex-shrink-0 bg-muted/20 border-r flex items-center justify-between px-3 py-2">
+          <div className="w-80 flex-shrink-0 bg-muted/20 border-r flex items-center justify-between px-4 py-2">
             {/* Empty space */}
           </div>
 
@@ -1165,7 +1165,7 @@ export function Timeline() {
         {/* Timeline Header with Ruler */}
         <div className="flex bg-panel sticky top-0 z-10">
           {/* Track Labels Header */}
-          <div className="w-48 flex-shrink-0 bg-muted/30 border-r flex items-center justify-between px-3 py-2">
+          <div className="w-80 flex-shrink-0 bg-muted/30 border-r flex items-center justify-between px-4 py-2">
             {/* Empty space */}
             <span className="text-sm font-medium text-muted-foreground opacity-0">
               .
@@ -1232,7 +1232,7 @@ export function Timeline() {
                             : "border-l border-muted-foreground/40"
                         }`}
                         style={{
-                          left: `${time * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel + 18}px`,
+                          left: `${time * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel + 200}px`,
                           top: '0px',
                           height: '32px',
                           zIndex: 1
@@ -1280,7 +1280,7 @@ export function Timeline() {
           {tracks.length > 0 && (
             <div
               ref={trackLabelsRef}
-              className="w-48 flex-shrink-0 border-r bg-panel-accent overflow-y-auto"
+              className="w-80 flex-shrink-0 border-r bg-panel-accent overflow-y-auto"
               data-track-labels
             >
               <ScrollArea className="w-full h-full" ref={trackLabelsScrollRef}>
@@ -1288,7 +1288,7 @@ export function Timeline() {
                   {tracks.map((track) => (
                     <div
                       key={track.id}
-                      className="flex items-center px-3 pr-8 border-b border-muted/30 group bg-foreground/5"
+                      className="flex items-center px-4 pr-16 border-b border-muted/30 group bg-foreground/5"
                       style={{ height: `${getTrackHeight(track.type)}px` }}
                     >
                       <div className="flex items-center flex-1 min-w-0">
