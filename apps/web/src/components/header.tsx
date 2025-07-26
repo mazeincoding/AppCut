@@ -144,7 +144,7 @@ export function Header({ initialStars }: HeaderProps) {
         {/* Mobile Menu Overlay */}
         {isMobileMenuOpen && (
           <div className="absolute top-full left-4 right-4 mt-2 md:hidden z-50">
-            <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-4 shadow-xl">
+            <div className="bg-accent backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-4 shadow-xl">
               <nav className="flex flex-col gap-3">
                 <Link href="/blog" onClick={() => setIsMobileMenuOpen(false)}>
                   <span className="block w-full text-left py-2 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-all cursor-pointer">
