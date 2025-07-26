@@ -112,13 +112,16 @@ class StorageService {
     const { mediaMetadataAdapter, mediaFilesAdapter } =
       this.getProjectMediaAdapters(projectId);
 
-    // Save file to project-specific OPFS
+    // hash the file to check for duplicates
     const hash = await this.getFileHash(mediaItem.file);
     const fileExists = await this.checkFileExists(projectId, hash);
     if (fileExists) {
-      throw new Error("File with the same content already exists in this project.");
+      throw new Error(
+        "File with the same content already exists in this project."
+      );
     }
 
+    // Save file to project-specific OPFS
     await mediaFilesAdapter.set(mediaItem.id, mediaItem.file);
 
     // Save metadata to project-specific IndexedDB
@@ -131,7 +134,7 @@ class StorageService {
       width: mediaItem.width,
       height: mediaItem.height,
       duration: mediaItem.duration,
-      hash
+      hash,
     };
 
     await mediaMetadataAdapter.set(mediaItem.id, metadata);
@@ -282,8 +285,10 @@ class StorageService {
 
   async getFileHash(file: File): Promise<string> {
     const arrayBuffer = await file.arrayBuffer();
-    const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
-    return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+    const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
+    return Array.from(new Uint8Array(hashBuffer))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
   }
 
   async checkFileExists(projectId: string, hash: string): Promise<boolean> {
@@ -293,7 +298,7 @@ class StorageService {
     for (const id of mediaIds) {
       const metadata = await mediaMetadataAdapter.get(id);
       if (metadata && metadata.hash === hash) {
-      return true;
+        return true;
       }
     }
     return false;
