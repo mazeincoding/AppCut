@@ -45,11 +45,11 @@ export function MediaView() {
   const [searchQuery, setSearchQuery] = useState("");
   const [mediaFilter, setMediaFilter] = useState("all");
   // Get media size from localStorage or default to 3
-  const [mediaSize, setMediaSize] = useState(
-    localStorage.getItem("mediaSize")
-      ? parseInt(localStorage.getItem("mediaSize")!, 10)
-      : 3
-  );
+  const [mediaSize, setMediaSize] = useState(() => {
+    const stored = localStorage.getItem("mediaSize");
+    const parsed = parseInt(stored ?? "", 10);
+    return !isNaN(parsed) && parsed >= 1 && parsed <= 5 ? parsed : 3;
+  });
 
   const processFiles = async (files: FileList | File[]) => {
     if (!files || files.length === 0) return;
