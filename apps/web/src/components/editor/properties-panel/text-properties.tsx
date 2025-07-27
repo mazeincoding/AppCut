@@ -154,7 +154,7 @@ export function TextProperties({
             value={element.rotation || 0}
             onChange={(e) =>
               updateTextElement(trackId, element.id, {
-                rotation: parseInt(e.target.value),
+                rotation: parseInt(e.target.value) || 0,
               })
             }
             className="w-full"
@@ -187,10 +187,10 @@ export function TextProperties({
               value={element.x ?? 0}
               onChange={(e) =>
                 updateTextElement(trackId, element.id, {
-                  x: parseInt(e.target.value),
+                  x: parseInt(e.target.value) || 0,
                 })
               }
-              className="w-14"
+              className="w-14 max-w-16"
               placeholder="X"
             />
           </div>
@@ -203,10 +203,10 @@ export function TextProperties({
               value={element.y ?? 0}
               onChange={(e) =>
                 updateTextElement(trackId, element.id, {
-                  y: parseInt(e.target.value),
+                  y: parseInt(e.target.value) || 0,
                 })
               }
-              className="w-14"
+              className="w-14 max-w-16"
               placeholder="Y"
             />
           </div>
