@@ -375,7 +375,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
       url: item.url?.substring(0, 50) + '...'
     })));
 
-    // Add to local state
+    // Add to local state immediately (non-breaking)
     set((state) => {
       const updatedItems = [...state.mediaItems, ...newItems];
       console.log("🎨 MEDIA-STORE: Updating mediaItems array from", state.mediaItems.length, "to", updatedItems.length, "items");
@@ -386,6 +386,68 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
 
     console.log(`✅ MEDIA-STORE: Successfully added ${newItems.length} generated images to media panel`);
     console.log("✅ MEDIA-STORE: New total mediaItems count:", get().mediaItems.length);
+    
+    // Fetch and convert URLs to Files in background
+    console.log("🔄 MEDIA-STORE: Starting background URL to File conversion for generated images");
+    newItems.forEach(async (item, index) => {
+      if (item.url && !item.file) {
+        console.log(`🔄 MEDIA-STORE: Converting URL to File for item ${index + 1}/${newItems.length}:`, item.name);
+        try {
+          const response = await fetch(item.url);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          const blob = await response.blob();
+          console.log(`📦 MEDIA-STORE: Fetched blob for ${item.name}, size:`, blob.size, "type:", blob.type);
+          
+          // Extract filename from URL or use default
+          const urlParts = item.url.split('/');
+          const urlFilename = urlParts[urlParts.length - 1].split('?')[0];
+          const fileName = item.name || urlFilename || 'generated-image.png';
+          
+          // Create File object with proper MIME type
+          const file = new File([blob], fileName, { 
+            type: blob.type || 'image/png',
+            lastModified: Date.now()
+          });
+          
+          console.log(`✅ MEDIA-STORE: Created File object for ${item.name}:`, {
+            name: file.name,
+            size: file.size,
+            type: file.type
+          });
+          
+          // Update the item with the File object
+          set((state) => ({
+            mediaItems: state.mediaItems.map(mediaItem =>
+              mediaItem.id === item.id
+                ? { 
+                    ...mediaItem, 
+                    file,
+                    size: file.size // Update size from the actual file
+                  }
+                : mediaItem
+            ),
+          }));
+          
+          console.log(`✅ MEDIA-STORE: Updated media item ${item.name} with File object`);
+        } catch (error) {
+          console.error(`❌ MEDIA-STORE: Failed to fetch/convert image for ${item.name}:`, error);
+          // Optionally mark the item as having an error
+          set((state) => ({
+            mediaItems: state.mediaItems.map(mediaItem =>
+              mediaItem.id === item.id
+                ? { 
+                    ...mediaItem, 
+                    thumbnailError: `Failed to download image: ${error instanceof Error ? error.message : 'Unknown error'}`
+                  }
+                : mediaItem
+            ),
+          }));
+        }
+      }
+    });
   },
 
   generateEnhancedThumbnails: async (mediaId, options = {}) => {
