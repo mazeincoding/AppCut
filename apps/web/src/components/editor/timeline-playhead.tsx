@@ -72,7 +72,7 @@ export function TimelinePlayhead({
   return (
     <div
       ref={playheadRef}
-      className="absolute pointer-events-auto z-[999]"
+      className="absolute pointer-events-auto z-[999] select-none"
       style={{
         left: `${leftPosition}px`,
         top: 0,
@@ -83,12 +83,15 @@ export function TimelinePlayhead({
     >
       {/* The red line spanning full height */}
       <div 
-        className="absolute left-0 cursor-col-resize h-full"
+        className="absolute cursor-col-resize h-full select-none"
         style={{
+          left: '3px', // Center the cursor on the line (8px width / 2 - 1px line width / 2)
           width: '2px',
           backgroundColor: '#dc2626',
           borderLeft: '1px solid #ef4444',
-          boxShadow: '0 0 15px rgba(220, 38, 38, 0.8), inset 0 0 5px rgba(220, 38, 38, 0.5)'
+          boxShadow: '0 0 15px rgba(220, 38, 38, 0.8), inset 0 0 5px rgba(220, 38, 38, 0.5)',
+          userSelect: 'none',
+          pointerEvents: 'none' // The parent div handles mouse events
         }}
       />
 
