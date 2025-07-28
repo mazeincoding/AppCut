@@ -107,83 +107,154 @@ Validation fails: no MIME type
 
 ### Immediate (High Priority)
 
-#### 1. Fix Media File Metadata - Detailed Plan
+#### 1. Fix Media File Metadata - Detailed Plan ✅ ANALYSIS COMPLETE
 
 **Problem**: Media files losing MIME type during storage/retrieval, preventing thumbnail generation
 
-**Investigation Steps**:
+**✅ INVESTIGATION RESULTS**:
+
 1. **IndexedDB Adapter Analysis** (`apps/web/src/lib/storage/indexeddb-adapter.ts`)
-   - Check `storeFile()` method - verify File object metadata preservation
-   - Check `getFile()` method - verify MIME type retrieval
-   - Verify Blob reconstruction includes proper type parameter
+   - ✅ **CONFIRMED**: Generic adapter doesn't handle File objects specifically
+   - ✅ Uses generic `{id: key, ...value}` spread pattern
+   - ✅ No specialized File metadata preservation logic
 
-2. **Media Store Investigation** (`apps/web/src/stores/media-store.ts`)
-   - Trace `addMediaFiles()` flow - ensure File objects retain metadata
-   - Check `loadMediaForProject()` - verify file type restoration
-   - Review `generateEnhancedThumbnails()` call chain
+2. **Storage Service Investigation** (`apps/web/src/lib/storage/storage-service.ts`)
+   - ✅ **ROOT CAUSE FOUND**: Uses separate adapters for metadata vs files
+   - ✅ `saveMediaItem()` stores metadata separately in IndexedDB 
+   - ✅ `loadMediaItem()` reconstructs File with `URL.createObjectURL(file)`
+   - ✅ File type preserved in metadata, but reconstruction may lose it
 
-3. **Storage Service Check** (`apps/web/src/lib/storage/storage-service.ts`)
-   - Verify `storeMediaFile()` preserves File.type property
-   - Check `getMediaFile()` returns proper MIME type
-   - Ensure metadata persistence in storage interface
+3. **OPFS Adapter Check** (`apps/web/src/lib/storage/opfs-adapter.ts`)
+   - ✅ **CONFIRMED**: OPFS `getFile()` method returns original File object
+   - ✅ OPFS preserves MIME type correctly via `fileHandle.getFile()`
+   - ✅ No metadata loss in OPFS layer
 
-**Root Cause Hypothesis**:
-- IndexedDB storing File as Blob without preserving MIME type
-- File reconstruction not including original type parameter
-- Metadata loss during browser storage/retrieval cycle
+**✅ ACTUAL ROOT CAUSE IDENTIFIED - DEEPER INVESTIGATION**:
+
+**Phase 2 Analysis**:
+1. **Media Store Flow** (`apps/web/src/stores/media-store.ts`):
+   - ✅ `loadProjectMedia()` calls `storageService.loadAllMediaItems(projectId)`
+   - ✅ Storage service returns reconstructed File objects correctly
+   - ✅ Media store stores files in state as `mediaItems` array
+
+2. **Thumbnail Generation Call Chain**:
+   - ✅ `generateEnhancedThumbnails()` called from media store line 416
+   - ✅ `videoFile = item.file` assignment at line 389
+   - ✅ File passed to `generateEnhancedThumbnails(videoFile, defaultOptions)`
+
+3. **FFmpeg Utils Validation** (`apps/web/src/lib/ffmpeg-utils.ts:732-733`):
+   - ✅ **EXACT ERROR SOURCE**: Validation `if (!videoFile || !videoFile.type)`
+   - ✅ Log shows: `{fileName: '299e89c4-00b8-4862-bf33-efc1cd00c023', fileType: '', fileSize: 6821683}`
+   - ✅ File exists, has size, but `type` property is empty string
+
+**✅ ROOT CAUSE CONFIRMED**:
+- File object exists and has content (6.8MB size)
+- File.name has UUID format (suggests it's restored from storage)
+- **File.type is empty string `''` instead of proper MIME type**
+- This indicates MIME type IS being lost during storage→retrieval→reconstruction
+
+**📍 INVESTIGATION TARGET**: 
+The issue occurs in `storageService.loadMediaItem()` reconstruction:
+```typescript
+// Create new object URL for the file
+const url = URL.createObjectURL(file);
+
+return {
+  id: metadata.id,
+  name: metadata.name,
+  type: metadata.type,  // ← MediaItem.type from metadata
+  file,                 // ← Raw File from OPFS (LOSING MIME TYPE)
+  url,
+  // ...
+};
+```
+
+**ACTUAL ISSUE**: OPFS File reconstruction doesn't preserve original MIME type when retrieved
 
 **Fix Strategy**:
-1. **Store metadata separately**: Store MIME type as separate field alongside Blob
-2. **Enhanced File reconstruction**: Reconstruct File objects with explicit type
-3. **Validation layer**: Add type validation before storage operations
+1. **✅ CONFIRMED**: Metadata IS stored separately in IndexedDB (working correctly)
+2. **❌ ISSUE**: File reconstruction in `storageService.loadMediaItem()` needs MIME type restoration
+3. **🎯 SOLUTION**: Reconstruct File object with metadata.type when loading from OPFS
 
 **Code Changes Required**:
 ```typescript
-// In IndexedDB adapter
-storeFile(file: File): Promise<string> {
-  // Store both blob and metadata
-  const metadata = {
-    name: file.name,
-    type: file.type, // Explicitly preserve
-    size: file.size,
-    lastModified: file.lastModified
-  };
-  // Store blob + metadata separately
-}
+// In storage-service.ts loadMediaItem() method
+async loadMediaItem(projectId: string, id: string): Promise<MediaItem | null> {
+  const [file, metadata] = await Promise.all([
+    mediaFilesAdapter.get(id),
+    mediaMetadataAdapter.get(id),
+  ]);
 
-getFile(id: string): Promise<File> {
-  // Reconstruct File with explicit type
-  return new File([blob], metadata.name, {
-    type: metadata.type, // Explicitly restore
+  if (!file || !metadata) return null;
+
+  // 🔧 FIX: Reconstruct File with preserved MIME type from metadata
+  const reconstructedFile = new File([file], metadata.name, {
+    type: metadata.type,        // ← Restore MIME type from metadata
     lastModified: metadata.lastModified
   });
+
+  const url = URL.createObjectURL(reconstructedFile);
+
+  return {
+    id: metadata.id,
+    name: metadata.name,
+    type: metadata.type,
+    file: reconstructedFile,    // ← Use reconstructed file with MIME type
+    url,
+    width: metadata.width,
+    height: metadata.height,
+    duration: metadata.duration,
+  };
 }
 ```
 
-#### 2. Resolve React Ref Warning - Detailed Plan
+**Alternative Approach** (if OPFS should preserve MIME type):
+```typescript
+// In ffmpeg-utils.ts - Add fallback validation
+if (!videoFile || !videoFile.type) {
+  // Try to infer MIME type from file extension as fallback
+  const mimeType = inferMimeTypeFromExtension(videoFile?.name);
+  if (mimeType) {
+    videoFile = new File([videoFile], videoFile.name, { type: mimeType });
+  } else {
+    console.error('Invalid file for thumbnail generation...');
+    return { thumbnails: [], metadata: {} };
+  }
+}
+```
+
+#### 2. Resolve React Ref Warning - Detailed Plan ✅ ANALYSIS COMPLETE
 
 **Problem**: Radix UI components receiving refs on function components in timeline toolbar
 
-**Investigation Steps**:
-1. **Component Tree Analysis**
-   - Map exact component hierarchy: TimelineToolbar → TooltipProvider → Select
-   - Identify which specific Radix components are causing ref issues
-   - Check component prop passing patterns
+**✅ INVESTIGATION RESULTS**:
 
-2. **Timeline Toolbar Audit** (`apps/web/src/components/editor/timeline-toolbar.tsx`)
-   - Review Select component usage within TooltipProvider
-   - Check for unnecessary ref forwarding
-   - Identify Button components wrapped in Tooltip
+1. **Component Tree Analysis** (`apps/web/src/components/editor/timeline-toolbar.tsx`)
+   - ✅ **CONFIRMED**: Select component wrapped in Tooltip at lines 202-220
+   - ✅ Pattern: `Tooltip → TooltipTrigger asChild → Select → SelectTrigger`
+   - ✅ `asChild` prop attempts to pass ref through to SelectTrigger
 
-3. **Radix UI Integration Review**
-   - Check Select component implementation
-   - Review TooltipProvider usage patterns
-   - Verify proper component composition
+2. **Root Cause Identified**:
+   - ✅ **EXACT ISSUE**: Lines 202-220 show Select wrapped in Tooltip
+   - ✅ `<TooltipTrigger asChild>` tries to forward ref to Select component
+   - ✅ Select component is a function component that can't receive refs
+   - ✅ This causes the "Function components cannot be given refs" warning
 
-**Root Cause Analysis**:
-- Select components nested inside TooltipProvider causing ref conflicts
-- Primitive components receiving refs they can't handle
-- Wrapper components not properly forwarding refs
+3. **Problematic Code Pattern**:
+```typescript
+<Tooltip>
+  <TooltipTrigger asChild>  // ← This tries to forward ref
+    <Select                 // ← Function component can't receive ref
+      value={speed.toFixed(1)}
+      onValueChange={(value) => setSpeed(parseFloat(value))}
+    >
+      <SelectTrigger className="w-[90px] h-8">
+        <SelectValue placeholder="1.0x" />
+      </SelectTrigger>
+    </Select>
+  </TooltipTrigger>
+</Tooltip>
+```
 
 **Fix Strategy**:
 1. **Component Restructuring**: Separate tooltip and select functionality
