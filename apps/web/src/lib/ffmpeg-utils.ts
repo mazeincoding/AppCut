@@ -7,7 +7,7 @@ let initializationPromise: Promise<FFmpeg> | null = null;
 
 export const initFFmpeg = async (): Promise<FFmpeg> => {
   if (ffmpeg && isLoaded) {
-    console.log("✅ FFmpeg already initialized, reusing instance");
+    // console.log("✅ FFmpeg already initialized, reusing instance");
     return ffmpeg;
   }
 
@@ -17,7 +17,7 @@ export const initFFmpeg = async (): Promise<FFmpeg> => {
     return initializationPromise;
   }
 
-  console.log("🚀 Initializing FFmpeg.wasm...");
+  // console.log("🚀 Initializing FFmpeg.wasm...");
   
   // Start new initialization
   initializationPromise = (async () => {
@@ -27,13 +27,13 @@ export const initFFmpeg = async (): Promise<FFmpeg> => {
     // Use locally hosted files instead of CDN
     const baseURL = '/ffmpeg';
     
-    console.log("📦 Loading FFmpeg core files from:", baseURL);
+    // console.log("📦 Loading FFmpeg core files from:", baseURL);
     
     const coreURL = await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript');
     const wasmURL = await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm');
     
-    console.log("🔗 Core URL loaded:", coreURL.substring(0, 50) + "...");
-    console.log("🔗 WASM URL loaded:", wasmURL.substring(0, 50) + "...");
+    // console.log("🔗 Core URL loaded:", coreURL.substring(0, 50) + "...");
+    // console.log("🔗 WASM URL loaded:", wasmURL.substring(0, 50) + "...");
     
     await ffmpeg.load({
       coreURL,
@@ -57,7 +57,7 @@ export const initFFmpeg = async (): Promise<FFmpeg> => {
       // console.log('FFmpeg logging not supported');
     }
     
-    console.log("✅ FFmpeg.wasm loaded successfully");
+    // console.log("✅ FFmpeg.wasm loaded successfully");
     return ffmpeg;
     } catch (error) {
       console.error("❌ Failed to initialize FFmpeg:", error);
@@ -510,6 +510,50 @@ const getVideoInfoViaHTML5 = async (videoFile: File): Promise<{
   });
 };
 
+// Simple single-frame thumbnail generation using HTML5 Canvas
+const generateSingleThumbnailViaCanvas = async (
+  videoFile: File,
+  timestamp: number = 1
+): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement('video');
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    if (!ctx) {
+      reject(new Error('Canvas context unavailable'));
+      return;
+    }
+
+    const cleanup = () => {
+      URL.revokeObjectURL(video.src);
+      video.remove();
+      canvas.remove();
+    };
+
+    video.addEventListener('loadedmetadata', () => {
+      canvas.width = 320; // Medium resolution
+      canvas.height = (320 * video.videoHeight) / video.videoWidth;
+      video.currentTime = Math.min(timestamp, video.duration - 0.1);
+    });
+
+    video.addEventListener('seeked', () => {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const thumbnail = canvas.toDataURL('image/jpeg', 0.8);
+      cleanup();
+      resolve(thumbnail);
+    });
+
+    video.addEventListener('error', () => {
+      cleanup();
+      reject(new Error('Video decode failed'));
+    });
+
+    video.src = URL.createObjectURL(videoFile);
+    video.load();
+  });
+};
+
 // Generate thumbnails using HTML5 Canvas (more reliable than FFmpeg for simple thumbnails)
 const generateThumbnailsViaCanvas = async (
   videoFile: File,
@@ -538,7 +582,8 @@ const generateThumbnailsViaCanvas = async (
       return;
     }
     
-    if (!videoFile.type.startsWith('video/')) {
+    // Allow files with missing MIME types - they'll be inferred later
+    if (videoFile.type && !videoFile.type.startsWith('video/')) {
       reject(new Error(`Invalid file type for thumbnail generation: ${videoFile.type}`));
       return;
     }
@@ -755,25 +800,33 @@ export const generateEnhancedThumbnails = async (
     const fileName = videoFile.name.toLowerCase();
     if (fileName.endsWith('.mp4')) {
       fileType = 'video/mp4';
-      console.warn(`Missing MIME type for ${videoFile.name}, inferred as video/mp4`);
+      // console.warn(`Missing MIME type for ${videoFile.name}, inferred as video/mp4`);
     } else if (fileName.endsWith('.webm')) {
       fileType = 'video/webm';
-      console.warn(`Missing MIME type for ${videoFile.name}, inferred as video/webm`);
+      // console.warn(`Missing MIME type for ${videoFile.name}, inferred as video/webm`);
     } else if (fileName.endsWith('.mov')) {
       fileType = 'video/quicktime';
-      console.warn(`Missing MIME type for ${videoFile.name}, inferred as video/quicktime`);
+      // console.warn(`Missing MIME type for ${videoFile.name}, inferred as video/quicktime`);
     } else {
       throw new Error(`Invalid file type for thumbnail generation: ${videoFile.type || 'unknown'} (filename: ${videoFile.name})`);
     }
   }
 
-  // Skip canvas method for known problematic formats and go straight to FFmpeg
-  const skipCanvas = fileType.includes('mp4') || fileType.includes('h264');
+  // Always try canvas method first, fallback to FFmpeg if it fails
+  const skipCanvas = false;
   
   if (!skipCanvas) {
     // Try HTML5 Canvas method first (fallback to FFmpeg if it fails)
     try {
-      return await generateThumbnailsViaCanvas(videoFile, options);
+      // Create a new File object with the correct MIME type if it was inferred
+      let fileForCanvas = videoFile;
+      if (fileType !== videoFile.type) {
+        fileForCanvas = new File([videoFile], videoFile.name, {
+          type: fileType,
+          lastModified: videoFile.lastModified
+        });
+      }
+      return await generateThumbnailsViaCanvas(fileForCanvas, options);
     } catch (canvasError) {
       console.log('⚠️ Canvas method failed, using FFmpeg fallback:', canvasError instanceof Error ? canvasError.message : String(canvasError));
     }
@@ -949,3 +1002,6 @@ const generateThumbnailsInternal = async (
     }
   };
 };
+
+// Export the simple single-frame function for basic thumbnail needs
+export const generateSimpleThumbnail = generateSingleThumbnailViaCanvas;
