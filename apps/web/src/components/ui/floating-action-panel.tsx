@@ -284,6 +284,7 @@ export function FloatingActionPanelModelOption({
         <label 
           className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 font-medium cursor-pointer" 
           htmlFor={id}
+          style={{ marginLeft: '5px' }}
         >
           {name}
         </label>

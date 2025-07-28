@@ -114,7 +114,7 @@ export function ImageUploader({ onImageSelect, uploading }: ImageUploaderProps) 
                 </p>
               </div>
 
-              <Button variant="outline" size="sm" className="mt-2">
+              <Button variant="outline" size="sm" className="mt-2 !bg-transparent !border-transparent">
                 <ImageIcon className="size-4 mr-2" />
                 Choose Image
               </Button>

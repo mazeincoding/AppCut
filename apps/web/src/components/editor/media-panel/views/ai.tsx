@@ -724,7 +724,7 @@ export function AiView() {
             
             <div className="space-y-2">
               <div style={{ height: '6px' }}></div>
-              <Label htmlFor="image-prompt">Additional prompt (optional)</Label>
+              <Label htmlFor="image-prompt" style={{ marginLeft: '5px' }}>Additional prompt (optional)</Label>
               <div style={{ height: '6px' }}></div>
               <Textarea
                 id="image-prompt"
@@ -782,7 +782,7 @@ export function AiView() {
                   transition-all duration-200 border-border/50 
                   ${isCompact ? 'p-2' : 'p-3'}
                   ${isModelSelected(model.id) 
-                    ? 'bg-blue-500/10 border-blue-500/50 text-blue-400' 
+                    ? 'bg-transparent border-blue-500/50' 
                     : 'bg-transparent hover:bg-accent/50 hover:border-border'
                   }
                 `}
@@ -791,7 +791,7 @@ export function AiView() {
                   <div className={`
                     w-4 h-4 rounded border flex items-center justify-center
                     ${isModelSelected(model.id) 
-                      ? 'bg-blue-500 border-blue-500' 
+                      ? 'bg-blue-500 border-transparent' 
                       : 'border-border bg-transparent'
                     }
                   `}>
@@ -800,23 +800,23 @@ export function AiView() {
                     )}
                   </div>
                   <div className="flex flex-col">
-                    <span className={`font-medium ${isCompact ? 'text-xs' : 'text-sm'}`}>
+                    <span className={`font-medium ${isCompact ? 'text-xs' : 'text-sm'} ${isModelSelected(model.id) ? 'text-[#05c7c7]' : 'text-foreground'}`}>
                       {isCompact ? model.name.split(' ')[0] : model.name}
                     </span>
                     {!isCompact && (
-                      <span className="text-xs text-muted-foreground">
+                      <span className={`text-xs ${isModelSelected(model.id) ? 'text-[#05c7c7]' : 'text-muted-foreground'}`}>
                         {model.description}
                       </span>
                     )}
                   </div>
                 </div>
                 {!isCompact && (
-                  <span className="text-xs text-muted-foreground font-normal ml-6">
+                  <span className={`text-xs font-normal ml-6 ${isModelSelected(model.id) ? 'text-[#05c7c7]' : 'text-muted-foreground'}`}>
                     USD {model.price} • {model.resolution}
                   </span>
                 )}
                 {isCompact && (
-                  <span className="text-xs text-muted-foreground font-normal">
+                  <span className={`text-xs font-normal ${isModelSelected(model.id) ? 'text-[#05c7c7]' : 'text-muted-foreground'}`}>
                     ${model.price}
                   </span>
                 )}
@@ -830,7 +830,7 @@ export function AiView() {
               size="sm"
               variant="outline"
               onClick={() => setSelectedModels(AI_MODELS.map(m => m.id))}
-              className="text-xs flex-1"
+              className="text-xs flex-1 !bg-transparent"
             >
               Select All
             </Button>
@@ -839,7 +839,7 @@ export function AiView() {
               size="sm"
               variant="outline"
               onClick={() => setSelectedModels([])}
-              className="text-xs flex-1"
+              className="text-xs flex-1 !bg-transparent"
             >
               Clear All
             </Button>

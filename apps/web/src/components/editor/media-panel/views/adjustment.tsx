@@ -267,7 +267,7 @@ export function AdjustmentView() {
             variant="outline"
             size="sm"
             onClick={toggleParameters}
-            className={showParameters ? 'bg-primary/10' : ''}
+            className={`!bg-transparent ${showParameters ? 'bg-primary/10' : ''}`}
           >
             <Settings className="size-4" />
           </Button>

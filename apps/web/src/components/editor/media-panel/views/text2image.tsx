@@ -123,14 +123,14 @@ export function Text2ImageView() {
           <RadioGroup
             value={generationMode}
             onValueChange={(value: "single" | "multi") => setGenerationMode(value)}
-            className="flex gap-6"
+            className="flex flex-col gap-3"
             style={{ marginBottom: '5px' }}
           >
-            <div className="flex items-center space-x-2 cursor-pointer">
+            <div className="flex items-center space-x-6 cursor-pointer">
               <RadioGroupItem value="single" id="single" className="h-4 w-4" />
               <Label htmlFor="single" className="text-sm cursor-pointer">Single Model</Label>
             </div>
-            <div className="flex items-center space-x-2 cursor-pointer">
+            <div className="flex items-center space-x-6 cursor-pointer">
               <RadioGroupItem value="multi" id="multi" className="h-4 w-4" />
               <Label htmlFor="multi" className="text-sm cursor-pointer">Multi-Model Compare</Label>
             </div>
@@ -141,9 +141,11 @@ export function Text2ImageView() {
       {/* Model Selection */}
       <Card>
         <CardHeader className="pb-3">
+          <div style={{ height: '5px' }}></div>
           <CardTitle className="text-sm">
             {generationMode === "single" ? "Select Model" : `Select Models (${selectedModelCount} chosen)`}
           </CardTitle>
+          <div style={{ height: '5px' }}></div>
         </CardHeader>
         <CardContent>
           <FloatingActionPanelRoot defaultMode="selection">
@@ -200,6 +202,7 @@ export function Text2ImageView() {
       <Card className="border-0 shadow-none" style={{ marginTop: '5px' }}>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm">Prompt</CardTitle>
+          <div style={{ height: '5px' }}></div>
         </CardHeader>
         <CardContent>
           <Textarea
@@ -214,12 +217,13 @@ export function Text2ImageView() {
       {/* Settings */}
       <Card className="border-0 shadow-none" style={{ marginTop: '5px' }}>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm">Settings</CardTitle>
+          <CardTitle className="text-sm" style={{ marginLeft: '5px' }}>Settings</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="size" className="text-xs">Image Size</Label>
+              <div style={{ height: '5px' }}></div>
               <Select value={imageSize} onValueChange={setImageSize}>
                 <SelectTrigger id="size" className="justify-between">
                   <SelectValue />
