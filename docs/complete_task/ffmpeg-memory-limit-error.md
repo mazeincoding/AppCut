@@ -47,9 +47,12 @@ FFmpeg in the browser requires approximately **3x the video file size** in memor
 
 ## Files Involved
 
-### **`apps/web/src/lib/memory-monitor.ts`** (lines 179-188) - **PRIMARY SOURCE**
-**Current code**: 
+### **`apps/web/src/lib/memory-monitor.ts`** (lines 164-188) - **PRIMARY SOURCE**
+**Function**: `checkFileSafety(fileSizeBytes: number)`
+**Current logic**: 
 ```javascript
+const fileSizeMB = fileSizeBytes / 1024 / 1024;
+const availableMemoryMB = memInfo.availableMemory / 1024 / 1024;
 const estimatedMemoryNeeded = fileSizeMB * 3; // 3x file size for processing
 
 if (estimatedMemoryNeeded > availableMemoryMB) {
@@ -61,23 +64,45 @@ if (estimatedMemoryNeeded > availableMemoryMB) {
   };
 }
 ```
-**Current issue**: Hard-coded threshold blocks files too early
-**Required fix**: Increase `availableMemoryMB` threshold to allow 8GB files
+
+**Current issue**: Uses browser's `jsHeapSizeLimit` which is typically 2-4GB, blocking large files
+**Required fix**: Override the available memory calculation to allow up to 8GB files
 
 ### **`apps/web/src/lib/export-errors.ts`** (line 97)
 **Current role**: Logs the MemoryError from memory-monitor.ts
 **Issue**: Only logs the error without offering solutions or recovery
 **Required fix**: Add better error messages with progressive warnings
 
-### **`apps/web/src/lib/export-engine-optimized.ts`** (line 57)
-**Current role**: Main export engine that calls memory-monitor validation
-**Issue**: Relies on memory-monitor's restrictive thresholds
-**Required fix**: Update to use new 8GB thresholds
+### **`apps/web/src/lib/export-engine-optimized.ts`** (lines 735-744)
+**Function**: Memory validation before export starts
+**Current logic**:
+```javascript
+const warning = memoryMonitor.checkFileSafety(estimatedBytes);
 
-### **`apps/web/src/components/export-dialog.tsx`** (line 253)
-**Current role**: UI component that triggers export process and handles errors
-**Issue**: Shows technical error messages from memory-monitor
-**Required fix**: Add progressive warnings for large files (2GB+, 4GB+, 8GB+)
+if (warning && warning.level === 'error') {
+  throw new MemoryError(
+    warning.message,
+    {
+      estimatedBytes,
+      level: warning.level
+    }
+  );
+}
+```
+**Current issue**: Directly throws MemoryError when memory-monitor returns 'error' level
+**Required fix**: No changes needed - will work once memory-monitor thresholds are updated
+
+### **`apps/web/src/components/export-dialog.tsx`** (lines 215-217)
+**Function**: Export error handling
+**Current logic**:
+```javascript
+} catch (error) {
+  const errorMessage = error instanceof Error ? error.message : "Unknown error";
+  updateProgress({ isExporting: false, status: `Error: ${errorMessage}` });
+}
+```
+**Current issue**: Shows raw MemoryError message to users
+**Required fix**: Add user-friendly handling for memory-related errors
 
 ## Solution Options
 
@@ -132,9 +157,15 @@ if (estimatedMemoryNeeded > availableMemoryMB) {
 ## Recommended Implementation
 
 ### **Phase 1: Immediate Fix**
-1. **Update `memory-monitor.ts`** - Increase `availableMemoryMB` calculation to allow 8GB files
-2. **Modify threshold logic** - Change `canContinue: false` to progressive warnings
-3. **Update `export-dialog.tsx`** - Add UI warnings for large files instead of blocking
+1. **Update `memory-monitor.ts` checkFileSafety()** (lines 164-188)
+   - Override `availableMemoryMB` calculation to allow up to 8GB files
+   - Change 8GB+ threshold from `canContinue: false` to blocking only above 8GB
+   - Keep progressive warnings at 2GB, 4GB levels
+
+2. **Update `export-dialog.tsx` error handling** (lines 215-217)
+   - Add specific handling for MemoryError types
+   - Show user-friendly messages instead of raw error text
+   - Provide guidance for memory-related issues
 
 ### **Phase 2: Long-term Solution**
 1. **Implement chunked processing** for large files

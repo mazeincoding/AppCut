@@ -173,34 +173,61 @@ export class MemoryMonitor {
     }
 
     const fileSizeMB = fileSizeBytes / 1024 / 1024;
-    const availableMemoryMB = memInfo.availableMemory / 1024 / 1024;
+    
+    // Override memory calculation to allow up to 8GB files
+    // Use larger threshold instead of browser's restrictive jsHeapSizeLimit
+    const maxAllowedMemoryMB = 8 * 1024; // 8GB threshold
+    const availableMemoryMB = Math.max(
+      memInfo.availableMemory / 1024 / 1024, // Browser's available memory
+      maxAllowedMemoryMB * 0.6 // Assume 60% of 8GB is available (4.8GB)
+    );
 
     // Estimate memory needed (rough calculation)
     const estimatedMemoryNeeded = fileSizeMB * 3; // 3x file size for processing
 
-    if (estimatedMemoryNeeded > availableMemoryMB) {
+    console.log(`🔍 MEMORY-MONITOR: File size check for ${fileSizeMB.toFixed(1)}MB file:`, {
+      estimatedMemoryNeeded: estimatedMemoryNeeded.toFixed(1) + 'MB',
+      browserAvailableMemory: (memInfo.availableMemory / 1024 / 1024).toFixed(1) + 'MB',
+      overrideAvailableMemory: availableMemoryMB.toFixed(1) + 'MB',
+      maxAllowedMemory: maxAllowedMemoryMB + 'MB'
+    });
+
+    // Block only files requiring more than 8GB (processing > 2.67GB files)
+    if (fileSizeMB > 2.67 * 1024) { // ~2.67GB * 3 = 8GB processing memory
       return {
         level: 'error',
-        message: `File too large: ${fileSizeMB.toFixed(1)}MB (estimated ${estimatedMemoryNeeded.toFixed(1)}MB needed)`,
-        recommendation: 'Reduce file size or close other applications',
+        message: `File too large: ${fileSizeMB.toFixed(1)}MB exceeds 8GB processing limit`,
+        recommendation: 'Use desktop app or compress video for files this large',
         canContinue: false,
       };
     }
 
-    if (estimatedMemoryNeeded > availableMemoryMB * 0.7) {
+    // High risk warning for large files (4GB+ processing memory needed)
+    if (estimatedMemoryNeeded > 4 * 1024) { // 4GB
       return {
         level: 'critical',
-        message: `Large file: ${fileSizeMB.toFixed(1)}MB may cause performance issues`,
-        recommendation: 'Consider reducing quality or using smaller segments',
+        message: `Large file: ${fileSizeMB.toFixed(1)}MB requires ${estimatedMemoryNeeded.toFixed(1)}MB processing memory`,
+        recommendation: 'Consider reducing quality or duration. May cause performance issues.',
         canContinue: true,
       };
     }
 
-    if (fileSizeMB > 100) {
+    // Warning for medium-large files (2GB+ processing memory needed)
+    if (estimatedMemoryNeeded > 2 * 1024) { // 2GB
       return {
         level: 'warning',
-        message: `Large file: ${fileSizeMB.toFixed(1)}MB detected`,
-        recommendation: 'Monitor memory usage during processing',
+        message: `Large file: ${fileSizeMB.toFixed(1)}MB requires ${estimatedMemoryNeeded.toFixed(1)}MB processing memory`,
+        recommendation: 'Monitor memory usage during processing. Close other tabs if needed.',
+        canContinue: true,
+      };
+    }
+
+    // Info for moderately large files
+    if (fileSizeMB > 500) { // 500MB
+      return {
+        level: 'info',
+        message: `Processing ${fileSizeMB.toFixed(1)}MB file (estimated ${estimatedMemoryNeeded.toFixed(1)}MB memory needed)`,
+        recommendation: 'File size is acceptable for browser processing',
         canContinue: true,
       };
     }

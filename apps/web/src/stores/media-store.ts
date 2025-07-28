@@ -616,17 +616,23 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     console.log('🚫 MEDIA-STORE: Timeline preview generation disabled to prevent FFmpeg errors');
     return;
     
+    /* ALL CODE BELOW IS UNREACHABLE AND DISABLED
     const item = get().mediaItems.find(item => item.id === mediaId);
-    if (!item || !item.file || item.type !== 'video') {
+    if (!item) {
+      console.warn('Cannot generate timeline previews: media item not found', { mediaId });
+      return;
+    }
+    
+    if (!item.file || item.type !== 'video') {
       console.warn('Cannot generate timeline previews: invalid media item', { 
         mediaId, 
-        type: item?.type,
-        hasFile: !!item?.file,
-        fileName: item?.file?.name 
+        type: item.type,
+        hasFile: !!item.file,
+        fileName: item.file?.name 
       });
       return;
     }
-
+    
     // ✨ ENHANCED: Better file validation for AI videos
     const itemVideoFile = item.file;
     
@@ -834,6 +840,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     // Store the request promise
     timelinePreviewRequests.set(requestKey, request);
     return request;
+    */
   },
 
   getTimelinePreviewStrip: (mediaId, elementDuration, zoomLevel) => {

@@ -214,12 +214,41 @@ export function ExportDialog() {
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      updateProgress({ isExporting: false, status: `Error: ${errorMessage}` });
       
-      // SAFETY: If auto mode fails, suggest stable fallback
-      if (exportEngine === 'auto') {
-        setMemoryWarning(`${errorMessage} - Try switching to "Stable Mode" in export options.`);
-        setMemoryLevel('error');
+      // Handle memory-related errors with user-friendly messages
+      if (errorMessage.includes('File too large') || errorMessage.includes('Memory') || errorMessage.includes('MemoryError')) {
+        const fileSizeMB = Math.round(estimateVideoMemoryUsage(resolution.width, resolution.height, getTotalDuration(), activeProject?.fps || 30) / (1024 * 1024 * 3));
+        
+        if (fileSizeMB > 2600) { // >8GB processing needed
+          updateProgress({ 
+            isExporting: false, 
+            status: `File too large (${fileSizeMB}MB) - Use desktop app or compress video` 
+          });
+          setMemoryWarning('This file exceeds browser limits. Try the desktop version or reduce file size/quality.');
+          setMemoryLevel('error');
+        } else if (fileSizeMB > 1300) { // >4GB processing needed
+          updateProgress({ 
+            isExporting: false, 
+            status: `Large file warning (${fileSizeMB}MB) - Consider reducing quality` 
+          });
+          setMemoryWarning('Large file detected. Try reducing quality to 720p or lower for better performance.');
+          setMemoryLevel('critical');
+        } else {
+          updateProgress({ 
+            isExporting: false, 
+            status: `Memory issue - Close other tabs and try again` 
+          });
+          setMemoryWarning('Memory issue detected. Close other browser tabs and try exporting again.');
+          setMemoryLevel('warning');
+        }
+      } else {
+        updateProgress({ isExporting: false, status: `Error: ${errorMessage}` });
+        
+        // SAFETY: If auto mode fails, suggest stable fallback
+        if (exportEngine === 'auto') {
+          setMemoryWarning(`${errorMessage} - Try switching to "Stable Mode" in export options.`);
+          setMemoryLevel('error');
+        }
       }
     }
   };
