@@ -37,13 +37,13 @@ export function Header() {
       prefetch={false}
       style={{ textDecoration: 'none' }}
     >
-      <Image src="./logo.svg" alt="OpenCut Logo" width={32} height={32} />
+      <Image src="./logo.svg" alt="OpenCut Logo" width={32} height={32} style={{ marginLeft: '380px' }} />
       <span className="text-xl font-medium" style={{ color: 'white' }}>OpenCut</span>
     </Link>
   );
 
   const rightContent = (
-    <nav className="flex items-center bg-gray-500/20 rounded-full px-4 py-2" style={{ marginRight: '120px', transform: 'translateX(-30px)' }}>
+    <nav className="flex items-center bg-black/30 backdrop-blur-md rounded-full px-4 py-2 border-2 border-white/20 shadow-lg" style={{ marginRight: '120px', transform: 'translateX(-30px)' }}>
       <Link 
         href="/blog"
         className="text-sm hover:text-gray-300 transition-colors no-underline"

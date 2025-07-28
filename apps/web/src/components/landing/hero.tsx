@@ -142,12 +142,12 @@ function TitleComponent({ signupCount }: { signupCount: number }) {
       />
       
       <div className="max-w-5xl mx-auto w-full flex-1 flex flex-col justify-center">
-        <div className="mb-8 flex justify-center" style={{ marginTop: '20px' }}>
+        <div className="mb-8 flex justify-center" style={{ transform: 'translateY(-60px)' }}>
           <a 
             href="https://vercel.com/home?utm_source=opencut" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-white/5 backdrop-blur-sm hover:bg-white/10 transition-all duration-200 group shadow-lg no-underline"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-white/5 backdrop-blur-sm hover:bg-white/10 transition-all duration-200 group shadow-lg no-underline border border-white/20"
           >
             <span 
               className="text-xs font-medium transition-colors"
@@ -173,7 +173,7 @@ function TitleComponent({ signupCount }: { signupCount: number }) {
 
         <h1 
           className="font-bold tracking-tighter text-black dark:text-white"
-          style={{ fontSize: 'clamp(2.5rem, 6vw, 6rem)', marginTop: '-10px' }}
+          style={{ fontSize: 'clamp(2.25rem, 4.5vw, 4.5rem)', transform: 'translateY(-40px)' }}
         >
           The Open Source
         </h1>
@@ -196,9 +196,9 @@ function TitleComponent({ signupCount }: { signupCount: number }) {
         </div>
 
         {/* Subheading */}
-        <p className="mt-8 text-lg md:text-xl max-w-2xl mx-auto text-gray-400">
+        <p className="mt-8 text-lg md:text-xl max-w-2xl mx-auto text-gray-400" style={{ opacity: 0.95 }}>
           An intuitive, powerful, and free video editor for everyone.<br />
-          Create stunning videos with professional tools, right from your browser.
+          Works on any platform.
         </p>
 
         <div className="mt-8 flex gap-8 justify-center">
@@ -373,6 +373,19 @@ function OpenSourceSlider({ width: initialWidth, height = 70, handleSize = 18, o
           left: '24px',
           right: '24px',
           height: '2px',
+          backgroundColor: '#eab308',
+          zIndex: 30,
+          pointerEvents: 'none'
+        }}
+      />
+      <div 
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '2px',
+          height: '60%',
           backgroundColor: '#eab308',
           zIndex: 30,
           pointerEvents: 'none'
