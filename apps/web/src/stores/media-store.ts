@@ -1,5 +1,8 @@
 import { create } from "zustand";
 import { storageService } from "@/lib/storage/storage-service";
+
+// Debug flag - set to false to disable console logs
+const DEBUG_MEDIA_STORE = process.env.NODE_ENV === 'development' && false;
 import { useTimelineStore } from "./timeline-store";
 import { generateUUID } from "@/lib/utils";
 import { generateEnhancedThumbnails, type EnhancedThumbnailOptions } from "@/lib/ffmpeg-utils";
@@ -378,20 +381,22 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     // Add to local state immediately (non-breaking)
     set((state) => {
       const updatedItems = [...state.mediaItems, ...newItems];
-      console.log("🎨 MEDIA-STORE: Updating mediaItems array from", state.mediaItems.length, "to", updatedItems.length, "items");
+      if (DEBUG_MEDIA_STORE) console.log("🎨 MEDIA-STORE: Updating mediaItems array from", state.mediaItems.length, "to", updatedItems.length, "items");
       return {
         mediaItems: updatedItems
       };
     });
 
-    console.log(`✅ MEDIA-STORE: Successfully added ${newItems.length} generated images to media panel`);
-    console.log("✅ MEDIA-STORE: New total mediaItems count:", get().mediaItems.length);
+    if (DEBUG_MEDIA_STORE) {
+      console.log(`✅ MEDIA-STORE: Successfully added ${newItems.length} generated images to media panel`);
+      console.log("✅ MEDIA-STORE: New total mediaItems count:", get().mediaItems.length);
+      console.log("🔄 MEDIA-STORE: Starting background URL to File conversion for generated images");
+    }
     
     // Fetch and convert URLs to Files in background
-    console.log("🔄 MEDIA-STORE: Starting background URL to File conversion for generated images");
     newItems.forEach(async (item, index) => {
       if (item.url && !item.file) {
-        console.log(`🔄 MEDIA-STORE: Converting URL to File for item ${index + 1}/${newItems.length}:`, item.name);
+        if (DEBUG_MEDIA_STORE) console.log(`🔄 MEDIA-STORE: Converting URL to File for item ${index + 1}/${newItems.length}:`, item.name);
         try {
           const response = await fetch(item.url);
           if (!response.ok) {
@@ -399,7 +404,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
           }
           
           const blob = await response.blob();
-          console.log(`📦 MEDIA-STORE: Fetched blob for ${item.name}, size:`, blob.size, "type:", blob.type);
+          if (DEBUG_MEDIA_STORE) console.log(`📦 MEDIA-STORE: Fetched blob for ${item.name}, size:`, blob.size, "type:", blob.type);
           
           // Extract filename from URL or use default
           const urlParts = item.url.split('/');
@@ -412,11 +417,13 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
             lastModified: Date.now()
           });
           
-          console.log(`✅ MEDIA-STORE: Created File object for ${item.name}:`, {
-            name: file.name,
-            size: file.size,
-            type: file.type
-          });
+          if (DEBUG_MEDIA_STORE) {
+            console.log(`✅ MEDIA-STORE: Created File object for ${item.name}:`, {
+              name: file.name,
+              size: file.size,
+              type: file.type
+            });
+          }
           
           // Update the item with the File object
           set((state) => ({
@@ -431,9 +438,9 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
             ),
           }));
           
-          console.log(`✅ MEDIA-STORE: Updated media item ${item.name} with File object`);
+          if (DEBUG_MEDIA_STORE) console.log(`✅ MEDIA-STORE: Updated media item ${item.name} with File object`);
         } catch (error) {
-          console.error(`❌ MEDIA-STORE: Failed to fetch/convert image for ${item.name}:`, error);
+          if (DEBUG_MEDIA_STORE) console.error(`❌ MEDIA-STORE: Failed to fetch/convert image for ${item.name}:`, error);
           // Optionally mark the item as having an error
           set((state) => ({
             mediaItems: state.mediaItems.map(mediaItem =>
