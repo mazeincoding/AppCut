@@ -140,16 +140,32 @@ export default function Document() {
                       const observer = new originalPerformanceObserver((list) => {
                         for (const entry of list.getEntries()) {
                           if (entry.name && (entry.name.includes('.json') || entry.name.includes('_next/data'))) {
-                            console.error('🚫 [PERFORMANCE API] Detected JSON resource load attempt:');
-                            console.error('Resource:', entry.name);
-                            console.error('Type:', entry.entryType);
-                            console.error('Entry:', entry);
-                            console.error('=================================');
+                            // Filter out legitimate Next.js development files
+                            const isLegitimateDevFile = 
+                              entry.name.includes('_devMiddleware') ||
+                              entry.name.includes('_devPage') ||
+                              entry.name.includes('_devMiddlewareManifest') ||
+                              entry.name.includes('static/development/') ||
+                              entry.name.includes('page-loader') ||
+                              entry.name.includes('webpack-hmr') ||
+                              entry.name.includes('hot-reloader') ||
+                              entry.name.includes('_buildManifest') ||
+                              entry.name.includes('_ssgManifest') ||
+                              entry.name.includes('_middlewareManifest');
+                            
+                            // Only log potentially problematic resources
+                            if (!isLegitimateDevFile) {
+                              console.error('🚫 [PERFORMANCE API] Detected JSON resource load attempt:');
+                              console.error('Resource:', entry.name);
+                              console.error('Type:', entry.entryType);
+                              console.error('Entry:', entry);
+                              console.error('=================================');
+                            }
                           }
                         }
                       });
                       observer.observe({entryTypes: ['resource', 'navigation']});
-                      console.log('✅ [DEBUG] Performance monitoring enabled for resource detection');
+                      // console.log('✅ [DEBUG] Performance monitoring enabled for resource detection');
                     } catch (e) {
                       console.log('⚠️ [DEBUG] Performance monitoring not available:', e);
                     }
@@ -167,21 +183,21 @@ export default function Document() {
                   });
                   
                   // ElectronAPI detection debugging
-                  console.log('🔍 [ELECTRON API DEBUG] Detection status:', {
-                    electronAPI: typeof window.electronAPI,
-                    process: typeof window.process,
-                    require: typeof window.require,
-                    userAgent: navigator.userAgent,
-                    isElectron: window.process && window.process.type === 'renderer'
-                  });
+                  // console.log('🔍 [ELECTRON API DEBUG] Detection status:', {
+                  //   electronAPI: typeof window.electronAPI,
+                  //   process: typeof window.process,
+                  //   require: typeof window.require,
+                  //   userAgent: navigator.userAgent,
+                  //   isElectron: window.process && window.process.type === 'renderer'
+                  // });
                 }
                 
-                console.log('✅ [IMMEDIATE BLOCK] All data fetching mechanisms blocked at script level');
+                // console.log('✅ [IMMEDIATE BLOCK] All data fetching mechanisms blocked at script level');
               })();
               
               // Wait for DOM to be ready
               document.addEventListener('DOMContentLoaded', function() {
-                console.log('🚀 [ELECTRON] DOM ready, checking for ElectronAPI');
+                // console.log('🚀 [ELECTRON] DOM ready, checking for ElectronAPI');
                 
                 if (typeof window !== 'undefined' && window.electronAPI && document.body) {
                   document.body.setAttribute('data-electron', 'true');
@@ -195,7 +211,7 @@ export default function Document() {
                   }
                 }
                 
-                console.log('🚀 [DEBUG] Page loaded, body data-electron:', document.body ? document.body.getAttribute('data-electron') : 'body not found');
+                // console.log('🚀 [DEBUG] Page loaded, body data-electron:', document.body ? document.body.getAttribute('data-electron') : 'body not found');
               });
               
               // Click debug logging and fallback handler for when React doesn't load

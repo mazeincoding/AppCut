@@ -182,8 +182,8 @@ export class ElectronErrorBoundary extends Component<Props, State> {
 }
 
 // =================== VERIFICATION PRINTS ===================
-console.log('🎯 [ERROR-BOUNDARY] ElectronErrorBoundary component loaded');
-console.log('- React error catching: ENABLED');
-console.log('- Electron-specific recovery: ENABLED');
-console.log('- Fallback UI with navigation: ENABLED');
-console.log('- Development error details: ENABLED');
+// console.log('🎯 [ERROR-BOUNDARY] ElectronErrorBoundary component loaded');
+// console.log('- React error catching: ENABLED');
+// console.log('- Electron-specific recovery: ENABLED');
+// console.log('- Fallback UI with navigation: ENABLED');
+// console.log('- Development error details: ENABLED');

@@ -20,7 +20,7 @@ import '@/lib/debug-logger'
 const isElectron = typeof window !== 'undefined' && (window as any).electronAPI;
 
 // =================== PHASE 4: ERROR BOUNDARY INTEGRATION ===================
-console.log('🚀 [APP] Loading OpenCut app with Electron error boundary and font fix...');
+// console.log('🚀 [APP] Loading OpenCut app with Electron error boundary and font fix...');
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -65,9 +65,9 @@ export default function App({ Component, pageProps }: AppProps) {
 }
 
 // =================== VERIFICATION PRINTS ===================
-console.log('🎯 [APP] App configuration:');
-console.log('- Error boundary: ENABLED');
-console.log('- Electron hydration fix: ENABLED');
-console.log('- Theme provider: ENABLED');
-console.log('- Storage provider: ENABLED');
-console.log('🚀 [APP] All providers and error boundaries configured');
+// console.log('🎯 [APP] App configuration:');
+// console.log('- Error boundary: ENABLED');
+// console.log('- Electron hydration fix: ENABLED');
+// console.log('- Theme provider: ENABLED');
+// console.log('- Storage provider: ENABLED');
+// console.log('🚀 [APP] All providers and error boundaries configured');
