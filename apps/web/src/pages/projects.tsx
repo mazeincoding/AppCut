@@ -584,7 +584,7 @@ export default function ProjectsPage() {
         </div>
 
         {isSelectionMode && savedProjects.length > 0 && (
-          <div className="mb-6 p-4 bg-muted/30 rounded-lg border">
+          <div className="mb-6 p-4 bg-muted/30 rounded-lg" style={{ border: '1px solid transparent' }}>
             <div className="flex items-center gap-3">
               <Checkbox
                 checked={allSelected}
@@ -599,6 +599,7 @@ export default function ProjectsPage() {
                   }
                 }}
                 onCheckedChange={handleSelectAll}
+                style={{ backgroundColor: 'transparent' }}
               />
               <span className="text-sm font-medium">
                 {allSelected ? "Deselect All" : "Select All"}&nbsp;&nbsp;
@@ -723,8 +724,9 @@ function ProjectCard({ project, isSelected, onSelect }: ProjectCardProps) {
               deleteProject(project.id);
             }
           }}
-          className="absolute top-3 left-3 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 z-40"
+          className="absolute left-4 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 z-40"
           style={{ 
+            top: '16px',
             opacity: 1,
             backgroundColor: 'rgba(0, 0, 0, 0.3)',
             color: 'white',
@@ -749,8 +751,8 @@ function ProjectCard({ project, isSelected, onSelect }: ProjectCardProps) {
         <div 
           className="absolute cursor-pointer z-40"
           style={{
-            top: '6px',
-            right: '12px',
+            top: '16px',
+            right: '16px',
             width: '20px',
             height: '20px',
             backgroundColor: isSelected ? '#3b82f6' : 'white',
@@ -790,7 +792,7 @@ function ProjectCard({ project, isSelected, onSelect }: ProjectCardProps) {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="flex items-center justify-center text-gray-400">
+              <div className="flex items-center justify-center text-gray-400" style={{ marginTop: '16px' }}>
                 <Video className="h-6 w-6 mr-2" />
                 <span className="text-xs">&nbsp;&nbsp;No preview</span>
               </div>
@@ -824,7 +826,7 @@ function ProjectCard({ project, isSelected, onSelect }: ProjectCardProps) {
                 />
               ) : (
                 <h3 
-                  className="font-semibold text-gray-900 text-sm line-clamp-1 cursor-pointer hover:text-blue-600 transition-colors pl-[5px]"
+                  className="font-semibold text-gray-900 text-sm line-clamp-1 cursor-pointer hover:text-blue-600 transition-colors pl-[10px]"
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsEditing(true);
@@ -837,10 +839,10 @@ function ProjectCard({ project, isSelected, onSelect }: ProjectCardProps) {
               )}
             </div>
             <div className="space-y-0.5">
-              <p className="text-xs text-gray-500 pl-[5px]">
+              <p className="text-xs text-gray-500 pl-[10px]">
                 Created: {project.createdAt.toLocaleDateString()}
               </p>
-              <p className="text-xs text-gray-500 pl-[5px]">
+              <p className="text-xs text-gray-500 pl-[10px]">
                 Last edited: {Math.floor((Date.now() - project.updatedAt.getTime()) / (1000 * 60 * 60 * 24))} days ago
               </p>
             </div>
