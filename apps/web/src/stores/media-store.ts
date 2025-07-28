@@ -356,6 +356,9 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
   },
 
   addGeneratedImages: (items) => {
+    console.log("🎨 MEDIA-STORE: addGeneratedImages() called with", items.length, "items");
+    console.log("🎨 MEDIA-STORE: Current mediaItems count before adding:", get().mediaItems.length);
+    
     // Convert items to full MediaItem objects with IDs
     const newItems: MediaItem[] = items.map((item) => ({
       ...item,
@@ -366,12 +369,23 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
       },
     }));
 
-    // Add to local state
-    set((state) => ({
-      mediaItems: [...state.mediaItems, ...newItems],
-    }));
+    console.log("🎨 MEDIA-STORE: Generated IDs for new items:", newItems.map(item => ({
+      id: item.id,
+      name: item.name,
+      url: item.url?.substring(0, 50) + '...'
+    })));
 
-    console.log(`Added ${newItems.length} generated images to media panel`);
+    // Add to local state
+    set((state) => {
+      const updatedItems = [...state.mediaItems, ...newItems];
+      console.log("🎨 MEDIA-STORE: Updating mediaItems array from", state.mediaItems.length, "to", updatedItems.length, "items");
+      return {
+        mediaItems: updatedItems
+      };
+    });
+
+    console.log(`✅ MEDIA-STORE: Successfully added ${newItems.length} generated images to media panel`);
+    console.log("✅ MEDIA-STORE: New total mediaItems count:", get().mediaItems.length);
   },
 
   generateEnhancedThumbnails: async (mediaId, options = {}) => {

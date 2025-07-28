@@ -245,6 +245,18 @@ export function MediaView() {
   const [progress, setProgress] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [mediaFilter, setMediaFilter] = useState("all");
+  
+  // Debug logging for media items changes
+  useEffect(() => {
+    console.log("🖼️ MEDIA-VIEW: mediaItems updated, count:", mediaItems.length);
+    console.log("🖼️ MEDIA-VIEW: mediaItems:", mediaItems.map(item => ({
+      id: item.id,
+      name: item.name,
+      type: item.type,
+      source: item.metadata?.source || item.source,
+      url: item.url?.substring(0, 50) + '...'
+    })));
+  }, [mediaItems]);
 
   const processFiles = async (files: FileList | File[]) => {
     if (!files || files.length === 0) return;
@@ -320,6 +332,12 @@ export function MediaView() {
   const [filteredMediaItems, setFilteredMediaItems] = useState(mediaItems);
 
   useEffect(() => {
+    console.log("🔍 MEDIA-VIEW: Filtering media items", {
+      totalItems: mediaItems.length,
+      filter: mediaFilter,
+      searchQuery: searchQuery
+    });
+    
     const filtered = mediaItems.filter((item) => {
       if (mediaFilter && mediaFilter !== "all" && item.type !== mediaFilter) {
         return false;
@@ -335,6 +353,16 @@ export function MediaView() {
       return true;
     });
 
+    console.log("🔍 MEDIA-VIEW: Filtered results", {
+      filteredCount: filtered.length,
+      filteredItems: filtered.map(item => ({
+        id: item.id,
+        name: item.name,
+        type: item.type,
+        source: item.metadata?.source || item.source
+      }))
+    });
+    
     setFilteredMediaItems(filtered);
   }, [mediaItems, mediaFilter, searchQuery]);
 
