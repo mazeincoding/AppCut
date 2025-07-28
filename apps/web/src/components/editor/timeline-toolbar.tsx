@@ -70,7 +70,7 @@ export function TimelineToolbar({
               variant="outline"
               size="icon"
               onClick={toggle}
-              className="mr-2"
+              className="mr-2 hover:text-[#05c7c7] transition-colors"
               style={{ backgroundColor: 'transparent', border: 'none' }}
             >
               {isPlaying ? (
@@ -129,7 +129,7 @@ export function TimelineToolbar({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="outline" size="icon" onClick={handleSplitSelected} className="mx-2" style={{ backgroundColor: 'transparent', border: 'none' }}>
+            <Button variant="outline" size="icon" onClick={handleSplitSelected} className="mx-2 hover:text-[#05c7c7] transition-colors" style={{ backgroundColor: 'transparent', border: 'none' }}>
               <Scissors className="h-3 w-3" />
             </Button>
           </TooltipTrigger>
@@ -138,7 +138,7 @@ export function TimelineToolbar({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="outline" size="icon" className="mx-2" style={{ backgroundColor: 'transparent', border: 'none' }}>
+            <Button variant="outline" size="icon" className="mx-2 hover:text-[#05c7c7] transition-colors" style={{ backgroundColor: 'transparent', border: 'none' }}>
               <ArrowLeftToLine className="h-3 w-3" />
             </Button>
           </TooltipTrigger>
@@ -147,7 +147,7 @@ export function TimelineToolbar({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="outline" size="icon" className="mx-2" style={{ backgroundColor: 'transparent', border: 'none' }}>
+            <Button variant="outline" size="icon" className="mx-2 hover:text-[#05c7c7] transition-colors" style={{ backgroundColor: 'transparent', border: 'none' }}>
               <ArrowRightToLine className="h-3 w-3" />
             </Button>
           </TooltipTrigger>
@@ -156,7 +156,7 @@ export function TimelineToolbar({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="outline" size="icon" className="mx-2" style={{ backgroundColor: 'transparent', border: 'none' }}>
+            <Button variant="outline" size="icon" className="mx-2 hover:text-[#05c7c7] transition-colors" style={{ backgroundColor: 'transparent', border: 'none' }}>
               <SplitSquareHorizontal className="h-3 w-3" />
             </Button>
           </TooltipTrigger>
@@ -169,7 +169,7 @@ export function TimelineToolbar({
               variant="outline"
               size="icon"
               onClick={handleDuplicateSelected}
-              className="mx-2"
+              className="mx-2 hover:text-[#05c7c7] transition-colors"
               style={{ backgroundColor: 'transparent', border: 'none' }}
             >
               <Copy className="h-3 w-3" />
@@ -180,7 +180,7 @@ export function TimelineToolbar({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="outline" size="icon" onClick={handleFreezeSelected} className="mx-2" style={{ backgroundColor: 'transparent', border: 'none' }}>
+            <Button variant="outline" size="icon" onClick={handleFreezeSelected} className="mx-2 hover:text-[#05c7c7] transition-colors" style={{ backgroundColor: 'transparent', border: 'none' }}>
               <Snowflake className="h-3 w-3" />
             </Button>
           </TooltipTrigger>
@@ -189,7 +189,7 @@ export function TimelineToolbar({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="outline" size="icon" onClick={handleDeleteSelected} className="mx-2" style={{ backgroundColor: 'transparent', border: 'none' }}>
+            <Button variant="outline" size="icon" onClick={handleDeleteSelected} className="mx-2 hover:text-[#05c7c7] transition-colors" style={{ backgroundColor: 'transparent', border: 'none' }}>
               <Trash2 className="h-3 w-3" />
             </Button>
           </TooltipTrigger>

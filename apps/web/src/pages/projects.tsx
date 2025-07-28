@@ -14,6 +14,8 @@ import {
   Trash2,
   Pencil,
   CheckSquare,
+  Clock,
+  SortAsc,
 } from "lucide-react";
 import { TProject } from "@/types/project";
 import Image from "next/image";
@@ -85,6 +87,8 @@ export default function ProjectsPage() {
   );
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
+  const [sortByNewest, setSortByNewest] = useState(true);
+  const [sortByName, setSortByName] = useState(false);
 
   const handleCreateProject = async () => {
     if (isCreatingProject) {
@@ -189,7 +193,7 @@ export default function ProjectsPage() {
                 onMouseEnter={(e) => (e.target as HTMLElement).style.backgroundColor = '#e9ecef'}
                 onMouseLeave={(e) => (e.target as HTMLElement).style.backgroundColor = '#f8f9fa'}
               >
-                <X className="mr-2" style={{ width: '14px', height: '14px' }} />
+                <X style={{ width: '14px', height: '14px', marginRight: '12px' }} />
                 Cancel
               </button>
               {selectedProjects.size > 0 && (
@@ -300,6 +304,60 @@ export default function ProjectsPage() {
               >
                 <Trash2 style={{ width: '14px', height: '14px', marginRight: '12px' }} />
                 Delete All
+              </button>
+              <button
+                style={{
+                  backgroundColor: '#f8f9fa', 
+                  color: 'black',
+                  height: '40px',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  paddingLeft: '16px',
+                  paddingRight: '16px',
+                  border: '1px solid #e9ecef',
+                  cursor: 'pointer',
+                  opacity: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'flex-start',
+                  width: '150px'
+                }}
+                onClick={() => {
+                  setSortByNewest(!sortByNewest);
+                  setSortByName(false);
+                }}
+                onMouseEnter={(e) => (e.target as HTMLElement).style.backgroundColor = '#e9ecef'}
+                onMouseLeave={(e) => (e.target as HTMLElement).style.backgroundColor = '#f8f9fa'}
+              >
+                <Clock style={{ width: '14px', height: '14px', marginRight: '12px' }} />
+                Sort by Time
+              </button>
+              <button
+                style={{
+                  backgroundColor: '#f8f9fa', 
+                  color: 'black',
+                  height: '40px',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  paddingLeft: '16px',
+                  paddingRight: '16px',
+                  border: '1px solid #e9ecef',
+                  cursor: 'pointer',
+                  opacity: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'flex-start',
+                  width: '150px'
+                }}
+                onClick={() => {
+                  setSortByName(true);
+                  setSortByNewest(false);
+                }}
+                onMouseEnter={(e) => (e.target as HTMLElement).style.backgroundColor = '#e9ecef'}
+                onMouseLeave={(e) => (e.target as HTMLElement).style.backgroundColor = '#f8f9fa'}
+              >
+                <SortAsc style={{ width: '14px', height: '14px', marginRight: '12px' }} />
+                Sort by Name
               </button>
             </div>
           )}
@@ -465,6 +523,60 @@ export default function ProjectsPage() {
                     <Trash2 style={{ width: '14px', height: '14px', marginRight: '12px' }} />
                       Delete All
                   </button>
+                  <button
+                    style={{
+                      backgroundColor: '#f8f9fa', 
+                      color: 'black',
+                      height: '40px',
+                      borderRadius: '6px',
+                      fontSize: '14px',
+                      paddingLeft: '16px',
+                      paddingRight: '16px',
+                      border: '1px solid #e9ecef',
+                      cursor: 'pointer',
+                      opacity: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'flex-start',
+                      width: '150px'
+                    }}
+                    onClick={() => {
+                  setSortByNewest(!sortByNewest);
+                  setSortByName(false);
+                }}
+                    onMouseEnter={(e) => (e.target as HTMLElement).style.backgroundColor = '#e9ecef'}
+                    onMouseLeave={(e) => (e.target as HTMLElement).style.backgroundColor = '#f8f9fa'}
+                  >
+                    <Clock style={{ width: '14px', height: '14px', marginRight: '12px' }} />
+                    Sort by Time
+                  </button>
+                  <button
+                    style={{
+                      backgroundColor: '#f8f9fa', 
+                      color: 'black',
+                      height: '40px',
+                      borderRadius: '6px',
+                      fontSize: '14px',
+                      paddingLeft: '16px',
+                      paddingRight: '16px',
+                      border: '1px solid #e9ecef',
+                      cursor: 'pointer',
+                      opacity: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'flex-start',
+                      width: '150px'
+                    }}
+                    onClick={() => {
+                      setSortByName(true);
+                      setSortByNewest(false);
+                    }}
+                    onMouseEnter={(e) => (e.target as HTMLElement).style.backgroundColor = '#e9ecef'}
+                    onMouseLeave={(e) => (e.target as HTMLElement).style.backgroundColor = '#f8f9fa'}
+                  >
+                    <SortAsc style={{ width: '14px', height: '14px', marginRight: '12px' }} />
+                    Sort by Name
+                  </button>
                 </div>
               </div>
             )}
@@ -489,7 +601,7 @@ export default function ProjectsPage() {
                 onCheckedChange={handleSelectAll}
               />
               <span className="text-sm font-medium">
-                {allSelected ? "Deselect All" : "Select All"}
+                {allSelected ? "Deselect All" : "Select All"}&nbsp;&nbsp;
               </span>
               <span className="text-sm text-muted-foreground">
                 ({selectedProjects.size} of {savedProjects.length} selected)
@@ -506,16 +618,26 @@ export default function ProjectsPage() {
           <NoProjects onCreateProject={handleCreateProject} disabled={isCreatingProject} />
         ) : (
           <div className="grid grid-cols-4 justify-center mx-auto max-w-5xl" style={{ gap: '20px' }}>
-            {savedProjects.map((project) => {
-              return (
-                <ProjectCard
-                  key={project.id}
-                  project={project}
-                  isSelected={selectedProjects.has(project.id)}
-                  onSelect={handleSelectProject}
-                />
-              );
-            })}
+            {[...savedProjects]
+              .sort((a, b) => {
+                if (sortByName) {
+                  return a.name.localeCompare(b.name);
+                } else if (sortByNewest) {
+                  return b.updatedAt.getTime() - a.updatedAt.getTime();
+                } else {
+                  return a.updatedAt.getTime() - b.updatedAt.getTime();
+                }
+              })
+              .map((project) => {
+                return (
+                  <ProjectCard
+                    key={project.id}
+                    project={project}
+                    isSelected={selectedProjects.has(project.id)}
+                    onSelect={handleSelectProject}
+                  />
+                );
+              })}
           </div>
         )}
       </main>

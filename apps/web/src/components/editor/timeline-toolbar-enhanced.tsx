@@ -55,11 +55,11 @@ export function TimelineToolbarEnhanced({
                       size="sm"
                       variant={selectedTool === 'select' ? 'outline' : 'outline'}
                       onClick={() => setSelectedTool('select')}
-                      className="h-8 w-8"
+                      className="h-8 w-8 hover:text-[#05c7c7] transition-colors"
                       style={{
                         backgroundColor: 'transparent',
                         border: 'none',
-                        color: selectedTool === 'select' ? '#ffffff' : undefined
+                        color: selectedTool === 'select' ? '#05c7c7' : undefined
                       }}
                     >
                       <MousePointer className="h-3 w-3" />
@@ -76,11 +76,11 @@ export function TimelineToolbarEnhanced({
                       size="sm"
                       variant="outline"
                       onClick={() => setSelectedTool('cut')}
-                      className="h-8 w-8"
+                      className="h-8 w-8 hover:text-[#05c7c7] transition-colors"
                       style={{
                         backgroundColor: 'transparent',
                         border: 'none',
-                        color: selectedTool === 'cut' ? '#3b82f6' : undefined
+                        color: selectedTool === 'cut' ? '#05c7c7' : undefined
                       }}
                     >
                       <Scissors className="h-3 w-3" />
@@ -97,11 +97,11 @@ export function TimelineToolbarEnhanced({
                       size="sm"
                       variant="outline"
                       onClick={() => setSelectedTool('text')}
-                      className="h-8 w-8"
+                      className="h-8 w-8 hover:text-[#05c7c7] transition-colors"
                       style={{
                         backgroundColor: 'transparent',
                         border: 'none',
-                        color: selectedTool === 'text' ? '#3b82f6' : undefined
+                        color: selectedTool === 'text' ? '#05c7c7' : undefined
                       }}
                     >
                       <Type className="h-3 w-3" />
@@ -126,11 +126,11 @@ export function TimelineToolbarEnhanced({
                     size="sm"
                     variant="outline"
                     onClick={() => setIsSnappingEnabled(!isSnappingEnabled)}
-                    className="h-8 w-8"
+                    className="h-8 w-8 hover:text-[#05c7c7] transition-colors"
                     style={{
                       backgroundColor: 'transparent',
                       borderColor: 'transparent',
-                      color: isSnappingEnabled ? '#3b82f6' : undefined
+                      color: isSnappingEnabled ? '#05c7c7' : undefined
                     }}
                   >
                     <Magnet className="h-3 w-3" />
@@ -153,7 +153,7 @@ export function TimelineToolbarEnhanced({
                   size="sm" 
                   variant="outline" 
                   onClick={() => setZoomLevel(Math.max(0.1, zoomLevel - 0.1))}
-                  className="h-8 w-8"
+                  className="h-8 w-8 hover:text-[#05c7c7] transition-colors"
                   style={{ backgroundColor: 'transparent', border: 'none' }}
                 >
                   <ZoomOut className="h-3 w-3" />
@@ -174,7 +174,7 @@ export function TimelineToolbarEnhanced({
                   size="sm" 
                   variant="outline" 
                   onClick={() => setZoomLevel(Math.min(5, zoomLevel + 0.1))}
-                  className="h-8 w-8"
+                  className="h-8 w-8 hover:text-[#05c7c7] transition-colors"
                   style={{ backgroundColor: 'transparent', border: 'none' }}
                 >
                   <ZoomIn className="h-3 w-3" />
