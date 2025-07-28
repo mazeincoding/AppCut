@@ -25,20 +25,58 @@ export class ZipManager {
     const total = items.length
     let completed = 0
 
+    console.log('📦 ZIP-MANAGER: Starting to add media items', {
+      totalItems: total,
+      generatedImages: items.filter(item => item.metadata?.source === 'text2image').length
+    });
+
     for (const item of items) {
       try {
-        // File objects are already Blobs, so use them directly
-        const filename = this.resolveFilename(item.name)
+        // Get the filename
+        let filename = item.name;
+        
+        // Fix missing extensions for generated images
+        if (item.metadata?.source === 'text2image' && item.file && !filename.includes('.')) {
+          // Get extension from file type
+          const mimeType = item.file.type || 'image/png';
+          const extension = mimeType.split('/')[1] || 'png';
+          filename = `${filename}.${extension}`;
+          console.log('🔧 ZIP-MANAGER: Fixed missing extension for generated image', {
+            originalName: item.name,
+            fixedName: filename,
+            mimeType: mimeType
+          });
+        }
+        
+        // Resolve filename conflicts
+        filename = this.resolveFilename(filename);
+        
+        console.log('📄 ZIP-MANAGER: Processing item', {
+          name: item.name,
+          finalFilename: filename,
+          hasFile: !!item.file,
+          hasUrl: !!item.url,
+          type: item.type,
+          isGenerated: item.metadata?.source === 'text2image',
+          fileSize: item.file?.size || 0
+        });
         
         // Add file to ZIP directly
         if (item.file) {
           this.zip.file(filename, item.file)
+          console.log('✅ ZIP-MANAGER: Added to ZIP', { filename, size: item.file.size });
+        } else {
+          console.warn('⚠️ ZIP-MANAGER: No file object for item', { 
+            name: item.name,
+            hasUrl: !!item.url,
+            urlType: item.url?.startsWith('data:') ? 'data' : item.url?.startsWith('blob:') ? 'blob' : 'other'
+          });
         }
         
         completed++
         onProgress?.(completed / total)
       } catch (error) {
-        console.error(`Failed to add ${item.name} to ZIP:`, error)
+        console.error(`❌ ZIP-MANAGER: Failed to add ${item.name} to ZIP:`, error)
         // Continue with other files
       }
     }

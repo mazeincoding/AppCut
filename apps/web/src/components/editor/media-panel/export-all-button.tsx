@@ -23,18 +23,54 @@ export function ExportAllButton({
   const { exportState, exportToZip, isExporting } = useZipExport()
 
   const handleExportAll = async () => {
-    if (mediaItems.length === 0 || isExporting) return
+    console.log('📦 EXPORT-ALL: Button clicked!');
+    console.log('📊 EXPORT-ALL: Media items analysis', {
+      totalItems: mediaItems.length,
+      generatedImages: mediaItems.filter(item => item.metadata?.source === 'text2image').length,
+      regularImages: mediaItems.filter(item => item.type === 'image' && item.metadata?.source !== 'text2image').length,
+      videos: mediaItems.filter(item => item.type === 'video').length,
+      audio: mediaItems.filter(item => item.type === 'audio').length
+    });
+    
+    // Log generated images details
+    const generatedImages = mediaItems.filter(item => item.metadata?.source === 'text2image');
+    if (generatedImages.length > 0) {
+      console.log('🖼️ EXPORT-ALL: Generated images found:', generatedImages.map(img => ({
+        id: img.id,
+        name: img.name,
+        hasFile: !!img.file,
+        hasUrl: !!img.url,
+        urlType: img.url?.startsWith('data:') ? 'data' : img.url?.startsWith('blob:') ? 'blob' : 'other',
+        fileSize: img.file?.size || 0,
+        metadata: img.metadata
+      })));
+    }
+    
+    if (mediaItems.length === 0 || isExporting) {
+      console.log('⚠️ EXPORT-ALL: Export blocked', {
+        reason: mediaItems.length === 0 ? 'No media items' : 'Already exporting',
+        isExporting
+      });
+      return
+    }
 
     try {
+      console.log('🚀 EXPORT-ALL: Starting ZIP export...');
       await exportToZip(mediaItems, {
         filename: `media-export-${Date.now()}.zip`
       })
+      
+      console.log('✅ EXPORT-ALL: Export completed', {
+        phase: exportState.phase,
+        totalFiles: exportState.totalFiles,
+        completedFiles: exportState.completedFiles
+      });
       
       if (exportState.phase === 'complete') {
         toast.success(`Successfully exported ${mediaItems.length} files to ZIP!`)
       }
     } catch (error) {
-      console.error('Export failed:', error)
+      console.error('❌ EXPORT-ALL: Export failed:', error)
       toast.error('Failed to export media files')
     }
   }

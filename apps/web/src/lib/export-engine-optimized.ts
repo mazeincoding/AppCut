@@ -464,6 +464,15 @@ export class ExportEngine {
   private async renderImageElementOptimized(element: TimelineElement, timestamp: number): Promise<void> {
     const mediaElement = element as any; // Type assertion for media element
     const mediaItem = this.mediaItems.find(m => m.id === mediaElement.mediaId);
+    
+    console.log('🔍 EXPORT-ENGINE: renderImageElementOptimized called', {
+      elementId: element.id,
+      mediaId: mediaElement.mediaId,
+      hasMediaItem: !!mediaItem,
+      mediaName: mediaItem?.name,
+      isGenerated: mediaItem?.metadata?.source === 'text2image'
+    });
+    
     if (!mediaItem) return;
 
     // For short videos, skip cache and render directly
@@ -474,6 +483,10 @@ export class ExportEngine {
       if (!isShortVideo) {
         this.log('ImageBitmap not found in cache, falling back to regular rendering');
       }
+      console.log('🔄 EXPORT-ENGINE: Falling back to renderImageElement for', {
+        mediaId: mediaElement.mediaId,
+        reason: isShortVideo ? 'short video' : 'no bitmap cache'
+      });
       return await this.renderImageElement(element, this.calculateBounds(element));
     }
 
@@ -559,19 +572,56 @@ export class ExportEngine {
       text: [] as TimelineElement[]
     };
 
+    console.log('🔍 EXPORT-ENGINE: Grouping elements by type', {
+      totalElements: elements.length,
+      elementTypes: elements.map(e => e.type)
+    });
+
     for (const element of elements) {
       if (element.type === 'text') {
         groups.text.push(element);
       } else if (element.type === 'media') {
         const mediaElement = element as any; // Type assertion for media element
         const mediaItem = this.mediaItems.find(m => m.id === mediaElement.mediaId);
+        
+        console.log('📊 EXPORT-ENGINE: Processing media element', {
+          elementId: element.id,
+          mediaId: mediaElement.mediaId,
+          hasMediaItem: !!mediaItem,
+          mediaType: mediaItem?.type,
+          mediaName: mediaItem?.name,
+          isGenerated: mediaItem?.metadata?.source === 'text2image'
+        });
+        
         if (mediaItem?.type === 'image') {
           groups.images.push(element);
+          console.log('🖼️ EXPORT-ENGINE: Added to images group', {
+            elementId: element.id,
+            mediaName: mediaItem.name,
+            isGenerated: mediaItem.metadata?.source === 'text2image'
+          });
         } else if (mediaItem?.type === 'video') {
           groups.videos.push(element);
+          console.log('🎥 EXPORT-ENGINE: Added to videos group', {
+            elementId: element.id,
+            mediaName: mediaItem.name
+          });
+        } else {
+          console.warn('⚠️ EXPORT-ENGINE: Media element has unknown type', {
+            elementId: element.id,
+            mediaId: mediaElement.mediaId,
+            mediaType: mediaItem?.type,
+            mediaItem: mediaItem
+          });
         }
       }
     }
+    
+    console.log('✅ EXPORT-ENGINE: Element grouping complete', {
+      imageCount: groups.images.length,
+      videoCount: groups.videos.length,
+      textCount: groups.text.length
+    });
 
     return groups;
   }

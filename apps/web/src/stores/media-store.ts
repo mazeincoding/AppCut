@@ -409,7 +409,22 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
           // Extract filename from URL or use default
           const urlParts = item.url.split('/');
           const urlFilename = urlParts[urlParts.length - 1].split('?')[0];
-          const fileName = item.name || urlFilename || 'generated-image.png';
+          
+          // Ensure generated images have proper file extension
+          let fileName = item.name || urlFilename || 'generated-image';
+          
+          // Add extension if missing for generated images
+          if (item.metadata?.source === 'text2image' && !fileName.includes('.')) {
+            // Determine extension from blob type
+            const mimeType = blob.type || 'image/png';
+            const extension = mimeType.split('/')[1] || 'png';
+            fileName = `${fileName}.${extension}`;
+            console.log('🔧 MEDIA-STORE: Added extension to generated image filename', {
+              originalName: item.name,
+              newFileName: fileName,
+              mimeType: mimeType
+            });
+          }
           
           // Create File object with proper MIME type
           const file = new File([blob], fileName, { 

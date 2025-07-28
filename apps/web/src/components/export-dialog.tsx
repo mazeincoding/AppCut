@@ -162,6 +162,7 @@ export function ExportDialog() {
 
   // Event handlers - implements mermaid diagram export flow
   const handleExport = async () => {
+    console.log('🎬 EXPORT-DIALOG: Export button clicked');
     if (!canvasRef.current?.getCanvas() || isExporting) return;
 
     try {
@@ -171,8 +172,51 @@ export function ExportDialog() {
       if (!canvas) {
         throw new Error("Canvas not available");
       }
+      
+      // DIAGNOSTIC: Log what's being exported
+      const timelineElements = tracks.flatMap(track => track.elements);
+      const mediaElements = timelineElements.filter(el => el.type === 'media');
+      const generatedElements = mediaElements.filter(el => {
+        const mediaItem = mediaItems.find(m => m.id === (el as any).mediaId);
+        return mediaItem?.metadata?.source === 'text2image';
+      });
+      
+      console.log('📊 EXPORT-DIALOG: Export content analysis', {
+        totalElements: timelineElements.length,
+        mediaElements: mediaElements.length,
+        generatedImages: generatedElements.length,
+        regularMedia: mediaElements.length - generatedElements.length,
+        textElements: timelineElements.filter(el => el.type === 'text').length,
+        mediaItemsCount: mediaItems.length,
+        generatedMediaItems: mediaItems.filter(m => m.metadata?.source === 'text2image').length
+      });
+      
+      // Log generated images details
+      if (generatedElements.length > 0) {
+        console.log('🖼️ EXPORT-DIALOG: Generated images to export:', generatedElements.map(el => {
+          const mediaItem = mediaItems.find(m => m.id === (el as any).mediaId);
+          return {
+            elementId: el.id,
+            mediaId: (el as any).mediaId,
+            mediaName: mediaItem?.name,
+            hasUrl: !!mediaItem?.url,
+            urlType: mediaItem?.url?.startsWith('data:') ? 'data' : 
+                    mediaItem?.url?.startsWith('blob:') ? 'blob' : 'other',
+            position: { start: el.startTime, duration: el.duration }
+          };
+        }));
+      }
 
       // SAFETY: Use factory to select engine based on user preference - implements mermaid diagram
+      console.log('🏭 EXPORT-DIALOG: Creating export engine with:', {
+        engineType: exportEngine,
+        mediaItemsCount: mediaItems.length,
+        generatedImagesCount: mediaItems.filter(m => m.metadata?.source === 'text2image').length,
+        timelineElementsCount: tracks.flatMap(track => track.elements).length,
+        duration: getTotalDuration(),
+        fps: activeProject?.fps || 30
+      });
+      
       const engine = await ExportEngineFactory.createEngineByPreference(exportEngine, {
         canvas: canvas,
         settings: {
@@ -205,8 +249,15 @@ export function ExportDialog() {
         },
       });
 
+      console.log('🚀 EXPORT-DIALOG: Starting export...');
       const videoBlob = await engine.startExport();
       const fullFilename = `${filename}.${format}`;
+      
+      console.log('✅ EXPORT-DIALOG: Export completed', {
+        blobSize: videoBlob.size,
+        blobType: videoBlob.type,
+        filename: fullFilename
+      });
       await ExportEngine.createDownloadLink(videoBlob, fullFilename);
       
       updateProgress({ isExporting: false, progress: 100, status: "Export complete!" });
