@@ -417,12 +417,13 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
         thumbnails = result.thumbnails;
         metadata = result.metadata;
         
-        console.log('🎬 FFMPEG THUMBNAIL COMPLETE:', {
-          mediaItemId: mediaId,
-          thumbnailCount: thumbnails.length,
-          duration: metadata.duration,
-          processingTime: Date.now() - startTime
-        });
+        // Debug FFmpeg thumbnail completion (disabled by default)
+        // console.log('🎬 FFMPEG THUMBNAIL COMPLETE:', {
+        //   mediaItemId: mediaId,
+        //   thumbnailCount: thumbnails.length,
+        //   duration: metadata.duration,
+        //   processingTime: Date.now() - startTime
+        // });
       } catch (thumbnailError) {
         console.error('❌ Thumbnail generation failed:', {
           mediaId,

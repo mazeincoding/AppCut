@@ -475,19 +475,19 @@ export function MediaView() {
             >
               {/* Render each media item as a draggable button */}
               {filteredMediaItems.map((item) => {
-                // Debug logging for media panel item rendering
-                console.group('🎬 MEDIA PANEL ITEM RENDER');
-                console.log('Item state:', {
-                  id: item.id,
-                  name: item.name,
-                  isAIGenerated: item.source === 'ai',
-                  thumbnailsReady: (item.thumbnails?.length || 0) > 0,
-                  fileValid: item.file ? (item.file as any) instanceof File : false,
-                  duration: item.duration,
-                  processingStage: item.processingStage,
-                  processingComplete: item.processingComplete
-                });
-                console.groupEnd();
+                // Debug logging for media panel item rendering (disabled by default)
+                // console.group('🎬 MEDIA PANEL ITEM RENDER');
+                // console.log('Item state:', {
+                //   id: item.id,
+                //   name: item.name,
+                //   isAIGenerated: item.source === 'ai',
+                //   thumbnailsReady: (item.thumbnails?.length || 0) > 0,
+                //   fileValid: item.file ? (item.file as any) instanceof File : false,
+                //   duration: item.duration,
+                //   processingStage: item.processingStage,
+                //   processingComplete: item.processingComplete
+                // });
+                // console.groupEnd();
 
                 return (
                 <ContextMenu key={item.id}>

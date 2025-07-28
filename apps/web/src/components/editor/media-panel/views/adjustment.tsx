@@ -250,7 +250,7 @@ export function AdjustmentView() {
             variant="outline"
             size="sm"
             onClick={() => setActiveTab('media')}
-            className="mr-2 hover:bg-primary hover:text-primary-foreground transition-colors"
+            className="mr-2 bg-transparent hover:bg-primary hover:text-primary-foreground transition-colors"
             aria-label="Back to media"
           >
             <ArrowLeft className="size-4" />

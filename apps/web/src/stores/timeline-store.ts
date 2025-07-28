@@ -1064,24 +1064,25 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       try {
         const tracks = await storageService.loadTimeline(projectId);
         if (tracks) {
-          console.log("📂 LOADING TIMELINE FROM STORAGE:", {
-            projectId,
-            tracksCount: tracks.length,
-            elementsData: tracks.flatMap(track => 
-              track.elements.map(el => ({
-                id: el.id,
-                type: el.type,
-                duration: el.duration,
-                trimStart: el.trimStart,
-                trimEnd: el.trimEnd,
-                hasNonZeroTrimEnd: el.trimEnd > 0
-              }))
-            ),
-            timestamp: new Date().toISOString()
-          });
+          // Debug timeline loading (disabled by default)
+          // console.log("📂 LOADING TIMELINE FROM STORAGE:", {
+          //   projectId,
+          //   tracksCount: tracks.length,
+          //   elementsData: tracks.flatMap(track => 
+          //     track.elements.map(el => ({
+          //       id: el.id,
+          //       type: el.type,
+          //       duration: el.duration,
+          //       trimStart: el.trimStart,
+          //       trimEnd: el.trimEnd,
+          //       hasNonZeroTrimEnd: el.trimEnd > 0
+          //     }))
+          //   ),
+          //   timestamp: new Date().toISOString()
+          // });
           
           // PROPER FIX: Validate and sanitize trim values
-          console.log("🔧 APPLYING TRIM VALUE SANITIZATION...");
+          // console.log("🔧 APPLYING TRIM VALUE SANITIZATION...");
           
           const sanitizedTracks = tracks.map(track => ({
             ...track,
@@ -1089,12 +1090,13 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
               const originalTrimEnd = element.trimEnd;
               const originalTrimStart = element.trimStart;
               
-              console.log("🔍 CHECKING ELEMENT FOR SANITIZATION:", {
-                elementId: element.id,
-                duration: element.duration,
-                originalTrimStart,
-                originalTrimEnd
-              });
+              // Debug element sanitization (disabled by default)
+              // console.log("🔍 CHECKING ELEMENT FOR SANITIZATION:", {
+              //   elementId: element.id,
+              //   duration: element.duration,
+              //   originalTrimStart,
+              //   originalTrimEnd
+              // });
               
               // Sanitize trim values to prevent corrupted data
               const sanitizedTrimStart = Math.max(0, element.trimStart || 0);

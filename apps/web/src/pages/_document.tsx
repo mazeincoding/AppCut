@@ -47,7 +47,8 @@ export default function Document() {
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              console.log('🚀 [ELECTRON DEBUG] JavaScript executing in Electron');
+              // Debug logs disabled by default
+              // console.log('🚀 [ELECTRON DEBUG] JavaScript executing in Electron');
               
               // ROOT CAUSE FIX: IMMEDIATE blocking before ANY library loads
               (function() {
@@ -57,17 +58,17 @@ export default function Document() {
                   window.fetch = function(input, init) {
                     const url = typeof input === 'string' ? input : (input && input.url) || input.toString();
                     
-                    // DETAILED DEBUG: Log ALL fetch requests to understand the pattern
-                    console.log('🔍 [FETCH DEBUG] Request intercepted:', {
-                      url: url,
-                      type: typeof input,
-                      input: input,
-                      stack: new Error().stack
-                    });
+                    // DETAILED DEBUG: Log ALL fetch requests to understand the pattern (disabled by default)
+                    // console.log('🔍 [FETCH DEBUG] Request intercepted:', {
+                    //   url: url,
+                    //   type: typeof input,
+                    //   input: input,
+                    //   stack: new Error().stack
+                    // });
                     
                     // Allow FFmpeg files
                     if (url && (url.includes('/ffmpeg/') || url.includes('ffmpeg-core'))) {
-                      console.log('✅ [ELECTRON] Allowing FFmpeg file:', url);
+                      // console.log('✅ [ELECTRON] Allowing FFmpeg file:', url);
                       return originalFetch.apply(this, arguments);
                     }
                     
@@ -75,7 +76,7 @@ export default function Document() {
                     if (url && (url.includes('.json') || url.includes('_next/data') || url.includes('.html.json'))) {
                       // Allow Next.js development middleware files
                       if (url.includes('_devMiddleware') || url.includes('_devPage') || url.includes('page-loader')) {
-                        console.log('✅ [ELECTRON] Allowing Next.js dev file:', url.split('/').pop());
+                        // console.log('✅ [ELECTRON] Allowing Next.js dev file:', url.split('/').pop());
                         return originalFetch.apply(this, arguments);
                       }
                       console.warn('🚫 [ELECTRON] Blocked data fetch:', url.split('/').pop());
@@ -93,14 +94,14 @@ export default function Document() {
                     const originalOpen = xhr.open;
                     xhr.open = function(method, url) {
                       // DETAILED DEBUG: Log ALL XHR requests
-                      console.log('🔍 [XHR DEBUG] Request intercepted:', {
-                        method: method,
-                        url: url,
-                        stack: new Error().stack
-                      });
+                      // console.log('🔍 [XHR DEBUG] Request intercepted:', {
+                      //   method: method,
+                      //   url: url,
+                      //   stack: new Error().stack
+                      // });
                       
                       if (typeof url === 'string' && (url.includes('.json') || url.includes('_next/data') || url.includes('.html.json'))) {
-                        console.warn('🚫 [ELECTRON] Blocked XHR:', method, url.split('/').pop());
+                        // console.warn('🚫 [ELECTRON] Blocked XHR:', method, url.split('/').pop());
                         throw new Error('Data fetching disabled in Electron');
                       }
                       return originalOpen.apply(this, arguments);

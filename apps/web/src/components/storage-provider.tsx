@@ -67,11 +67,12 @@ export function StorageProvider({ children }: StorageProviderProps) {
   const instanceId = Math.random().toString(36).substr(2, 9);
   setGlobalState({ instanceCount: (globalState?.instanceCount || 0) + 1 });
   
-  console.log(`🔥 StorageProvider v14:15 - Instance #${(globalState?.instanceCount || 0) + 1} - hasGloballyInitialized: ${globalState?.hasGloballyInitialized}`);
+  // Debug storage provider initialization (disabled by default)
+  // console.log(`🔥 StorageProvider v14:15 - Instance #${(globalState?.instanceCount || 0) + 1} - hasGloballyInitialized: ${globalState?.hasGloballyInitialized}`);
   
   // EMERGENCY: If we've already initialized globally, just return a minimal provider
   if (globalState?.hasGloballyInitialized) {
-    console.log(`🛑 EMERGENCY SKIP`);
+    // console.log(`🛑 EMERGENCY SKIP`);
     return (
       <StorageContext.Provider value={{
         isInitialized: true,

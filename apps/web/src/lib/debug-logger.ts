@@ -13,6 +13,7 @@ class DebugLogger {
   private logs: LogEntry[] = [];
   private maxLogs = 1000;
   private storageKey = 'opencut-debug-logs';
+  private enabled = false; // Disabled by default
 
   private constructor() {
     // Load existing logs from localStorage
@@ -70,7 +71,7 @@ class DebugLogger {
       'MEDIA_PANEL_RENDER'
     ].includes(event);
 
-    if (!skipConsoleLog) {
+    if (!skipConsoleLog && this.enabled) {
       console.log(`[DEBUG] ${component} - ${event}:`, data);
     }
   }
@@ -139,5 +140,6 @@ export const debugLogger = DebugLogger.getInstance();
 // Add window export for easy access in console
 if (typeof window !== 'undefined') {
   (window as any).debugLogger = debugLogger;
-  console.log('🔥 DebugLogger v13:15');
+  // Debug logger initialization (disabled by default)
+  // console.log('🔥 DebugLogger v13:15');
 }

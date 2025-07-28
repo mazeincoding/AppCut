@@ -147,18 +147,18 @@ export function TimelineElement({
       : element.startTime;
   const elementLeft = 120 + (elementStartTime * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel);
   
-  // Debug element positioning
-  if (elementStartTime === 0) {
-    console.log('🎬 VIDEO AT 0.0s POSITION:', {
-      elementName: element.name,
-      elementStartTime,
-      pixelsPerSecond: TIMELINE_CONSTANTS.PIXELS_PER_SECOND,
-      zoomLevel,
-      offset: 320,
-      finalElementLeft: elementLeft,
-      shouldMatchRuler: true
-    });
-  }
+  // Debug element positioning (disabled by default)
+  // if (elementStartTime === 0) {
+  //   console.log('🎬 VIDEO AT 0.0s POSITION:', {
+  //     elementName: element.name,
+  //     elementStartTime,
+  //     pixelsPerSecond: TIMELINE_CONSTANTS.PIXELS_PER_SECOND,
+  //     zoomLevel,
+  //     offset: 320,
+  //     finalElementLeft: elementLeft,
+  //     shouldMatchRuler: true
+  //   });
+  // }
 
   const handleDeleteElement = () => {
     removeElementFromTrack(track.id, element.id);
@@ -346,12 +346,13 @@ export function TimelineElement({
     }
 
     if (mediaItem.type === "video") {
-      console.log('🎬 VIDEO ELEMENT RENDERING:', {
-        elementName: element.name,
-        elementId: element.id,
-        mediaItemId: mediaItem.id,
-        isSelected
-      });
+      // Debug video element rendering (disabled by default)
+      // console.log('🎬 VIDEO ELEMENT RENDERING:', {
+      //   elementName: element.name,
+      //   elementId: element.id,
+      //   mediaItemId: mediaItem.id,
+      //   isSelected
+      // });
       
       // Video element with colorful background and proper selection
       return (

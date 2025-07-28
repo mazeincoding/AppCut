@@ -61,12 +61,13 @@ export function TimelinePlayhead({
     325 +
     playheadPosition * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel;
 
-  console.log('🔴 PLAYHEAD HORIZONTAL POSITION:', {
-    leftPosition,
-    trackLabelsWidth,
-    playheadPosition,
-    currentTime
-  });
+  // Debug playhead positioning (disabled by default)
+  // console.log('🔴 PLAYHEAD HORIZONTAL POSITION:', {
+  //   leftPosition,
+  //   trackLabelsWidth,
+  //   playheadPosition,
+  //   currentTime
+  // });
 
   return (
     <div
