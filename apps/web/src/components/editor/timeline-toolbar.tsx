@@ -198,26 +198,28 @@ export function TimelineToolbar({
 
         <div className="w-px h-6 bg-border mx-1" />
 
-        {/* Speed Control */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Select
-              value={speed.toFixed(1)}
-              onValueChange={(value) => setSpeed(parseFloat(value))}
-            >
-              <SelectTrigger className="w-[90px] h-8" style={{ borderColor: 'transparent' }}>
-                <SelectValue placeholder="1.0x" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="0.5">0.5x</SelectItem>
-                <SelectItem value="1.0">1.0x</SelectItem>
-                <SelectItem value="1.5">1.5x</SelectItem>
-                <SelectItem value="2.0">2.0x</SelectItem>
-              </SelectContent>
-            </Select>
-          </TooltipTrigger>
-          <TooltipContent>Playback Speed</TooltipContent>
-        </Tooltip>
+        {/* Speed Control - Fixed: Separate tooltip and select to avoid ref issues */}
+        <div className="relative">
+          <Select
+            value={speed.toFixed(1)}
+            onValueChange={(value) => setSpeed(parseFloat(value))}
+          >
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <SelectTrigger className="w-[90px] h-8" style={{ borderColor: 'transparent' }}>
+                  <SelectValue placeholder="1.0x" />
+                </SelectTrigger>
+              </TooltipTrigger>
+              <TooltipContent>Playback Speed</TooltipContent>
+            </Tooltip>
+            <SelectContent>
+              <SelectItem value="0.5">0.5x</SelectItem>
+              <SelectItem value="1.0">1.0x</SelectItem>
+              <SelectItem value="1.5">1.5x</SelectItem>
+              <SelectItem value="2.0">2.0x</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </TooltipProvider>
   );
 

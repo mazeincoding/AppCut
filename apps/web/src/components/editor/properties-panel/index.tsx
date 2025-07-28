@@ -34,8 +34,12 @@ export function PropertiesPanel() {
   const emptyView = (
     <div className="space-y-6 p-6 pt-8 bg-gray-800/50 rounded-lg">
       {/* Media Properties */}
-      <div className="flex flex-col gap-3">
-        <PropertyItem label="Name:" value={activeProject?.name || ""} />
+      <div className="flex flex-col">
+        <div className="h-5"></div>
+        <div className="flex justify-between">
+          <Label className="text-xs text-muted-foreground ml-[5px]">Name:</Label>
+          <span className="text-xs text-right mr-[5px]">{activeProject?.name || ""}</span>
+        </div>
         <PropertyItem label="Aspect ratio:" value={getDisplayName()} />
         <PropertyItem
           label="Resolution:"
@@ -113,7 +117,7 @@ export function PropertiesPanel() {
 
 function PropertyItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between">
+    <div className="flex justify-between mt-2">
       <Label className="text-xs text-muted-foreground ml-[5px]">{label}</Label>
       <span className="text-xs text-right mr-[5px]">{value}</span>
     </div>

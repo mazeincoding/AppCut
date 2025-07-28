@@ -140,7 +140,7 @@ export default function Document() {
                       const observer = new originalPerformanceObserver((list) => {
                         for (const entry of list.getEntries()) {
                           if (entry.name && (entry.name.includes('.json') || entry.name.includes('_next/data'))) {
-                            // Filter out legitimate Next.js development files
+                            // Filter out legitimate Next.js development files and PWA manifest
                             const isLegitimateDevFile = 
                               entry.name.includes('_devMiddleware') ||
                               entry.name.includes('_devPage') ||
@@ -151,7 +151,8 @@ export default function Document() {
                               entry.name.includes('hot-reloader') ||
                               entry.name.includes('_buildManifest') ||
                               entry.name.includes('_ssgManifest') ||
-                              entry.name.includes('_middlewareManifest');
+                              entry.name.includes('_middlewareManifest') ||
+                              entry.name.includes('manifest.json');
                             
                             // Only log potentially problematic resources
                             if (!isLegitimateDevFile) {

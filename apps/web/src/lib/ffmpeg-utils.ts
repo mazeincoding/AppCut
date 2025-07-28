@@ -42,16 +42,19 @@ export const initFFmpeg = async (): Promise<FFmpeg> => {
     
     isLoaded = true;
     
-    // Set up logging (if supported)
+    // Set up logging (if supported) - disabled by default for cleaner console
     try {
       ffmpeg.on('log', ({ message }) => {
-        // Filter out excessive logging to prevent memory issues
-        if (!message.includes('frame=') && !message.includes('time=')) {
+        // Filter out excessive logging to prevent memory issues and console noise
+        // Only log critical errors, warnings, or specific debug information when needed
+        if (message.includes('Error') || message.includes('Warning') || message.includes('Failed')) {
           console.log('FFmpeg:', message);
         }
+        // Uncomment below for full FFmpeg logging when debugging:
+        // console.log('FFmpeg:', message);
       });
     } catch (e) {
-      console.log('FFmpeg logging not supported');
+      // console.log('FFmpeg logging not supported');
     }
     
     console.log("✅ FFmpeg.wasm loaded successfully");

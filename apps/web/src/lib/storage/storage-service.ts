@@ -189,14 +189,21 @@ class StorageService {
 
     if (!file || !metadata) return null;
 
-    // Create new object URL for the file
-    const url = URL.createObjectURL(file);
+    // Fix: Reconstruct File with preserved MIME type from metadata
+    // OPFS File reconstruction loses MIME type, so we restore it from stored metadata
+    const reconstructedFile = new File([file], metadata.name, {
+      type: metadata.type,        // Restore MIME type from metadata
+      lastModified: metadata.lastModified
+    });
+
+    // Create new object URL for the reconstructed file
+    const url = URL.createObjectURL(reconstructedFile);
 
     return {
       id: metadata.id,
       name: metadata.name,
       type: metadata.type,
-      file,
+      file: reconstructedFile,    // Use reconstructed file with MIME type
       url,
       width: metadata.width,
       height: metadata.height,
