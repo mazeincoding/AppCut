@@ -8,6 +8,47 @@ import {
 } from "@/constants/timeline-constants";
 import { useTimelinePlayhead } from "@/hooks/use-timeline-playhead";
 
+// Fake cursor component to replace system cursor with 200px offset
+const FakeCursor = () => (
+  <div className="fake-cursor pointer-events-none" style={{
+    width: '20px',
+    height: '20px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  }}>
+    <div style={{
+      width: '2px',
+      height: '16px',
+      background: '#000',
+      position: 'relative'
+    }}>
+      {/* Top arrow */}
+      <div style={{
+        position: 'absolute',
+        top: '-2px',
+        left: '-2px',
+        width: '0',
+        height: '0',
+        borderLeft: '3px solid transparent',
+        borderRight: '3px solid transparent',
+        borderBottom: '4px solid #000',
+      }} />
+      {/* Bottom arrow */}
+      <div style={{
+        position: 'absolute',
+        bottom: '-2px',
+        left: '-2px',
+        width: '0',
+        height: '0',
+        borderLeft: '3px solid transparent',
+        borderRight: '3px solid transparent',
+        borderTop: '4px solid #000',
+      }} />
+    </div>
+  </div>
+);
+
 interface TimelinePlayheadProps {
   currentTime: number;
   duration: number;
@@ -37,7 +78,7 @@ export function TimelinePlayhead({
 }: TimelinePlayheadProps) {
   const internalPlayheadRef = useRef<HTMLDivElement>(null);
   const playheadRef = externalPlayheadRef || internalPlayheadRef;
-  const { playheadPosition, handlePlayheadMouseDown } = useTimelinePlayhead({
+  const { playheadPosition, handlePlayheadMouseDown, fakeCursorPosition } = useTimelinePlayhead({
     currentTime,
     duration,
     zoomLevel,
@@ -70,6 +111,7 @@ export function TimelinePlayhead({
   // });
 
   return (
+    <>
     <div
       ref={playheadRef}
       className="absolute pointer-events-auto z-[999] select-none"
@@ -78,6 +120,7 @@ export function TimelinePlayhead({
         top: 0,
         height: `${totalHeight}px`,
         width: "8px", // Much wider for better visibility and click target
+        cursor: 'none', // Hide system cursor so we can show fake one at red line position
       }}
       onMouseDown={handlePlayheadMouseDown}
     >
@@ -96,6 +139,21 @@ export function TimelinePlayhead({
       />
 
     </div>
+    
+    {/* Fake cursor element positioned 200px right of actual mouse position */}
+    {fakeCursorPosition.visible && (
+      <div 
+        className="fake-cursor fixed z-[9999] pointer-events-none"
+        style={{
+          left: `${fakeCursorPosition.x + TIMELINE_CONSTANTS.CURSOR_OFFSET_PX}px`,
+          top: `${fakeCursorPosition.y - 10}px`,
+          transform: 'translate(-50%, -50%)',
+        }}
+      >
+        <FakeCursor />
+      </div>
+    )}
+    </>
   );
 }
 
@@ -110,7 +168,7 @@ export function useTimelinePlayheadRuler({
   tracksScrollRef,
   playheadRef,
 }: Omit<TimelinePlayheadProps, "tracks" | "trackLabelsRef" | "timelineRef">) {
-  const { handleRulerMouseDown, isDraggingRuler } = useTimelinePlayhead({
+  const { handleRulerMouseDown, isDraggingRuler, fakeCursorPosition } = useTimelinePlayhead({
     currentTime,
     duration,
     zoomLevel,
@@ -121,7 +179,7 @@ export function useTimelinePlayheadRuler({
     playheadRef,
   });
 
-  return { handleRulerMouseDown, isDraggingRuler };
+  return { handleRulerMouseDown, isDraggingRuler, fakeCursorPosition };
 }
 
 export { TimelinePlayhead as default };

@@ -49,6 +49,47 @@ import {
   TimelinePlayhead,
   useTimelinePlayheadRuler,
 } from "./timeline-playhead";
+
+// Fake cursor component to replace system cursor with 200px offset
+const FakeCursor = () => (
+  <div className="fake-cursor pointer-events-none" style={{
+    width: '20px',
+    height: '20px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  }}>
+    <div style={{
+      width: '2px',
+      height: '16px',
+      background: '#000',
+      position: 'relative'
+    }}>
+      {/* Top arrow */}
+      <div style={{
+        position: 'absolute',
+        top: '-2px',
+        left: '-2px',
+        width: '0',
+        height: '0',
+        borderLeft: '3px solid transparent',
+        borderRight: '3px solid transparent',
+        borderBottom: '4px solid #000',
+      }} />
+      {/* Bottom arrow */}
+      <div style={{
+        position: 'absolute',
+        bottom: '-2px',
+        left: '-2px',
+        width: '0',
+        height: '0',
+        borderLeft: '3px solid transparent',
+        borderRight: '3px solid transparent',
+        borderTop: '4px solid #000',
+      }} />
+    </div>
+  </div>
+);
 import { TimelinePlayheadEnhanced } from "./timeline-playhead-enhanced";
 import { TimelineToolbarEnhanced } from "./timeline-toolbar-enhanced";
 import { SelectionBox } from "./selection-box";
@@ -135,7 +176,7 @@ export function Timeline() {
   const lastVerticalSync = useRef(0);
 
   // Timeline playhead ruler handlers
-  const { handleRulerMouseDown, isDraggingRuler } = useTimelinePlayheadRuler({
+  const { handleRulerMouseDown, isDraggingRuler, fakeCursorPosition } = useTimelinePlayheadRuler({
     currentTime,
     duration,
     zoomLevel,
@@ -1191,6 +1232,7 @@ export function Timeline() {
                 style={{
                   width: `${dynamicTimelineWidth}px`,
                   height: '28px',
+                  cursor: 'none', // Hide system cursor so we can show fake one at red line position
                 }}
                 onMouseDown={handleRulerMouseDown}
               >
@@ -1429,6 +1471,20 @@ export function Timeline() {
           }}
         />
       </div>
+      
+      {/* Fake cursor element for ruler interactions positioned 200px right of actual mouse position */}
+      {fakeCursorPosition.visible && (
+        <div 
+          className="fake-cursor fixed z-[9999] pointer-events-none"
+          style={{
+            left: `${fakeCursorPosition.x + TIMELINE_CONSTANTS.CURSOR_OFFSET_PX}px`,
+            top: `${fakeCursorPosition.y - 10}px`,
+            transform: 'translate(-50%, -50%)',
+          }}
+        >
+          <FakeCursor />
+        </div>
+      )}
     </div>
   );
 }

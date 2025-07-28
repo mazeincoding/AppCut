@@ -75,6 +75,7 @@ export const TIMELINE_CONSTANTS = {
   TRACK_HEIGHT: 60, // Default fallback
   DEFAULT_TEXT_DURATION: 5,
   ZOOM_LEVELS: [0.25, 0.5, 1, 1.5, 2, 3, 4],
+  CURSOR_OFFSET_PX: 200, // Offset for fake cursor positioning to align with red line
 } as const;
 
 // FPS presets for project settings

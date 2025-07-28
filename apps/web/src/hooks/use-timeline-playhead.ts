@@ -30,6 +30,9 @@ export function useTimelinePlayhead({
   // Ruler drag detection state
   const [isDraggingRuler, setIsDraggingRuler] = useState(false);
   const [hasDraggedRuler, setHasDraggedRuler] = useState(false);
+  
+  // Fake cursor position tracking
+  const [fakeCursorPosition, setFakeCursorPosition] = useState({ x: 0, y: 0, visible: false });
 
   const playheadPosition =
     isScrubbing && scrubTime !== null ? scrubTime : currentTime;
@@ -87,6 +90,14 @@ export function useTimelinePlayhead({
     if (!isScrubbing) return;
     const onMouseMove = (e: MouseEvent) => {
       handleScrub(e);
+      
+      // Update fake cursor position
+      setFakeCursorPosition({ 
+        x: e.clientX, 
+        y: e.clientY,
+        visible: true
+      });
+      
       // Mark that we've dragged if ruler drag is active
       if (isDraggingRuler) {
         setHasDraggedRuler(true);
@@ -96,6 +107,9 @@ export function useTimelinePlayhead({
       setIsScrubbing(false);
       if (scrubTime !== null) seek(scrubTime); // finalize seek
       setScrubTime(null);
+      
+      // Hide fake cursor when scrubbing ends
+      setFakeCursorPosition(prev => ({ ...prev, visible: false }));
 
       // Handle ruler click vs drag
       if (isDraggingRuler) {
@@ -153,5 +167,6 @@ export function useTimelinePlayhead({
     handlePlayheadMouseDown,
     handleRulerMouseDown,
     isDraggingRuler,
+    fakeCursorPosition,
   };
 }
