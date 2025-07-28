@@ -34,14 +34,15 @@ export function DevelopmentDebug() {
   useEffect(() => {
     if (typeof window !== 'undefined' && (isElectronEnvironment() || SHOW_DEBUG_INFO)) {
       (window as any).storageService = storageService;
-      console.log('📊 Storage service exposed to window.storageService', {
-        isElectron: isElectronEnvironment(),
-        isDevelopment: SHOW_DEBUG_INFO,
-        storageService: storageService,
-        isSupported: storageService.isFullySupported(),
-        isOPFSSupported: storageService.isOPFSSupported(),
-        isIndexedDBSupported: storageService.isIndexedDBSupported()
-      });
+      // Debug storage service exposure (disabled by default)
+      // console.log('📊 Storage service exposed to window.storageService', {
+      //   isElectron: isElectronEnvironment(),
+      //   isDevelopment: SHOW_DEBUG_INFO,
+      //   storageService: storageService,
+      //   isSupported: storageService.isFullySupported(),
+      //   isOPFSSupported: storageService.isOPFSSupported(),
+      //   isIndexedDBSupported: storageService.isIndexedDBSupported()
+      // });
       
       // Test storage service in Electron
       if (isElectronEnvironment()) {

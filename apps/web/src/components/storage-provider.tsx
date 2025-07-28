@@ -94,23 +94,23 @@ export function StorageProvider({ children }: StorageProviderProps) {
   // Don't subscribe to the function to prevent reference changes from triggering re-runs
 
   useEffect(() => {
-    console.log(`🔄 StorageProvider ${instanceId} useEffect running - mount/re-mount detected`);
+    // console.log(`🔄 StorageProvider ${instanceId} useEffect running - mount/re-mount detected`);
     
     // Prevent multiple initializations - check if already initialized
     const projectStore = useProjectStore.getState();
     const currentGlobalState = getGlobalState();
     
-    console.log(`🔍 StorageProvider ${instanceId}: Checking initialization state`, {
-      isInitialized: projectStore.isInitialized,
-      isLoading: projectStore.isLoading,
-      hasProjects: projectStore.savedProjects.length > 0,
-      hasGloballyInitialized: currentGlobalState?.hasGloballyInitialized,
-      isGloballyInitializing: currentGlobalState?.isGloballyInitializing
-    });
+    // console.log(`🔍 StorageProvider ${instanceId}: Checking initialization state`, {
+    //   isInitialized: projectStore.isInitialized,
+    //   isLoading: projectStore.isLoading,
+    //   hasProjects: projectStore.savedProjects.length > 0,
+    //   hasGloballyInitialized: currentGlobalState?.hasGloballyInitialized,
+    //   isGloballyInitializing: currentGlobalState?.isGloballyInitializing
+    // });
     
     // Check global flag first - most aggressive guard
     if (currentGlobalState?.hasGloballyInitialized) {
-      console.log(`🚫 StorageProvider ${instanceId}: Global initialization already completed, skipping`);
+      // console.log(`🚫 StorageProvider ${instanceId}: Global initialization already completed, skipping`);
       debugLogger.log('StorageProvider', 'SKIP_GLOBAL_ALREADY_INITIALIZED', { instanceId });
       setStatus({
         isInitialized: true,
@@ -142,7 +142,7 @@ export function StorageProvider({ children }: StorageProviderProps) {
     
     const initializeStorage = async () => {
       setGlobalState({ isGloballyInitializing: true });
-      console.log(`🚀 StorageProvider ${instanceId}: Starting initialization...`);
+      // console.log(`🚀 StorageProvider ${instanceId}: Starting initialization...`);
       setStatus((prev) => ({ ...prev, isLoading: true }));
 
       try {
@@ -156,10 +156,10 @@ export function StorageProvider({ children }: StorageProviderProps) {
         }
 
         // Load saved projects (media will be loaded when a project is loaded)
-        console.log(`📦 StorageProvider ${instanceId}: Calling loadAllProjects...`);
+        // console.log(`📦 StorageProvider ${instanceId}: Calling loadAllProjects...`);
         debugLogger.log('StorageProvider', 'CALLING_LOAD_ALL_PROJECTS', { source: 'StorageProvider_init', instanceId });
         await useProjectStore.getState().loadAllProjects();
-        console.log('✅ StorageProvider: loadAllProjects completed');
+        // console.log('✅ StorageProvider: loadAllProjects completed');
         debugLogger.log('StorageProvider', 'LOAD_ALL_PROJECTS_COMPLETED', { source: 'StorageProvider_init' });
 
         setStatus({
@@ -168,7 +168,7 @@ export function StorageProvider({ children }: StorageProviderProps) {
           hasSupport,
           error: null,
         });
-        console.log(`✅ StorageProvider ${instanceId}: Initialization complete`);
+        // console.log(`✅ StorageProvider ${instanceId}: Initialization complete`);
         setGlobalState({ hasGloballyInitialized: true }); // Mark as globally completed
       } catch (error) {
         console.error('❌ StorageProvider: Initialization failed:', error);
