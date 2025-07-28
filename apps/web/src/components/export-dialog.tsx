@@ -242,21 +242,35 @@ export function ExportDialog() {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
-            <h2 className="text-sm font-semibold">Export Video</h2>
-            <p className="text-[13px] text-muted-foreground mt-1">Configure your export settings and render your video.</p>
+            <h2 className="text-sm font-semibold ml-[5px]">Export Video</h2>
+            <p className="text-[13px] text-muted-foreground mt-1 ml-[5px]">Configure your export settings and render your video.</p>
           </div>
           <Button
             variant="text"
             size="icon"
             onClick={handleClose}
-            className="h-9 w-9 rounded-lg"
+            className="h-9 w-9 rounded-lg bg-transparent hover:bg-transparent"
           >
             <X className="h-5 w-5" />
           </Button>
         </div>
         
+        {/* Export Button - Moved to top */}
+        <div className="p-6 border-b border-border">
+          <Button
+            variant="shimmer"
+            size="lg"
+            onClick={handleExport}
+            disabled={isExporting || !isValidFilename(filename) || memoryLevel === 'error' || timelineDuration === 0}
+            className="w-full"
+          >
+            <Download style={{ width: '12px', height: '12px', marginRight: '8px' }} />
+            {isExporting ? "Exporting..." : "Export Video"}
+          </Button>
+        </div>
+        
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 ml-[5px]">
           {/* Format Selection */}
           <div className="space-y-3">
             <Label className="text-[13px] font-medium">Format</Label>
@@ -443,27 +457,15 @@ export function ExportDialog() {
         
         {/* Footer */}
         <div className="border-t border-border p-6">
-          <div className="flex flex-col gap-3">
-            <Button
-              variant="shimmer"
-              size="lg"
-              onClick={handleExport}
-              disabled={isExporting || !isValidFilename(filename) || memoryLevel === 'error' || timelineDuration === 0}
-              className="w-full"
-            >
-              <Download className="h-4 w-4" />
-              {isExporting ? "Exporting..." : "Export Video"}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleCancel}
-              disabled={isExporting}
-              className="w-full h-11 text-[13px] font-medium !bg-transparent hover:!bg-transparent"
-            >
-              <X className="h-4 w-4 mr-2.5" />
-              Cancel
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            onClick={handleCancel}
+            disabled={isExporting}
+            className="w-full h-11 text-[13px] font-medium !bg-transparent hover:!bg-transparent"
+          >
+            <X className="h-4 w-4 mr-2.5" />
+            Cancel
+          </Button>
         </div>
       </div>
       
