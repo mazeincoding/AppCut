@@ -552,12 +552,12 @@ This will show the blob-to-file conversion process and help identify if the issu
 🖼️ EXPORT-ENGINE: No media item or URL found
 ```
 
-## Potential Solutions
+## Solution: Convert to Data URLs
 
-### **Solution 1: Convert to Data URLs** (Recommended)
+### **Implementation**
 Convert blob URLs to data URLs for persistence during export.
 
-**Implementation** - Update `media-store.ts:441` after File creation:
+**Update `apps/web/src/stores/media-store.ts` - Line 441** after File creation:
 ```javascript
 // After line 441: if (DEBUG_MEDIA_STORE) console.log(`✅ MEDIA-STORE: Updated media item...`)
 // Convert the File to data URL for export stability
@@ -593,96 +593,11 @@ reader.onload = () => {
 reader.readAsDataURL(blob);
 ```
 
-**Benefits**:
+### **Why This Solution Works**
 - **Data URLs never expire** - Persist through entire export process
 - **No cross-origin issues** - Embedded directly in string
 - **Export engine compatibility** - Works with both `Image.src` and canvas
 - **Browser cache independent** - No network requests during export
-
-### **Solution 2: Improved Error Handling**
-Add comprehensive error handling in export pipeline.
-
-**Implementation**:
-```javascript
-// In export-engine-optimized.ts
-const renderImageElement = async (element, bounds) => {
-  try {
-    const mediaItem = this.getMediaItem(element.mediaId);
-    
-    if (!mediaItem) {
-      throw new Error(`Media item not found: ${element.mediaId}`);
-    }
-    
-    if (mediaItem.metadata?.source === 'text2image') {
-      console.log('🎨 EXPORT: Processing generated image', mediaItem.name);
-      // Special handling for generated images
-      return await this.renderGeneratedImage(mediaItem, bounds);
-    }
-    
-    return await this.renderRegularImage(mediaItem, bounds);
-  } catch (error) {
-    console.error('🚨 EXPORT: Failed to render image element', {
-      elementId: element.id,
-      mediaId: element.mediaId,
-      error: error.message
-    });
-    // Return placeholder or skip element
-    return this.renderPlaceholderImage(bounds);
-  }
-};
-```
-
-### **Solution 3: Pre-Export Validation**
-Validate all generated images before starting export.
-
-**Implementation**:
-```javascript
-// In export-dialog.tsx, add validation before export
-const validateGeneratedImages = async () => {
-  const timelineElements = tracks.flatMap(track => track.elements);
-  const imageElements = timelineElements.filter(el => 
-    el.type === 'media' && 
-    mediaItems.find(m => m.id === el.mediaId)?.metadata?.source === 'text2image'
-  );
-  
-  for (const element of imageElements) {
-    const mediaItem = mediaItems.find(m => m.id === element.mediaId);
-    if (!mediaItem?.file || !mediaItem?.url) {
-      throw new Error(`Generated image not ready for export: ${mediaItem?.name}`);
-    }
-  }
-};
-
-// Call before starting export
-await validateGeneratedImages();
-```
-
-### **Solution 4: Fallback Image Loading**
-Implement fallback mechanisms for failed image loads.
-
-**Implementation**:
-```javascript
-// In canvas-renderer.ts
-const loadImageWithFallback = async (mediaItem) => {
-  const loadAttempts = [
-    () => loadFromFile(mediaItem.file),
-    () => loadFromUrl(mediaItem.url),
-    () => loadFromDataUrl(mediaItem.dataUrl),
-    () => loadPlaceholderImage()
-  ];
-  
-  for (const attempt of loadAttempts) {
-    try {
-      const image = await attempt();
-      if (image) return image;
-    } catch (error) {
-      console.warn('🔄 CANVAS: Load attempt failed, trying fallback', error);
-    }
-  }
-  
-  throw new Error('All image loading attempts failed');
-};
-```
 
 ## Expected Export Behavior
 
@@ -696,54 +611,38 @@ const loadImageWithFallback = async (mediaItem) => {
 ### **After Fix (Expected)**
 1. Generate images successfully ✅
 2. Images appear in media panel ✅
-3. Images can be dragged to timeline ✅
-4. Pre-export validation checks image validity ✅
+3. Blob URLs converted to data URLs automatically ✅
+4. Images can be dragged to timeline ✅
 5. Export processes generated images correctly ✅
 6. Final video includes all generated images ✅
 
-## Debugging Steps
+## Implementation Steps
 
-### **Step 1: Enable Export Debugging**
-Add debug logging to export engine:
-```javascript
-// In export-engine-optimized.ts
-const DEBUG_EXPORT = true;
-if (DEBUG_EXPORT) console.log('Export debug info here...');
-```
+### **Step 1: Apply Diagnostic Code (Optional)**
+Use the comprehensive debugging code from the "Root Cause Investigation" section to identify the exact failure point before implementing the fix.
 
-### **Step 2: Test Generated Image Export**
+### **Step 2: Implement Data URL Conversion**
+Apply the code from the "Solution" section to convert blob URLs to data URLs in the media store.
+
+### **Step 3: Test the Fix**
 1. Generate 1-2 test images
-2. Add them to timeline
-3. Start export with console open
-4. Look for specific error messages related to image processing
+2. Add them to timeline  
+3. Start export and verify generated images appear in final video
+4. Check console for successful data URL conversion logs
 
-### **Step 3: Compare with Regular Images**
-1. Export timeline with only regular uploaded images (should work)
-2. Export timeline with only generated images (likely fails)
-3. Export timeline with mixed images (identify which fail)
-
-## Quick Test Cases
+## Test Cases
 
 ### **Test Case 1: Single Generated Image**
 - **Input**: Generate one image, add to timeline, export
 - **Expected**: Export succeeds with generated image in video
-- **Failure**: Export fails or video has missing image
 
 ### **Test Case 2: Mixed Content**  
 - **Input**: Upload one regular image + generate one image, add both to timeline, export
 - **Expected**: Export succeeds with both images in video
-- **Failure**: Only regular image works, generated image missing
 
 ### **Test Case 3: Multiple Generated Images**
 - **Input**: Generate 3 images, add all to timeline, export
 - **Expected**: Export succeeds with all 3 generated images
-- **Failure**: Export fails or some images missing
 
 ## Priority: High
 Generated images are a core Text2Image feature and export functionality is essential for video creation workflow.
-
-## Recommended Implementation Order
-1. **Immediate**: Add debug logging to export pipeline
-2. **Short-term**: Implement data URL conversion (Solution 1)
-3. **Medium-term**: Add comprehensive error handling (Solution 2)
-4. **Long-term**: Implement pre-export validation and fallback mechanisms

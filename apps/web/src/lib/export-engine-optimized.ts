@@ -844,21 +844,126 @@ export class ExportEngine {
   private async renderImageElement(element: TimelineElement, bounds: any): Promise<void> {
     const mediaElement = element as any;
     const mediaItem = this.getMediaItem(mediaElement.mediaId);
-    if (!mediaItem?.url) return;
+    
+    // DIAGNOSTIC: Log all image processing attempts
+    console.log('🖼️ EXPORT-ENGINE: Processing image element', {
+      elementId: element.id,
+      mediaId: mediaElement.mediaId,
+      elementType: element.type,
+      hasMediaItem: !!mediaItem,
+      mediaItemData: mediaItem ? {
+        name: mediaItem.name,
+        type: mediaItem.type,
+        hasFile: !!mediaItem.file,
+        fileSize: mediaItem.file?.size,
+        fileType: mediaItem.file?.type,
+        hasUrl: !!mediaItem.url,
+        urlLength: mediaItem.url?.length,
+        urlType: mediaItem.url?.startsWith('blob:') ? 'blob' : 
+                mediaItem.url?.startsWith('data:') ? 'data' : 'other',
+        isGenerated: mediaItem.metadata?.source === 'text2image',
+        metadata: mediaItem.metadata
+      } : null,
+      bounds: bounds
+    });
+    
+    if (!mediaItem?.url) {
+      console.error('❌ EXPORT-ENGINE: No media item or URL found', {
+        elementId: element.id,
+        mediaId: mediaElement.mediaId,
+        hasMediaItem: !!mediaItem,
+        hasUrl: !!mediaItem?.url
+      });
+      return;
+    }
 
     const img = new Image();
     img.crossOrigin = 'anonymous';
     
+    // DIAGNOSTIC: Track image loading states
+    let loadingStartTime = performance.now();
+    console.log('⏱️ EXPORT-ENGINE: Starting image load', {
+      mediaId: mediaElement.mediaId,
+      url: mediaItem.url.substring(0, 100) + (mediaItem.url.length > 100 ? '...' : ''),
+      isGenerated: mediaItem.metadata?.source === 'text2image',
+      timestamp: new Date().toISOString(),
+      bounds: bounds
+    });
+    
     // Wait for image to load
     await new Promise<void>((resolve, reject) => {
-      img.onload = () => resolve();
-      img.onerror = () => {
+      img.onload = () => {
+        const loadTime = performance.now() - loadingStartTime;
+        console.log('✅ EXPORT-ENGINE: Image loaded successfully', {
+          mediaId: mediaElement.mediaId,
+          loadTimeMs: Math.round(loadTime),
+          imageSize: { width: img.naturalWidth, height: img.naturalHeight },
+          complete: img.complete,
+          src: img.src.substring(0, 100) + '...'
+        });
+        resolve();
+      };
+      
+      img.onerror = (error) => {
+        const loadTime = performance.now() - loadingStartTime;
+        console.error('🚨 EXPORT-ENGINE: Image load failed', {
+          mediaId: mediaElement.mediaId,
+          name: mediaItem.name,
+          url: (mediaItem.url || '').substring(0, 100) + '...',
+          loadTimeMs: Math.round(loadTime),
+          error: error,
+          errorType: (error as any)?.type || 'unknown',
+          isGenerated: mediaItem.metadata?.source === 'text2image'
+        });
+        
+        // Test if URL is still accessible
+        if (mediaItem.url) {
+          fetch(mediaItem.url)
+            .then(response => {
+              console.log('🔍 EXPORT-ENGINE: URL fetch test result', {
+                mediaId: mediaElement.mediaId,
+                status: response.status,
+                statusText: response.statusText,
+                contentType: response.headers.get('content-type'),
+                ok: response.ok
+              });
+            })
+            .catch(fetchError => {
+              console.error('🚨 EXPORT-ENGINE: URL fetch test failed', {
+                mediaId: mediaElement.mediaId,
+                fetchError: fetchError.message
+              });
+            });
+        }
+        
         this.log('Failed to load image:', mediaItem.url);
         reject(new Error(`Failed to load image: ${mediaItem.url}`));
       };
+      
       // Add timeout to prevent hanging
-      setTimeout(() => reject(new Error('Image load timeout')), 5000);
+      setTimeout(() => {
+        const loadTime = performance.now() - loadingStartTime;
+        console.error('⏰ EXPORT-ENGINE: Image load timeout (5s)', {
+          mediaId: mediaElement.mediaId,
+          name: mediaItem.name,
+          loadTimeMs: Math.round(loadTime),
+          imageState: {
+            complete: img.complete,
+            naturalWidth: img.naturalWidth,
+            naturalHeight: img.naturalHeight,
+            readyState: (img as any).readyState || 'unknown'
+          }
+        });
+        reject(new Error('Image load timeout'));
+      }, 5000);
+      
       img.src = mediaItem.url || '';
+    });
+    
+    console.log('🎨 EXPORT-ENGINE: About to draw image to canvas', {
+      mediaId: mediaElement.mediaId,
+      bounds: bounds,
+      imageReady: img.complete && img.naturalWidth > 0
     });
     
     this.renderer.save();
@@ -867,6 +972,11 @@ export class ExportEngine {
     
     this.renderer.drawImage(img, bounds.x, bounds.y, bounds.width, bounds.height);
     this.renderer.restore();
+    
+    console.log('✅ EXPORT-ENGINE: Successfully drew image to canvas', {
+      mediaId: mediaElement.mediaId,
+      elementId: element.id
+    });
   }
 
   private renderTextElement(element: TimelineElement, bounds: any): void {

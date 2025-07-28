@@ -53,7 +53,84 @@ export class CanvasRenderer {
     width: number,
     height: number
   ): void {
-    this.ctx.drawImage(image, x, y, width, height);
+    // DIAGNOSTIC: Log canvas drawing attempts
+    console.log('🎨 CANVAS-RENDERER: Attempting to draw image', {
+      imageType: image.constructor.name,
+      imageSource: image instanceof HTMLImageElement ? image.src?.substring(0, 100) + '...' : 'N/A',
+      imageDimensions: {
+        natural: {
+          width: image instanceof HTMLImageElement ? image.naturalWidth : 
+                 image instanceof HTMLVideoElement ? image.videoWidth : image.width,
+          height: image instanceof HTMLImageElement ? image.naturalHeight :
+                  image instanceof HTMLVideoElement ? image.videoHeight : image.height
+        },
+        display: {
+          width: image.width || (image as HTMLVideoElement).videoWidth,
+          height: image.height || (image as HTMLVideoElement).videoHeight
+        }
+      },
+      imageState: {
+        complete: image instanceof HTMLImageElement ? image.complete : true,
+        readyState: image instanceof HTMLVideoElement ? image.readyState : 'N/A'
+      },
+      targetBounds: { x, y, width, height },
+      canvasState: {
+        width: this.canvas.width,
+        height: this.canvas.height,
+        contextValid: !!this.ctx
+      }
+    });
+    
+    try {
+      // Check if image is ready for drawing
+      if (image instanceof HTMLImageElement) {
+        if (!image.complete || image.naturalWidth === 0 || image.naturalHeight === 0) {
+          console.warn('⚠️ CANVAS-RENDERER: Image not fully loaded', {
+            complete: image.complete,
+            naturalWidth: image.naturalWidth,
+            naturalHeight: image.naturalHeight,
+            src: image.src?.substring(0, 100) + '...'
+          });
+        }
+      }
+      
+      // Perform the actual draw
+      this.ctx.drawImage(image, x, y, width, height);
+      
+      console.log('✅ CANVAS-RENDERER: Successfully drew image to canvas', {
+        drawnAt: { x, y, width, height },
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      console.error('🚨 CANVAS-RENDERER: Failed to draw image', {
+        error: (error as Error).message,
+        errorName: (error as Error).name,
+        imageDetails: {
+          type: image.constructor.name,
+          src: image instanceof HTMLImageElement ? image.src?.substring(0, 100) + '...' : 'N/A',
+          complete: image instanceof HTMLImageElement ? image.complete : 'N/A',
+          naturalWidth: image instanceof HTMLImageElement ? image.naturalWidth : 'N/A',
+          naturalHeight: image instanceof HTMLImageElement ? image.naturalHeight : 'N/A'
+        },
+        canvasDetails: {
+          width: this.canvas.width,
+          height: this.canvas.height,
+          contextType: this.ctx?.constructor.name
+        },
+        targetBounds: { x, y, width, height }
+      });
+      
+      // Check if this is a CORS/taint error
+      if ((error as Error).name === 'SecurityError' || (error as Error).message.includes('tainted')) {
+        console.error('🔒 CANVAS-RENDERER: CORS/Security error detected', {
+          errorType: 'CORS_VIOLATION',
+          suggestion: 'Image may be from different origin or blob URL expired'
+        });
+      }
+      
+      throw error;
+    }
   }
 
   /**

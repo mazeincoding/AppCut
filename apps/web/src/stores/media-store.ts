@@ -439,6 +439,38 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
           }));
           
           if (DEBUG_MEDIA_STORE) console.log(`✅ MEDIA-STORE: Updated media item ${item.name} with File object`);
+          
+          // Convert the File to data URL for export stability
+          const reader = new FileReader();
+          reader.onload = () => {
+            const dataUrl = reader.result as string;
+            console.log('🔄 MEDIA-STORE: Converting to data URL for export stability', {
+              mediaId: item.id,
+              originalSize: blob.size,
+              dataUrlSize: dataUrl.length,
+              mimeType: blob.type
+            });
+            
+            // Update with data URL instead of blob URL
+            set((state) => ({
+              mediaItems: state.mediaItems.map(mediaItem =>
+                mediaItem.id === item.id
+                  ? { 
+                      ...mediaItem, 
+                      url: dataUrl, // Replace blob URL with data URL
+                      metadata: {
+                        ...mediaItem.metadata,
+                        originalBlobSize: blob.size,
+                        convertedAt: Date.now()
+                      }
+                    }
+                  : mediaItem
+              )
+            }));
+            
+            console.log('✅ MEDIA-STORE: Replaced blob URL with data URL for', item.name);
+          };
+          reader.readAsDataURL(blob);
         } catch (error) {
           if (DEBUG_MEDIA_STORE) console.error(`❌ MEDIA-STORE: Failed to fetch/convert image for ${item.name}:`, error);
           // Optionally mark the item as having an error
