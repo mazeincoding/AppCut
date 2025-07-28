@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { useState } from "react";
+
+// Debug flag - set to false to disable console logs
+const DEBUG_PROJECTS = process.env.NODE_ENV === 'development' && false;
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -699,7 +702,7 @@ function ProjectCard({ project, isSelected, onSelect }: ProjectCardProps) {
             : '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
         }}
         onClick={() => {
-          console.log("🔗 [CLICK DEBUG] Click: Open Project:", project.id);
+          if (DEBUG_PROJECTS) console.log("🔗 [CLICK DEBUG] Click: Open Project:", project.id);
           window.location.href = `/editor/project/${encodeURIComponent(project.id)}`;
         }}
         onMouseEnter={(e) => {

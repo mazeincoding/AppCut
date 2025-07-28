@@ -1,5 +1,8 @@
 "use client";
 
+// Debug flag - set to false to disable console logs
+const DEBUG_MEDIA_VIEW = process.env.NODE_ENV === 'development' && false;
+
 import { useDragDrop } from "@/hooks/use-drag-drop";
 import { processMediaFiles } from "@/lib/media-processing";
 import { useMediaStore, type MediaItem } from "@/stores/media-store";
@@ -248,8 +251,8 @@ export function MediaView() {
   
   // Debug logging for media items changes
   useEffect(() => {
-    console.log("🖼️ MEDIA-VIEW: mediaItems updated, count:", mediaItems.length);
-    console.log("🖼️ MEDIA-VIEW: mediaItems:", mediaItems.map(item => ({
+    if (DEBUG_MEDIA_VIEW) console.log("🖼️ MEDIA-VIEW: mediaItems updated, count:", mediaItems.length);
+    if (DEBUG_MEDIA_VIEW) console.log("🖼️ MEDIA-VIEW: mediaItems:", mediaItems.map(item => ({
       id: item.id,
       name: item.name,
       type: item.type,
@@ -332,7 +335,7 @@ export function MediaView() {
   const [filteredMediaItems, setFilteredMediaItems] = useState(mediaItems);
 
   useEffect(() => {
-    console.log("🔍 MEDIA-VIEW: Filtering media items", {
+    if (DEBUG_MEDIA_VIEW) console.log("🔍 MEDIA-VIEW: Filtering media items", {
       totalItems: mediaItems.length,
       filter: mediaFilter,
       searchQuery: searchQuery
@@ -353,7 +356,7 @@ export function MediaView() {
       return true;
     });
 
-    console.log("🔍 MEDIA-VIEW: Filtered results", {
+    if (DEBUG_MEDIA_VIEW) console.log("🔍 MEDIA-VIEW: Filtered results", {
       filteredCount: filtered.length,
       filteredItems: filtered.map(item => ({
         id: item.id,

@@ -218,7 +218,23 @@ export function AdjustmentView() {
     } catch (error) {
       console.error('Edit failed:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      setError(`Edit failed: ${errorMessage}`);
+      
+      // Handle content policy violations with user-friendly toast notifications
+      if (errorMessage.includes('Content policy violation')) {
+        toast.error('Content policy violation', {
+          description: 'Please use appropriate language for image descriptions. Avoid terms that could be flagged as inappropriate.',
+          duration: 6000,
+        });
+        setError('Please try a different description');
+      } else {
+        // Handle other errors with existing logic
+        setError(`Edit failed: ${errorMessage}`);
+        toast.error('Edit failed', {
+          description: errorMessage,
+          duration: 4000,
+        });
+      }
+      
       setProcessingState({ isProcessing: false });
     }
   }, [originalImage, prompt, selectedModel, parameters, originalImageUrl, addToHistory, setProcessingState, handleAutoAddToMedia]);

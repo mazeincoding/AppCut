@@ -1,6 +1,9 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { toBlobURL } from '@ffmpeg/util';
 
+// Debug flag - set to false to disable console logs
+const DEBUG_FFMPEG = process.env.NODE_ENV === 'development' && false;
+
 let ffmpeg: FFmpeg | null = null;
 let isLoaded = false;
 let initializationPromise: Promise<FFmpeg> | null = null;
@@ -676,12 +679,14 @@ const generateThumbnailsViaCanvas = async (
     };
     
     video.addEventListener('loadedmetadata', () => {
-      console.log('✅ Video metadata loaded successfully', {
-        duration: video.duration,
-        videoWidth: video.videoWidth,
-        videoHeight: video.videoHeight,
-        readyState: video.readyState
-      });
+      if (DEBUG_FFMPEG) {
+        console.log('✅ Video metadata loaded successfully', {
+          duration: video.duration,
+          videoWidth: video.videoWidth,
+          videoHeight: video.videoHeight,
+          readyState: video.readyState
+        });
+      }
       
       // Set first timestamp
       if (timestamps.length > 0) {
@@ -734,11 +739,13 @@ const generateThumbnailsViaCanvas = async (
     video.muted = true;
     video.preload = 'metadata';
     
-    console.log('🎬 Starting video load for canvas thumbnails', {
-      fileType: videoFile.type,
-      fileSize: videoFile.size,
-      objectUrl: objectUrl.substring(0, 50) + '...'
-    });
+    if (DEBUG_FFMPEG) {
+      console.log('🎬 Starting video load for canvas thumbnails', {
+        fileType: videoFile.type,
+        fileSize: videoFile.size,
+        objectUrl: objectUrl.substring(0, 50) + '...'
+      });
+    }
     
     video.src = objectUrl;
     video.load();

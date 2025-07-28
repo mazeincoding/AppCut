@@ -191,6 +191,19 @@ export async function editImage(
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error('FAL API Error:', errorData);
+      
+      // Handle content policy violations (422 errors) with user-friendly messages
+      if (response.status === 422 && errorData.detail && Array.isArray(errorData.detail)) {
+        const contentPolicyError = errorData.detail.find(
+          (error: any) => error.type === 'content_policy_violation'
+        );
+        
+        if (contentPolicyError) {
+          throw new Error('Content policy violation: Please use appropriate language for image descriptions');
+        }
+      }
+      
+      // Handle other error types with original logic
       const errorMessage = errorData.detail 
         ? (typeof errorData.detail === 'string' ? errorData.detail : JSON.stringify(errorData.detail))
         : errorData.message || response.statusText;

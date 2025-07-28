@@ -21,8 +21,11 @@ import {
   FloatingActionPanelModelOption,
 } from "@/components/ui/floating-action-panel";
 
+// Debug flag - set to false to disable console logs
+const DEBUG_TEXT2IMAGE = process.env.NODE_ENV === 'development' && false;
+
 export function Text2ImageView() {
-  console.log("Text2ImageView rendered");
+  if (DEBUG_TEXT2IMAGE) console.log("Text2ImageView rendered");
   
   const {
     prompt,
@@ -40,15 +43,17 @@ export function Text2ImageView() {
     clearResults
   } = useText2ImageStore();
   
-  console.log("Text2ImageView store state:", {
-    prompt,
-    selectedModels,
-    generationMode,
-    isGenerating,
-    hasResults: Object.keys(generationResults).length > 0
-  });
-  
-  console.log("Available models:", Object.keys(TEXT2IMAGE_MODELS));
+  if (DEBUG_TEXT2IMAGE) {
+    console.log("Text2ImageView store state:", {
+      prompt,
+      selectedModels,
+      generationMode,
+      isGenerating,
+      hasResults: Object.keys(generationResults).length > 0
+    });
+    
+    console.log("Available models:", Object.keys(TEXT2IMAGE_MODELS));
+  }
 
   const [imageSize, setImageSize] = useState("square_hd");
   const [seed, setSeed] = useState("");
@@ -59,16 +64,18 @@ export function Text2ImageView() {
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
-      console.log("No prompt provided");
+      if (DEBUG_TEXT2IMAGE) console.log("No prompt provided");
       return;
     }
     
-    console.log("Starting generation with:", {
-      prompt,
-      selectedModels,
-      imageSize,
-      seed
-    });
+    if (DEBUG_TEXT2IMAGE) {
+      console.log("Starting generation with:", {
+        prompt,
+        selectedModels,
+        imageSize,
+        seed
+      });
+    }
     
     const settings = {
       imageSize,

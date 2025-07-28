@@ -1,6 +1,9 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 
+// Debug flag - set to false to disable console logs
+const DEBUG_TEXT2IMAGE_STORE = process.env.NODE_ENV === 'development' && false;
+
 export interface GenerationResult {
   status: "loading" | "success" | "error";
   imageUrl?: string;
@@ -117,13 +120,13 @@ export const useText2ImageStore = create<Text2ImageStore>()(
       
       // Actions
       generateImages: async (prompt, settings) => {
-        console.log("generateImages called with:", { prompt, settings });
+        if (DEBUG_TEXT2IMAGE_STORE) console.log("generateImages called with:", { prompt, settings });
         const { selectedModels, generationMode } = get();
         
-        console.log("Current store state:", { selectedModels, generationMode });
+        if (DEBUG_TEXT2IMAGE_STORE) console.log("Current store state:", { selectedModels, generationMode });
         
         if (selectedModels.length === 0) {
-          console.error("No models selected");
+          if (DEBUG_TEXT2IMAGE_STORE) console.error("No models selected");
           return;
         }
         
@@ -180,8 +183,8 @@ export const useText2ImageStore = create<Text2ImageStore>()(
             }
           }
           
-          console.log(`🎯 TEXT2IMAGE-STORE: Auto-selecting ${successfulResults.length} successful results for media panel`);
-          console.log('🎯 TEXT2IMAGE-STORE: Successful results:', successfulResults.map(r => ({
+          if (DEBUG_TEXT2IMAGE_STORE) console.log(`🎯 TEXT2IMAGE-STORE: Auto-selecting ${successfulResults.length} successful results for media panel`);
+          if (DEBUG_TEXT2IMAGE_STORE) console.log('🎯 TEXT2IMAGE-STORE: Successful results:', successfulResults.map(r => ({
             model: r.modelKey,
             url: r.imageUrl.substring(0, 50) + '...'
           })));
@@ -189,18 +192,18 @@ export const useText2ImageStore = create<Text2ImageStore>()(
           
           // Automatically add all successful results to media panel
           if (successfulResults.length > 0) {
-            console.log("🚀 TEXT2IMAGE-STORE: Automatically calling addSelectedToMedia() with", successfulResults.length, "images");
+            if (DEBUG_TEXT2IMAGE_STORE) console.log("🚀 TEXT2IMAGE-STORE: Automatically calling addSelectedToMedia() with", successfulResults.length, "images");
             get().addSelectedToMedia(successfulResults);
-            console.log("✅ TEXT2IMAGE-STORE: addSelectedToMedia() call completed");
+            if (DEBUG_TEXT2IMAGE_STORE) console.log("✅ TEXT2IMAGE-STORE: addSelectedToMedia() call completed");
           } else {
-            console.warn("⚠️ TEXT2IMAGE-STORE: No successful results to add to media panel");
+            if (DEBUG_TEXT2IMAGE_STORE) console.warn("⚠️ TEXT2IMAGE-STORE: No successful results to add to media panel");
           }
           
           // Add to history
           get().addToHistory(prompt, selectedModels, finalResults);
           
         } catch (error) {
-          console.error("Generation failed:", error);
+          if (DEBUG_TEXT2IMAGE_STORE) console.error("Generation failed:", error);
           
           // Mark all as failed
           const errorResults: Record<string, GenerationResult> = {};
@@ -222,28 +225,30 @@ export const useText2ImageStore = create<Text2ImageStore>()(
         const { selectedResults, generationResults, prompt } = get();
         const resultsToAdd = results || selectedResults;
         
-        console.log("📤 TEXT2IMAGE-STORE: addSelectedToMedia() called with:", { 
-          resultsCount: results?.length || 0,
-          selectedResultsCount: selectedResults.length,
-          totalResultsToAdd: resultsToAdd.length 
-        });
+        if (DEBUG_TEXT2IMAGE_STORE) {
+          console.log("📤 TEXT2IMAGE-STORE: addSelectedToMedia() called with:", { 
+            resultsCount: results?.length || 0,
+            selectedResultsCount: selectedResults.length,
+            totalResultsToAdd: resultsToAdd.length 
+          });
+        }
         
         if (resultsToAdd.length === 0) {
-          console.warn("⚠️ TEXT2IMAGE-STORE: No results selected to add to media");
+          if (DEBUG_TEXT2IMAGE_STORE) console.warn("⚠️ TEXT2IMAGE-STORE: No results selected to add to media");
           return;
         }
         
-        console.log(`📋 TEXT2IMAGE-STORE: Preparing ${resultsToAdd.length} images for media panel`);
-        console.log('📋 TEXT2IMAGE-STORE: Results to add:', resultsToAdd.map(r => ({
+        if (DEBUG_TEXT2IMAGE_STORE) console.log(`📋 TEXT2IMAGE-STORE: Preparing ${resultsToAdd.length} images for media panel`);
+        if (DEBUG_TEXT2IMAGE_STORE) console.log('📋 TEXT2IMAGE-STORE: Results to add:', resultsToAdd.map(r => ({
           model: r.modelKey,
           prompt: r.prompt.substring(0, 30) + '...',
           hasUrl: !!r.imageUrl
         })));
         
         // Import media store dynamically to avoid circular deps
-        console.log("🔄 TEXT2IMAGE-STORE: Importing media-store dynamically...");
+        if (DEBUG_TEXT2IMAGE_STORE) console.log("🔄 TEXT2IMAGE-STORE: Importing media-store dynamically...");
         import("@/stores/media-store").then(({ useMediaStore }) => {
-          console.log("✅ TEXT2IMAGE-STORE: Media store imported successfully");
+          if (DEBUG_TEXT2IMAGE_STORE) console.log("✅ TEXT2IMAGE-STORE: Media store imported successfully");
           const { addGeneratedImages } = useMediaStore.getState();
           
           const mediaItems = resultsToAdd.map((result) => ({
@@ -261,16 +266,16 @@ export const useText2ImageStore = create<Text2ImageStore>()(
             },
           }));
           
-          console.log("📦 TEXT2IMAGE-STORE: Media items prepared:", mediaItems.length, "items");
-          console.log("📦 TEXT2IMAGE-STORE: Calling media-store.addGeneratedImages()...");
+          if (DEBUG_TEXT2IMAGE_STORE) console.log("📦 TEXT2IMAGE-STORE: Media items prepared:", mediaItems.length, "items");
+          if (DEBUG_TEXT2IMAGE_STORE) console.log("📦 TEXT2IMAGE-STORE: Calling media-store.addGeneratedImages()...");
           addGeneratedImages(mediaItems);
-          console.log("✅ TEXT2IMAGE-STORE: media-store.addGeneratedImages() called successfully");
+          if (DEBUG_TEXT2IMAGE_STORE) console.log("✅ TEXT2IMAGE-STORE: media-store.addGeneratedImages() called successfully");
         }).catch((error) => {
-          console.error("❌ TEXT2IMAGE-STORE: Failed to import media store:", error);
+          if (DEBUG_TEXT2IMAGE_STORE) console.error("❌ TEXT2IMAGE-STORE: Failed to import media store:", error);
         });
         
         // Clear selections after adding
-        console.log("🧹 TEXT2IMAGE-STORE: Clearing selected results");
+        if (DEBUG_TEXT2IMAGE_STORE) console.log("🧹 TEXT2IMAGE-STORE: Clearing selected results");
         set({ selectedResults: [] });
       },
       

@@ -216,8 +216,9 @@ export default function Document() {
               });
               
               // Click debug logging and fallback handler for when React doesn't load
+              const DEBUG_CLICKS = false; // Set to true to enable click debugging
               document.addEventListener('click', function(e) {
-                console.log('🚀 [CLICK DEBUG] Click:', e.target.tagName, e.target.textContent?.slice(0, 30));
+                if (DEBUG_CLICKS) console.log('🚀 [CLICK DEBUG] Click:', e.target.tagName, e.target.textContent?.slice(0, 30));
                 
                 // Fallback handler for New Project button when React fails to hydrate
                 // Only trigger for actual "New project" buttons, not project titles or other elements
