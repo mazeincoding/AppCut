@@ -117,6 +117,7 @@ export function Text2ImageView() {
       <Card className="border-0 shadow-none" style={{ marginTop: '5px' }}>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm">Generation Mode</CardTitle>
+          <div style={{ height: '6px' }}></div>
         </CardHeader>
         <CardContent>
           <RadioGroup

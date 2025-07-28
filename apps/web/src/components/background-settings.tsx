@@ -40,7 +40,7 @@ export function BackgroundSettings() {
         <Button
           variant="text"
           size="icon"
-          className="!size-4 border border-muted-foreground"
+          className="!size-4 border border-muted-foreground !bg-transparent"
         >
           <BackgroundIcon className="!size-3" />
         </Button>

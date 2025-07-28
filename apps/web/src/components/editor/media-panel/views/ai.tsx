@@ -592,7 +592,7 @@ export function AiView() {
   return (
     <div className={`h-full flex flex-col transition-all duration-200 ${isCollapsed ? 'p-2' : isCompact ? 'p-3' : 'p-4'}`}>
       <div className={`flex items-center mb-4 ${isCollapsed ? 'justify-center' : isCompact ? 'flex-col gap-1' : 'justify-between'}`}>
-        <div className={`flex items-center gap-2 ${isCompact && !isCollapsed ? 'flex-col' : ''}`}>
+        <div className={`flex items-center ${isCompact && !isCollapsed ? 'flex-col' : ''}`} style={{ marginLeft: '5px', gap: '7px' }}>
           <BotIcon className="size-5 text-primary" />
           {!isCollapsed && (
             <h3 className={`text-sm font-medium ${isCompact ? 'text-center text-xs' : ''}`}>
@@ -650,9 +650,11 @@ export function AiView() {
           
           <TabsContent key="text-tab-content" value="text" className={isCompact ? "space-y-2" : "space-y-4"}>
             <div className={isCompact ? "space-y-1" : "space-y-2"}>
-              <Label htmlFor="prompt" className={isCompact ? "text-xs" : ""}>
+              <div style={{ height: '6px' }}></div>
+              <Label htmlFor="prompt" className={isCompact ? "text-xs" : ""} style={{ marginLeft: '5px' }}>
                 {isCompact ? "Prompt" : "Describe your video"}
               </Label>
+              <div style={{ height: '6px' }}></div>
               <Textarea
                 id="prompt"
                 placeholder={isCompact ? "Video prompt..." : "Describe your video..."}
@@ -662,7 +664,7 @@ export function AiView() {
               />
               <div className={`flex items-center ${isCompact ? 'flex-col gap-1' : 'justify-between'}`}>
                 {!isCompact && (
-                  <p className="text-[0.65rem] text-muted-foreground">
+                  <p className="text-[0.65rem] text-muted-foreground" style={{ marginLeft: '5px' }}>
                     Be specific about scenes, actions, and style
                   </p>
                 )}
@@ -676,6 +678,7 @@ export function AiView() {
           <TabsContent key="image-tab-content" value="image" className="space-y-4">
             <div className="space-y-2">
               <Label>Upload Image</Label>
+              <div style={{ height: '6px' }}></div>
               {!selectedImage ? (
                 <div 
                   className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
@@ -720,7 +723,9 @@ export function AiView() {
             </div>
             
             <div className="space-y-2">
+              <div style={{ height: '6px' }}></div>
               <Label htmlFor="image-prompt">Additional prompt (optional)</Label>
+              <div style={{ height: '6px' }}></div>
               <Textarea
                 id="image-prompt"
                 placeholder="Describe how the image should animate..."
@@ -763,6 +768,7 @@ export function AiView() {
           <Label htmlFor="models" className={`font-medium text-foreground ${isCompact ? "text-xs" : "text-sm"}`}>
             {isCompact ? "Models" : "AI Models"}
           </Label>
+          <div style={{ height: '6px' }}></div>
           <div className={`grid grid-cols-1 gap-2 overflow-y-auto ${isCompact ? "max-h-32" : "max-h-48"}`}>
             {AI_MODELS.map((model) => (
               <Button
