@@ -4,15 +4,14 @@ import { TabBar } from "./tabbar";
 import { MediaView } from "./views/media";
 import { useMediaPanelStore, Tab } from "./store";
 import { TextView } from "./views/text";
+import { AudioView } from "./views/audio";
 
 export function MediaPanel() {
   const { activeTab } = useMediaPanelStore();
 
   const viewMap: Record<Tab, React.ReactNode> = {
     media: <MediaView />,
-    audio: (
-      <div className="p-4 text-muted-foreground">Audio view coming soon...</div>
-    ),
+    audio: <AudioView />,
     text: <TextView />,
     stickers: (
       <div className="p-4 text-muted-foreground">
@@ -47,9 +46,9 @@ export function MediaPanel() {
   };
 
   return (
-    <div className="h-full flex flex-col bg-panel rounded-sm overflow-hidden">
+    <div className="h-full flex flex-col bg-panel rounded-sm">
       <TabBar />
-      <div className="flex-1">{viewMap[activeTab]}</div>
+      <div className="flex-1 overflow-y-auto">{viewMap[activeTab]}</div>
     </div>
   );
 }

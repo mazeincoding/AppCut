@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "../ui/button";
+import { Button } from "../../ui/button";
 import {
   MoreVertical,
   Scissors,
@@ -17,13 +17,14 @@ import {
 import { useMediaStore } from "@/stores/media-store";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { usePlaybackStore } from "@/stores/playback-store";
-import AudioWaveform from "./audio-waveform";
+import AudioWaveform from "../audio-waveform";
 import { toast } from "sonner";
 import { TimelineElementProps, TrackType } from "@/types/timeline";
 import { useTimelineElementResize } from "@/hooks/use-timeline-element-resize";
 import {
   getTrackElementClasses,
   TIMELINE_CONSTANTS,
+  getTrackHeight,
 } from "@/constants/timeline-constants";
 import {
   DropdownMenu,
@@ -34,14 +35,14 @@ import {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-} from "../ui/dropdown-menu";
+} from "../../ui/dropdown-menu";
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
   ContextMenuTrigger,
-} from "../ui/context-menu";
+} from "../../ui/context-menu";
 
 export function TimelineElement({
   element,
@@ -56,6 +57,7 @@ export function TimelineElement({
     updateElementTrim,
     updateElementDuration,
     removeElementFromTrack,
+    removeElementFromTrackWithRipple,
     dragState,
     splitElement,
     splitAndKeepLeft,
@@ -63,6 +65,7 @@ export function TimelineElement({
     separateAudio,
     addElementToTrack,
     replaceElementMedia,
+    rippleEditingEnabled,
   } = useTimelineStore();
   const { currentTime } = usePlaybackStore();
 
@@ -95,95 +98,12 @@ export function TimelineElement({
     isBeingDragged && dragState.isDragging
       ? dragState.currentTime
       : element.startTime;
+
+  // Element should always be positioned at startTime - trimStart only affects content, not position
   const elementLeft = elementStartTime * 50 * zoomLevel;
 
-  const handleDeleteElement = () => {
-    removeElementFromTrack(track.id, element.id);
-    setElementMenuOpen(false);
-  };
-
-  const handleSplitElement = () => {
-    const effectiveStart = element.startTime;
-    const effectiveEnd =
-      element.startTime +
-      (element.duration - element.trimStart - element.trimEnd);
-
-    if (currentTime <= effectiveStart || currentTime >= effectiveEnd) {
-      toast.error("Playhead must be within element to split");
-      return;
-    }
-
-    const secondElementId = splitElement(track.id, element.id, currentTime);
-    if (!secondElementId) {
-      toast.error("Failed to split element");
-    }
-    setElementMenuOpen(false);
-  };
-
-  const handleSplitAndKeepLeft = () => {
-    const effectiveStart = element.startTime;
-    const effectiveEnd =
-      element.startTime +
-      (element.duration - element.trimStart - element.trimEnd);
-
-    if (currentTime <= effectiveStart || currentTime >= effectiveEnd) {
-      toast.error("Playhead must be within element");
-      return;
-    }
-
-    splitAndKeepLeft(track.id, element.id, currentTime);
-    setElementMenuOpen(false);
-  };
-
-  const handleSplitAndKeepRight = () => {
-    const effectiveStart = element.startTime;
-    const effectiveEnd =
-      element.startTime +
-      (element.duration - element.trimStart - element.trimEnd);
-
-    if (currentTime <= effectiveStart || currentTime >= effectiveEnd) {
-      toast.error("Playhead must be within element");
-      return;
-    }
-
-    splitAndKeepRight(track.id, element.id, currentTime);
-    setElementMenuOpen(false);
-  };
-
-  const handleSeparateAudio = () => {
-    if (element.type !== "media") {
-      toast.error("Audio separation only available for media elements");
-      return;
-    }
-
-    const mediaItem = mediaItems.find((item) => item.id === element.mediaId);
-    if (!mediaItem || mediaItem.type !== "video") {
-      toast.error("Audio separation only available for video elements");
-      return;
-    }
-
-    const audioElementId = separateAudio(track.id, element.id);
-    if (!audioElementId) {
-      toast.error("Failed to separate audio");
-    }
-    setElementMenuOpen(false);
-  };
-
-  const canSplitAtPlayhead = () => {
-    const effectiveStart = element.startTime;
-    const effectiveEnd =
-      element.startTime +
-      (element.duration - element.trimStart - element.trimEnd);
-    return currentTime > effectiveStart && currentTime < effectiveEnd;
-  };
-
-  const canSeparateAudio = () => {
-    if (element.type !== "media") return false;
-    const mediaItem = mediaItems.find((item) => item.id === element.mediaId);
-    return mediaItem?.type === "video" && track.type === "media";
-  };
-
-  const handleElementSplitContext = () => {
+  const handleElementSplitContext = (e: React.MouseEvent) => {
+    e.stopPropagation();
     const effectiveStart = element.startTime;
     const effectiveEnd =
       element.startTime +
@@ -199,7 +119,8 @@ export function TimelineElement({
     }
   };
 
-  const handleElementDuplicateContext = () => {
+  const handleElementDuplicateContext = (e: React.MouseEvent) => {
+    e.stopPropagation();
     const { id, ...elementWithoutId } = element;
     addElementToTrack(track.id, {
       ...elementWithoutId,
@@ -211,11 +132,17 @@ export function TimelineElement({
     });
   };
 
-  const handleElementDeleteContext = () => {
-    removeElementFromTrack(track.id, element.id);
+  const handleElementDeleteContext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (rippleEditingEnabled) {
+      removeElementFromTrackWithRipple(track.id, element.id);
+    } else {
+      removeElementFromTrack(track.id, element.id);
+    }
   };
 
-  const handleReplaceClip = () => {
+  const handleReplaceClip = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (element.type !== "media") {
       toast.error("Replace is only available for media clips");
       return;
@@ -267,35 +194,90 @@ export function TimelineElement({
       );
     }
 
+    const TILE_ASPECT_RATIO = 16 / 9;
+
     if (mediaItem.type === "image") {
+      // Calculate tile size based on 16:9 aspect ratio
+      const trackHeight = getTrackHeight(track.type);
+      const tileHeight = trackHeight - 8; // Account for padding
+      const tileWidth = tileHeight * TILE_ASPECT_RATIO;
+
       return (
         <div className="w-full h-full flex items-center justify-center">
-          <div className="bg-[#004D52] py-3 w-full h-full">
-            <img
-              src={mediaItem.url}
-              alt={mediaItem.name}
-              className="w-full h-full object-cover"
-              draggable={false}
+          <div className="bg-[#004D52] py-3 w-full h-full relative">
+            {/* Background with tiled images */}
+            <div
+              className="absolute top-3 bottom-3 left-0 right-0"
+              style={{
+                backgroundImage: mediaItem.url
+                  ? `url(${mediaItem.url})`
+                  : "none",
+                backgroundRepeat: "repeat-x",
+                backgroundSize: `${tileWidth}px ${tileHeight}px`,
+                backgroundPosition: "left center",
+                pointerEvents: "none",
+              }}
+              aria-label={`Tiled background of ${mediaItem.name}`}
+            />
+            {/* Overlay with vertical borders */}
+            <div
+              className="absolute top-3 bottom-3 left-0 right-0 pointer-events-none"
+              style={{
+                backgroundImage: `repeating-linear-gradient(
+                  to right,
+                  transparent 0px,
+                  transparent ${tileWidth - 1}px,
+                  rgba(255, 255, 255, 0.6) ${tileWidth - 1}px,
+                  rgba(255, 255, 255, 0.6) ${tileWidth}px
+                )`,
+                backgroundPosition: "left center",
+              }}
             />
           </div>
         </div>
       );
     }
 
+    const VIDEO_TILE_PADDING = 16;
+    const OVERLAY_SPACE_MULTIPLIER = 1.5;
+
     if (mediaItem.type === "video" && mediaItem.thumbnailUrl) {
+      const trackHeight = getTrackHeight(track.type);
+      const tileHeight = trackHeight - 8; // Match image padding
+      const tileWidth = tileHeight * TILE_ASPECT_RATIO;
+
       return (
-        <div className="w-full h-full flex items-center gap-2">
-          <div className="w-8 h-8 flex-shrink-0">
-            <img
-              src={mediaItem.thumbnailUrl}
-              alt={mediaItem.name}
-              className="w-full h-full object-cover rounded-sm"
-              draggable={false}
+        <div className="w-full h-full flex items-center justify-center">
+          <div className="bg-[#004D52] py-3 w-full h-full relative">
+            {/* Background with tiled thumbnails */}
+            <div
+              className="absolute top-3 bottom-3 left-0 right-0"
+              style={{
+                backgroundImage: mediaItem.thumbnailUrl
+                  ? `url(${mediaItem.thumbnailUrl})`
+                  : "none",
+                backgroundRepeat: "repeat-x",
+                backgroundSize: `${tileWidth}px ${tileHeight}px`,
+                backgroundPosition: "left center",
+                pointerEvents: "none",
+              }}
+              aria-label={`Tiled thumbnail of ${mediaItem.name}`}
+            />
+            {/* Overlay with vertical borders */}
+            <div
+              className="absolute top-3 bottom-3 left-0 right-0 pointer-events-none"
+              style={{
+                backgroundImage: `repeating-linear-gradient(
+                  to right,
+                  transparent 0px,
+                  transparent ${tileWidth - 1}px,
+                  rgba(255, 255, 255, 0.6) ${tileWidth - 1}px,
+                  rgba(255, 255, 255, 0.6) ${tileWidth}px
+                )`,
+                backgroundPosition: "left center",
+              }}
             />
           </div>
-          <span className="text-xs text-foreground/80 truncate flex-1">
-            {element.name}
-          </span>
         </div>
       );
     }
@@ -376,7 +358,7 @@ export function TimelineElement({
           </div>
         </div>
       </ContextMenuTrigger>
-      <ContextMenuContent>
+      <ContextMenuContent className="z-[200]">
         <ContextMenuItem onClick={handleElementSplitContext}>
           <Scissors className="h-4 w-4 mr-2" />
           Split at playhead

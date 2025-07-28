@@ -98,7 +98,6 @@
           ],
           "columnsTo": [
             "id"
-          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -183,9 +182,7 @@
         "sessions_token_unique": {
           "name": "sessions_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -247,9 +244,7 @@
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -335,9 +330,7 @@
         "waitlist_email_unique": {
           "name": "waitlist_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -356,4 +349,3 @@
     "schemas": {},
     "tables": {}
   }
-}

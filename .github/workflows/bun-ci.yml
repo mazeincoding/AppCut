@@ -23,6 +23,10 @@ jobs:
 
     env:
       DATABASE_URL: "postgresql://opencut:opencutthegoat@localhost:5432/opencut"
+      BETTER_AUTH_SECRET: "supersecret"
+      NEXT_PUBLIC_BETTER_AUTH_URL: "http://localhost:3000"
+      UPSTASH_REDIS_REST_URL: "https://your-upstash-redis-url"
+      UPSTASH_REDIS_REST_TOKEN: "your-upstash-redis-token"
 
     steps:
       - name: Checkout repository
@@ -31,13 +35,13 @@ jobs:
       - name: Install Bun
         uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76
         with:
-          bun-version: 1.2.17
+          bun-version: 1.2.18
 
       - name: Cache Bun modules
         uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-1.2.17-${{ hashFiles('apps/web/bun.lock') }}
+          key: ${{ runner.os }}-bun-1.2.18-${{ hashFiles('apps/web/bun.lock') }}
 
       - name: Install dependencies
         working-directory: apps/web

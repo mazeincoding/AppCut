@@ -43,4 +43,4 @@ export function SpeedControl() {
       </div>
     </div>
   );
-} 
+}

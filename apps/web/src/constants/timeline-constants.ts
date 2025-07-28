@@ -74,16 +74,17 @@ export const TIMELINE_CONSTANTS = {
   PIXELS_PER_SECOND: 50,
   TRACK_HEIGHT: 60, // Default fallback
   DEFAULT_TEXT_DURATION: 5,
+  DEFAULT_IMAGE_DURATION: 5,
   ZOOM_LEVELS: [0.25, 0.5, 1, 1.5, 2, 3, 4],
 } as const;
 
 // FPS presets for project settings
 export const FPS_PRESETS = [
-  { value: "24", label: "24 fps (Film)" },
-  { value: "25", label: "25 fps (PAL)" },
-  { value: "30", label: "30 fps (NTSC)" },
-  { value: "60", label: "60 fps (High)" },
-  { value: "120", label: "120 fps (Slow-mo)" },
+  { value: "24", label: "24 fps" },
+  { value: "25", label: "25 fps" },
+  { value: "30", label: "30 fps" },
+  { value: "60", label: "60 fps" },
+  { value: "120", label: "120 fps" },
 ] as const;
 
 // Frame snapping utilities

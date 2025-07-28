@@ -7,14 +7,6 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect("https://opencut.app/why-not-capcut", 301);
   }
 
-  const path = request.nextUrl.pathname;
-
-  if (path === "/editor" && process.env.NODE_ENV === "production") {
-    const homeUrl = new URL("/", request.url);
-    homeUrl.searchParams.set("redirect", request.url);
-    return NextResponse.redirect(homeUrl);
-  }
-
   return NextResponse.next();
 }
 

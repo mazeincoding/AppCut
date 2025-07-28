@@ -7,7 +7,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./schema": "./src/schema.ts",
-    "./drizzle.config": "./drizzle.config.ts"
+    "./drizzle.config": "./drizzle.config.ts",
+    "./keys": "./src/keys.ts"
   },
   "scripts": {
     "db:generate": "drizzle-kit generate",
@@ -16,8 +17,10 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@t3-oss/env-nextjs": "^0.13.8",
     "drizzle-orm": "^0.44.2",
-    "postgres": "^3.4.5"
+    "postgres": "^3.4.5",
+    "zod": "^4.0.5"
   },
   "devDependencies": {
     "drizzle-kit": "^0.31.1",

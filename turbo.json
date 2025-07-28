@@ -4,7 +4,12 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**"],
-      "env": ["DATABASE_URL"]
+      "env": [
+        "DATABASE_URL",
+        "BETTER_AUTH_SECRET",
+        "UPSTASH_REDIS_REST_URL",
+        "UPSTASH_REDIS_REST_TOKEN"
+      ]
     },
     "check-types": {
       "dependsOn": ["^check-types"]
@@ -12,6 +17,17 @@
     "dev": {
       "persistent": true,
       "cache": false
+    },
+    "lint": {
+      "dependsOn": ["^lint"],
+      "cache": false
+    },
+    "lint:fix": {
+      "dependsOn": ["^lint:fix"],
+      "cache": false
+    },
+    "format": {
+      "dependsOn": ["^format"]
     }
   }
 }

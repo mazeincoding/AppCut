@@ -119,7 +119,11 @@ const LoginPage = () => {
                   className="w-full h-11"
                   size="lg"
                 >
-                  {isEmailLoading ? <Loader2 className="animate-spin" /> : "Sign in"}
+                  {isEmailLoading ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    "Sign in"
+                  )}
                 </Button>
               </div>
             </div>
@@ -137,6 +141,6 @@ const LoginPage = () => {
       </Card>
     </div>
   );
-}
+};
 
 export default memo(LoginPage);

@@ -1,18 +1,20 @@
 import { Hero } from "@/components/landing/hero";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
-import { getWaitlistCount } from "@/lib/waitlist";
+import type { Metadata } from "next";
+import { SITE_URL } from "@/constants/site";
 
-// Force dynamic rendering so waitlist count updates in real-time
-export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  alternates: {
+    canonical: SITE_URL,
+  },
+};
 
 export default async function Home() {
-  const signupCount = await getWaitlistCount();
-
   return (
     <div>
       <Header />
-      <Hero signupCount={signupCount} />
+      <Hero />
       <Footer />
     </div>
   );

@@ -5,7 +5,7 @@ export class IndexedDBAdapter<T> implements StorageAdapter<T> {
   private storeName: string;
   private version: number;
 
-  constructor(dbName: string, storeName: string, version: number = 1) {
+  constructor(dbName: string, storeName: string, version = 1) {
     this.dbName = dbName;
     this.storeName = storeName;
     this.version = version;
