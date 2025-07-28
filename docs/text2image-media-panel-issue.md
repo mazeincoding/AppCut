@@ -102,18 +102,19 @@ if (!mediaItem.file) {
 ### Recommended Solution: Convert URL to File when adding to media store
 
 **Files to modify:**
-- `apps/web/src/stores/media-store.ts` - Update `addGeneratedImages()` function (line 358)
+- `apps/web/src/stores/media-store.ts` - Update `addGeneratedImages()` function (line 358-389)
+- `apps/web/src/stores/text2image-store.ts` - Update the call to `addGeneratedImages()` (line 266)
+- `apps/web/src/stores/media-store.ts` - Update interface definition (line 84)
 
-**Implementation approach:**
-1. Before creating MediaItem objects, fetch each image URL
-2. Convert the fetched data to a Blob
-3. Create a File object from the Blob with appropriate name and type
-4. Add the File object to the MediaItem along with the URL
+**Implementation approach (Non-breaking):**
+1. Keep `addGeneratedImages` synchronous to avoid breaking changes
+2. Add items to store immediately with URL
+3. Fetch and convert to File in the background
+4. Update items once File is ready
 
 **Current code structure (line 358-389):**
 ```javascript
 addGeneratedImages: (items) => {
-  // Convert items to full MediaItem objects with IDs
   const newItems: MediaItem[] = items.map((item) => ({
     ...item,
     id: generateUUID(),
@@ -123,14 +124,64 @@ addGeneratedImages: (items) => {
     },
   }));
   
-  // Add to local state
   set((state) => ({
     mediaItems: [...state.mediaItems, ...newItems],
   }));
 }
 ```
 
-**Required changes:**
-- Add async URL fetching before the `items.map()` 
-- Create File objects from the fetched image data
-- Include both `file` and `url` properties in the MediaItem
+**Safer implementation that won't break existing features:**
+```javascript
+addGeneratedImages: (items) => {
+  // Generate IDs for all items
+  const newItems: MediaItem[] = items.map((item) => ({
+    ...item,
+    id: generateUUID(),
+    metadata: {
+      ...item.metadata,
+      source: "text2image",
+    },
+  }));
+  
+  // Add to state immediately (non-breaking)
+  set((state) => ({
+    mediaItems: [...state.mediaItems, ...newItems],
+  }));
+  
+  // Fetch and convert URLs to Files in background
+  newItems.forEach(async (item) => {
+    if (item.url && !item.file) {
+      try {
+        const response = await fetch(item.url);
+        const blob = await response.blob();
+        const fileName = item.name || 'generated-image.png';
+        const file = new File([blob], fileName, { type: blob.type || 'image/png' });
+        
+        // Update the item with the File object
+        set((state) => ({
+          mediaItems: state.mediaItems.map(mediaItem =>
+            mediaItem.id === item.id
+              ? { ...mediaItem, file }
+              : mediaItem
+          ),
+        }));
+      } catch (error) {
+        console.error('Failed to fetch image for', item.name, error);
+      }
+    }
+  });
+}
+```
+
+**Why this approach is safer:**
+- No breaking changes to the interface (remains synchronous)
+- Items appear in media panel immediately
+- Files are fetched in background without blocking
+- No changes needed in text2image-store.ts
+- Graceful error handling per image
+
+**Potential issues addressed:**
+- ✓ Doesn't break existing synchronous calls
+- ✓ Media panel updates immediately
+- ✓ Timeline will work once File is ready
+- ✓ Individual image failures don't affect others
