@@ -8,6 +8,9 @@ import { useZipExport } from '@/hooks/use-zip-export'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 
+// Debug flag - set to true to enable console logging
+const DEBUG_EXPORT_ALL = process.env.NODE_ENV === 'development' && false;
+
 interface ExportAllButtonProps {
   className?: string
   variant?: 'default' | 'primary' | 'destructive' | 'outline' | 'secondary' | 'text' | 'link' | 'shimmer'
@@ -23,8 +26,8 @@ export function ExportAllButton({
   const { exportState, exportToZip, isExporting } = useZipExport()
 
   const handleExportAll = async () => {
-    console.log('📦 EXPORT-ALL: Button clicked!');
-    console.log('📊 EXPORT-ALL: Media items analysis', {
+    if (DEBUG_EXPORT_ALL) console.log('📦 EXPORT-ALL: Button clicked!');
+    if (DEBUG_EXPORT_ALL) console.log('📊 EXPORT-ALL: Media items analysis', {
       totalItems: mediaItems.length,
       generatedImages: mediaItems.filter(item => item.metadata?.source === 'text2image').length,
       regularImages: mediaItems.filter(item => item.type === 'image' && item.metadata?.source !== 'text2image').length,
@@ -35,7 +38,7 @@ export function ExportAllButton({
     // Log generated images details
     const generatedImages = mediaItems.filter(item => item.metadata?.source === 'text2image');
     if (generatedImages.length > 0) {
-      console.log('🖼️ EXPORT-ALL: Generated images found:', generatedImages.map(img => ({
+      if (DEBUG_EXPORT_ALL) console.log('🖼️ EXPORT-ALL: Generated images found:', generatedImages.map(img => ({
         id: img.id,
         name: img.name,
         hasFile: !!img.file,
@@ -47,7 +50,7 @@ export function ExportAllButton({
     }
     
     if (mediaItems.length === 0 || isExporting) {
-      console.log('⚠️ EXPORT-ALL: Export blocked', {
+      if (DEBUG_EXPORT_ALL) console.log('⚠️ EXPORT-ALL: Export blocked', {
         reason: mediaItems.length === 0 ? 'No media items' : 'Already exporting',
         isExporting
       });
@@ -55,12 +58,12 @@ export function ExportAllButton({
     }
 
     try {
-      console.log('🚀 EXPORT-ALL: Starting ZIP export...');
+      if (DEBUG_EXPORT_ALL) console.log('🚀 EXPORT-ALL: Starting ZIP export...');
       await exportToZip(mediaItems, {
         filename: `media-export-${Date.now()}.zip`
       })
       
-      console.log('✅ EXPORT-ALL: Export completed', {
+      if (DEBUG_EXPORT_ALL) console.log('✅ EXPORT-ALL: Export completed', {
         phase: exportState.phase,
         totalFiles: exportState.totalFiles,
         completedFiles: exportState.completedFiles

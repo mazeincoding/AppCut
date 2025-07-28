@@ -1,6 +1,9 @@
 import JSZip from 'jszip'
 import { MediaItem } from '@/stores/media-store'
 
+// Debug flag - set to true to enable console logging
+const DEBUG_ZIP_MANAGER = process.env.NODE_ENV === 'development' && false;
+
 export interface ZipExportOptions {
   filename?: string
   compression?: 'DEFLATE' | 'STORE'
@@ -25,7 +28,7 @@ export class ZipManager {
     const total = items.length
     let completed = 0
 
-    console.log('📦 ZIP-MANAGER: Starting to add media items', {
+    if (DEBUG_ZIP_MANAGER) console.log('📦 ZIP-MANAGER: Starting to add media items', {
       totalItems: total,
       generatedImages: items.filter(item => item.metadata?.source === 'text2image').length
     });
@@ -41,32 +44,30 @@ export class ZipManager {
           const mimeType = item.file.type || 'image/png';
           const extension = mimeType.split('/')[1] || 'png';
           filename = `${filename}.${extension}`;
-          console.log('🔧 ZIP-MANAGER: Fixed missing extension for generated image', {
-            originalName: item.name,
-            fixedName: filename,
-            mimeType: mimeType
-          });
+          if (DEBUG_ZIP_MANAGER) console.log('🔧 ZIP-MANAGER: Fixed missing extension for generated image:', 
+            'originalName:', item.name,
+            'fixedName:', filename,
+            'mimeType:', mimeType
+          );
         }
         
         // Resolve filename conflicts
         filename = this.resolveFilename(filename);
         
-        console.log('📄 ZIP-MANAGER: Processing item', {
-          name: item.name,
-          finalFilename: filename,
-          hasFile: !!item.file,
-          hasUrl: !!item.url,
-          type: item.type,
-          isGenerated: item.metadata?.source === 'text2image',
-          fileSize: item.file?.size || 0
-        });
+        if (DEBUG_ZIP_MANAGER) console.log('📄 ZIP-MANAGER: Processing item:', 
+          'name:', item.name,
+          'finalFilename:', filename,
+          'hasFile:', !!item.file,
+          'type:', item.type,
+          'isGenerated:', item.metadata?.source === 'text2image'
+        );
         
         // Add file to ZIP directly
         if (item.file) {
           this.zip.file(filename, item.file)
-          console.log('✅ ZIP-MANAGER: Added to ZIP', { filename, size: item.file.size });
+          if (DEBUG_ZIP_MANAGER) console.log('✅ ZIP-MANAGER: Added to ZIP:', 'filename:', filename, 'size:', item.file.size);
         } else {
-          console.warn('⚠️ ZIP-MANAGER: No file object for item', { 
+          if (DEBUG_ZIP_MANAGER) console.warn('⚠️ ZIP-MANAGER: No file object for item', { 
             name: item.name,
             hasUrl: !!item.url,
             urlType: item.url?.startsWith('data:') ? 'data' : item.url?.startsWith('blob:') ? 'blob' : 'other'

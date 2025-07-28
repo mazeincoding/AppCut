@@ -12,42 +12,34 @@ export function ModelSelector() {
 
   return (
     <Card>
-      <CardContent className="p-4 space-y-4">
+      <CardContent className="p-3 space-y-3">
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-primary rounded-full"></div>
-          <label className="text-sm font-semibold">AI Model</label>
+          <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
+          <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Model Selection</label>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin' }}>
           {models.map((model) => {
             const isSelected = selectedModel === model.id;
             
             return (
-              <div
+              <button
                 key={model.id}
                 className={cn(
-                  "p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:shadow-md",
+                  "w-full h-6 px-2 rounded-md border text-left cursor-pointer transition-all duration-200 flex items-center justify-between",
                   isSelected
-                    ? "bg-gradient-to-br from-primary/10 to-primary/5 border-primary shadow-md"
-                    : "bg-card hover:bg-muted/30 border-muted-foreground/10 hover:border-muted-foreground/30"
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                    : "bg-card hover:bg-muted/50 border-muted-foreground/20 hover:border-muted-foreground/40"
                 )}
                 onClick={() => setSelectedModel(model.id as any)}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className={cn(
-                      "w-2.5 h-2.5 rounded-full transition-colors",
-                      isSelected ? "bg-primary" : "bg-muted-foreground/30"
-                    )}></div>
-                    <h4 className="text-sm font-semibold">{model.name}</h4>
-                  </div>
-                  <Badge 
-                    variant={isSelected ? "default" : "secondary"} 
-                    className={cn("text-xs font-medium", isSelected && "bg-primary/20 text-primary-foreground")}
-                  >
-                    {model.estimatedCost}
-                  </Badge>
-                </div>
-              </div>
+                <span className="text-xs font-medium truncate">{model.name}</span>
+                <span className={cn(
+                  "text-[10px] font-medium ml-2 flex-shrink-0",
+                  isSelected ? "text-primary-foreground/80" : "text-muted-foreground"
+                )}>
+                  {model.estimatedCost}
+                </span>
+              </button>
             );
           })}
         </div>

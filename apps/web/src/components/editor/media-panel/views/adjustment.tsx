@@ -354,11 +354,9 @@ export function AdjustmentView() {
         </Card>
       )}
 
-      {/* Main Content */}
-      <div className="flex-1 flex gap-6 min-h-0">
-        {/* Left Panel - Controls */}
-        <div className="w-96 flex-shrink-0 flex flex-col min-h-0">
-          <div className="flex-1 space-y-6 overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin' }}>
+      {/* Main Content - Single Column */}
+      <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 space-y-3 overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin' }}>
           {/* Image Upload */}
           {!originalImage ? (
             <ImageUploader 
@@ -367,80 +365,26 @@ export function AdjustmentView() {
             />
           ) : (
             <Card className="border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <CheckCircle className="size-5 text-green-600" />
-                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    </div>
+              <CardContent className="p-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="size-4 text-green-600" />
                     <div>
-                      <span className="text-sm font-semibold text-green-800 dark:text-green-200">Image loaded</span>
-                      <div className="text-xs text-green-600 dark:text-green-400 font-medium">
+                      <span className="text-xs font-semibold text-green-800 dark:text-green-200">Image loaded</span>
+                      <div className="text-[10px] text-green-600 dark:text-green-400 font-medium">
                         {formatFileSize(originalImage.size)}
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={clearImage}
-                      className="border-green-300 hover:bg-green-100 dark:border-green-700 dark:hover:bg-green-900/20 text-xs"
-                    >
-                      Remove
-                    </Button>
-                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={clearImage}
+                    className="border-green-300 hover:bg-green-100 dark:border-green-700 dark:hover:bg-green-900/20 text-xs h-6"
+                  >
+                    Remove
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Edit/Generate Button - Moved to top */}
-          {originalImage && (
-            <Card className="bg-gradient-to-r from-primary/5 to-blue-500/5 border-primary/20">
-              <CardContent className="p-4 space-y-3">
-                <Button
-                  onClick={handleEdit}
-                  disabled={!canEdit}
-                  className="w-full h-14 font-bold text-lg transition-all duration-200 hover:scale-[1.02] shadow-md"
-                  size="lg"
-                >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="mr-3 size-6 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <ImageIcon className="mr-3 size-6" />
-                      Generate Edit
-                    </>
-                  )}
-                </Button>
-                
-                {editHistory.length > 0 && (
-                  <div className="flex gap-3">
-                    <Button
-                      variant="outline"
-                      onClick={undo}
-                      disabled={!canUndo()}
-                      className="flex-1 h-10 transition-all duration-200 hover:scale-[1.02]"
-                    >
-                      <Undo2 className="size-4 mr-2" />
-                      Undo
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={redo}
-                      disabled={!canRedo()}
-                      className="flex-1 h-10 transition-all duration-200 hover:scale-[1.02]"
-                    >
-                      <Redo2 className="size-4 mr-2" />
-                      Redo
-                    </Button>
-                  </div>
-                )}
               </CardContent>
             </Card>
           )}
@@ -453,26 +397,26 @@ export function AdjustmentView() {
           {/* Prompt Input */}
           {originalImage && (
             <Card>
-              <CardContent className="p-4 space-y-4">
+              <CardContent className="p-3 space-y-3">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-primary rounded-full"></div>
-                  <label className="text-sm font-semibold">Edit Instructions</label>
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Edit Instructions</label>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <textarea
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
-                    placeholder="Describe what you want to change in the image..."
-                    className="w-full p-3 text-sm border-2 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200"
-                    rows={4}
+                    placeholder="Describe what you want to change..."
+                    className="w-full p-2.5 text-sm border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200"
+                    rows={3}
                     maxLength={700}
                   />
                   <div className="flex justify-between items-center">
-                    <span className="text-xs text-muted-foreground font-medium">
-                      Be specific about the changes you want
+                    <span className="text-[10px] text-muted-foreground font-medium">
+                      Be specific about changes
                     </span>
                     <span className={cn(
-                      "text-xs font-medium transition-colors",
+                      "text-[10px] font-medium transition-colors",
                       prompt.length > 650 ? "text-orange-500" : prompt.length > 600 ? "text-yellow-500" : "text-muted-foreground"
                     )}>
                       {prompt.length}/700
@@ -483,19 +427,72 @@ export function AdjustmentView() {
             </Card>
           )}
 
+          {/* Preview Panel - Below Edit Instructions */}
+          {originalImage && (
+            <div className="h-64">
+              <PreviewPanel />
+            </div>
+          )}
+
+          {/* Edit/Generate Button */}
+          {originalImage && (
+            <Card className="bg-gradient-to-r from-primary/5 to-blue-500/5 border-primary/20">
+              <CardContent className="p-3 space-y-2">
+                <Button
+                  onClick={handleEdit}
+                  disabled={!canEdit}
+                  className="w-full h-10 font-semibold text-sm transition-all duration-200 hover:scale-[1.01] shadow-sm"
+                  size="default"
+                >
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="mr-2 size-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <ImageIcon className="mr-2 size-4" />
+                      Generate Edit
+                    </>
+                  )}
+                </Button>
+                
+                {editHistory.length > 0 && (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={undo}
+                      disabled={!canUndo()}
+                      className="flex-1 h-8 text-xs"
+                      size="sm"
+                    >
+                      <Undo2 className="size-3 mr-1" />
+                      Undo
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={redo}
+                      disabled={!canRedo()}
+                      className="flex-1 h-8 text-xs"
+                      size="sm"
+                    >
+                      <Redo2 className="size-3 mr-1" />
+                      Redo
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Parameter Controls */}
           {originalImage && showParameters && (
             <ParameterControls />
           )}
-          </div>
-        </div>
 
-        {/* Right Panel - Preview */}
-        <div className="flex-1 min-w-0">
-          {originalImage ? (
-            <PreviewPanel />
-          ) : (
-            <Card className="h-full flex items-center justify-center">
+          {/* No Image State */}
+          {!originalImage && (
+            <Card className="h-64 flex items-center justify-center">
               <CardContent className="text-center">
                 <ImageIcon className="size-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-medium mb-2">No Image Selected</h3>
