@@ -13,6 +13,7 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { createTestImageFile } from '../fixtures/test-utils';
 
 // Helper class to monitor StorageProvider instances
 class StorageProviderMonitor {
