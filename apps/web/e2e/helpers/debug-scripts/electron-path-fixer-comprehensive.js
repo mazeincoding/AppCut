@@ -20,8 +20,8 @@ function findFiles(dir) {
   return files;
 }
 
-// Fix paths in HTML and CSS content
-function fixPaths(content) {
+// Fix basic HTML and CSS path attributes
+function fixBasicPaths(content) {
   return content
     // Fix main _next paths to use app:// protocol
     .replace(/href="\/_next\//g, 'href="app://_next/')
@@ -29,10 +29,6 @@ function fixPaths(content) {
     // Fix root-relative paths to use app:// protocol
     .replace(/href="\/([^\/])/g, 'href="app://$1')
     .replace(/src="\/([^\/])/g, 'src="app://$1')
-    // Fix inline JavaScript paths
-    .replace(/\\\\\"\/_next\//g, '\\\\"app:\\/\\/_next\\/')
-    .replace(/"\/_next\//g, '"app://_next/')
-    .replace(/:HL\["\/_next\//g, ':HL["app://_next/')
     // Fix dynamic imports and preload paths
     .replace(/"\/static\//g, '"app://static/')
     .replace(/href="\/static\//g, 'href="app://static/')
@@ -41,37 +37,74 @@ function fixPaths(content) {
     .replace(/url\(\/static\//g, 'url(app://static/')
     .replace(/url\(\/_next\//g, 'url(app://_next/')
     // Fix font preload paths in HTML
-    .replace(/href="\/_next\/static\/media\//g, 'href="app://_next/static/media/')
-    // Fix JavaScript fetch/import paths
-    .replace(/fetch\("\/([^"]*?)"\)/g, 'fetch("app://$1")')
-    .replace(/import\("\/([^"]*?)"\)/g, 'import("app://$1")')
-    // Remove external analytics scripts for Electron
-    .replace(/<link rel="preload" href="https:\/\/cdn\.databuddy\.cc\/databuddy\.js"[^>]*>/g, '')
-    .replace(/<script[^>]*src="https:\/\/cdn\.databuddy\.cc\/databuddy\.js"[^>]*>[\s\S]*?<\/script>/g, '')
-    // Remove inline databuddy references in JavaScript
-    .replace(/\\"src\\":\\"https:\/\/cdn\.databuddy\.cc\/databuddy\.js\\"/g, '\\"src\\":\\"\\"')
-    .replace(/,\\"data-client-id\\":\\"[^"]*\\"/g, '')
-    .replace(/,\\"data-track-[^"]*\\":(true|false)/g, '')
-    // Fix remaining icon paths  
-    .replace(/href="\/favicon/g, 'href="app://favicon')
-    .replace(/href="\/icons\//g, 'href="app://icons/')
-    .replace(/href="\/manifest\.json"/g, 'href="app://manifest.json"')
-    .replace(/href="\/browserconfig\.xml"/g, 'href="app://browserconfig.xml"')
-    .replace(/content="\/browserconfig\.xml"/g, 'content="app://browserconfig.xml"')
+    .replace(/href="\/_next\/static\/media\//g, 'href="app://_next/static/media/');
+}
+
+// Fix inline JavaScript path references
+function fixInlineJavaScript(content) {
+  return content
+    // Fix inline JavaScript paths
+    .replace(/\\\\\"\/_next\//g, '\\\\"app:\\/\\/_next\\/')
+    .replace(/"\/_next\//g, '"app://_next/')
+    .replace(/:HL\["\/_next\//g, ':HL["app://_next/')
     // Fix Next.js router paths
     .replace(/"_next\/static\//g, '"app://_next/static/')
     .replace(/'_next\/static\//g, "'app://_next/static/")
     // Fix inline JavaScript chunk references
     .replace(/"static\/chunks\//g, '"app://_next/static/chunks/')
     .replace(/'static\/chunks\//g, "'app://_next/static/chunks/")
-    // Enhanced detection patterns for window location assignments
-    .replace(/window\.location\.href\s*=\s*["'](?!app:\/\/)\//g, 'window.location.href = "app:///')
+    // Fix Next.js paths in JavaScript (double quotes)
+    .replace(/"(?!app:\/\/|https?:\/\/)\/_next/g, '"app://_next')
+    // Fix Next.js paths in JavaScript (single quotes)  
+    .replace(/'(?!app:\/\/|https?:\/\/)\/_next/g, "'app://_next");
+}
+
+// Fix dynamic imports and fetch calls
+function fixDynamicImports(content) {
+  return content
+    // Fix JavaScript fetch/import paths
+    .replace(/fetch\("\/([^"]*?)"\)/g, 'fetch("app://$1")')
+    .replace(/import\("\/([^"]*?)"\)/g, 'import("app://$1")')
+    // Fix fetch calls with root-relative paths
+    .replace(/fetch\(\s*["'](?!app:\/\/|https?:\/\/)\//g, 'fetch("app:///')
+    // Fix import statements with root-relative paths
+    .replace(/import\(\s*["'](?!app:\/\/|https?:\/\/)\//g, 'import("app:///')
     // Fix template literals
-    .replace(/`\$\{[^}]*\}\/(?!app:\/\/)/g, '`app://${...}/')
-    // Fix dynamic href assignments
-    .replace(/\.href\s*=\s*["'](?!app:\/\/)\//g, '.href = "app:///')
-    // Fix event handler URLs
-    .replace(/onclick\s*=\s*["'][^"']*location\.href\s*=\s*["'](?!app:\/\/)\//g, 'onclick="location.href=\\"app:///')
+    .replace(/`\$\{[^}]*\}\/(?!app:\/\/)/g, '`app://${...}/');
+}
+
+// Remove external scripts for Electron environment
+function removeExternalScripts(content) {
+  return content
+    // Remove external analytics scripts for Electron
+    .replace(/<link rel="preload" href="https:\/\/cdn\.databuddy\.cc\/databuddy\.js"[^>]*>/g, '')
+    .replace(/<script[^>]*src="https:\/\/cdn\.databuddy\.cc\/databuddy\.js"[^>]*>[\s\S]*?<\/script>/g, '')
+    // Remove inline databuddy references in JavaScript
+    .replace(/\\"src\\":\\"https:\/\/cdn\.databuddy\.cc\/databuddy\.js\\"/g, '\\"src\\":\\"\\"')
+    .replace(/,\\"data-client-id\\":\\"[^"]*\\"/g, '')
+    .replace(/,\\"data-track-[^"]*\\":(true|false)/g, '');
+}
+
+// Fix icon and manifest file paths
+function fixIconPaths(content) {
+  return content
+    // Fix remaining icon paths  
+    .replace(/href="\/favicon/g, 'href="app://favicon')
+    .replace(/href="\/icons\//g, 'href="app://icons/')
+    .replace(/href="\/manifest\.json"/g, 'href="app://manifest.json"')
+    .replace(/href="\/browserconfig\.xml"/g, 'href="app://browserconfig.xml"')
+    .replace(/content="\/browserconfig\.xml"/g, 'content="app://browserconfig.xml"')
+    // Fix additional root-relative href patterns
+    .replace(/href\s*=\s*["'](?!app:\/\/|https?:\/\/|mailto:|tel:|#)\//g, 'href="app:///')
+    // Fix additional root-relative src patterns  
+    .replace(/src\s*=\s*["'](?!app:\/\/|https?:\/\/)\//g, 'src="app:///')
+    // Fix CSS url() patterns
+    .replace(/url\(\s*["']?(?!app:\/\/|https?:\/\/|data:)\//g, 'url("app:///');
+}
+
+// Fix double protocol issues and malformed URLs
+function fixDoubleProtocols(content) {
+  return content
     // Fix double protocol issues (comprehensive)
     .replace(/app:\/\/[^"']*app:\/\//g, 'app://')
     .replace(/app:\/\/[^"']*\/app:\/\//g, 'app://')
@@ -97,39 +130,22 @@ function fixPaths(content) {
         return "'" + match.substring(lastApp).replace(/["']$/, '') + "'";
       }
       return match;
-    })
-    // Additional patterns found by validation script
+    });
+}
+
+// Fix window.location and location.href assignments
+function fixLocationAssignments(content) {
+  return content
+    // Enhanced detection patterns for window location assignments
+    .replace(/window\.location\.href\s*=\s*["'](?!app:\/\/)\//g, 'window.location.href = "app:///')
+    // Fix dynamic href assignments
+    .replace(/\.href\s*=\s*["'](?!app:\/\/)\//g, '.href = "app:///')
+    // Fix event handler URLs
+    .replace(/onclick\s*=\s*["'][^"']*location\.href\s*=\s*["'](?!app:\/\/)\//g, 'onclick="location.href=\\"app:///')
     // Fix window.location.href assignments (more comprehensive)
     .replace(/window\.location\.href\s*=\s*["'](?!app:\/\/|https?:\/\/|mailto:|tel:)([^"']*)/g, 'window.location.href = "app://$1')
     // Fix location.href assignments  
     .replace(/location\.href\s*=\s*["'](?!app:\/\/|https?:\/\/|mailto:|tel:)([^"']*)/g, 'location.href = "app://$1')
-    // Fix Next.js paths in JavaScript (double quotes)
-    .replace(/"(?!app:\/\/|https?:\/\/)\/_next/g, '"app://_next')
-    // Fix Next.js paths in JavaScript (single quotes)  
-    .replace(/'(?!app:\/\/|https?:\/\/)\/_next/g, "'app://_next")
-    // Fix encoded paths and special cases
-    .replace(/"(?!app:\/\/|https?:\/\/)\/[^"]*"/g, function(match) {
-      if (match.includes('%') || match.includes('\\') || match.includes('svg')) {
-        return match; // Skip encoded/escaped content
-      }
-      return '"app://' + match.slice(2);
-    })
-    .replace(/'(?!app:\/\/|https?:\/\/)\/[^']*'/g, function(match) {
-      if (match.includes('%') || match.includes('\\') || match.includes('svg')) {
-        return match; // Skip encoded/escaped content
-      }
-      return "'app://" + match.slice(2);
-    })
-    // Fix fetch calls with root-relative paths
-    .replace(/fetch\(\s*["'](?!app:\/\/|https?:\/\/)\//g, 'fetch("app:///')
-    // Fix additional root-relative href patterns
-    .replace(/href\s*=\s*["'](?!app:\/\/|https?:\/\/|mailto:|tel:|#)\//g, 'href="app:///')
-    // Fix additional root-relative src patterns  
-    .replace(/src\s*=\s*["'](?!app:\/\/|https?:\/\/)\//g, 'src="app:///')
-    // Fix CSS url() patterns
-    .replace(/url\(\s*["']?(?!app:\/\/|https?:\/\/|data:)\//g, 'url("app:///')
-    // Fix import statements with root-relative paths
-    .replace(/import\(\s*["'](?!app:\/\/|https?:\/\/)\//g, 'import("app:///')
     // Fix remaining window.location assignments (more comprehensive)
     .replace(/window\.location\.href\s*=\s*["'][^"']*["']/g, function(match) {
       if (match.includes('app://') || match.includes('http://') || match.includes('https://') || match.includes('mailto:') || match.includes('tel:')) {
@@ -153,6 +169,24 @@ function fixPaths(content) {
         return match.replace(pathMatch[1], 'app://' + pathMatch[1]);
       }
       return match;
+    });
+}
+
+// Clean up paths and handle special cases
+function cleanupPaths(content) {
+  return content
+    // Fix encoded paths and special cases
+    .replace(/"(?!app:\/\/|https?:\/\/)\/[^"]*"/g, function(match) {
+      if (match.includes('%') || match.includes('\\') || match.includes('svg')) {
+        return match; // Skip encoded/escaped content
+      }
+      return '"app://' + match.slice(2);
+    })
+    .replace(/'(?!app:\/\/|https?:\/\/)\/[^']*'/g, function(match) {
+      if (match.includes('%') || match.includes('\\') || match.includes('svg')) {
+        return match; // Skip encoded/escaped content
+      }
+      return "'app://" + match.slice(2);
     })
     // Fix single quoted paths more aggressively
     .replace(/'(?!app:\/\/|https?:\/\/|mailto:|tel:|data:|#|javascript:)\/[^']*'/g, function(match) {
@@ -173,6 +207,19 @@ function fixPaths(content) {
     .replace(/src="\.\/_next\//g, 'src="app://_next/')
     .replace(/href="\.\/([^"]*?)"/g, 'href="app://$1"')
     .replace(/src="\.\/([^"]*?)"/g, 'src="app://$1"');
+}
+
+// Main function to fix paths in HTML and CSS content
+function fixPaths(content) {
+  content = fixBasicPaths(content);
+  content = fixInlineJavaScript(content);
+  content = fixDynamicImports(content);
+  content = removeExternalScripts(content);
+  content = fixIconPaths(content);
+  content = fixDoubleProtocols(content);
+  content = fixLocationAssignments(content);
+  content = cleanupPaths(content);
+  return content;
 }
 
 // Main function
