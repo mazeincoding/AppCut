@@ -194,10 +194,13 @@
             const file = e.target.files[0];
             if (file) {
                 const video = document.createElement('video');
-                video.src = URL.createObjectURL(file);
+                const videoUrl = URL.createObjectURL(file);
+                video.src = videoUrl;
                 video.onloadedmetadata = () => {
                     testVideo = video;
                     console.log('Test video loaded:', video.videoWidth + 'x' + video.videoHeight, video.duration + 's');
+                    // Clean up the object URL after metadata is loaded
+                    URL.revokeObjectURL(videoUrl);
                 };
             }
         });
