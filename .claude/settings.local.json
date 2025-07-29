@@ -73,7 +73,8 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:github.com)",
       "Bash(robocopy:*)",
-      "Bash(xcopy:*)"
+      "Bash(xcopy:*)",
+      "Bash(sed:*)"
     ],
     "deny": []
   }

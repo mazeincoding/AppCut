@@ -4,9 +4,9 @@
  */
 
 import { test, expect } from '@playwright/test'
-import { EditorPage, ExportDialog } from './fixtures/page-objects'
-import { TestHelpers } from './helpers/test-helpers'
-import { EXPORT_SETTINGS } from './fixtures/test-data'
+import { EditorPage, ExportDialog } from '../fixtures/page-objects'
+import { TestHelpers } from 
+import { EXPORT_SETTINGS } from '../fixtures/test-data'
 
 test.describe('Export Cancellation', () => {
   let editorPage: EditorPage

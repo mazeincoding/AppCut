@@ -4,9 +4,9 @@
  */
 
 import { test, expect } from '@playwright/test'
-import { EditorPage, ExportDialog, MediaLibraryPanel } from './fixtures/page-objects'
-import { TestHelpers } from './helpers/test-helpers'
-import { TEST_MEDIA, EXPORT_SETTINGS, createMockVideoFile } from './fixtures/test-data'
+import { EditorPage, ExportDialog, MediaLibraryPanel } from '../fixtures/page-objects'
+import { TestHelpers } from 
+import { TEST_MEDIA, EXPORT_SETTINGS, createMockVideoFile } from '../fixtures/test-data'
 
 test.describe('Video-Only Export', () => {
   let editorPage: EditorPage

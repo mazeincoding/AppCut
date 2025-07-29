@@ -4,21 +4,15 @@
  */
 
 import { test, expect } from '@playwright/test'
-import { HomePage } from './fixtures/page-objects'
-import { TestHelpers } from './helpers/test-helpers'
+import { HomePage } from '../fixtures/page-objects'
 
 test.describe('E2E Setup Verification', () => {
-  test.beforeEach(async ({ page }) => {
-    const helpers = new TestHelpers(page)
-    await helpers.mockBrowserAPIs()
-  })
 
   test('should load the home page successfully', async ({ page }) => {
     const homePage = new HomePage(page)
-    const helpers = new TestHelpers(page)
     
     await homePage.goto()
-    await helpers.waitForAppLoad()
+    await page.waitForLoadState('networkidle')
     
     // Verify page title
     await expect(page).toHaveTitle(/OpenCut/i)
@@ -28,11 +22,17 @@ test.describe('E2E Setup Verification', () => {
   })
 
   test('should have required browser APIs available', async ({ page }) => {
-    const helpers = new TestHelpers(page)
-    
     await page.goto('/')
     
-    const support = await helpers.checkBrowserSupport()
+    const support = await page.evaluate(() => {
+      return {
+        mediaRecorder: !!window.MediaRecorder,
+        webWorkers: !!window.Worker,
+        indexedDB: !!window.indexedDB,
+        canvas: !!document.createElement('canvas').getContext,
+        fileAPI: !!(window.File && window.FileReader && window.FileList && window.Blob),
+      }
+    })
     
     // Log browser support for debugging
     console.log('Browser support:', support)
@@ -42,18 +42,13 @@ test.describe('E2E Setup Verification', () => {
     expect(support.fileAPI).toBe(true)
     expect(support.webWorkers).toBe(true)
     expect(support.indexedDB).toBe(true)
-    
-    // These may be mocked in test environment
-    // expect(support.mediaRecorder).toBe(true)
-    // expect(support.audioContext).toBe(true)
   })
 
   test('should handle basic navigation', async ({ page }) => {
     const homePage = new HomePage(page)
-    const helpers = new TestHelpers(page)
     
     await homePage.goto()
-    await helpers.waitForAppLoad()
+    await page.waitForLoadState('networkidle')
     
     // Check if we can navigate to different sections
     const links = await page.getByRole('link').all()
@@ -63,7 +58,7 @@ test.describe('E2E Setup Verification', () => {
     const editorLink = page.getByRole('link', { name: /editor/i }).first()
     if (await editorLink.isVisible()) {
       await editorLink.click()
-      await helpers.waitForAppLoad()
+      await page.waitForLoadState('networkidle')
       
       // Should navigate to editor page
       expect(page.url()).toContain('editor')
@@ -71,17 +66,27 @@ test.describe('E2E Setup Verification', () => {
   })
 
   test('should perform basic performance checks', async ({ page }) => {
-    const helpers = new TestHelpers(page)
-    
     const startTime = Date.now()
     await page.goto('/')
-    await helpers.waitForAppLoad()
+    await page.waitForLoadState('networkidle')
     const loadTime = Date.now() - startTime
     
     // Page should load within reasonable time
     expect(loadTime).toBeLessThan(10000) // 10 seconds max
     
-    const metrics = await helpers.getPerformanceMetrics()
+    const metrics = await page.evaluate(() => {
+      const navigation = performance.getEntriesByType('navigation')[0] as any
+      const memory = (performance as any).memory
+      
+      return {
+        loadTime: navigation?.loadEventEnd - navigation?.navigationStart,
+        memoryUsage: memory ? {
+          usedJSHeapSize: memory.usedJSHeapSize,
+          totalJSHeapSize: memory.totalJSHeapSize,
+        } : null
+      }
+    })
+    
     console.log('Performance metrics:', metrics)
     
     // Basic performance assertions
@@ -96,10 +101,8 @@ test.describe('E2E Setup Verification', () => {
   })
 
   test('should handle responsive design', async ({ page }) => {
-    const helpers = new TestHelpers(page)
-    
     await page.goto('/')
-    await helpers.waitForAppLoad()
+    await page.waitForLoadState('networkidle')
     
     // Test desktop viewport
     await page.setViewportSize({ width: 1920, height: 1080 })
@@ -122,8 +125,6 @@ test.describe('E2E Setup Verification', () => {
   })
 
   test('should handle error scenarios gracefully', async ({ page }) => {
-    const helpers = new TestHelpers(page)
-    
     // Test 404 page
     await page.goto('/non-existent-page')
     
@@ -133,17 +134,15 @@ test.describe('E2E Setup Verification', () => {
     
     // Navigate back to home
     await page.goto('/')
-    await helpers.waitForAppLoad()
+    await page.waitForLoadState('networkidle')
     
     // Should recover successfully
     await expect(page.getByRole('navigation')).toBeVisible()
   })
 
   test('should cleanup properly after test', async ({ page }) => {
-    const helpers = new TestHelpers(page)
-    
     await page.goto('/')
-    await helpers.waitForAppLoad()
+    await page.waitForLoadState('networkidle')
     
     // Add some data to storage
     await page.evaluate(() => {
@@ -161,7 +160,10 @@ test.describe('E2E Setup Verification', () => {
     expect(initialData.sessionStorage).toBe('test-data')
     
     // Cleanup
-    await helpers.cleanup()
+    await page.evaluate(() => {
+      localStorage.clear()
+      sessionStorage.clear()
+    })
     
     // Verify data was cleared
     const clearedData = await page.evaluate(() => ({

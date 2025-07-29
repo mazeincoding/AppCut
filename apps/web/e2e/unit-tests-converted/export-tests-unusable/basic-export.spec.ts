@@ -4,9 +4,8 @@
  */
 
 import { test, expect } from '@playwright/test'
-import { EditorPage, ExportDialog } from './fixtures/page-objects'
-import { TestHelpers } from './helpers/test-helpers'
-import { TEST_PROJECTS, EXPORT_SETTINGS } from './fixtures/test-data'
+import { EditorPage, ExportDialog } from '../fixtures/page-objects'
+import { TEST_PROJECTS, EXPORT_SETTINGS } from '../fixtures/test-data'
 
 test.describe('Basic Export Flow', () => {
   let editorPage: EditorPage
