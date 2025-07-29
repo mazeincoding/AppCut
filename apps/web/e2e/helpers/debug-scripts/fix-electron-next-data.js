@@ -4,8 +4,6 @@ const fs = require('fs');
 const path = require('path');
 const glob = require('glob');
 
-console.log('🔧 [FIX-NEXT-DATA] Starting __NEXT_DATA__ fixes for Electron...');
-
 const outDir = path.join(__dirname, '..', 'out');
 
 // Find all HTML files
@@ -16,7 +14,6 @@ let totalFixed = 0;
 
 htmlFiles.forEach(file => {
   const filePath = path.join(outDir, file);
-  console.log(`🔧 [FIX-NEXT-DATA] Processing: ${file}`);
   
   let content = fs.readFileSync(filePath, 'utf8');
   let modified = false;
@@ -35,9 +32,8 @@ htmlFiles.forEach(file => {
       
       content = content.replace(nextDataMatch[0], staticNextData);
       modified = true;
-      console.log(`✅ [FIX-NEXT-DATA] Fixed __NEXT_DATA__ in: ${file} (page: ${pagePath})`);
     } catch (e) {
-      console.log(`⚠️ [FIX-NEXT-DATA] Could not parse existing __NEXT_DATA__ in: ${file}, using fallback`);
+      // Could not parse existing __NEXT_DATA__, using fallback
       
       // Fallback to basic replacement if parsing fails
       const staticNextData = `<script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{}},"page":"/","query":{},"buildId":"electron-static","nextExport":true,"autoExport":true,"isFallback":false,"scriptLoader":[]}</script>`;
@@ -51,7 +47,6 @@ htmlFiles.forEach(file => {
   content = content.replace(fontPreloadRegex, 'href="./$1"');
   if (fontPreloadRegex.test(content)) {
     modified = true;
-    console.log(`✅ [FIX-NEXT-DATA] Fixed font preloads in: ${file}`);
   }
   
   if (modified) {
@@ -61,7 +56,3 @@ htmlFiles.forEach(file => {
   
   totalFiles++;
 });
-
-console.log(`🎯 [FIX-NEXT-DATA] Processed ${totalFiles} HTML files`);
-console.log(`✅ [FIX-NEXT-DATA] Fixed __NEXT_DATA__ in ${totalFixed} files`);
-console.log('✅ [FIX-NEXT-DATA] All Electron __NEXT_DATA__ fixes completed!');
