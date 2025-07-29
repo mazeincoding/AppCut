@@ -8,40 +8,41 @@ const { test, expect } = require('@playwright/test');
 
 test.describe('Manual Video Generation Test', () => {
   test('should manually test video generation and get actual results', async ({ page }) => {
+    test.setTimeout(120000); // 2 minutes timeout for video generation
     console.log('🎬 Starting manual video generation test...');
     
     // Navigate to editor
     await page.goto(`${process.env.BASE_URL || 'http://localhost:3002'}/projects`);
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState('networkidle');
 
     // Create new project
     const newProjectButton = page.locator('text=New project').first();
     if (await newProjectButton.isVisible({ timeout: 3000 })) {
       await newProjectButton.click();
-      await page.waitForTimeout(4000);
+      await page.waitForLoadState('networkidle');
     }
 
     console.log(`📍 Current URL: ${page.url()}`);
-    await page.waitForTimeout(5000);
+    await page.waitForLoadState('domcontentloaded');
 
     // Navigate to AI tab
     const aiTab = page.locator('.flex.flex-col.gap-2.items-center.cursor-pointer:has-text("AI")').first();
     await aiTab.click();
-    await page.waitForTimeout(3000);
+    await aiTab.waitFor({ state: 'visible' });
 
     // Select Hailuo model
     const modelSelector = page.locator('button[id="model"]').first();
     await modelSelector.click();
-    await page.waitForTimeout(1000);
+    await modelSelector.waitFor({ state: 'visible' });
     
     const hailuoOption = page.locator('[role="option"]:has-text("Hailuo")').first();
+    await hailuoOption.waitFor({ state: 'visible' });
     await hailuoOption.click();
-    await page.waitForTimeout(1000);
 
     // Switch to Image-to-Video tab
     const imageTab = page.locator('button:has-text("Image to Video")').first();
     await imageTab.click();
-    await page.waitForTimeout(1000);
+    await imageTab.waitFor({ state: 'visible' });
 
     // Upload image
     const fileInput = page.locator('input[type="file"]').first();
@@ -82,12 +83,15 @@ test.describe('Manual Video Generation Test', () => {
       buffer: Buffer.from(await blob.arrayBuffer())
     });
     
-    await page.waitForTimeout(3000);
+    // Wait for file upload to complete (look for preview or upload indicator)
+    await page.waitForSelector('img[src*="blob:"], .upload-preview, .file-uploaded', { timeout: 10000 }).catch(() => {
+      console.log('⚠️ No upload preview found, continuing...');
+    });
 
     // Add prompt
     const promptInput = page.locator('textarea[id="image-prompt"]').first();
+    await promptInput.waitFor({ state: 'visible' });
     await promptInput.fill('A beautiful sunset with gentle movement');
-    await page.waitForTimeout(1000);
 
     // Monitor network requests
     const videoRequests = [];
@@ -127,34 +131,33 @@ test.describe('Manual Video Generation Test', () => {
       await generateButton.click();
       console.log('✅ Generate button clicked');
       
-      // Wait and monitor for a reasonable time
+      // Wait and monitor for video generation completion
       console.log('⏳ Monitoring for video generation completion...');
       
       let completed = false;
       let videoUrl = null;
+      const timeout = 90000; // 1.5 minutes
       
-      for (let i = 0; i < 30; i++) { // 1.5 minutes
-        await page.waitForTimeout(3000);
+      try {
+        // Wait for either success or error indicators
+        const result = await Promise.race([
+          page.waitForSelector('div:has-text("Generated Successfully"), div:has-text("Generation complete"), button:has-text("Download")', { timeout })
+            .then(() => ({ type: 'success' })),
+          page.waitForSelector('div:has-text("failed"), div:has-text("error"), .text-destructive', { timeout })
+            .then(async (errorElement) => ({ 
+              type: 'error', 
+              text: await errorElement.textContent() 
+            }))
+        ]);
         
-        // Check for success indicators
-        const success = await page.locator('div:has-text("Generated Successfully"), div:has-text("Generation complete"), button:has-text("Download")').first().isVisible({ timeout: 1000 }).catch(() => false);
-        
-        if (success) {
-          console.log(`✅ Success indicator found at attempt ${i + 1}`);
+        if (result.type === 'success') {
+          console.log('✅ Success indicator found!');
           completed = true;
-          break;
+        } else if (result.type === 'error') {
+          console.log(`❌ Error detected: ${result.text}`);
         }
-        
-        // Check for errors
-        const error = await page.locator('div:has-text("failed"), div:has-text("error"), .text-destructive').first().isVisible({ timeout: 1000 }).catch(() => false);
-        
-        if (error) {
-          const errorText = await page.locator('div:has-text("failed"), div:has-text("error"), .text-destructive').first().textContent();
-          console.log(`❌ Error detected: ${errorText}`);
-          break;
-        }
-        
-        console.log(`⏳ Waiting... (${i + 1}/30)`);
+      } catch (timeoutError) {
+        console.log('⏰ Timeout reached while waiting for generation completion');
       }
       
       // Final check for any video URLs or results

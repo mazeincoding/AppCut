@@ -75,13 +75,13 @@ The build process uses:
 
 The `apps/web/scripts/` folder contains critical build scripts that make Electron work properly:
 
-### Core Build Scripts:
+### Core Build Scripts
 - **build-electron.js** - Main build orchestrator for Electron
 - **fix-electron-paths-robust.js** - Converts relative paths to app:// protocol for assets
 - **electron-editor-fix.js** - Removes blocking scripts that prevent React rendering
 - **copy-nav-fix.js** - Copies navigation handler to output directory
 
-### Utility Scripts:
+### Utility Scripts
 - **run-electron-with-logs.js** - Debug wrapper with enhanced logging
 - **validate-electron-urls.js** - Validates URLs in build output
 - **test-build.js** - Build verification script
