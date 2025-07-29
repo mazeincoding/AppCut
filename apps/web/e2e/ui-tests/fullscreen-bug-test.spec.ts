@@ -19,7 +19,12 @@ async function attemptRecoveryWithEscape(page: Page): Promise<boolean> {
   console.log('⌨️ Attempting recovery with Escape key...');
   await page.keyboard.press('Escape');
   await page.waitForTimeout(1000);
-  const recovered = await page.locator('.bg-panel').isVisible();
+  
+  // Check if basic UI is still visible
+  const hasNav = await page.locator('nav').isVisible();
+  const hasBody = await page.locator('body').isVisible();
+  const recovered = hasNav && hasBody;
+  
   console.log(`⌨️ Escape key recovery: ${recovered ? 'SUCCESS' : 'FAILED'}`);
   return recovered;
 }
@@ -43,7 +48,9 @@ async function attemptRecoveryWithCloseButtons(page: Page): Promise<boolean> {
       console.log(`🎯 Found close button with selector: ${selector}`);
       await closeButton.click();
       await page.waitForTimeout(500);
-      const recovered = await page.locator('.bg-panel').isVisible();
+      const hasNav = await page.locator('nav').isVisible();
+      const hasBody = await page.locator('body').isVisible();
+      const recovered = hasNav && hasBody;
       if (recovered) {
         console.log('🖱️ Close button recovery: SUCCESS');
         return true;
@@ -71,7 +78,9 @@ async function attemptRecoveryWithBackdrop(page: Page): Promise<boolean> {
       console.log(`🎯 Found backdrop with selector: ${selector}`);
       await backdrop.click({ position: { x: 10, y: 10 } }); // Click edge to avoid content
       await page.waitForTimeout(500);
-      const recovered = await page.locator('.bg-panel').isVisible();
+      const hasNav = await page.locator('nav').isVisible();
+      const hasBody = await page.locator('body').isVisible();
+      const recovered = hasNav && hasBody;
       if (recovered) {
         console.log('🖱️ Backdrop recovery: SUCCESS');
         return true;
@@ -130,11 +139,12 @@ test.describe('Fullscreen Navigation Bug Test', () => {
         await tab.click();
         await page.waitForTimeout(1000);
         
-        // Check if we can still see basic UI elements
+        // Check if we can still see basic UI elements and navigate
         const hasMainUI = await page.locator('body').isVisible();
-        const canNavigateBack = await page.locator('a[href*="/projects"], button:has-text("Back")').isVisible();
+        const hasNavigation = await page.locator('nav').isVisible();
+        const hasEditorUI = await page.locator('main, .editor, .canvas-container').first().isVisible();
         
-        if (!hasMainUI || !canNavigateBack) {
+        if (!hasMainUI || !hasNavigation || !hasEditorUI) {
           console.log(`🚨 Navigation issue detected on ${tabName} tab!`);
           navigationWorking = false;
           

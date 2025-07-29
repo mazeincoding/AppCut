@@ -38,11 +38,10 @@ test.describe('Export Dialog Spacing', () => {
     
     // Wait for editor to load and find the main video export button in header (not the "Export All" media button)
     await page.waitForSelector('nav button:has-text("Export")', { timeout: 10000 });
-    const exportButton = page.locator('nav button:has-text("Export")');
-    await exportButton.click();
+    await page.click('nav button:has-text("Export")');
     
-    // Wait for export dialog to be visible
-    await page.waitForSelector('[role="dialog"]', { state: 'visible' });
+    // Wait for export dialog to be visible by waiting for filename input (same as other tests)
+    await page.waitForSelector('#filename', { timeout: 10000 });
     
     console.log('📸 Taking screenshot of export dialog...');
     await page.screenshot({ 

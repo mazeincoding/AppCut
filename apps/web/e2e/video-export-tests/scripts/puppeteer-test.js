@@ -1,4 +1,3 @@
-
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
@@ -28,37 +27,106 @@ async function testVideoExport() {
     console.log('🌐 Navigating to OpenCut...');
     await page.goto('http://localhost:3000', { waitUntil: 'networkidle0' });
     
-    // Go to projects or editor
-    await page.waitForSelector('button, a', { timeout: 10000 });
+    // Wait for page to load
+    await page.waitForSelector('body', { timeout: 10000 });
+    await new Promise(resolve => setTimeout(resolve, 2000));
     
-    // Look for "Start Creating" or similar button
-    const startButton = await page.$('text=Start Creating') || 
-                       await page.$('[href*="editor"]') ||
-                       await page.$('button:contains("Create")');
-    
-    if (startButton) {
-      await startButton.click();
-      await page.waitForNavigation({ waitUntil: 'networkidle0' });
+    // Try direct navigation to editor
+    console.log('🎯 Navigating directly to editor...');
+    try {
+      await page.goto('http://localhost:3000/editor/project/test-project', { waitUntil: 'networkidle0' });
+      console.log('✅ Reached editor interface');
+    } catch (navError) {
+      console.log('⚠️  Direct navigation failed, trying projects page...');
+      await page.goto('http://localhost:3000/projects', { waitUntil: 'networkidle0' });
     }
     
-    console.log('✅ Reached editor interface');
+    // Wait for editor to load
+    await new Promise(resolve => setTimeout(resolve, 3000));
     
-    // The rest would need to be adapted based on actual UI structure
-    console.log('⚠️  Manual interaction required from here');
-    console.log('   1. Upload video: /home/zdhpe/veo3-video-generation/output/videos/generated_4a2ba290.mp4');
-    console.log('   2. Add to timeline');
-    console.log('   3. Start export');
-    console.log('   4. Check console output above');
+    // Basic automation attempts
+    console.log('🎬 Attempting basic automation...');
+    
+    try {
+      // Look for file input
+      const fileInput = await page.$('input[type="file"]');
+      if (fileInput) {
+        console.log('📁 Found file input, uploading test video...');
+        const videoPath = path.join(__dirname, '../input/generated_4a2ba290.mp4');
+        
+        // Check if file exists
+        if (fs.existsSync(videoPath)) {
+          await fileInput.uploadFile(videoPath);
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          console.log('✅ Video upload attempted');
+        } else {
+          console.log('❌ Test video file not found:', videoPath);
+        }
+      } else {
+        console.log('⚠️  No file input found - manual upload required');
+      }
+      
+      // Look for export button
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      const exportButtons = await page.$$('button');
+      let exportFound = false;
+      
+      for (const button of exportButtons) {
+        try {
+          const text = await page.evaluate(el => el.textContent || '', button);
+          if (text.toLowerCase().includes('export')) {
+            console.log('🎯 Found export button:', text.trim());
+            await button.click();
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            console.log('✅ Export button clicked');
+            exportFound = true;
+            break;
+          }
+        } catch (e) {
+          // Skip buttons that can't be evaluated
+        }
+      }
+      
+      if (!exportFound) {
+        console.log('⚠️  Export button not found - manual export required');
+      }
+      
+    } catch (automationError) {
+      console.log('⚠️  Automation error:', automationError.message);
+    }
+    
+    // Provide manual instructions
+    console.log('\n📋 Manual testing instructions:');
+    console.log('   1. Upload video:', path.join(__dirname, '../input/generated_4a2ba290.mp4'));
+    console.log('   2. Add video to timeline');
+    console.log('   3. Click Export button');
+    console.log('   4. Start export process');
+    console.log('   5. Monitor console output above for success indicators');
+    console.log('');
+    console.log('🔍 Success indicators in console:');
+    console.log('   ✅ Video preloaded messages');
+    console.log('   🎬 Using preloaded video');
+    console.log('   🎯 Video seeking messages');
+    console.log('   ✅ Preloaded video drawn to canvas');
+    console.log('   ✅ Export completed successfully!');
+    console.log('');
+    console.log('❌ Failure indicators:');
+    console.log('   📦 Drew placeholder rectangle');
+    console.log('   Video not preloaded or ready');
+    console.log('   Export errors or timeouts');
     
     // Keep browser open for manual testing
-    console.log('🔍 Browser kept open for manual testing...');
-    await page.waitForTimeout(300000); // 5 minutes
+    console.log('\n🔍 Browser kept open for manual testing (30 seconds)...');
+    console.log('   Browser will close automatically or press Ctrl+C to exit early');
+    await new Promise(resolve => setTimeout(resolve, 30000));
     
   } catch (error) {
-    console.error('❌ Test failed:', error);
+    console.error('❌ Test failed:', error.message);
   } finally {
+    console.log('🏁 Closing browser...');
     await browser.close();
   }
 }
 
+// Run the test
 testVideoExport().catch(console.error);
