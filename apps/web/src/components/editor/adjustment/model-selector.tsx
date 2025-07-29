@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAdjustmentStore } from '@/stores/adjustment-store';
 import { getImageEditModels } from '@/lib/image-edit-client';
 import { cn } from '@/lib/utils';
+import { Check } from 'lucide-react';
 
 export function ModelSelector() {
   const { selectedModel, setSelectedModel } = useAdjustmentStore();
@@ -27,15 +28,18 @@ export function ModelSelector() {
                 className={cn(
                   "w-full h-6 px-2 rounded-md border text-left cursor-pointer transition-all duration-200 flex items-center justify-between",
                   isSelected
-                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                    ? "bg-transparent text-[#05c7c7] border-[#05c7c7] shadow-sm"
                     : "bg-card hover:bg-muted/50 border-muted-foreground/20 hover:border-muted-foreground/40"
                 )}
                 onClick={() => setSelectedModel(model.id as any)}
               >
-                <span className="text-xs font-medium truncate">{model.name}</span>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  {isSelected && <Check className="w-3 h-3 flex-shrink-0" />}
+                  <span className="text-xs font-medium truncate">{model.name}</span>
+                </div>
                 <span className={cn(
                   "text-[10px] font-medium ml-2 flex-shrink-0",
-                  isSelected ? "text-primary-foreground/80" : "text-muted-foreground"
+                  isSelected ? "text-[#05c7c7]/80" : "text-muted-foreground"
                 )}>
                   {model.estimatedCost}
                 </span>
