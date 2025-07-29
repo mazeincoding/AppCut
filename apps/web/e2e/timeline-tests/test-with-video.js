@@ -1,4 +1,5 @@
 const { chromium } = require('playwright');
+const path = require('path');
 
 (async () => {
   const browser = await chromium.launch({ headless: false });
@@ -26,7 +27,7 @@ const { chromium } = require('playwright');
     
     if (hasAddButton) {
       // Upload the specific video file
-      const videoPath = 'c:\\Users\\zdhpe\\Desktop\\video_agent\\character_refine\\videos\\32_egypt.mp4';
+      const videoPath = path.join(__dirname, '../fixtures/test-video.mp4');
       
       // Find the file input (it should be hidden)
       const fileInput = await page.locator('input[type="file"]').first();
@@ -59,8 +60,8 @@ const { chromium } = require('playwright');
         }
         
         // Check for media items in the media panel
-        const mediaItems = await page.locator('text=32_egypt').all();
-        console.log(`Found ${mediaItems.length} media items with "32_egypt"`);
+        const mediaItems = await page.locator('[data-testid="media-item"], .media-item, video, img').all();
+        console.log(`Found ${mediaItems.length} media items in the panel`);
         
         // Keep browser open for inspection
         console.log('Upload complete. Browser left open for inspection...');
