@@ -1,4 +1,5 @@
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
+import { readFile } from 'fs/promises';
 import { join } from 'path';
 
 /**
@@ -8,7 +9,34 @@ import { join } from 'path';
 export function createTestImageBuffer(): Buffer {
   // Use the existing test-image-real.jpg from fixtures
   const imagePath = join(__dirname, 'test-image-real.jpg');
-  return readFileSync(imagePath);
+  
+  // Check if the file exists, otherwise use minimal image as fallback
+  if (!existsSync(imagePath)) {
+    console.warn(`Test image not found at ${imagePath}, using minimal image as fallback`);
+    return createMinimalTestImageBuffer();
+  }
+  
+  try {
+    return readFileSync(imagePath);
+  } catch (error) {
+    console.error(`Error reading test image: ${error}`);
+    return createMinimalTestImageBuffer();
+  }
+}
+
+/**
+ * Async version of createTestImageBuffer
+ * @returns Promise<Buffer> containing test image data
+ */
+export async function createTestImageBufferAsync(): Promise<Buffer> {
+  const imagePath = join(__dirname, 'test-image-real.jpg');
+  
+  try {
+    return await readFile(imagePath);
+  } catch (error) {
+    console.warn(`Test image not found or error reading: ${error}, using minimal image as fallback`);
+    return createMinimalTestImageBuffer();
+  }
 }
 
 /**
@@ -21,6 +49,19 @@ export function createTestImageFile(filename = 'test-image.jpg') {
     name: filename,
     mimeType: 'image/jpeg',
     buffer: createTestImageBuffer()
+  };
+}
+
+/**
+ * Async version of createTestImageFile
+ * @param filename Optional custom filename
+ * @returns Promise<Object> suitable for Playwright's setInputFiles method
+ */
+export async function createTestImageFileAsync(filename = 'test-image.jpg') {
+  return {
+    name: filename,
+    mimeType: 'image/jpeg',
+    buffer: await createTestImageBufferAsync()
   };
 }
 
