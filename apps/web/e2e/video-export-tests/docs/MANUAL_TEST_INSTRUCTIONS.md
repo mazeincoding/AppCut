@@ -2,13 +2,13 @@
 # Manual Video Export Test Instructions
 
 ## Prerequisites
-- OpenCut running at http://localhost:3000
+- OpenCut running at [http://localhost:3000](http://localhost:3000)
 - Test video: `apps/web/e2e/fixtures/test-video.mp4` (place your test video here)
 
 ## Test Steps
 
 ### 1. Basic Export Test
-1. Open http://localhost:3000 in Chrome
+1. Open [http://localhost:3000](http://localhost:3000) in Chrome
 2. Click "Start Creating" or go to editor
 3. Upload the test video from `apps/web/e2e/fixtures/test-video.mp4`
 4. Drag video to timeline
@@ -22,7 +22,7 @@
 
 ### 2. Expected Console Output
 Look for these log patterns:
-```
+```text
 📹 Starting video preload process...
 📹 Found 1 unique video(s) to preload
 ✅ Video fully preloaded: generated_4a2ba290.mp4, readyState: 4

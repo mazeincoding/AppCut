@@ -1,5 +1,99 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 import { join } from 'path';
+
+// Helper functions for fullscreen bug detection and recovery
+
+async function detectFullscreenBug(page: Page): Promise<boolean> {
+  const hasEditorUI = await page.locator('.bg-panel').isVisible();
+  const hasTimeline = await page.locator('.timeline').isVisible();
+  const hasBackButton = await page.locator('button[aria-label="Back to media"]').isVisible();
+  
+  console.log(`📊 UI State - Editor UI: ${hasEditorUI}, Timeline: ${hasTimeline}, Back Button: ${hasBackButton}`);
+  
+  // If we lose all main UI elements, we're likely in fullscreen bug state
+  return !hasEditorUI && !hasTimeline && !hasBackButton;
+}
+
+async function attemptRecoveryWithEscape(page: Page): Promise<boolean> {
+  console.log('⌨️ Attempting recovery with Escape key...');
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(1000);
+  const recovered = await page.locator('.bg-panel').isVisible();
+  console.log(`⌨️ Escape key recovery: ${recovered ? 'SUCCESS' : 'FAILED'}`);
+  return recovered;
+}
+
+async function attemptRecoveryWithCloseButtons(page: Page): Promise<boolean> {
+  console.log('🖱️ Attempting recovery with close buttons...');
+  
+  const closeSelectors = [
+    'button[aria-label="Close"]',
+    'button[aria-label="close"]',
+    '.close-button',
+    'button:has-text("×")',
+    'button:has-text("Close")',
+    '[data-testid="close-button"]',
+    '[role="button"]:has-text("×")'
+  ];
+  
+  for (const selector of closeSelectors) {
+    const closeButton = page.locator(selector).first();
+    if (await closeButton.isVisible({ timeout: 1000 })) {
+      console.log(`🎯 Found close button with selector: ${selector}`);
+      await closeButton.click();
+      await page.waitForTimeout(500);
+      const recovered = await page.locator('.bg-panel').isVisible();
+      if (recovered) {
+        console.log('🖱️ Close button recovery: SUCCESS');
+        return true;
+      }
+    }
+  }
+  
+  console.log('🖱️ Close button recovery: FAILED');
+  return false;
+}
+
+async function attemptRecoveryWithBackdrop(page: Page): Promise<boolean> {
+  console.log('🖱️ Attempting recovery with backdrop click...');
+  
+  const backdropSelectors = [
+    '.modal-backdrop',
+    '.overlay',
+    '[data-testid="modal-backdrop"]',
+    '.dialog-overlay'
+  ];
+  
+  for (const selector of backdropSelectors) {
+    const backdrop = page.locator(selector).first();
+    if (await backdrop.isVisible({ timeout: 1000 })) {
+      console.log(`🎯 Found backdrop with selector: ${selector}`);
+      await backdrop.click({ position: { x: 10, y: 10 } }); // Click edge to avoid content
+      await page.waitForTimeout(500);
+      const recovered = await page.locator('.bg-panel').isVisible();
+      if (recovered) {
+        console.log('🖱️ Backdrop recovery: SUCCESS');
+        return true;
+      }
+    }
+  }
+  
+  console.log('🖱️ Backdrop recovery: FAILED');
+  return false;
+}
+
+async function attemptFullRecovery(page: Page): Promise<boolean> {
+  // Try recovery methods in order of likelihood to succeed
+  if (await attemptRecoveryWithEscape(page)) return true;
+  if (await attemptRecoveryWithCloseButtons(page)) return true;
+  if (await attemptRecoveryWithBackdrop(page)) return true;
+  
+  // Final escape attempt
+  console.log('⌨️ Final escape key attempt...');
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(500);
+  return await page.locator('.bg-panel').isVisible();
+}
 
 test.describe('Fullscreen Navigation Bug Test', () => {
   test('detect and fix fullscreen navigation issue after generation', async ({ page }) => {
@@ -19,7 +113,7 @@ test.describe('Fullscreen Navigation Bug Test', () => {
     await uploadArea.click();
     
     const fileChooser = await fileChooserPromise;
-    const realImagePath = join(__dirname, 'fixtures', 'test-image-real.jpg');
+    const realImagePath = join(__dirname, '..', 'fixtures', 'test-image-real.jpg');
     await fileChooser.setFiles(realImagePath);
     await page.waitForTimeout(5000);
     
@@ -49,95 +143,26 @@ test.describe('Fullscreen Navigation Bug Test', () => {
         await page.waitForTimeout(10000);
         await page.screenshot({ path: `test-results/bug-check-${i}sec.png`, fullPage: true });
         
-        // Check if we're in an unexpected fullscreen state
-        const hasEditorUI = await page.locator('.bg-panel').isVisible();
-        const hasTimeline = await page.locator('.timeline').isVisible();
-        const hasBackButton = await page.locator('button[aria-label="Back to media"]').isVisible();
+        console.log(`🕐 Checking at ${i} seconds...`);
         
-        console.log(`📊 At ${i}s - Editor UI: ${hasEditorUI}, Timeline: ${hasTimeline}, Back Button: ${hasBackButton}`);
-        
-        // If we lose the main UI elements, we might be in fullscreen bug state
-        if (!hasEditorUI && !hasTimeline && !hasBackButton) {
-          console.log(`🚨 POTENTIAL FULLSCREEN BUG DETECTED at ${i} seconds!`);
+        // Check if we're in fullscreen bug state
+        if (await detectFullscreenBug(page)) {
+          console.log(`🚨 FULLSCREEN BUG DETECTED at ${i} seconds!`);
           foundFullscreenBug = true;
           
-          // Try escape key
-          await page.keyboard.press('Escape');
-          await page.waitForTimeout(1000);
-          await page.screenshot({ path: `test-results/bug-escape-attempt-${i}sec.png`, fullPage: true });
+          // Take screenshot before recovery
+          await page.screenshot({ path: `test-results/bug-detected-${i}sec.png`, fullPage: true });
           
-          // Check if escape worked
-          const escapeWorked = await page.locator('.bg-panel').isVisible();
-          console.log(`⌨️ Escape key worked: ${escapeWorked}`);
+          // Attempt recovery
+          const recovered = await attemptFullRecovery(page);
           
-          if (!escapeWorked) {
-            // Try to find and click actual close buttons
-            console.log('🖱️ Trying to find close buttons...');
-            
-            const closeSelectors = [
-              'button[aria-label="Close"]',
-              'button[aria-label="close"]',
-              '.close-button',
-              'button:has-text("×")',
-              'button:has-text("Close")',
-              '[data-testid="close-button"]',
-              '[role="button"]:has-text("×")'
-            ];
-            
-            let clickWorked = false;
-            for (const selector of closeSelectors) {
-              const closeButton = page.locator(selector).first();
-              if (await closeButton.isVisible({ timeout: 1000 })) {
-                console.log(`🎯 Found close button with selector: ${selector}`);
-                await closeButton.click();
-                await page.waitForTimeout(500);
-                clickWorked = await page.locator('.bg-panel').isVisible();
-                if (clickWorked) break;
-              }
-            }
-            
-            console.log(`🖱️ Close button click worked: ${clickWorked}`);
-            
-            if (!clickWorked) {
-              // Try clicking on backdrop/overlay to close modal
-              console.log('🖱️ Trying backdrop click...');
-              
-              const backdropSelectors = [
-                '.modal-backdrop',
-                '.overlay',
-                '[data-testid="modal-backdrop"]',
-                '.dialog-overlay'
-              ];
-              
-              let backdropClickWorked = false;
-              for (const selector of backdropSelectors) {
-                const backdrop = page.locator(selector).first();
-                if (await backdrop.isVisible({ timeout: 1000 })) {
-                  console.log(`🎯 Found backdrop with selector: ${selector}`);
-                  await backdrop.click({ position: { x: 10, y: 10 } }); // Click edge to avoid content
-                  await page.waitForTimeout(500);
-                  backdropClickWorked = await page.locator('.bg-panel').isVisible();
-                  if (backdropClickWorked) break;
-                }
-              }
-              
-              // If no backdrop found, try alternative keyboard shortcuts
-              if (!backdropClickWorked) {
-                console.log('⌨️ Trying alternative keyboard shortcuts...');
-                await page.keyboard.press('Alt+F4'); // Windows close shortcut
-                await page.waitForTimeout(500);
-                backdropClickWorked = await page.locator('.bg-panel').isVisible();
-              }
-              
-              console.log(`🖱️ Backdrop/keyboard attempt worked: ${backdropClickWorked}`);
-            }
-          }
+          // Take screenshot after recovery attempts
+          await page.screenshot({ path: `test-results/bug-recovery-${i}sec.png`, fullPage: true });
           
-          // Final check
-          await page.screenshot({ path: `test-results/bug-final-state-${i}sec.png`, fullPage: true });
-          const finalState = await page.locator('.bg-panel').isVisible();
-          console.log(`🏁 Final navigation state: ${finalState ? 'RECOVERED' : 'STILL STUCK'}`);
+          console.log(`🏁 Recovery result: ${recovered ? 'SUCCESS - UI RESTORED' : 'FAILED - STILL STUCK'}`);
           
+          // Assert recovery was successful
+          expect(recovered).toBe(true);
           break;
         }
         
@@ -151,7 +176,7 @@ test.describe('Fullscreen Navigation Bug Test', () => {
       }
       
       if (!foundFullscreenBug) {
-        console.log('✅ No fullscreen navigation bug detected');
+        console.log('✅ No fullscreen navigation bug detected during test');
       }
       
     } else {

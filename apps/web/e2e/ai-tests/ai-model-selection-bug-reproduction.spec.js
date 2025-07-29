@@ -13,6 +13,7 @@
  */
 
 const { test, expect } = require('@playwright/test');
+const { createTestImageFile } = require('../fixtures/test-utils');
 
 // Helper class to monitor StorageProvider instances
 class StorageProviderMonitor {
@@ -123,9 +124,8 @@ async function clickAITab(page) {
           if (textContent && textContent.includes('AI')) {
             await tab.click();
             // Wait for AI panel to load
-            await page.waitForSelector('.ai-panel, [data-testid="ai-panel"], textarea, button[id="model"]', { timeout: 5000 }).catch(() => {
-              console.log('AI panel elements not found, continuing...');
-            });
+            // Let the test fail if AI panel doesn't load - this indicates a real issue
+            await page.waitForSelector('.ai-panel, [data-testid="ai-panel"], textarea, button[id="model"]', { timeout: 5000 });
             return true;
           }
         } catch (e) {
@@ -154,9 +154,8 @@ async function selectAIModel(page, modelName = 'Hailuo') {
     if (await modelButton.isVisible({ timeout: 3000 })) {
       await modelButton.click();
       // Wait for dropdown options to appear
-      await page.waitForSelector('[role="option"], .select-option, [data-value]', { timeout: 3000 }).catch(() => {
-        console.log('Model dropdown options not found, continuing...');
-      });
+      // Let the test fail if dropdown options don't load - this indicates a real issue
+      await page.waitForSelector('[role="option"], .select-option, [data-value]', { timeout: 3000 });
       
       // Try to select the specific model
       const modelOption = page.locator(`text=${modelName}`).first();
@@ -191,19 +190,13 @@ async function uploadTestImage(page) {
     if (await uploadElement.isVisible({ timeout: 3000 })) {
       if (selector === 'input[type="file"]') {
         // Create a test image file buffer
-        const testImageBuffer = Buffer.from('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64');
-        await uploadElement.setInputFiles({
-          name: 'test-image.png',
-          mimeType: 'image/png',
-          buffer: testImageBuffer
-        });
+        await uploadElement.setInputFiles(createTestImageFile('test-image.jpg'));
       } else {
         await uploadElement.click();
       }
       // Wait for file upload to complete
-      await page.waitForSelector('img[src*="blob:"], .upload-preview, .file-uploaded', { timeout: 5000 }).catch(() => {
-        console.log('Upload preview not found, continuing...');
-      });
+      // Let the test fail if upload preview doesn't load - this indicates a real issue
+      await page.waitForSelector('img[src*="blob:"], .upload-preview, .file-uploaded', { timeout: 5000 });
       return true;
     }
   }
@@ -376,9 +369,8 @@ describe('AI Model Selection Bug', () => {
     // Perform actions most likely to trigger the bug
     await clickAITab(page);
     // Wait for AI tab to be active
-    await page.waitForSelector('.ai-panel, button[id="model"]', { timeout: 3000 }).catch(() => {
-      console.log('AI tab activation not confirmed, continuing...');
-    });
+    // Let the test fail if AI panel doesn't load - this indicates a real issue
+    await page.waitForSelector('.ai-panel, button[id="model"]', { timeout: 3000 });
     
     await selectAIModel(page, 'Hailuo');
     // Wait a moment for any state changes after model selection

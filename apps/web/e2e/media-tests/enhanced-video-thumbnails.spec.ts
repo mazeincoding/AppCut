@@ -214,22 +214,29 @@ test.describe('Enhanced Video Thumbnails', () => {
   });
 
   test('error handling for invalid video files', async ({ page }) => {
-    // Create a mock invalid video file
     const fileInput = page.locator('input[type="file"]');
     
-    // Upload an invalid file (using a text file renamed as .mp4)
-    const invalidFile = new File(['invalid video content'], 'fake-video.mp4', { type: 'video/mp4' });
+    // Create an actual invalid file for testing
+    // Use a text file content but with .mp4 extension to bypass file type validation
+    await fileInput.setInputFiles({
+      name: 'fake-video.mp4',
+      mimeType: 'video/mp4',
+      buffer: Buffer.from('invalid video content - this is not a real video file')
+    });
     
-    // This test would need a way to inject the invalid file
-    // For now, we'll skip the actual upload and just verify error states exist
-    
-    // Verify error UI elements exist in the component
-    const videoPreview = page.locator('.relative.w-full.h-full.bg-muted.flex.items-center.justify-center');
+    // Wait for error state to appear
     const errorMessage = page.locator('.text-red-500:has-text("Thumbnail failed")');
+    await expect(errorMessage).toBeVisible({ timeout: 10000 });
     
-    // These elements should be present in the DOM even if not visible
-    expect(videoPreview).toBeDefined();
-    expect(errorMessage).toBeDefined();
+    // Verify error state UI
+    const videoPreview = page.locator('.relative.w-full.h-full.bg-muted.flex.items-center.justify-center');
+    await expect(videoPreview).toBeVisible();
+    
+    // Take screenshot of error state
+    await page.screenshot({ 
+      path: 'test-results/invalid-video-error-state.png',
+      fullPage: false 
+    });
   });
 
   test('multiple video thumbnails display correctly', async ({ page }) => {
