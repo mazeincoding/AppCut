@@ -383,9 +383,16 @@
                         await encoder.flush();
                         encoder.close();
                         
-                        // Create blob from chunks (simplified)
-                        const totalSize = encodedChunks.reduce((size, chunk) => size + chunk.byteLength, 0);
-                        const blob = new Blob([new Uint8Array(totalSize)], { type: 'video/mp4' });
+                        // Create blob from actual encoded chunks  
+                        // WARNING: This creates raw H.264 data, not a proper MP4 file
+                        // In production, use a proper MP4 muxer like mp4-muxer
+                        const chunkBuffers = [];
+                        for (const chunk of encodedChunks) {
+                            const buffer = new ArrayBuffer(chunk.byteLength);
+                            chunk.copyTo(buffer);
+                            chunkBuffers.push(buffer);
+                        }
+                        const blob = new Blob(chunkBuffers, { type: 'video/mp4' });
                         
                         const endTime = performance.now();
                         
@@ -495,6 +502,11 @@
                         <td style="padding: 8px; border: 1px solid #ddd;">${((webCodecsResult.size / canvasResult.size) * 100).toFixed(0)}% of original</td>
                     </tr>
                 </table>
+                
+                <div style="margin-top: 15px; padding: 10px; background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; border-radius: 4px; font-size: 14px;">
+                    <strong>⚠️ File Size Limitation:</strong> WebCodecs output contains raw H.264 data without proper MP4 container muxing. 
+                    File size comparison may not be accurate. Use a proper MP4 muxer like mp4-muxer for production implementations.
+                </div>
                 
                 <div style="margin-top: 20px; padding: 15px; ${speedup > 1.5 ? 'background: #d4edda; border: 1px solid #c3e6cb; color: #155724;' : speedup > 1 ? 'background: #fff3cd; border: 1px solid #ffeaa7; color: #856404;' : 'background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24;'} border-radius: 4px;">
                     <strong>Conclusion:</strong> 
