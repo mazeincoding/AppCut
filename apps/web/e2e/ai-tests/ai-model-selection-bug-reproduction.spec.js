@@ -275,8 +275,8 @@ describe('AI Model Selection Bug', () => {
     const afterCount = monitor.getCount();
     const newInstances = afterCount - beforeCount;
     
-    // Allow some instances but not excessive (bug threshold is 3+)
-    expect(newInstances).toBeLessThanOrEqual(2);
+    // Ideally, no new instances should be created just from clicking a tab
+    expect(newInstances).toBe(0);
   });
 
   test('should not create excess instances on model selection', async ({ page }) => {
@@ -294,8 +294,8 @@ describe('AI Model Selection Bug', () => {
       const afterCount = monitor.getCount();
       const newInstances = afterCount - beforeCount;
       
-      // Allow some instances but not excessive
-      expect(newInstances).toBeLessThanOrEqual(2);
+      // Model selection should create at most 1 instance
+      expect(newInstances).toBeLessThanOrEqual(1);
     } else {
       // If model selector not found, test should still pass but log warning
       console.warn('Model selector not found - skipping instance count check');
@@ -359,8 +359,8 @@ describe('AI Model Selection Bug', () => {
     const finalCount = monitor.getCount();
     const totalNewInstances = finalCount - initialCount;
     
-    // Allow reasonable number of instances for complete workflow but not excessive
-    expect(totalNewInstances).toBeLessThan(10);
+    // A complete workflow should create at most 1-2 instances
+    expect(totalNewInstances).toBeLessThanOrEqual(2);
   });
 
   test('should generate comprehensive bug report', async ({ page }) => {
