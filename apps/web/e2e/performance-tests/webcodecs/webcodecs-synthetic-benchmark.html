@@ -470,6 +470,9 @@
             });
         }
 
+        // Store URLs for cleanup
+        let canvasVideoUrl, webCodecsVideoUrl;
+
         function displayCanvasResults(result) {
             document.getElementById('canvasTime').textContent = result.time.toFixed(2) + 's';
             document.getElementById('canvasFrames').textContent = result.frames;
@@ -477,7 +480,9 @@
             document.getElementById('canvasSize').textContent = formatBytes(result.size);
             
             const video = document.getElementById('canvasVideo');
-            video.src = URL.createObjectURL(result.blob);
+            if (canvasVideoUrl) URL.revokeObjectURL(canvasVideoUrl);
+            canvasVideoUrl = URL.createObjectURL(result.blob);
+            video.src = canvasVideoUrl;
             video.style.display = 'block';
             
             document.getElementById('canvasStatus').innerHTML = '<span style="color: green;">✅ Complete</span>';
@@ -490,7 +495,9 @@
             document.getElementById('webCodecsSize').textContent = formatBytes(result.size);
             
             const video = document.getElementById('webCodecsVideo');
-            video.src = URL.createObjectURL(result.blob);
+            if (webCodecsVideoUrl) URL.revokeObjectURL(webCodecsVideoUrl);
+            webCodecsVideoUrl = URL.createObjectURL(result.blob);
+            video.src = webCodecsVideoUrl;
             video.style.display = 'block';
             
             document.getElementById('webCodecsStatus').innerHTML = '<span style="color: green;">✅ Complete</span>';
@@ -564,6 +571,16 @@
              'webCodecsTime', 'webCodecsFrames', 'webCodecsFPS', 'webCodecsSize'].forEach(id => {
                 document.getElementById(id).textContent = '-';
             });
+            
+            // Clean up object URLs to prevent memory leaks
+            if (canvasVideoUrl) {
+                URL.revokeObjectURL(canvasVideoUrl);
+                canvasVideoUrl = null;
+            }
+            if (webCodecsVideoUrl) {
+                URL.revokeObjectURL(webCodecsVideoUrl);
+                webCodecsVideoUrl = null;
+            }
             
             document.getElementById('canvasVideo').style.display = 'none';
             document.getElementById('webCodecsVideo').style.display = 'none';
