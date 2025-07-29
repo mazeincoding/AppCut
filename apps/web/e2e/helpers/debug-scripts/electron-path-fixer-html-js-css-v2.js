@@ -1,5 +1,7 @@
-const fs = require('fs');
-const path = require('path');
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
 
 // Function to recursively find all HTML, JS, and CSS files
 function findFiles(dir, extensions = ['.html', '.js', '.css']) {
@@ -20,10 +22,9 @@ function findFiles(dir, extensions = ['.html', '.js', '.css']) {
   return files;
 }
 
-// Fix paths in HTML content
-function fixHtmlPaths(content) {
-  // First fix HTML attributes - use relative paths for file:// protocol
-  content = content
+// Fix HTML attributes - use relative paths for file:// protocol
+function fixHtmlAttributes(content) {
+  return content
     // Fix href attributes - use relative paths
     .replace(/href="\/([^"]+)"/g, 'href="$1"')
     // Fix src attributes - use relative paths
@@ -37,9 +38,11 @@ function fixHtmlPaths(content) {
     .replace(/href="app:\/\/http:/g, 'href="http:')
     .replace(/src="app:\/\/http:/g, 'src="http:')
     .replace(/content="app:\/\/http:/g, 'content="http:');
+}
 
-  // Fix inline JavaScript in HTML - this is crucial for CSS loading
-  content = content
+// Fix inline JavaScript in HTML - crucial for CSS loading
+function fixInlineJavaScript(content) {
+  return content
     // Fix CSS paths in inline JavaScript (React Server Components)
     .replace(/"href":"\/(_next\/static\/css\/[^"]+\.css)"/g, '"href":"app://$1"')
     .replace(/"href":"\/(_next\/static\/media\/[^"]+)"/g, '"href":"app://$1"')
@@ -52,7 +55,12 @@ function fixHtmlPaths(content) {
     .replace(/:HL\[\\"\/_next\/static\/css\/([^"]+\.css)\\",\\"style\\"\]/g, ':HL[\\"_next/static/css/$1\\",\\"style\\"]')
     .replace(/:HL\[\\"\/_next\/static\/([^"]+)\\",\\"style\\"\]/g, ':HL[\\"_next/static/$1\\",\\"style\\"]')
     .replace(/:HL\["\/_next\/static\/css\/([^"]+\.css)","style"\]/g, ':HL["_next/static/css/$1","style"]')
-    .replace(/:HL\["\/_next\/static\/([^"]+)","style"\]/g, ':HL["_next/static/$1","style"]')
+    .replace(/:HL\["\/_next\/static\/([^"]+)","style"\]/g, ':HL["_next/static/$1","style"]');
+}
+
+// Fix CSS and static asset references in inline scripts
+function fixCssReferences(content) {
+  return content
     // Fix paths in inline scripts that reference _next - use relative paths
     .replace(/["']\/_next\/static\/css\/([^"']+\.css)["']/g, '"_next/static/css/$1"')
     .replace(/["']\/_next\/static\/chunks\/([^"']+\.js)["']/g, '"_next/static/chunks/$1"')
@@ -63,7 +71,13 @@ function fixHtmlPaths(content) {
     .replace(/"static\/chunks\/([^"]+\.js)"/g, '"_next/static/chunks/$1"')
     // Fix CSS file references that might be relative
     .replace(/,\s*"(static\/css\/[^"]+\.css)"/g, ',"_next/$1"');
+}
 
+// Main function to fix paths in HTML content
+function fixHtmlPaths(content) {
+  content = fixHtmlAttributes(content);
+  content = fixInlineJavaScript(content);
+  content = fixCssReferences(content);
   return content;
 }
 
@@ -124,8 +138,8 @@ function fixCssPaths(content) {
 }
 
 // Main function
-function main() {
-  const outDir = path.join(__dirname, '../out');
+function main(scriptDir = __dirname) {
+  const outDir = path.join(scriptDir, '../out');
 
   if (!fs.existsSync(outDir)) {
     console.log('Output directory does not exist:', outDir);
