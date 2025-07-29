@@ -11,7 +11,7 @@ test.describe('Manual Video Generation Test', () => {
     console.log('🎬 Starting manual video generation test...');
     
     // Navigate to editor
-    await page.goto('http://localhost:3002/projects');
+    await page.goto(`${process.env.BASE_URL || 'http://localhost:3002'}/projects`);
     await page.waitForTimeout(3000);
 
     // Create new project
