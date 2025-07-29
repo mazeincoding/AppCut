@@ -276,11 +276,33 @@
                 
                 document.getElementById('canvasStatus').textContent = 'Rendering frames...';
 
-                // Create MediaRecorder for canvas
+                // Create MediaRecorder for canvas with codec fallback
                 const stream = canvas.captureStream(fps);
-                const mediaRecorder = new MediaRecorder(stream, {
-                    mimeType: 'video/webm;codecs=vp9'
-                });
+                const codecs = [
+                    'video/webm;codecs=vp9',
+                    'video/webm;codecs=vp8', 
+                    'video/webm',
+                    'video/mp4'
+                ];
+                
+                let mediaRecorder;
+                let supportedCodec = null;
+                
+                for (const codec of codecs) {
+                    if (MediaRecorder.isTypeSupported(codec)) {
+                        supportedCodec = codec;
+                        break;
+                    }
+                }
+                
+                if (supportedCodec) {
+                    mediaRecorder = new MediaRecorder(stream, { mimeType: supportedCodec });
+                    console.log('Using codec:', supportedCodec);
+                } else {
+                    // Fallback to default if none are explicitly supported
+                    mediaRecorder = new MediaRecorder(stream);
+                    console.warn('Using default MediaRecorder codec');
+                }
                 
                 const chunks = [];
                 mediaRecorder.ondataavailable = (e) => chunks.push(e.data);

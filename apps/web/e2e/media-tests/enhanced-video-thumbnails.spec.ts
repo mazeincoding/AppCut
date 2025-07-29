@@ -9,8 +9,8 @@ test.describe('Enhanced Video Thumbnails', () => {
     // Wait for the media panel to be ready
     await page.waitForSelector('input[type="file"]', { timeout: 10000 });
     
-    // Wait a bit for UI to stabilize
-    await page.waitForTimeout(1000);
+    // Wait for editor to be fully loaded
+    await page.waitForLoadState('networkidle');
   });
 
   test('generates multiple thumbnails for uploaded video', async ({ page }) => {
@@ -194,8 +194,17 @@ test.describe('Enhanced Video Thumbnails', () => {
     const clearCacheButton = page.locator('button:has-text("Clear Cache")');
     await clearCacheButton.click();
     
-    // Verify cache was cleared (console log would appear)
-    // In a real test, we might check localStorage or other indicators
+    // Verify cache was cleared
+    const cacheCleared = await page.evaluate(() => {
+      // Check if thumbnail cache keys are removed from localStorage/sessionStorage
+      const cacheKeys = Object.keys(localStorage).filter(key => key.includes('thumbnail-cache'));
+      return cacheKeys.length === 0;
+    });
+    expect(cacheCleared).toBe(true);
+    
+    // Alternatively, check if thumbnails need regeneration
+    const thumbnailIndicator = page.locator('.bg-blue-500\\/80');
+    await expect(thumbnailIndicator).toHaveCount(0);
     
     // Take screenshot after clearing cache
     await page.screenshot({ 

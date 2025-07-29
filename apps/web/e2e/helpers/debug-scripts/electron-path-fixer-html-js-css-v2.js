@@ -6,17 +6,27 @@ const path = require('node:path');
 // Function to recursively find all HTML, JS, and CSS files
 function findFiles(dir, extensions = ['.html', '.js', '.css']) {
   const files = [];
-  const items = fs.readdirSync(dir);
+  try {
+    const items = fs.readdirSync(dir);
 
-  for (const item of items) {
-    const fullPath = path.join(dir, item);
-    const stat = fs.statSync(fullPath);
+    for (const item of items) {
+      const fullPath = path.join(dir, item);
+      let stat;
+      try {
+        stat = fs.statSync(fullPath);
+      } catch (error) {
+        console.warn(`Skipping inaccessible path: ${fullPath}`, error.message);
+        continue;
+      }
 
-    if (stat.isDirectory()) {
-      files.push(...findFiles(fullPath, extensions));
-    } else if (extensions.some(ext => item.endsWith(ext))) {
-      files.push(fullPath);
+      if (stat.isDirectory()) {
+        files.push(...findFiles(fullPath, extensions));
+      } else if (extensions.some(ext => item.endsWith(ext))) {
+        files.push(fullPath);
+      }
     }
+  } catch (error) {
+    console.error(`Failed to read directory: ${dir}`, error.message);
   }
 
   return files;
