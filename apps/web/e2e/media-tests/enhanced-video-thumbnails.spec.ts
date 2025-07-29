@@ -231,9 +231,8 @@ test.describe('Enhanced Video Thumbnails', () => {
       path.join(__dirname, '..', 'fixtures', 'test-video-2.mp4')
     ];
     
-    // Note: This assumes you have multiple test videos
-    // In practice, you might upload the same video twice for testing
-    await fileInput.setInputFiles(testVideoPath);
+    // Upload multiple videos
+    await fileInput.setInputFiles(testVideoPaths);
     
     // Wait for first video
     await page.waitForSelector('.relative.w-full.h-full.cursor-pointer', { timeout: 30000 });
