@@ -405,7 +405,11 @@ describe('AI Model Selection Bug', () => {
       console.log('✅ No excessive StorageProvider creation detected');
     }
     
-    // Test passes regardless, but logs results for analysis
-    expect(report.totalInstances).toBeGreaterThanOrEqual(0);
+    // Verify the bug reproduction criteria
+    const isBugReproduced = totalNewInstances > 2;
+    expect(isBugReproduced).toBe(false); // Test fails if bug is reproduced
+    
+    // Also verify navigation didn't occur unexpectedly
+    expect(report.navigationEvents).toBeLessThanOrEqual(1);
   });
 });
