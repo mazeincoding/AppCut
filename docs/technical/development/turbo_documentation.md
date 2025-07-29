@@ -6,6 +6,83 @@ This document describes the `turbo.json` file, which configures Turborepo for th
 
 `turbo.json` defines how Turborepo should execute tasks (scripts) across the monorepo's workspaces. It optimizes build times by caching previous build outputs, running tasks in parallel, and understanding dependencies between packages.
 
+## Turborepo Architecture in OpenCut
+
+This diagram shows how Turborepo orchestrates the build pipeline across the OpenCut monorepo:
+
+```mermaid
+graph TD
+    A[Monorepo Root] --> B[turbo.json]
+    B --> C[Task Configuration]
+    
+    C --> D[Build Task]
+    C --> E[Check-Types Task]
+    C --> F[Dev Task]
+    
+    G[apps/web] --> H[Web App Package]
+    I[packages/db] --> J[Database Package]
+    K[packages/auth] --> L[Auth Package]
+    
+    H --> M[Next.js Build]
+    J --> N[Schema Generation]
+    L --> O[Auth Components]
+    
+    D --> P[Dependency Resolution]
+    P --> Q[^build Dependencies]
+    Q --> R[Parallel Execution]
+    R --> S[Cache Outputs]
+    
+    T[Build Pipeline] --> U[packages/db build]
+    T --> V[packages/auth build]
+    U --> W[apps/web build]
+    V --> W
+    
+    style B fill:#e1f5fe
+    style D fill:#e8f5e8
+    style T fill:#fff3e0
+    style R fill:#f3e5f5
+```
+
+## Workspace Dependencies Flow
+
+This diagram illustrates how package dependencies flow through the Turborepo build system:
+
+```mermaid
+sequenceDiagram
+    participant DEV as Developer
+    participant TURBO as Turborepo
+    participant DB as packages/db
+    participant AUTH as packages/auth
+    participant WEB as apps/web
+    participant CACHE as Build Cache
+    
+    DEV->>TURBO: bun run build
+    TURBO->>TURBO: Analyze dependency graph
+    TURBO->>CACHE: Check cached outputs
+    
+    alt Cache Miss for packages/db
+        TURBO->>DB: Run build task
+        DB->>DB: Compile TypeScript & generate types
+        DB->>CACHE: Store build outputs
+    else Cache Hit
+        TURBO->>CACHE: Use cached DB build
+    end
+    
+    alt Cache Miss for packages/auth
+        TURBO->>AUTH: Run build task (depends on DB)
+        AUTH->>AUTH: Compile components & types
+        AUTH->>CACHE: Store build outputs
+    else Cache Hit
+        TURBO->>CACHE: Use cached AUTH build
+    end
+    
+    TURBO->>WEB: Run build task (depends on DB & AUTH)
+    WEB->>WEB: Next.js build process
+    WEB->>CACHE: Store .next/ outputs
+    
+    TURBO->>DEV: Build complete with timing
+```
+
 ## Configuration Details
 
 ```json
@@ -49,6 +126,114 @@ This document describes the `turbo.json` file, which configures Turborepo for th
     *   `cache`: `false`
         *   This tells Turborepo *not* to cache the output of the `dev` task. Development servers typically produce logs and temporary files that are not meant for caching and would only slow down the development process if cached.
 
+## Task Execution Flow
+
+This diagram shows how individual tasks are executed and cached:
+
+```mermaid
+flowchart TD
+    A[Developer Runs Command] --> B{Task in turbo.json?}
+    B -->|Yes| C[Check Dependencies]
+    B -->|No| D[Run Directly]
+    
+    C --> E{Dependencies Built?}
+    E -->|No| F[Build Dependencies First]
+    E -->|Yes| G[Check Cache]
+    
+    F --> H[Execute Dependency Tasks]
+    H --> G
+    
+    G --> I{Cache Hit?}
+    I -->|Yes| J[Use Cached Output]
+    I -->|No| K[Execute Task]
+    
+    K --> L[Generate Outputs]
+    L --> M[Store in Cache]
+    M --> N[Task Complete]
+    J --> N
+    
+    N --> O[Report Timing]
+    
+    style C fill:#e1f5fe
+    style G fill:#e8f5e8
+    style K fill:#fff3e0
+    style M fill:#f3e5f5
+```
+
+## Cache Management System
+
+```mermaid
+graph LR
+    A[Source Files] --> B[Task Execution]
+    B --> C[Output Generation]
+    C --> D[Cache Storage]
+    
+    D --> E[File Hash Cache]
+    D --> F[Remote Cache]
+    D --> G[Local Cache]
+    
+    H[Subsequent Runs] --> I[Cache Lookup]
+    I --> J{Cache Valid?}
+    J -->|Yes| K[Restore Outputs]
+    J -->|No| L[Execute Task]
+    
+    M[File Changes] --> N[Cache Invalidation]
+    N --> O[Rebuild Required]
+    
+    style D fill:#e1f5fe
+    style I fill:#e8f5e8
+    style N fill:#fff3e0
+```
+
+## Development Commands
+
+Common Turborepo commands used in OpenCut development:
+
+```bash
+# Build all packages in dependency order
+bun run build
+
+# Run type checking across all packages
+bun run check-types
+
+# Start development servers
+bun run dev
+
+# Build specific package
+turbo build --filter=@opencut/web
+
+# Clear Turborepo cache
+turbo prune
+
+# View build dependency graph
+turbo graph
+```
+
+## Performance Optimizations
+
+### Task Configuration Best Practices
+
+```json
+{
+  "build": {
+    "dependsOn": ["^build"],
+    "outputs": [".next/**", "!.next/cache/**"],
+    "inputs": ["src/**", "public/**", "package.json", "tsconfig.json"]
+  },
+  "check-types": {
+    "dependsOn": ["^build"],
+    "outputs": []
+  }
+}
+```
+
+### Cache Efficiency Tips
+
+1. **Specific Output Patterns**: Define precise output directories to avoid caching unnecessary files
+2. **Input Specifications**: Use `inputs` to control when tasks should be re-run
+3. **Dependency Management**: Use `^` syntax for cross-package dependencies
+4. **Persistent Tasks**: Mark development servers as `persistent: true`
+
 ## Purpose
 
 This `turbo.json` file is crucial for optimizing the development and build workflows in the OpenCut monorepo. It enables:
@@ -56,5 +241,24 @@ This `turbo.json` file is crucial for optimizing the development and build workf
 *   **Faster Builds:** By caching build outputs and only rebuilding what's changed.
 *   **Correct Order of Operations:** Ensuring that dependent packages are built or type-checked before their consumers.
 *   **Efficient Development:** By allowing development servers to run persistently without unnecessary caching.
+*   **Parallel Execution:** Running independent tasks simultaneously for better performance.
+*   **Remote Caching:** Sharing build cache across team members and CI/CD pipelines.
 
 It centralizes the configuration for how tasks are executed across the multiple `apps` and `packages` within the OpenCut project.
+
+## Integration with OpenCut Development Workflow
+
+### Build Pipeline Integration
+
+The Turborepo configuration integrates seamlessly with OpenCut's development tools:
+
+- **Next.js**: Optimized for Next.js build outputs with proper cache exclusions
+- **TypeScript**: Dependency-aware type checking across packages
+- **Electron**: Build process coordination for desktop app packaging
+- **Testing**: Parallel test execution across workspaces
+
+### Recent Improvements (January 2025)
+
+- **ENHANCED**: Cache efficiency with specific output patterns
+- **IMPROVED**: Build dependency resolution for complex monorepo structure
+- **OPTIMIZED**: Development server startup time with persistent task configuration
