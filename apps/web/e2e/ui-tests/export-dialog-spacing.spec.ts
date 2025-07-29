@@ -3,6 +3,14 @@ import path from 'path';
 import fs from 'fs';
 
 test.describe('Export Dialog Spacing', () => {
+  test.beforeEach(async () => {
+    // Create screenshots directory if it doesn't exist
+    const screenshotsDir = path.join(__dirname, 'screenshots');
+    if (!fs.existsSync(screenshotsDir)) {
+      fs.mkdirSync(screenshotsDir, { recursive: true });
+    }
+  });
+
   test('should have proper spacing between Format and Quality sections', async ({ page, baseURL }) => {
     console.log('🚀 Starting export dialog spacing test...');
     
@@ -72,14 +80,6 @@ test.describe('Export Dialog Spacing', () => {
       
       // Assert that spacing is adequate (at least 30px)
       expect(spacing).toBeGreaterThan(30);
-    }
-  });
-  
-  test.beforeEach(async () => {
-    // Create screenshots directory if it doesn't exist
-    const screenshotsDir = path.join(__dirname, 'screenshots');
-    if (!fs.existsSync(screenshotsDir)) {
-      fs.mkdirSync(screenshotsDir, { recursive: true });
     }
   });
 });

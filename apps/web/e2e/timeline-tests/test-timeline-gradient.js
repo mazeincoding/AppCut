@@ -63,6 +63,10 @@ const path = require('path');
       console.log('Screenshot after add click saved');
     }
     
+    // Look for timeline elements
+    const timelineElements = await page.locator('[data-testid="timeline-element"]').all();
+    console.log(`Found ${timelineElements.length} timeline elements`);
+    
     if (timelineElements.length > 0) {
       // Get the first timeline element
       const firstElement = timelineElements[0];

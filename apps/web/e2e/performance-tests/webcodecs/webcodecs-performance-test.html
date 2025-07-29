@@ -360,7 +360,13 @@
                     output: (chunk, metadata) => {
                         encodedChunks.push(new Uint8Array(chunk.byteLength));
                     },
-                    error: reject
+                    error: (error) => {
+                        console.error('WebCodecs encoder error:', error);
+                        if (encoder.state !== 'closed') {
+                            encoder.close();
+                        }
+                        reject(new Error('WebCodecs encoder failed: ' + error.message));
+                    }
                 });
 
                 // Configure encoder
@@ -375,6 +381,10 @@
                 try {
                     encoder.configure(config);
                 } catch (error) {
+                    console.error('WebCodecs configuration error:', error);
+                    if (encoder.state !== 'closed') {
+                        encoder.close();
+                    }
                     reject(new Error('WebCodecs configuration failed: ' + error.message));
                     return;
                 }
@@ -384,8 +394,21 @@
                 // Encode frames
                 const encodeFrame = async () => {
                     if (frameCount >= totalFrames) {
-                        await encoder.flush();
-                        encoder.close();
+                        try {
+                            if (encoder.state === 'configured') {
+                                await encoder.flush();
+                            }
+                            if (encoder.state !== 'closed') {
+                                encoder.close();
+                            }
+                        } catch (error) {
+                            console.error('Error during encoding finalization:', error);
+                            if (encoder.state !== 'closed') {
+                                encoder.close();
+                            }
+                            reject(new Error('Failed to finalize encoding: ' + error.message));
+                            return;
+                        }
 
                         // Create result blob
                         const totalSize = encodedChunks.reduce((sum, chunk) => sum + chunk.byteLength, 0);
@@ -413,20 +436,39 @@
                     
                     ctx.drawImage(sourceVideo, 0, 0, canvas.width, canvas.height);
 
+                    // Check encoder state before proceeding
+                    if (encoder.state === 'closed') {
+                        reject(new Error('Encoder was closed unexpectedly'));
+                        return;
+                    }
+
+                    if (encoder.state !== 'configured') {
+                        reject(new Error('Encoder is not in configured state: ' + encoder.state));
+                        return;
+                    }
+
                     // Create VideoFrame and encode
                     const timestamp = (frameCount * 1_000_000) / testSettings.fps;
-                    const videoFrame = new VideoFrame(canvas, {
-                        timestamp: timestamp,
-                        duration: 1_000_000 / testSettings.fps
-                    });
-
+                    let videoFrame;
+                    
                     try {
+                        videoFrame = new VideoFrame(canvas, {
+                            timestamp: timestamp,
+                            duration: 1_000_000 / testSettings.fps
+                        });
+
                         encoder.encode(videoFrame, { keyFrame: frameCount % 30 === 0 });
-                        videoFrame.close();
                     } catch (error) {
-                        videoFrame.close();
-                        reject(error);
+                        console.error('Encoding failed for frame', frameCount, ':', error);
+                        if (encoder.state !== 'closed') {
+                            encoder.close();
+                        }
+                        reject(new Error('Frame encoding failed: ' + error.message));
                         return;
+                    } finally {
+                        if (videoFrame) {
+                            videoFrame.close();
+                        }
                     }
 
                     frameCount++;
