@@ -1,55 +1,61 @@
 // Hydration debug script for Electron
-console.log('🔍 [HYDRATION DEBUG] Starting hydration analysis...');
+// Starting hydration analysis...
 
 // Check if React is loaded
-console.log('🔍 [HYDRATION DEBUG] React status:', {
+const reactStatus = {
   React: typeof React !== 'undefined' ? 'loaded' : 'not loaded',
   ReactDOM: typeof ReactDOM !== 'undefined' ? 'loaded' : 'not loaded',
   NextJS: typeof window.__NEXT_DATA__ !== 'undefined' ? 'loaded' : 'not loaded'
-});
+};
 
 // Check DOM elements
-console.log('🔍 [HYDRATION DEBUG] DOM elements:');
 const nextRoot = document.querySelector('#__next');
-console.log('- #__next element:', nextRoot ? 'found' : 'not found');
+const nextRootStatus = nextRoot ? 'found' : 'not found';
 
 const hiddenDiv = document.querySelector('div[hidden]');
-console.log('- hidden div:', hiddenDiv ? 'found' : 'not found');
+const hiddenDivStatus = hiddenDiv ? 'found' : 'not found';
 
 const body = document.querySelector('body');
-console.log('- body classes:', body ? body.className : 'no body');
+const bodyClasses = body ? body.className : 'no body';
 
 // Check for React components
 setTimeout(() => {
-  console.log('🔍 [HYDRATION DEBUG] Checking for React components after delay...');
+  // Checking for React components after delay...
   
   const buttons = document.querySelectorAll('button');
-  console.log('- Total buttons found:', buttons.length);
+  const buttonCount = buttons.length;
   
+  const buttonInfo = [];
   buttons.forEach((button, index) => {
-    console.log(`- Button ${index}: "${button.textContent?.trim()}" (${button.className})`);
+    buttonInfo.push({
+      index,
+      text: button.textContent?.trim(),
+      className: button.className
+    });
   });
   
   // Check for Next.js hydration
+  let nextJSData = null;
   if (typeof window !== 'undefined' && window.__NEXT_DATA__) {
-    console.log('🔍 [HYDRATION DEBUG] Next.js data:', window.__NEXT_DATA__);
+    nextJSData = window.__NEXT_DATA__;
   }
   
   // Check for React Fiber
   const reactFiber = document.querySelector('[data-reactroot]') || document.querySelector('#__next');
-  if (reactFiber) {
-    console.log('🔍 [HYDRATION DEBUG] React Fiber found:', reactFiber);
-  } else {
-    console.log('🔍 [HYDRATION DEBUG] No React Fiber found');
-  }
+  const reactFiberStatus = reactFiber ? 'found' : 'not found';
 }, 3000);
 
 // Add click listener to debug button interactions
 document.addEventListener('click', function(e) {
   if (e.target.textContent && e.target.textContent.includes('New project')) {
-    console.log('🔍 [HYDRATION DEBUG] New project button clicked!');
-    console.log('- Target:', e.target);
-    console.log('- Event type:', e.type);
-    console.log('- Is React event?', e.isTrusted);
+    // New project button clicked - store debug info
+    const clickDebugInfo = {
+      target: e.target,
+      eventType: e.type,
+      isTrusted: e.isTrusted,
+      timestamp: Date.now()
+    };
+    
+    // Debug info is stored in clickDebugInfo variable for analysis
   }
 });

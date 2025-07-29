@@ -16,7 +16,7 @@ test.describe('Enhanced Video Thumbnails', () => {
   test('generates multiple thumbnails for uploaded video', async ({ page }) => {
     // Upload a video file
     const fileInput = page.locator('input[type="file"]');
-    const testVideoPath = path.join(__dirname, 'fixtures', 'test-video.mp4');
+    const testVideoPath = path.join(__dirname, '..', 'fixtures', 'test-video.mp4');
     
     // Upload the video
     await fileInput.setInputFiles(testVideoPath);
@@ -53,7 +53,7 @@ test.describe('Enhanced Video Thumbnails', () => {
   test('hover scrubbing works on video thumbnails', async ({ page }) => {
     // Upload a video file
     const fileInput = page.locator('input[type="file"]');
-    const testVideoPath = path.join(__dirname, 'fixtures', 'test-video.mp4');
+    const testVideoPath = path.join(__dirname, '..', 'fixtures', 'test-video.mp4');
     
     await fileInput.setInputFiles(testVideoPath);
     
@@ -131,7 +131,7 @@ test.describe('Enhanced Video Thumbnails', () => {
   test('thumbnail quality controls work', async ({ page }) => {
     // Upload a video file
     const fileInput = page.locator('input[type="file"]');
-    const testVideoPath = path.join(__dirname, 'fixtures', 'test-video.mp4');
+    const testVideoPath = path.join(__dirname, '..', 'fixtures', 'test-video.mp4');
     
     await fileInput.setInputFiles(testVideoPath);
     
@@ -182,7 +182,7 @@ test.describe('Enhanced Video Thumbnails', () => {
   test('clear cache functionality works', async ({ page }) => {
     // Upload a video file
     const fileInput = page.locator('input[type="file"]');
-    const testVideoPath = path.join(__dirname, 'fixtures', 'test-video.mp4');
+    const testVideoPath = path.join(__dirname, '..', 'fixtures', 'test-video.mp4');
     
     await fileInput.setInputFiles(testVideoPath);
     
@@ -227,8 +227,8 @@ test.describe('Enhanced Video Thumbnails', () => {
     // Upload multiple video files
     const fileInput = page.locator('input[type="file"]');
     const testVideoPaths = [
-      path.join(__dirname, 'fixtures', 'test-video.mp4'),
-      path.join(__dirname, 'fixtures', 'test-video-2.mp4')
+      path.join(__dirname, '..', 'fixtures', 'test-video.mp4'),
+      path.join(__dirname, '..', 'fixtures', 'test-video-2.mp4')
     ];
     
     // Note: This assumes you have multiple test videos
@@ -280,7 +280,7 @@ test.describe('Documentation Screenshots', () => {
         name: '2-uploading-video', 
         action: async () => {
           const fileInput = page.locator('input[type="file"]');
-          await fileInput.setInputFiles(path.join(__dirname, 'fixtures', 'test-video.mp4'));
+          await fileInput.setInputFiles(path.join(__dirname, '..', 'fixtures', 'test-video.mp4'));
         }
       },
       { 

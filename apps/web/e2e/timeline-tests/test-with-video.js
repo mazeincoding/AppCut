@@ -6,7 +6,8 @@ const { chromium } = require('playwright');
   
   try {
     // Navigate to the editor page
-    await page.goto('http://localhost:3000/editor/project/db4599bd-0a8a-4dc3-b727-2503b5434eac');
+    const testProjectId = process.env.TEST_PROJECT_ID || 'default-test-project-id';
+    await page.goto(`http://localhost:3000/editor/project/${testProjectId}`);
     
     // Wait for the page to load
     await page.waitForLoadState('networkidle');
