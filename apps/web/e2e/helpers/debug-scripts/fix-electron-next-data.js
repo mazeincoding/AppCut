@@ -15,8 +15,15 @@ let totalFixed = 0;
 htmlFiles.forEach(file => {
   const filePath = path.join(outDir, file);
   
-  let content = fs.readFileSync(filePath, 'utf8');
+  let content;
   let modified = false;
+  
+  try {
+    content = fs.readFileSync(filePath, 'utf8');
+  } catch (error) {
+    // Failed to read file, skip processing
+    return;
+  }
   
   // Replace the __NEXT_DATA__ script with a static version that preserves the correct page path
   const nextDataMatch = content.match(/<script id="__NEXT_DATA__" type="application\/json">(.*?)<\/script>/);
@@ -50,8 +57,13 @@ htmlFiles.forEach(file => {
   }
   
   if (modified) {
-    fs.writeFileSync(filePath, content);
-    totalFixed++;
+    try {
+      fs.writeFileSync(filePath, content);
+      totalFixed++;
+    } catch (error) {
+      // Failed to write file, skip incrementing totalFixed
+      // File processing continues for other files
+    }
   }
   
   totalFiles++;
