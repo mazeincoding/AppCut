@@ -56,18 +56,32 @@ Project-level information and configuration
 - `root_markdown_files_documentation.md` - Root markdown files documentation
 
 ### 📁 **technical/**
-Technical configuration and setup documentation
-- `biome_documentation.md` - Biome configuration documentation
+Technical configuration and setup documentation, organized by category:
+
+#### 🏗️ **architecture/**
+System architecture and component documentation
 - `components_documentation.md` - React components documentation
-- `e2e_documentation.md` - End-to-end testing documentation
-- `electron_documentation.md` - Electron application documentation
-- `github_documentation.md` - GitHub configuration documentation
 - `lib_documentation.md` - Library functions documentation
+- `preview-panel-component-documentation.md` - Preview panel component documentation
+- `stores_documentation.md` - State management stores documentation
+- `types_documentation.md` - TypeScript types documentation
+
+#### 🛠️ **development/**
+Development tools and processes
+- `biome_documentation.md` - Biome configuration documentation
 - `migrations_documentation.md` - Database migrations documentation
 - `scripts_documentation.md` - Build and development scripts documentation
-- `stores_documentation.md` - State management stores documentation
 - `turbo_documentation.md` - Turbo monorepo configuration documentation
-- `types_documentation.md` - TypeScript types documentation
+
+#### 🖥️ **platform/**
+Platform-specific integrations
+- `electron_documentation.md` - Electron application documentation
+- `github_documentation.md` - GitHub configuration documentation
+
+#### 🧪 **testing/**
+Testing documentation and guides
+- `e2e_documentation.md` - End-to-end testing documentation
+
 
 ## 🔍 **How to Use This Documentation**
 
@@ -79,7 +93,11 @@ Technical configuration and setup documentation
 6. **For Debugging**: Use the `debugging/` folder for troubleshooting guides
 7. **For Deployment**: Check `deployment/` for setup and deployment guides
 8. **For Packages**: Look in `packages/` for package-specific documentation
-9. **For Technical Setup**: Use `technical/` for configuration and technical guides
+9. **For Technical Setup**: Use `technical/` for configuration and technical guides:
+   - `technical/architecture/` - System architecture and components
+   - `technical/development/` - Development tools and processes  
+   - `technical/platform/` - Platform-specific integrations
+   - `technical/testing/` - Testing documentation
 10. **For Project Info**: Check `project-info/` for project-level information
 
 ## 📝 **Contributing to Documentation**
@@ -93,7 +111,11 @@ When adding new documentation:
 - Place project-level info in `project-info/`
 - Place deployment guides in `deployment/`
 - Place package docs in `packages/`
-- Place technical configs in `technical/`
+- Place technical configs in appropriate `technical/` subfolders:
+  - Architecture docs in `technical/architecture/`
+  - Development tools in `technical/development/`
+  - Platform integrations in `technical/platform/`
+  - Testing docs in `technical/testing/`
 - Place archived work in `archive_task/`
 
 Keep documentation up-to-date and well-organized for easy navigation and maintenance.
