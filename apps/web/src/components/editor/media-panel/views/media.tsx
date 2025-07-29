@@ -64,18 +64,23 @@ const EnhancedVideoPreview = ({ item }: { item: MediaItem }) => {
   // Generate enhanced thumbnails if not available
   useEffect(() => {
     if (item.type === 'video' && !item.thumbnails && !item.thumbnailError) {
-      try {
-        generateEnhancedThumbnails(item.id, {
-          resolution: 'medium',
-          sceneDetection: true
-        });
-      } catch (error) {
+      generateEnhancedThumbnails(item.id, {
+        resolution: 'medium',
+        sceneDetection: true
+      }).catch(error => {
+        // Silently handle AI video thumbnail failures
+        if (error.message?.includes('Invalid file type for thumbnail generation')) {
+          console.warn(`Thumbnail generation not supported for ${item.name}, using fallback`);
+          // Video will still display without thumbnail
+          return;
+        }
+        // Log other errors but don't throw them
         console.error('Failed to generate thumbnails for media item:', {
           itemId: item.id,
           itemName: item.name,
-          error
+          error: error.message || error
         });
-      }
+      });
     }
   }, [item.id, item.type, item.thumbnails, item.thumbnailError, generateEnhancedThumbnails]);
 
@@ -372,6 +377,16 @@ export function MediaView() {
   const renderPreview = (item: MediaItem) => {
     // Render a preview for each media type (image, video, audio, unknown)
     if (item.type === "image") {
+      if (DEBUG_MEDIA_VIEW) {
+        console.log('🖼️ MEDIA-VIEW: Rendering image preview:', {
+          itemId: item.id,
+          itemName: item.name,
+          hasUrl: !!item.url,
+          urlType: item.url ? (item.url.startsWith('blob:') ? 'blob' : item.url.startsWith('data:') ? 'data' : 'other') : 'none',
+          urlPreview: item.url ? item.url.substring(0, 100) + '...' : 'none'
+        });
+      }
+      
       return (
         <div className="w-full h-full flex items-center justify-center">
           <img
@@ -379,6 +394,21 @@ export function MediaView() {
             alt={item.name}
             className="max-w-full max-h-full object-contain"
             loading="lazy"
+            onError={(e) => {
+              if (DEBUG_MEDIA_VIEW) {
+                console.error('❌ MEDIA-VIEW: Image failed to load:', {
+                  itemId: item.id,
+                  itemName: item.name,
+                  url: item.url,
+                  error: e
+                });
+              }
+            }}
+            onLoad={() => {
+              if (DEBUG_MEDIA_VIEW) {
+                console.log('✅ MEDIA-VIEW: Image loaded successfully:', item.name);
+              }
+            }}
           />
         </div>
       );

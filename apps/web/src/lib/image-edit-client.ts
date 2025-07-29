@@ -74,13 +74,67 @@ export async function uploadImageToFAL(imageFile: File): Promise<string> {
     throw new Error('FAL API key not configured');
   }
 
-  // Convert image to base64 data URL as fallback since FAL storage upload might not be available
+  console.log('📤 UPLOAD: Starting upload process for:', {
+    fileName: imageFile.name,
+    fileSize: imageFile.size,
+    fileType: imageFile.type
+  });
+
+  // Try actual file upload first
+  try {
+    console.log('🔄 UPLOAD: Attempting FAL storage upload...');
+    const formData = new FormData();
+    formData.append('file', imageFile);
+
+    const uploadResponse = await fetch(`https://fal.run/storage/upload`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Key ${FAL_API_KEY}`,
+      },
+      body: formData,
+    });
+
+    if (uploadResponse.ok) {
+      const uploadResult = await uploadResponse.json();
+      console.log('✅ UPLOAD: FAL storage upload successful:', uploadResult);
+      return uploadResult.url;
+    } else {
+      const errorText = await uploadResponse.text();
+      console.warn('⚠️ UPLOAD: FAL storage upload failed, falling back to base64:', {
+        status: uploadResponse.status,
+        error: errorText
+      });
+    }
+  } catch (error) {
+    console.warn('⚠️ UPLOAD: FAL storage upload error, using base64 fallback:', error);
+  }
+
+  // Fallback to base64 data URL with proper MIME type
+  console.log('🔄 UPLOAD: Using base64 data URL fallback...');
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
       if (reader.result) {
-        console.log('✅ Image converted to base64 data URL for FAL API');
-        resolve(reader.result as string);
+        let dataUrl = reader.result as string;
+        
+        // Fix malformed MIME type if needed
+        if (dataUrl.startsWith('data:image;base64,')) {
+          // Determine proper MIME type from file type or default to PNG
+          const mimeType = imageFile.type || 'image/png';
+          const base64Data = dataUrl.split(',')[1];
+          dataUrl = `data:${mimeType};base64,${base64Data}`;
+          console.log('🔧 UPLOAD: Fixed MIME type in data URL');
+        }
+        
+        console.log('✅ UPLOAD: Image converted to base64 data URL for FAL API');
+        console.log('🔍 UPLOAD: Data URL format:', {
+          type: typeof dataUrl,
+          length: dataUrl.length,
+          startsWithData: dataUrl.startsWith('data:'),
+          prefix: dataUrl.substring(0, 30),
+          mimeType: dataUrl.split(';')[0]
+        });
+        resolve(dataUrl);
       } else {
         reject(new Error('Failed to convert image to base64'));
       }
@@ -165,6 +219,15 @@ export async function editImage(
   console.log(`🎨 Editing image with ${request.model}:`, {
     ...payload,
     image_url: payload.image_url?.substring(0, 50) + '...' // Truncate for readability
+  });
+
+  // Debug: Check the actual format of the image URL
+  console.log('🔍 DEBUG: Image URL details:', {
+    type: typeof payload.image_url,
+    length: payload.image_url?.length,
+    startsWithData: payload.image_url?.startsWith('data:'),
+    startsWithHttps: payload.image_url?.startsWith('https:'),
+    firstChars: payload.image_url?.substring(0, 20)
   });
 
   if (onProgress) {

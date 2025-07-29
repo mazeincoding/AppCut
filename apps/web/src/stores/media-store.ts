@@ -235,10 +235,40 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
   isLoading: false,
 
   addMediaItem: async (projectId, item) => {
+    console.log('📥 MEDIA-STORE: addMediaItem called with:', {
+      projectId,
+      itemName: item.name,
+      itemType: item.type,
+      hasFile: !!item.file,
+      hasUrl: !!item.url,
+      fileSize: item.file?.size,
+      fileType: item.file?.type,
+      width: item.width,
+      height: item.height
+    });
+
     const newItem: MediaItem = {
       ...item,
       id: generateUUID(),
     };
+
+    // Check if media item needs URL creation (for both images and videos)
+    if (item.file && !item.url) {
+      if (item.type === 'image') {
+        console.log('🔗 MEDIA-STORE: Creating object URL for edited image');
+        newItem.url = URL.createObjectURL(item.file);
+      } else if (item.type === 'video') {
+        console.log('🔗 MEDIA-STORE: Creating object URL for video');
+        newItem.url = URL.createObjectURL(item.file);
+      }
+    }
+
+    console.log('🆕 MEDIA-STORE: Created new media item:', {
+      id: newItem.id,
+      name: newItem.name,
+      hasUrl: !!newItem.url,
+      urlPreview: newItem.url ? newItem.url.substring(0, 100) + '...' : 'none'
+    });
 
     // Add to local state immediately for UI responsiveness
     set((state) => ({

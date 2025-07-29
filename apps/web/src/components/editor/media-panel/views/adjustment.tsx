@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -73,6 +73,15 @@ export function AdjustmentView() {
     redo
   } = useAdjustmentStore();
 
+  // Debug logging
+  console.log('🔍 ADJUSTMENT-VIEW: Component state:', {
+    hasOriginalImage: !!originalImage,
+    originalImageType: originalImage ? typeof originalImage : 'null',
+    originalImageName: originalImage?.name,
+    originalImageSize: originalImage?.size,
+    hasOriginalImageUrl: !!originalImageUrl
+  });
+
   // Media and project stores for adding edited images
   const { addMediaItem } = useMediaStore();
   const { activeProject } = useProjectStore();
@@ -80,6 +89,15 @@ export function AdjustmentView() {
 
   const [uploadingImage, setUploadingImage] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Debug effect to log when originalImage changes
+  useEffect(() => {
+    console.log('🔄 ADJUSTMENT-VIEW: originalImage changed:', {
+      hasImage: !!originalImage,
+      imageName: originalImage?.name,
+      shouldShowControls: !!originalImage
+    });
+  }, [originalImage]);
 
   // Handle automatic add to media panel (download disabled temporarily)
   const handleAutoAddToMedia = useCallback(async (
@@ -151,6 +169,12 @@ export function AdjustmentView() {
       const previewUrl = await imageToDataUrl(file);
       
       // Set in store
+      console.log('📸 ADJUSTMENT-VIEW: Setting original image:', {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        previewUrlLength: previewUrl.length
+      });
       setOriginalImage(file, previewUrl);
       
       toast.success(`Image loaded: ${imageInfo.width}x${imageInfo.height} (${formatFileSize(file.size)})`);
@@ -174,7 +198,18 @@ export function AdjustmentView() {
     try {
       // Upload image to FAL.ai
       setProcessingState({ isProcessing: true, progress: 5, statusMessage: 'Uploading image...' });
+      console.log('🚀 ADJUSTMENT: About to upload image:', {
+        fileName: originalImage.name,
+        fileSize: originalImage.size,
+        fileType: originalImage.type
+      });
       const imageUrl = await uploadImageToFAL(originalImage);
+      console.log('🎯 ADJUSTMENT: Upload completed, imageUrl:', {
+        type: typeof imageUrl,
+        length: imageUrl?.length,
+        startsWithData: imageUrl?.startsWith('data:'),
+        prefix: imageUrl?.substring(0, 30)
+      });
       
       // Progress callback
       const onProgress: ImageEditProgressCallback = (status) => {
@@ -356,7 +391,7 @@ export function AdjustmentView() {
 
       {/* Main Content - Single Column */}
       <div className="flex-1 flex flex-col min-h-0">
-        <div className="flex-1 space-y-3 overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin' }}>
+        <div className="flex-1 space-y-3 overflow-y-auto pr-2 pb-4" style={{ scrollbarWidth: 'thin' }}>
           {/* Image Upload */}
           {!originalImage ? (
             <ImageUploader 
@@ -389,52 +424,7 @@ export function AdjustmentView() {
             </Card>
           )}
 
-          {/* Model Selection */}
-          {originalImage && (
-            <ModelSelector />
-          )}
-
-          {/* Prompt Input */}
-          {originalImage && (
-            <Card>
-              <CardContent className="p-3 space-y-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
-                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Edit Instructions</label>
-                </div>
-                <div className="space-y-2">
-                  <textarea
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    placeholder="Describe what you want to change..."
-                    className="w-full p-2.5 text-sm border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200"
-                    rows={3}
-                    maxLength={700}
-                  />
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] text-muted-foreground font-medium">
-                      Be specific about changes
-                    </span>
-                    <span className={cn(
-                      "text-[10px] font-medium transition-colors",
-                      prompt.length > 650 ? "text-orange-500" : prompt.length > 600 ? "text-yellow-500" : "text-muted-foreground"
-                    )}>
-                      {prompt.length}/700
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Preview Panel - Below Edit Instructions */}
-          {originalImage && (
-            <div className="h-64">
-              <PreviewPanel />
-            </div>
-          )}
-
-          {/* Edit/Generate Button */}
+          {/* Edit/Generate Button - Moved to top */}
           {originalImage && (
             <Card className="bg-gradient-to-r from-primary/5 to-blue-500/5 border-primary/20">
               <CardContent className="p-3 space-y-2">
@@ -483,6 +473,51 @@ export function AdjustmentView() {
                 )}
               </CardContent>
             </Card>
+          )}
+
+          {/* Model Selection */}
+          {originalImage && (
+            <ModelSelector />
+          )}
+
+          {/* Prompt Input */}
+          {originalImage && (
+            <Card>
+              <CardContent className="p-3 space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Edit Instructions</label>
+                </div>
+                <div className="space-y-2">
+                  <textarea
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    placeholder="Describe what you want to change..."
+                    className="w-full p-2.5 text-sm border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200"
+                    rows={3}
+                    maxLength={700}
+                  />
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-muted-foreground font-medium">
+                      Be specific about changes
+                    </span>
+                    <span className={cn(
+                      "text-[10px] font-medium transition-colors",
+                      prompt.length > 650 ? "text-orange-500" : prompt.length > 600 ? "text-yellow-500" : "text-muted-foreground"
+                    )}>
+                      {prompt.length}/700
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Preview Panel - Below Edit Instructions */}
+          {originalImage && (
+            <div className="h-64">
+              <PreviewPanel />
+            </div>
           )}
 
           {/* Parameter Controls */}

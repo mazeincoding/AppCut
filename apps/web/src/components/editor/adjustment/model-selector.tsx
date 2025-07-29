@@ -38,7 +38,7 @@ export function ModelSelector() {
                   <span className="text-xs font-medium truncate">{model.name}</span>
                 </div>
                 <span className={cn(
-                  "text-[10px] font-medium ml-2 flex-shrink-0",
+                  "text-[10px] font-medium ml-2 flex-shrink-0 border border-transparent",
                   isSelected ? "text-[#05c7c7]/80" : "text-muted-foreground"
                 )}>
                   {model.estimatedCost}
