@@ -283,9 +283,7 @@ test.describe('AI Model Selection Bug', () => {
   test('should not create excess instances on model selection', async ({ page }) => {
     await clickAITab(page);
     // Wait for AI panel to fully load
-    await page.waitForSelector('button[id="model"], textarea, .ai-panel-content', { timeout: 5000 }).catch(() => {
-      console.log('AI panel not fully loaded, continuing...');
-    });
+    await page.waitForSelector('button[id="model"], textarea, .ai-panel-content', { timeout: 5000 });
     
     const beforeCount = monitor.getCount();
     
@@ -309,9 +307,7 @@ test.describe('AI Model Selection Bug', () => {
     // Complete workflow
     await clickAITab(page);
     // Wait for AI panel to be ready for interaction
-    await page.waitForSelector('button[id="model"], textarea, input[type="file"]', { timeout: 5000 }).catch(() => {
-      console.log('AI panel not ready, continuing...');
-    });
+    await page.waitForSelector('button[id="model"], textarea, input[type="file"]', { timeout: 5000 });
     
     const modelSelected = await selectAIModel(page, 'Hailuo');
     if (!modelSelected) {
