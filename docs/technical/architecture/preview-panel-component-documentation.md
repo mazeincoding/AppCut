@@ -26,6 +26,32 @@ The `PreviewPanel` component is the central video preview display in OpenCut's e
 
 ## Architecture
 
+### Preview Panel State Flow
+
+This diagram shows the data flow and function calls within the Preview Panel component:
+
+```mermaid
+sequenceDiagram
+    participant PB as Playback Store
+    participant PP as Preview Panel
+    participant TS as Timeline Store
+    participant MS as Media Store
+    participant PS as Project Store
+    
+    PB->>PP: currentTime updated
+    PP->>TS: getTracks()
+    PP->>PP: getActiveElements(currentTime)
+    loop For each active element
+        PP->>MS: getMediaItem(element.mediaId)
+        MS-->>PP: MediaItem data
+        PP->>PP: renderElement(element, mediaItem)
+    end
+    PP->>PS: getBackgroundSettings()
+    PS-->>PP: Background config
+    PP->>PP: renderBackground()
+    PP->>PP: updatePreviewDisplay()
+```
+
 ### State Management
 The component integrates with multiple Zustand stores:
 

@@ -185,6 +185,35 @@ Fetches the number of stargazers for the OpenCut GitHub repository.
 
 This module provides a comprehensive wrapper around the `ffmpeg.wasm` library, enabling powerful client-side video and audio processing directly within the browser. It abstracts the complexities of FFmpeg commands and file handling, offering a simplified API for common media manipulation tasks.
 
+#### FFmpeg Function Call Flow
+
+```mermaid
+sequenceDiagram
+    participant APP as Application
+    participant FU as FFmpegUtils
+    participant FFW as FFmpeg.wasm
+    participant WA as WebAssembly
+    participant FS as Virtual FS
+
+    APP->>FU: initFFmpeg()
+    FU->>FFW: createFFmpeg()
+    FFW->>WA: Load WASM core
+    WA-->>FFW: WASM loaded
+    FFW-->>FU: FFmpeg instance ready
+    FU-->>APP: Initialization complete
+
+    APP->>FU: generateThumbnail(video, time)
+    FU->>FS: writeFile('input.mp4', videoData)
+    FU->>FFW: run(['-i', 'input.mp4', '-ss', time, '-vframes', '1', 'output.jpg'])
+    FFW->>WA: Execute FFmpeg command
+    WA-->>FFW: Processing complete
+    FFW->>FS: readFile('output.jpg')
+    FS-->>FFW: Thumbnail data
+    FFW-->>FU: Thumbnail blob
+    FU->>FS: unlink('input.mp4', 'output.jpg')
+    FU-->>APP: Thumbnail URL
+```
+
 **Key Capabilities:**
 *   **FFmpeg Initialization:** Manages the loading and initialization of the `ffmpeg.wasm` core, ensuring it's ready for use.
 *   **Thumbnail Generation:** Extracts high-quality thumbnails from video files at specified timestamps, with options for resolution, quality, and even scene detection for more intelligent thumbnail selection.

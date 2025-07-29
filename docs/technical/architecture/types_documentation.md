@@ -2,6 +2,102 @@
 
 This document outlines the core TypeScript type definitions used across the OpenCut web application. These types ensure data consistency and provide clear contracts for various components, stores, and services.
 
+## Core Type Architecture Overview
+
+This diagram shows the relationships between the main type definitions and how they interact across the application:
+
+```mermaid
+classDiagram
+    class TProject {
+        +string id
+        +string name
+        +string thumbnail
+        +Date createdAt
+        +Date updatedAt
+        +MediaItem[] mediaItems
+        +string backgroundColor
+        +BackgroundType backgroundType
+        +number blurIntensity
+        +number fps
+    }
+
+    class MediaItem {
+        +string id
+        +string name
+        +MediaType type
+        +string url
+        +number duration
+        +number width
+        +number height
+        +string thumbnail
+    }
+
+    class TimelineTrack {
+        +string id
+        +string name
+        +TrackType type
+        +TimelineElement[] elements
+        +boolean muted
+        +boolean isMain
+    }
+
+    class TimelineElement {
+        <<interface>>
+        +string id
+        +string name
+        +number duration
+        +number startTime
+        +number trimStart
+        +number trimEnd
+    }
+
+    class MediaElement {
+        +string type = "media"
+        +string mediaId
+    }
+
+    class TextElement {
+        +string type = "text"
+        +string content
+        +number fontSize
+        +string fontFamily
+        +string color
+        +number x
+        +number y
+        +number rotation
+        +number opacity
+    }
+
+    class ExportSettings {
+        +ExportFormat format
+        +ExportQuality quality
+        +string filename
+        +number width
+        +number height
+    }
+
+    class PlaybackState {
+        +boolean isPlaying
+        +number currentTime
+        +number duration
+        +number volume
+        +number speed
+        +boolean muted
+    }
+
+    TProject ||--o{ MediaItem : contains
+    TProject ||--o{ TimelineTrack : has
+    TimelineTrack ||--o{ TimelineElement : contains
+    TimelineElement <|-- MediaElement
+    TimelineElement <|-- TextElement
+    MediaElement ||--|| MediaItem : references
+    
+    style TProject fill:#e1f5fe
+    style MediaItem fill:#e8f5e8
+    style TimelineTrack fill:#fff3e0
+    style TimelineElement fill:#fce4ec
+```
+
 ## Type Definitions and Their Purpose
 
 ### `editor.ts`

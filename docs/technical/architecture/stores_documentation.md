@@ -32,6 +32,41 @@ Manages application-wide keyboard shortcuts and their associated actions.
 *   **State:** `keybindings` (a map of key combinations to actions).
 *   **Actions:** `updateKeybinding`, `removeKeybinding`, `getKeybindingString` (converts KeyboardEvent to a key string), `validateKeybinding`, `getKeybindingsForAction`.
 
+## Store Interactions Overview
+
+This diagram shows how the different Zustand stores interact with each other and external services:
+
+```mermaid
+graph TD
+    A[Project Store] --> B[Media Store]
+    A --> C[Timeline Store] 
+    A --> D[Export Store]
+    
+    B --> E[Storage Service]
+    B --> F[FFmpeg Utils]
+    B --> G[Media Processing]
+    
+    C --> H[Playback Store]
+    C --> B
+    
+    I[Editor Store] --> J[Panel Store]
+    I --> C
+    
+    K[Text2Image Store] --> L[FAL AI Client]
+    K --> B
+    
+    M[Adjustment Store] --> N[FAL AI Client]
+    M --> B
+    
+    style A fill:#e1f5fe
+    style B fill:#e8f5e8
+    style C fill:#fff3e0
+    style D fill:#fce4ec
+    style I fill:#f3e5f5
+    style K fill:#e0f2f1
+    style M fill:#fff8e1
+```
+
 ### `media-store.ts`
 
 This Zustand store is responsible for **managing all media assets** (images, videos, and audio) within the OpenCut application. It acts as the central source of truth for media items, handling their loading, processing, metadata extraction, and persistence. It also integrates with external utilities for advanced media operations like thumbnail and timeline preview generation.
