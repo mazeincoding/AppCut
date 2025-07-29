@@ -12,8 +12,7 @@
  * Usage: npx playwright test ai-model-selection-bug-reproduction.spec.js --headed
  */
 
-const { test, expect } = require('@playwright/test');
-const { createTestImageFile } = require('../fixtures/test-utils');
+import { test, expect } from '@playwright/test';
 
 // Helper class to monitor StorageProvider instances
 class StorageProviderMonitor {
@@ -37,11 +36,13 @@ class StorageProviderMonitor {
         text: text
       });
 
-      // Track StorageProvider instances
-      if (text.includes('StorageProvider v14:15') || text.includes('StorageProvider v')) {
+      // Track StorageProvider instances with more robust pattern matching
+      const storageProviderPattern = /StorageProvider\s*(v\d+(?::\d+)?)?/i;
+      if (storageProviderPattern.test(text)) {
         this.instances.push({
           timestamp: Date.now(),
-          text: text
+          text: text,
+          version: text.match(storageProviderPattern)?.[1] || 'unknown'
         });
       }
     });
@@ -259,10 +260,10 @@ async function generateVideo(page) {
   return false;
 }
 
-describe('AI Model Selection Bug', () => {
+test.describe('AI Model Selection Bug', () => {
   let monitor;
   
-  beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page }) => {
     monitor = new StorageProviderMonitor(page);
     await navigateToProject(page);
   });
