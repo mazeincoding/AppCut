@@ -1,6 +1,6 @@
-import { readFileSync, existsSync } from 'fs';
-import { readFile } from 'fs/promises';
-import { join } from 'path';
+import { readFileSync, existsSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
 /**
  * Creates a test image buffer for consistent testing across e2e tests
