@@ -14,14 +14,31 @@ test.describe('Export Dialog Spacing', () => {
   test('should have proper spacing between Format and Quality sections', async ({ page, baseURL }) => {
     console.log('🚀 Starting export dialog spacing test...');
     
-    // Navigate to the editor page
-    await page.goto(`${baseURL}/editor/project`);
-    
-    // Wait for editor to load
+    // Navigate to the projects page first
+    await page.goto(`${baseURL}/projects`);
     await page.waitForLoadState('networkidle');
     
-    // Open export dialog
-    const exportButton = page.getByRole('button', { name: /export/i });
+    // Create or navigate to a project
+    const createProjectButton = page.getByRole('button', { name: /create.*project/i }).first();
+    if (await createProjectButton.isVisible()) {
+      await createProjectButton.click();
+      await page.waitForLoadState('networkidle');
+    } else {
+      // Try to click on an existing project
+      const projectLink = page.locator('a[href*="/editor/project"]').first();
+      if (await projectLink.isVisible()) {
+        await projectLink.click();
+        await page.waitForLoadState('networkidle');
+      } else {
+        // Navigate directly to editor with a test project
+        await page.goto(`${baseURL}/editor/project/test-project`);
+        await page.waitForLoadState('networkidle');
+      }
+    }
+    
+    // Wait for editor to load and find the main video export button in header (not the "Export All" media button)
+    await page.waitForSelector('nav button:has-text("Export")', { timeout: 10000 });
+    const exportButton = page.locator('nav button:has-text("Export")');
     await exportButton.click();
     
     // Wait for export dialog to be visible

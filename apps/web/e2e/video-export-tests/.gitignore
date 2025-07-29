@@ -1,0 +1,10 @@
+# Test output files
+output/
+*.json
+*.log
+
+# Video files (except test fixtures)
+*.mp4
+*.webm
+*.mov
+!input/*.mp4

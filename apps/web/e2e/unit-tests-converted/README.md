@@ -38,3 +38,7 @@ These Jest-based unit tests need to be converted to Playwright E2E tests to be u
 - Jest framework not configured in package.json
 - Missing Jest dependencies
 - Heavy mocking approach incompatible with E2E testing philosophy
+
+## Files Moved to Archives:
+- `export-tests-unusable/` - Moved to `docs/complete_task/` (January 2025)
+  - These export tests had heavy TestHelpers dependencies and were deemed unusable without major refactoring
