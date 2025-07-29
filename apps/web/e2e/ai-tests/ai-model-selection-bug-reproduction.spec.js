@@ -85,7 +85,7 @@ class StorageProviderMonitor {
 
 // Helper functions
 async function navigateToProject(page) {
-  await page.goto('http://localhost:3000/editor/project');
+  await page.goto(`${process.env.BASE_URL || 'http://localhost:3000'}/editor/project`);
   await page.waitForLoadState('networkidle');
   // Wait for editor to be ready
   await page.waitForSelector('[data-testid="editor-ready"], .editor-container, .timeline-container', { timeout: 10000 }).catch(() => {
@@ -129,7 +129,8 @@ async function clickAITab(page) {
             return true;
           }
         } catch (e) {
-          // Skip elements that can't be read
+          // Log the error for debugging but continue trying other selectors
+          console.error(`Failed to read tab content: ${e.message}`);
         }
       }
     }
