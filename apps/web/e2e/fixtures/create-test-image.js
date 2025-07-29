@@ -48,5 +48,3 @@ const base64Data = jpegDataUrl.split(',')[1];
 const jpegBuffer = Buffer.from(base64Data, 'base64');
 
 fs.writeFileSync(path.join(__dirname, 'test-image.jpg'), jpegBuffer);
-
-console.log('Test images created successfully!');
