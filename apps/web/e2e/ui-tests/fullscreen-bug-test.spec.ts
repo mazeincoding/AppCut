@@ -71,22 +71,65 @@ test.describe('Fullscreen Navigation Bug Test', () => {
           console.log(`⌨️ Escape key worked: ${escapeWorked}`);
           
           if (!escapeWorked) {
-            // Try clicking at coordinates where close button might be
-            console.log('🖱️ Trying to click where close button should be...');
-            await page.click('body', { position: { x: 1200, y: 50 } }); // Top right area
-            await page.waitForTimeout(1000);
+            // Try to find and click actual close buttons
+            console.log('🖱️ Trying to find close buttons...');
             
-            const clickWorked = await page.locator('.bg-panel').isVisible();
-            console.log(`🖱️ Click attempt worked: ${clickWorked}`);
+            const closeSelectors = [
+              'button[aria-label="Close"]',
+              'button[aria-label="close"]',
+              '.close-button',
+              'button:has-text("×")',
+              'button:has-text("Close")',
+              '[data-testid="close-button"]',
+              '[role="button"]:has-text("×")'
+            ];
+            
+            let clickWorked = false;
+            for (const selector of closeSelectors) {
+              const closeButton = page.locator(selector).first();
+              if (await closeButton.isVisible({ timeout: 1000 })) {
+                console.log(`🎯 Found close button with selector: ${selector}`);
+                await closeButton.click();
+                await page.waitForTimeout(500);
+                clickWorked = await page.locator('.bg-panel').isVisible();
+                if (clickWorked) break;
+              }
+            }
+            
+            console.log(`🖱️ Close button click worked: ${clickWorked}`);
             
             if (!clickWorked) {
-              // Try clicking in center to close modal
-              console.log('🖱️ Trying center click...');
-              await page.click('body', { position: { x: 640, y: 400 } });
-              await page.waitForTimeout(1000);
+              // Try clicking on backdrop/overlay to close modal
+              console.log('🖱️ Trying backdrop click...');
               
-              const centerClickWorked = await page.locator('.bg-panel').isVisible();
-              console.log(`🖱️ Center click worked: ${centerClickWorked}`);
+              const backdropSelectors = [
+                '.modal-backdrop',
+                '.overlay',
+                '[data-testid="modal-backdrop"]',
+                '.dialog-overlay'
+              ];
+              
+              let backdropClickWorked = false;
+              for (const selector of backdropSelectors) {
+                const backdrop = page.locator(selector).first();
+                if (await backdrop.isVisible({ timeout: 1000 })) {
+                  console.log(`🎯 Found backdrop with selector: ${selector}`);
+                  await backdrop.click({ position: { x: 10, y: 10 } }); // Click edge to avoid content
+                  await page.waitForTimeout(500);
+                  backdropClickWorked = await page.locator('.bg-panel').isVisible();
+                  if (backdropClickWorked) break;
+                }
+              }
+              
+              // If no backdrop found, try alternative keyboard shortcuts
+              if (!backdropClickWorked) {
+                console.log('⌨️ Trying alternative keyboard shortcuts...');
+                await page.keyboard.press('Alt+F4'); // Windows close shortcut
+                await page.waitForTimeout(500);
+                backdropClickWorked = await page.locator('.bg-panel').isVisible();
+              }
+              
+              console.log(`🖱️ Backdrop/keyboard attempt worked: ${backdropClickWorked}`);
             }
           }
           
