@@ -49,29 +49,46 @@ test.describe('Manual Video Generation Test', () => {
     
     // Create test image
     const testImageBuffer = await page.evaluate(() => {
-      return new Promise((resolve) => {
-        const canvas = document.createElement('canvas');
-        canvas.width = 512;
-        canvas.height = 512;
-        const ctx = canvas.getContext('2d');
-        
-        const gradient = ctx.createLinearGradient(0, 0, 512, 512);
-        gradient.addColorStop(0, '#ff6b6b');
-        gradient.addColorStop(1, '#4ecdc4');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 512, 512);
-        
-        ctx.fillStyle = 'white';
-        ctx.font = '48px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('Test Video', 256, 256);
-        
-        canvas.toBlob((blob) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.readAsDataURL(blob);
-        }, 'image/png');
+      return new Promise((resolve, reject) => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = 512;
+          canvas.height = 512;
+          
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            throw new Error('Failed to get 2D canvas context');
+          }
+          
+          const gradient = ctx.createLinearGradient(0, 0, 512, 512);
+          gradient.addColorStop(0, '#ff6b6b');
+          gradient.addColorStop(1, '#4ecdc4');
+          ctx.fillStyle = gradient;
+          ctx.fillRect(0, 0, 512, 512);
+          
+          ctx.fillStyle = 'white';
+          ctx.font = '48px Arial';
+          ctx.textAlign = 'center';
+          ctx.fillText('Test Video', 256, 256);
+          
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              reject(new Error('Failed to create blob from canvas'));
+              return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(new Error('Failed to read blob as data URL'));
+            reader.readAsDataURL(blob);
+          }, 'image/png');
+        } catch (error) {
+          reject(new Error(`Canvas operation failed: ${error.message}`));
+        }
       });
+    }).catch(error => {
+      console.error('Failed to create test image:', error);
+      throw error;
     });
     
     const response = await fetch(testImageBuffer);
