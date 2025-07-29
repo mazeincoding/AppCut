@@ -7,12 +7,20 @@
 
 const { test, expect } = require('@playwright/test');
 
+// Configuration
+const TEST_CONFIG = {
+  baseUrl: process.env.BASE_URL || 'http://localhost:3002',
+  projectId: process.env.TEST_PROJECT_ID || 'test-project',
+  timeout: 60000
+};
+
 test.describe('Video Status Check', () => {
   test('should check for existing generated videos', async ({ page }) => {
     console.log('🔍 Checking for existing generated videos...');
     
     // Navigate directly to a project that might have videos
-    await page.goto('http://localhost:3002/editor/project/test-project', { timeout: 60000 });
+    const testProjectUrl = `${TEST_CONFIG.baseUrl}/editor/project/${TEST_CONFIG.projectId}`;
+    await page.goto(testProjectUrl, { timeout: TEST_CONFIG.timeout });
     await page.waitForTimeout(5000);
 
     console.log(`📍 Current URL: ${page.url()}`);
