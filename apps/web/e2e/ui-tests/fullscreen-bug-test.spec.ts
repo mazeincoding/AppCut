@@ -1,5 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
-import { join } from 'path';
+import { join } from 'node:path';
+import { createTestImageFile } from '../fixtures/test-utils';
 
 // Helper functions for fullscreen bug detection and recovery
 
@@ -105,7 +106,7 @@ test.describe('Fullscreen Navigation Bug Test', () => {
     
     const adjustmentTab = page.locator('span:text("Adjustment")');
     await adjustmentTab.click();
-    await page.waitForTimeout(2000);
+    await page.waitForSelector('.border-dashed', { state: 'visible' });
     
     // Upload image
     const fileChooserPromise = page.waitForEvent('filechooser');
@@ -113,9 +114,10 @@ test.describe('Fullscreen Navigation Bug Test', () => {
     await uploadArea.click();
     
     const fileChooser = await fileChooserPromise;
-    const realImagePath = join(__dirname, '..', 'fixtures', 'test-image-real.jpg');
-    await fileChooser.setFiles(realImagePath);
-    await page.waitForTimeout(5000);
+    // Use the test utility to create a test image
+    const testImage = createTestImageFile('test-image.jpg');
+    await fileChooser.setFiles(testImage);
+    await page.waitForSelector('span:text("Image loaded")', { timeout: 10000 });
     
     // Verify image loaded and start generation
     const imageLoaded = page.locator('span:text("Image loaded")');
