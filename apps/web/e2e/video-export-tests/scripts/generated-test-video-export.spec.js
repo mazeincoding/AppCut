@@ -11,20 +11,14 @@ test.describe('OpenCut Video Export', () => {
     await page.goto('http://localhost:3000');
     await page.waitForLoadState('networkidle');
     
-    // Go to editor (try different navigation approaches)
-    try {
-      await page.click('text=Start Creating', { timeout: 5000 });
-    } catch (e) {
-      // Try direct navigation to editor
-      await page.goto('http://localhost:3000/editor/project/test-project');
-    }
+    // Go to editor
+    await page.click('text=Start Creating');
     await page.waitForLoadState('networkidle');
     
     // Upload test video
     console.log('📹 Uploading test video...');
     const fileInput = page.locator('input[type="file"]');
-    const videoPath = path.join(__dirname, '../input/generated_4a2ba290.mp4');
-    await fileInput.setInputFiles(videoPath);
+    await fileInput.setInputFiles('C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\e2e\video-export-tests\input\generated_4a2ba290.mp4');
     
     // Wait for video to load
     await page.waitForTimeout(3000);
@@ -91,7 +85,7 @@ test.describe('OpenCut Video Export', () => {
     await page.click('button:has-text("Download")');
     const download = await downloadPromise;
     
-    const downloadPath = path.join('./test-outputs', `exported-${Date.now()}.mp4`);
+    const downloadPath = path.join('C:\Users\zdhpe\Desktop\New folder\OpenCut\apps\web\e2e\video-export-tests\output\test-outputs', `exported-${Date.now()}.mp4`);
     await download.saveAs(downloadPath);
     
     console.log(`✅ Video exported and saved to: ${downloadPath}`);
@@ -109,14 +103,8 @@ test.describe('OpenCut Video Export', () => {
     await page.goto('http://localhost:3000');
     await page.waitForLoadState('networkidle');
     
-    // Try to find and click export button
-    try {
-      await page.click('text=Export', { timeout: 5000 });
-    } catch (e) {
-      // Try different selectors
-      const exportBtn = page.locator('nav button').filter({ hasText: 'Export' });
-      await exportBtn.click();
-    }
+    // Try to export without any media
+    await page.click('text=Export');
     
     // Should show error message
     const errorMessage = page.locator('text=No media to export');

@@ -9,9 +9,9 @@ const fs = require('fs');
 const path = require('path');
 
 // Configuration
-const TEST_VIDEO_PATH = '/home/zdhpe/veo3-video-generation/output/videos/generated_4a2ba290.mp4';
+const TEST_VIDEO_PATH = path.join(__dirname, '../input/generated_4a2ba290.mp4');
 const OPENCUT_URL = 'http://localhost:3000';
-const OUTPUT_DIR = './test-outputs';
+const OUTPUT_DIR = path.join(__dirname, '../output/test-outputs');
 
 console.log('🎬 OpenCut Video Export Test Script');
 console.log('=====================================');
@@ -156,8 +156,9 @@ test.describe('OpenCut Video Export', () => {
 });
 `;
 
-  fs.writeFileSync('./test-video-export.spec.js', testScript);
-  console.log('✅ Generated Playwright test: test-video-export.spec.js');
+  const specPath = path.join(__dirname, 'generated-test-video-export.spec.js');
+  fs.writeFileSync(specPath, testScript);
+  console.log('✅ Generated Playwright test: generated-test-video-export.spec.js');
 }
 
 // Generate manual test instructions
@@ -225,8 +226,9 @@ If you see placeholder rectangles:
 - Should contain actual video content for frame testing
 `;
 
-  fs.writeFileSync('./MANUAL_TEST_INSTRUCTIONS.md', instructions);
-  console.log('✅ Generated manual test instructions: MANUAL_TEST_INSTRUCTIONS.md');
+  const manualPath = path.join(__dirname, 'generated-MANUAL_TEST_INSTRUCTIONS.md');
+  fs.writeFileSync(manualPath, instructions);
+  console.log('✅ Generated manual test instructions: generated-MANUAL_TEST_INSTRUCTIONS.md');
 }
 
 // Generate browser automation test
@@ -297,8 +299,9 @@ async function testVideoExport() {
 testVideoExport().catch(console.error);
 `;
 
-  fs.writeFileSync('./puppeteer-test.js', puppeteerScript);
-  console.log('✅ Generated Puppeteer test: puppeteer-test.js');
+  const puppeteerPath = path.join(__dirname, 'generated-puppeteer-test.js');
+  fs.writeFileSync(puppeteerPath, puppeteerScript);
+  console.log('✅ Generated Puppeteer test: generated-puppeteer-test.js');
 }
 
 // Main execution
