@@ -1,8 +1,8 @@
 {
   "timestamp": "2025-07-15T13:09:39.566Z",
   "testConfig": {
-    "testVideo": "/home/zdhpe/opencut/OpenCut/test_video_export/input/generated_4a2ba290.mp4",
-    "outputDir": "/home/zdhpe/opencut/OpenCut/test_video_export/output/audio-processing-tests",
+    "testVideo": "./test_video_export/input/generated_4a2ba290.mp4",
+    "outputDir": "./test_video_export/output/audio-processing-tests",
     "openCutUrl": "http://localhost:3000",
     "testDuration": 10,
     "sampleRate": 44100,

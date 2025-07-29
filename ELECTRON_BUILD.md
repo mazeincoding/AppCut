@@ -6,8 +6,8 @@ To build and test the Electron version of OpenCut:
 
 ### Option 1: Dev Mode (Recommended)
 ```powershell
-# Quick start - just run this script
-& 'c:\Users\zdhpe\Desktop\New folder\OpenCut\electron-dev.ps1'
+# From the project root directory
+./electron-dev.ps1
 ```
 
 ### Option 2: Manual Steps
