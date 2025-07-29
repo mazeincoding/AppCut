@@ -3,14 +3,14 @@
 
 ## Prerequisites
 - OpenCut running at http://localhost:3000
-- Test video: /home/zdhpe/veo3-video-generation/output/videos/generated_4a2ba290.mp4
+- Test video: `apps/web/e2e/fixtures/test-video.mp4` (place your test video here)
 
 ## Test Steps
 
 ### 1. Basic Export Test
 1. Open http://localhost:3000 in Chrome
 2. Click "Start Creating" or go to editor
-3. Upload the test video: /home/zdhpe/veo3-video-generation/output/videos/generated_4a2ba290.mp4
+3. Upload the test video from `apps/web/e2e/fixtures/test-video.mp4`
 4. Drag video to timeline
 5. Click "Export" button
 6. Select format: MP4, quality: 720p
@@ -56,6 +56,7 @@ If you see placeholder rectangles:
 - Verify no memory leaks after export
 
 ## Test Video Info
-- Path: /home/zdhpe/veo3-video-generation/output/videos/generated_4a2ba290.mp4
+- Path: `apps/web/e2e/fixtures/test-video.mp4` (relative to project root)
 - Expected to be MP4 format
 - Should contain actual video content for frame testing
+- **Note**: Place your test video in the fixtures directory before running tests
