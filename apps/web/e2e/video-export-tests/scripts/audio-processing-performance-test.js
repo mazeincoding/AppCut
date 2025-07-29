@@ -387,18 +387,32 @@ async function simulateAudioMixing(trackCount, effectCount) {
   const memoryAfter = process.memoryUsage().heapUsed;
   const processingTime = performance.now() - startTime;
   
-  // Calculate audio quality (simulated)
+  // Calculate audio quality based on signal characteristics
   let signalPower = 0;
-  let noisePower = 0;
+  let peakLevel = 0;
+  let clipCount = 0;
+  const sampleCount = Math.min(1000, mixedOutput.length);
   
-  for (let i = 0; i < Math.min(1000, mixedOutput.length); i++) {
-    signalPower += mixedOutput[i] * mixedOutput[i];
-    // Simulate noise measurement
-    noisePower += Math.random() * 0.001;
+  for (let i = 0; i < sampleCount; i++) {
+    const sample = mixedOutput[i];
+    signalPower += sample * sample;
+    peakLevel = Math.max(peakLevel, Math.abs(sample));
+    
+    // Count clipping
+    if (Math.abs(sample) >= 0.99) {
+      clipCount++;
+    }
   }
   
-  const snr = 10 * Math.log10(signalPower / noisePower);
-  const audioQuality = Math.min(100, Math.max(0, (snr - 60) / 40 * 100)); // Convert SNR to quality %
+  const rmsLevel = Math.sqrt(signalPower / sampleCount);
+  const dynamicRange = peakLevel > 0 ? 20 * Math.log10(peakLevel / (rmsLevel + 0.001)) : 0;
+  const clippingPenalty = (clipCount / sampleCount) * 50; // Penalty for clipping
+  
+  // Quality based on dynamic range, signal level, and lack of clipping
+  let audioQuality = 90; // Base quality
+  audioQuality += Math.min(10, dynamicRange * 2); // Reward good dynamic range
+  audioQuality -= clippingPenalty; // Penalize clipping
+  audioQuality = Math.min(100, Math.max(0, audioQuality));
   
   return {
     status: audioQuality > 80 ? 'completed' : 'degraded',
