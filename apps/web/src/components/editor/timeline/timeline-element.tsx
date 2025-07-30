@@ -13,6 +13,10 @@ import {
   Type,
   Copy,
   RefreshCw,
+  EyeOff,
+  Eye,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { useMediaStore } from "@/stores/media-store";
 import { useTimelineStore } from "@/stores/timeline-store";
@@ -66,10 +70,17 @@ export function TimelineElement({
     addElementToTrack,
     replaceElementMedia,
     rippleEditingEnabled,
+    toggleElementHidden,
   } = useTimelineStore();
   const { currentTime } = usePlaybackStore();
 
   const [elementMenuOpen, setElementMenuOpen] = useState(false);
+
+  const mediaItem =
+    element.type === "media"
+      ? mediaItems.find((item) => item.id === element.mediaId)
+      : null;
+  const isAudio = mediaItem?.type === "audio";
 
   const {
     resizing,
@@ -139,6 +150,11 @@ export function TimelineElement({
     } else {
       removeElementFromTrack(track.id, element.id);
     }
+  };
+
+  const handleToggleElementHidden = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    toggleElementHidden(track.id, element.id);
   };
 
   const handleReplaceClip = (e: React.MouseEvent) => {
@@ -332,7 +348,7 @@ export function TimelineElement({
               track.type
             )} ${isSelected ? "border-b-[0.5px] border-t-[0.5px] border-foreground" : ""} ${
               isBeingDragged ? "z-50" : "z-10"
-            }`}
+            } ${element.hidden ? "opacity-50" : ""}`}
             onClick={(e) => onElementClick && onElementClick(e, element)}
             onMouseDown={handleElementMouseDown}
             onContextMenu={(e) =>
@@ -342,6 +358,16 @@ export function TimelineElement({
             <div className="absolute inset-0 flex items-center h-full">
               {renderElementContent()}
             </div>
+
+            {element.hidden && (
+              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center pointer-events-none">
+                {isAudio ? (
+                  <VolumeX className="h-6 w-6 text-white" />
+                ) : (
+                  <EyeOff className="h-6 w-6 text-white" />
+                )}
+              </div>
+            )}
 
             {isSelected && (
               <>
@@ -362,6 +388,29 @@ export function TimelineElement({
         <ContextMenuItem onClick={handleElementSplitContext}>
           <Scissors className="h-4 w-4 mr-2" />
           Split at playhead
+        </ContextMenuItem>
+        <ContextMenuItem onClick={handleToggleElementHidden}>
+          {isAudio ? (
+            element.hidden ? (
+              <Volume2 className="h-4 w-4 mr-2" />
+            ) : (
+              <VolumeX className="h-4 w-4 mr-2" />
+            )
+          ) : element.hidden ? (
+            <Eye className="h-4 w-4 mr-2" />
+          ) : (
+            <EyeOff className="h-4 w-4 mr-2" />
+          )}
+          <span>
+            {isAudio
+              ? element.hidden
+                ? "Unmute"
+                : "Mute"
+              : element.hidden
+              ? "Show"
+              : "Hide"}{" "}
+            {element.type === "text" ? "text" : "clip"}
+          </span>
         </ContextMenuItem>
         <ContextMenuItem onClick={handleElementDuplicateContext}>
           <Copy className="h-4 w-4 mr-2" />

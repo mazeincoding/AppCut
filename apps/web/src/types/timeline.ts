@@ -11,6 +11,7 @@ interface BaseTimelineElement {
   startTime: number;
   trimStart: number;
   trimEnd: number;
+  hidden?: boolean;
 }
 
 // Media element that references MediaStore

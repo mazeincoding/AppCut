@@ -234,6 +234,7 @@ export function PreviewPanel() {
 
     tracks.forEach((track) => {
       track.elements.forEach((element) => {
+        if (element.hidden) return;
         const elementStart = element.startTime;
         const elementEnd =
           element.startTime +
