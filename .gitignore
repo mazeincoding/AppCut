@@ -79,3 +79,6 @@ screenshots/
 
 # Claude AI settings
 .claude/
+
+# Completed tasks documentation
+docs/complete_task/
