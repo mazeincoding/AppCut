@@ -5,9 +5,10 @@ import { MediaView } from "./views/media";
 import { useMediaPanelStore, Tab } from "./store";
 import { TextView } from "./views/text";
 import { StickerView } from "./views/stickers";
+import { AudioView } from "./views/audio";
 
 export function MediaPanel() {
-	const { activeTab } = useMediaPanelStore();
+  const { activeTab } = useMediaPanelStore();
 
   const viewMap: Record<Tab, React.ReactNode> = {
     media: <MediaView />,
@@ -43,10 +44,10 @@ export function MediaPanel() {
     ),
   };
 
-	return (
-		<div className="h-full flex flex-col bg-panel rounded-sm overflow-hidden">
-			<TabBar />
-			<div className="flex-1">{viewMap[activeTab]}</div>
-		</div>
-	);
+  return (
+    <div className="h-full flex flex-col bg-panel rounded-sm">
+      <TabBar />
+      <div className="flex-1 overflow-y-auto">{viewMap[activeTab]}</div>
+    </div>
+  );
 }
