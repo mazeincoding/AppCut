@@ -14,7 +14,6 @@ export function SponsorButton({
   companyName,
   className = "",
 }: SponsorButtonProps) {
-
   return (
     <motion.a
       href={href}

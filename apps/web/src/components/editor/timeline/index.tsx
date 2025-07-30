@@ -278,7 +278,7 @@ export function Timeline() {
         Math.min(
           duration,
           (mouseX + scrollLeft) /
-          (TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel)
+            (TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel)
         )
       );
 
@@ -501,7 +501,9 @@ export function Timeline() {
 
   return (
     <div
-      className={`h-full flex flex-col transition-colors duration-200 relative bg-panel rounded-sm overflow-hidden`}
+      className={
+        "h-full flex flex-col transition-colors duration-200 relative bg-panel rounded-sm overflow-hidden"
+      }
       {...dragProps}
       onMouseEnter={() => setIsInTimeline(true)}
       onMouseLeave={() => setIsInTimeline(false)}
@@ -535,12 +537,13 @@ export function Timeline() {
           tracks={tracks}
           timelineRef={timelineRef}
           trackLabelsRef={trackLabelsRef}
+          tracksScrollRef={tracksScrollRef}
           isVisible={showSnapIndicator}
         />
         {/* Timeline Header with Ruler */}
         <div className="flex bg-panel sticky top-0 z-10">
           {/* Track Labels Header */}
-          <div className="w-48 flex-shrink-0 bg-muted/30 border-r flex items-center justify-between px-3 py-2">
+          <div className="w-48 flex-shrink-0 bg-panel border-r flex items-center justify-between px-3 py-2">
             {/* Empty space */}
             <span className="text-sm font-medium text-muted-foreground opacity-0">
               .
@@ -598,19 +601,21 @@ export function Timeline() {
                     return (
                       <div
                         key={i}
-                        className={`absolute top-0 bottom-0 ${isMainMarker
+                        className={`absolute top-0 bottom-0 ${
+                          isMainMarker
                             ? "border-l border-muted-foreground/40"
                             : "border-l border-muted-foreground/20"
-                          }`}
+                        }`}
                         style={{
                           left: `${time * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel}px`,
                         }}
                       >
                         <span
-                          className={`absolute top-1 left-1 text-[0.6rem] ${isMainMarker
+                          className={`absolute top-1 left-1 text-[0.6rem] ${
+                            isMainMarker
                               ? "text-muted-foreground font-medium"
                               : "text-muted-foreground/70"
-                            }`}
+                          }`}
                         >
                           {(() => {
                             const formatTime = (seconds: number) => {
@@ -620,13 +625,14 @@ export function Timeline() {
 
                               if (hours > 0) {
                                 return `${hours}:${minutes.toString().padStart(2, "0")}:${Math.floor(secs).toString().padStart(2, "0")}`;
-                              } else if (minutes > 0) {
-                                return `${minutes}:${Math.floor(secs).toString().padStart(2, "0")}`;
-                              } else if (interval >= 1) {
-                                return `${Math.floor(secs)}s`;
-                              } else {
-                                return `${secs.toFixed(1)}s`;
                               }
+                              if (minutes > 0) {
+                                return `${minutes}:${Math.floor(secs).toString().padStart(2, "0")}`;
+                              }
+                              if (interval >= 1) {
+                                return `${Math.floor(secs)}s`;
+                              }
+                              return `${secs.toFixed(1)}s`;
                             };
                             return formatTime(time);
                           })()}
@@ -646,7 +652,7 @@ export function Timeline() {
           {tracks.length > 0 && (
             <div
               ref={trackLabelsRef}
-              className="w-48 flex-shrink-0 border-r border-black overflow-y-auto"
+              className="w-48 flex-shrink-0 border-r border-black overflow-y-auto z-[200] bg-panel"
               data-track-labels
             >
               <ScrollArea className="w-full h-full" ref={trackLabelsScrollRef}>
@@ -709,7 +715,7 @@ export function Timeline() {
                 }}
               >
                 {tracks.length === 0 ? (
-                  <div></div>
+                  <div />
                 ) : (
                   <>
                     {tracks.map((track, index) => (
@@ -739,13 +745,16 @@ export function Timeline() {
                             />
                           </div>
                         </ContextMenuTrigger>
-                        <ContextMenuContent>
+                        <ContextMenuContent className="z-[200]">
                           <ContextMenuItem
-                            onClick={() => toggleTrackMute(track.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleTrackMute(track.id);
+                            }}
                           >
                             {track.muted ? "Unmute Track" : "Mute Track"}
                           </ContextMenuItem>
-                          <ContextMenuItem>
+                          <ContextMenuItem onClick={(e) => e.stopPropagation()}>
                             Track settings (soon)
                           </ContextMenuItem>
                         </ContextMenuContent>

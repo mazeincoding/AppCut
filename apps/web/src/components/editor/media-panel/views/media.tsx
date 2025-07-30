@@ -25,6 +25,7 @@ import {
 import { DraggableMediaItem } from "@/components/ui/draggable-item";
 import { useProjectStore } from "@/stores/project-store";
 import { useTimelineStore } from "@/stores/timeline-store";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function MediaView() {
   const { mediaItems, addMediaItem, removeMediaItem } = useMediaStore();
@@ -204,7 +205,7 @@ export function MediaView() {
         className={`h-full flex flex-col gap-1 transition-colors relative ${isDragOver ? "bg-accent/30" : ""}`}
         {...dragProps}
       >
-        <div className="p-3 pb-2">
+        <div className="p-3 pb-2 bg-panel">
           {/* Search and filter controls */}
           <div className="flex gap-2">
             <Select value={mediaFilter} onValueChange={setMediaFilter}>
@@ -241,57 +242,59 @@ export function MediaView() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-3 pt-0">
-          {isDragOver || filteredMediaItems.length === 0 ? (
-            <MediaDragOverlay
-              isVisible={true}
-              isProcessing={isProcessing}
-              progress={progress}
-              onClick={handleFileSelect}
-              isEmptyState={filteredMediaItems.length === 0 && !isDragOver}
-            />
-          ) : (
-            <div
-              className="grid gap-2"
-              style={{
-                gridTemplateColumns: "repeat(auto-fill, 160px)",
-              }}
-            >
-              {/* Render each media item as a draggable button */}
-              {filteredMediaItems.map((item) => (
-                <ContextMenu key={item.id}>
-                  <ContextMenuTrigger>
-                    <DraggableMediaItem
-                      name={item.name}
-                      preview={renderPreview(item)}
-                      dragData={{
-                        id: item.id,
-                        type: item.type,
-                        name: item.name,
-                      }}
-                      showPlusOnDrag={false}
-                      onAddToTimeline={(currentTime) =>
-                        useTimelineStore
-                          .getState()
-                          .addMediaAtTime(item, currentTime)
-                      }
-                      rounded={false}
-                    />
-                  </ContextMenuTrigger>
-                  <ContextMenuContent>
-                    <ContextMenuItem>Export clips</ContextMenuItem>
-                    <ContextMenuItem
-                      variant="destructive"
-                      onClick={(e) => handleRemove(e, item.id)}
-                    >
-                      Delete
-                    </ContextMenuItem>
-                  </ContextMenuContent>
-                </ContextMenu>
-              ))}
-            </div>
-          )}
-        </div>
+        <ScrollArea className="h-full">
+          <div className="flex-1 p-3 pt-0">
+            {isDragOver || filteredMediaItems.length === 0 ? (
+              <MediaDragOverlay
+                isVisible={true}
+                isProcessing={isProcessing}
+                progress={progress}
+                onClick={handleFileSelect}
+                isEmptyState={filteredMediaItems.length === 0 && !isDragOver}
+              />
+            ) : (
+              <div
+                className="grid gap-2"
+                style={{
+                  gridTemplateColumns: "repeat(auto-fill, 160px)",
+                }}
+              >
+                {/* Render each media item as a draggable button */}
+                {filteredMediaItems.map((item) => (
+                  <ContextMenu key={item.id}>
+                    <ContextMenuTrigger>
+                      <DraggableMediaItem
+                        name={item.name}
+                        preview={renderPreview(item)}
+                        dragData={{
+                          id: item.id,
+                          type: item.type,
+                          name: item.name,
+                        }}
+                        showPlusOnDrag={false}
+                        onAddToTimeline={(currentTime) =>
+                          useTimelineStore
+                            .getState()
+                            .addMediaAtTime(item, currentTime)
+                        }
+                        rounded={false}
+                      />
+                    </ContextMenuTrigger>
+                    <ContextMenuContent>
+                      <ContextMenuItem>Export clips</ContextMenuItem>
+                      <ContextMenuItem
+                        variant="destructive"
+                        onClick={(e) => handleRemove(e, item.id)}
+                      >
+                        Delete
+                      </ContextMenuItem>
+                    </ContextMenuContent>
+                  </ContextMenu>
+                ))}
+              </div>
+            )}
+          </div>
+        </ScrollArea>
       </div>
     </>
   );

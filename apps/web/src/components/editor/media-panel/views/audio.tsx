@@ -12,7 +12,7 @@ export function AudioView() {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
-      <div className="flex flex-col gap-2"></div>
+      <div className="flex flex-col gap-2" />
     </div>
   );
 }
