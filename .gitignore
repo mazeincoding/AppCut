@@ -91,3 +91,6 @@ docs/complete_task/
 
 # Claude settings in web app
 apps/web/.claude/
+
+# Unnecessary documentation
+docs/technical/project-info/public_documentation.md
