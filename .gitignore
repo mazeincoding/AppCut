@@ -85,3 +85,6 @@ docs/complete_task/
 
 # Kiro directory
 .kiro/
+
+# VSCode settings
+.vscode/
