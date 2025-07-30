@@ -110,5 +110,8 @@ docs/issues/
 *~
 .#*
 
-# Playwright config (using .mjs instead)
-apps/web/playwright.config.ts
+# Playwright config (using .ts instead)
+apps/web/playwright.config.mjs
+
+# Claude documentation
+CLAUDE.md
