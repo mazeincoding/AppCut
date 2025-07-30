@@ -62,7 +62,7 @@ export function Handlebars({ children }: HandlebarsProps) {
             whileDrag={{ scale: 1.1, cursor: "grabbing" }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
           >
-            <div className="w-2 h-8 rounded-full bg-yellow-500"></div>
+            <div className="w-2 h-8 rounded-full bg-yellow-500" />
           </motion.div>
 
           <motion.div
@@ -81,7 +81,7 @@ export function Handlebars({ children }: HandlebarsProps) {
             whileDrag={{ scale: 1.1, cursor: "grabbing" }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
           >
-            <div className="w-2 h-8 rounded-full bg-yellow-500"></div>
+            <div className="w-2 h-8 rounded-full bg-yellow-500" />
           </motion.div>
         </div>
 

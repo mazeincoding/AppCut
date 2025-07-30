@@ -86,7 +86,7 @@ export default function ProjectsPage() {
         });
       }
     },
-    [thumbnailCache]
+    []
   );
 
   const handleCreateProject = async () => {

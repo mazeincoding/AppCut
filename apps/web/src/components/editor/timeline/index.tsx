@@ -552,7 +552,7 @@ export function Timeline() {
 
           {/* Timeline Ruler */}
           <div
-            className="flex-1 relative overflow-hidden h-4"
+            className="flex-1 relative overflow-hidden h-10"
             onWheel={(e) => {
               // Check if this is horizontal scrolling - if so, don't handle it here
               if (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
@@ -567,7 +567,7 @@ export function Timeline() {
             <ScrollArea className="w-full" ref={rulerScrollRef}>
               <div
                 ref={rulerRef}
-                className="relative h-4 select-none cursor-default"
+                className="relative h-10 select-none cursor-default"
                 style={{
                   width: `${dynamicTimelineWidth}px`,
                 }}
@@ -601,13 +601,17 @@ export function Timeline() {
                     return (
                       <div
                         key={i}
-                        className={`absolute top-0 bottom-0 ${
+                        className={`absolute top-0 h-4 ${
                           isMainMarker
                             ? "border-l border-muted-foreground/40"
                             : "border-l border-muted-foreground/20"
                         }`}
                         style={{
-                          left: `${time * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel}px`,
+                          left: `${
+                            time *
+                            TIMELINE_CONSTANTS.PIXELS_PER_SECOND *
+                            zoomLevel
+                          }px`,
                         }}
                       >
                         <span
@@ -624,10 +628,16 @@ export function Timeline() {
                               const secs = seconds % 60;
 
                               if (hours > 0) {
-                                return `${hours}:${minutes.toString().padStart(2, "0")}:${Math.floor(secs).toString().padStart(2, "0")}`;
+                                return `${hours}:${minutes
+                                  .toString()
+                                  .padStart(2, "0")}:${Math.floor(secs)
+                                  .toString()
+                                  .padStart(2, "0")}`;
                               }
                               if (minutes > 0) {
-                                return `${minutes}:${Math.floor(secs).toString().padStart(2, "0")}`;
+                                return `${minutes}:${Math.floor(secs)
+                                  .toString()
+                                  .padStart(2, "0")}`;
                               }
                               if (interval >= 1) {
                                 return `${Math.floor(secs)}s`;
@@ -710,7 +720,10 @@ export function Timeline() {
               <div
                 className="relative flex-1"
                 style={{
-                  height: `${Math.max(200, Math.min(800, getTotalTracksHeight(tracks)))}px`,
+                  height: `${Math.max(
+                    200,
+                    Math.min(800, getTotalTracksHeight(tracks))
+                  )}px`,
                   width: `${dynamicTimelineWidth}px`,
                 }}
               >
@@ -724,7 +737,10 @@ export function Timeline() {
                           <div
                             className="absolute left-0 right-0 border-b border-muted/30 py-[0.05rem]"
                             style={{
-                              top: `${getCumulativeHeightBefore(tracks, index)}px`,
+                              top: `${getCumulativeHeightBefore(
+                                tracks,
+                                index
+                              )}px`,
                               height: `${getTrackHeight(track.type)}px`,
                             }}
                             onClick={(e) => {
@@ -1092,7 +1108,9 @@ function TimelineToolbar({
             <TooltipTrigger asChild>
               <Button variant="text" size="icon" onClick={toggleRippleEditing}>
                 <Link
-                  className={`h-4 w-4 ${rippleEditingEnabled ? "text-primary" : ""}`}
+                  className={`h-4 w-4 ${
+                    rippleEditingEnabled ? "text-primary" : ""
+                  }`}
                 />
               </Button>
             </TooltipTrigger>

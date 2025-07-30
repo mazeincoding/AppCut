@@ -20,6 +20,7 @@ import { Play, Pause, Expand, SkipBack, SkipForward } from "lucide-react";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { formatTimeCode } from "@/lib/time";
+import { EditableTimecode } from "@/components/ui/editable-timecode";
 import { FONT_CLASS_MAP } from "@/lib/font-config";
 import { BackgroundSettings } from "../background-settings";
 import { useProjectStore } from "@/stores/project-store";
@@ -68,8 +69,7 @@ export function PreviewPanel() {
                 const controlsHeight = 80;
                 const marginSpace = 24;
                 availableWidth = window.innerWidth - marginSpace;
-                availableHeight =
-                    window.innerHeight - controlsHeight - marginSpace;
+                availableHeight = window.innerHeight - controlsHeight - marginSpace;
             } else {
                 const container = containerRef.current.getBoundingClientRect();
                 const computedStyle = getComputedStyle(containerRef.current);
@@ -78,8 +78,7 @@ export function PreviewPanel() {
                 const paddingLeft = parseFloat(computedStyle.paddingLeft);
                 const paddingRight = parseFloat(computedStyle.paddingRight);
                 const gap = parseFloat(computedStyle.gap) || 16;
-                const toolbar =
-                    containerRef.current.querySelector("[data-toolbar]");
+                const toolbar = containerRef.current.querySelector("[data-toolbar]");
                 const toolbarHeight = toolbar
                     ? toolbar.getBoundingClientRect().height
                     : 0;
@@ -652,7 +651,7 @@ function FullscreenToolbar({
     toggle: () => void;
     getTotalDuration: () => number;
 }) {
-    const { isPlaying } = usePlaybackStore();
+    const { isPlaying, seek } = usePlaybackStore();
     const { activeProject } = useProjectStore();
     const [isDragging, setIsDragging] = useState(false);
 
@@ -713,13 +712,15 @@ function FullscreenToolbar({
             className="flex items-center gap-2 p-1 pt-2 w-full text-white"
         >
             <div className="flex items-center gap-1 text-[0.70rem] tabular-nums text-white/90">
-                <span className="text-primary">
-                    {formatTimeCode(
-                        currentTime,
-                        "HH:MM:SS:FF",
-                        activeProject?.fps || 30
-                    )}
-                </span>
+                <EditableTimecode
+                    time={currentTime}
+                    duration={totalDuration}
+                    format="HH:MM:SS:FF"
+                    fps={activeProject?.fps || 30}
+                    onTimeChange={seek}
+                    disabled={!hasAnyElements}
+                    className="text-white/90 hover:bg-white/10"
+                />
                 <span className="opacity-50">/</span>
                 <span>
                     {formatTimeCode(
@@ -899,7 +900,7 @@ function PreviewToolbar({
     toggle: () => void;
     getTotalDuration: () => number;
 }) {
-    const { isPlaying } = usePlaybackStore();
+    const { isPlaying, seek } = usePlaybackStore();
     const { setCanvasSize, setCanvasSizeToOriginal } = useEditorStore();
     const { activeProject } = useProjectStore();
     const {
@@ -942,17 +943,18 @@ function PreviewToolbar({
             <div>
                 <p
                     className={cn(
-                        "text-[0.75rem] text-muted-foreground flex items-center gap-1",
+                        "text-[0.75rem] text-muted-foreground flex items-center gap-1 w-[10rem]",
                         !hasAnyElements && "opacity-50"
                     )}
                 >
-                    <span className="text-primary tabular-nums">
-                        {formatTimeCode(
-                            currentTime,
-                            "HH:MM:SS:FF",
-                            activeProject?.fps || 30
-                        )}
-                    </span>
+                    <EditableTimecode
+                        time={currentTime}
+                        duration={getTotalDuration()}
+                        format="HH:MM:SS:FF"
+                        fps={activeProject?.fps || 30}
+                        onTimeChange={seek}
+                        disabled={!hasAnyElements}
+                    />
                     <span className="opacity-50">/</span>
                     <span className="tabular-nums">
                         {formatTimeCode(
