@@ -109,3 +109,6 @@ docs/issues/
 *.swo
 *~
 .#*
+
+# Playwright config (using .mjs instead)
+apps/web/playwright.config.ts
