@@ -114,7 +114,11 @@ export function Timeline() {
   const trackLabelsRef = useRef<HTMLDivElement>(null);
   const playheadRef = useRef<HTMLDivElement>(null);
   const trackLabelsScrollRef = useRef<HTMLDivElement>(null);
-  const isUpdatingRef = useRef(false);
+
+  // Separate sync state for horizontal and vertical scrolling to prevent race conditions
+  // This fixes issue #481 where shared state caused vertical scroll sync to fail
+  const isUpdatingHorizontalRef = useRef(false);
+  const isUpdatingVerticalRef = useRef(false);
   const lastRulerSync = useRef(0);
   const lastTracksSync = useRef(0);
   const lastVerticalSync = useRef(0);
@@ -420,15 +424,14 @@ export function Timeline() {
     onDrop: handleDrop,
   };
 
-  // --- Scroll synchronization effect ---
+  // --- Horizontal scroll synchronization effect ---
+  // Keeps the ruler and tracks content horizontally synchronized
+  // Separated from vertical sync to prevent race conditions (fixes issue #481)
   useEffect(() => {
     const rulerViewport = rulerScrollRef.current?.querySelector(
       "[data-radix-scroll-area-viewport]"
     ) as HTMLElement;
     const tracksViewport = tracksScrollRef.current?.querySelector(
-      "[data-radix-scroll-area-viewport]"
-    ) as HTMLElement;
-    const trackLabelsViewport = trackLabelsScrollRef.current?.querySelector(
       "[data-radix-scroll-area-viewport]"
     ) as HTMLElement;
 
@@ -437,65 +440,100 @@ export function Timeline() {
     // Horizontal scroll synchronization between ruler and tracks
     const handleRulerScroll = () => {
       const now = Date.now();
-      if (isUpdatingRef.current || now - lastRulerSync.current < 16) return;
+      if (isUpdatingHorizontalRef.current || now - lastRulerSync.current < 16)
+        return;
       lastRulerSync.current = now;
-      isUpdatingRef.current = true;
-      tracksViewport.scrollLeft = rulerViewport.scrollLeft;
-      isUpdatingRef.current = false;
+      isUpdatingHorizontalRef.current = true;
+
+      try {
+        tracksViewport.scrollLeft = rulerViewport.scrollLeft;
+      } catch (error) {
+        console.warn("Timeline horizontal scroll sync error:", error);
+      } finally {
+        isUpdatingHorizontalRef.current = false;
+      }
     };
+
     const handleTracksScroll = () => {
       const now = Date.now();
-      if (isUpdatingRef.current || now - lastTracksSync.current < 16) return;
+      if (isUpdatingHorizontalRef.current || now - lastTracksSync.current < 16)
+        return;
       lastTracksSync.current = now;
-      isUpdatingRef.current = true;
-      rulerViewport.scrollLeft = tracksViewport.scrollLeft;
-      isUpdatingRef.current = false;
+      isUpdatingHorizontalRef.current = true;
+
+      try {
+        rulerViewport.scrollLeft = tracksViewport.scrollLeft;
+      } catch (error) {
+        console.warn("Timeline horizontal scroll sync error:", error);
+      } finally {
+        isUpdatingHorizontalRef.current = false;
+      }
     };
 
     rulerViewport.addEventListener("scroll", handleRulerScroll);
     tracksViewport.addEventListener("scroll", handleTracksScroll);
 
-    // Vertical scroll synchronization between track labels and tracks content
-    if (trackLabelsViewport) {
-      const handleTrackLabelsScroll = () => {
-        const now = Date.now();
-        if (isUpdatingRef.current || now - lastVerticalSync.current < 16)
-          return;
-        lastVerticalSync.current = now;
-        isUpdatingRef.current = true;
-        tracksViewport.scrollTop = trackLabelsViewport.scrollTop;
-        isUpdatingRef.current = false;
-      };
-      const handleTracksVerticalScroll = () => {
-        const now = Date.now();
-        if (isUpdatingRef.current || now - lastVerticalSync.current < 16)
-          return;
-        lastVerticalSync.current = now;
-        isUpdatingRef.current = true;
-        trackLabelsViewport.scrollTop = tracksViewport.scrollTop;
-        isUpdatingRef.current = false;
-      };
-
-      trackLabelsViewport.addEventListener("scroll", handleTrackLabelsScroll);
-      tracksViewport.addEventListener("scroll", handleTracksVerticalScroll);
-
-      return () => {
-        rulerViewport.removeEventListener("scroll", handleRulerScroll);
-        tracksViewport.removeEventListener("scroll", handleTracksScroll);
-        trackLabelsViewport.removeEventListener(
-          "scroll",
-          handleTrackLabelsScroll
-        );
-        tracksViewport.removeEventListener(
-          "scroll",
-          handleTracksVerticalScroll
-        );
-      };
-    }
-
     return () => {
       rulerViewport.removeEventListener("scroll", handleRulerScroll);
       tracksViewport.removeEventListener("scroll", handleTracksScroll);
+    };
+  }, []);
+
+  // --- Vertical scroll synchronization effect ---
+  // Keeps the track labels and tracks content vertically synchronized
+  // Independent from horizontal sync with separate throttling (fixes issue #481)
+  useEffect(() => {
+    const tracksViewport = tracksScrollRef.current?.querySelector(
+      "[data-radix-scroll-area-viewport]"
+    ) as HTMLElement;
+    const trackLabelsViewport = trackLabelsScrollRef.current?.querySelector(
+      "[data-radix-scroll-area-viewport]"
+    ) as HTMLElement;
+
+    if (!tracksViewport || !trackLabelsViewport) return;
+
+    // Vertical scroll synchronization between track labels and tracks content
+    const handleTrackLabelsScroll = () => {
+      const now = Date.now();
+      if (isUpdatingVerticalRef.current || now - lastVerticalSync.current < 16)
+        return;
+      lastVerticalSync.current = now;
+      isUpdatingVerticalRef.current = true;
+
+      try {
+        tracksViewport.scrollTop = trackLabelsViewport.scrollTop;
+      } catch (error) {
+        console.warn("Timeline vertical scroll sync error:", error);
+      } finally {
+        isUpdatingVerticalRef.current = false;
+      }
+    };
+
+    const handleTracksVerticalScroll = () => {
+      const now = Date.now();
+      if (isUpdatingVerticalRef.current || now - lastVerticalSync.current < 16)
+        return;
+      lastVerticalSync.current = now;
+      isUpdatingVerticalRef.current = true;
+
+      try {
+        trackLabelsViewport.scrollTop = tracksViewport.scrollTop;
+      } catch (error) {
+        console.warn("Timeline vertical scroll sync error:", error);
+      } finally {
+        isUpdatingVerticalRef.current = false;
+      }
+    };
+
+    trackLabelsViewport.addEventListener("scroll", handleTrackLabelsScroll);
+    tracksViewport.addEventListener("scroll", handleTracksVerticalScroll);
+
+    return () => {
+      trackLabelsViewport.removeEventListener(
+        "scroll",
+        handleTrackLabelsScroll
+      );
+      tracksViewport.removeEventListener("scroll", handleTracksVerticalScroll);
     };
   }, []);
 

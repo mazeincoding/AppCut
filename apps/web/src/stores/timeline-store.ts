@@ -1530,3 +1530,16 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
     },
   };
 });
+
+// AUDIO CURSOR FIX: Expose timeline store globally to avoid circular dependencies
+//
+// This enables the playback store to access getTotalDuration() for the audio cursor fix
+// without creating circular imports (playback-store ↔ timeline-store).
+//
+// The playback store uses this to determine when to stop playback based on actual
+// content duration rather than the timeline's 10-second minimum duration.
+//
+// Related to GitHub issue #490: "[BUG] Editor cursor does not stop at the end of an audio file"
+if (typeof globalThis !== 'undefined') {
+  globalThis.__timelineStore = useTimelineStore;
+}
