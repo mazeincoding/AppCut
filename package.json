@@ -14,6 +14,7 @@
   ],
   "scripts": {
     "dev": "turbo run dev",
+    "tauri": "turbo run tauri --",
     "build": "turbo run build",
     "check-types": "turbo run check-types",
     "lint": "npx ultracite@latest lint",

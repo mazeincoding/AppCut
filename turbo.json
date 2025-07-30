@@ -18,6 +18,10 @@
       "persistent": true,
       "cache": false
     },
+    "native#tauri": {
+      "cache": false,
+      "with": ["opencut#dev"]
+    },
     "lint": {
       "dependsOn": ["^lint"],
       "cache": false
