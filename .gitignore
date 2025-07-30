@@ -115,3 +115,6 @@ apps/web/playwright.config.mjs
 
 # Claude documentation
 CLAUDE.md
+
+# License documentation
+docs/technical/project-info/license_documentation.md
