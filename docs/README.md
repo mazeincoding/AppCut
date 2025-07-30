@@ -4,56 +4,13 @@ This directory contains comprehensive documentation for the OpenCut video editor
 
 ## Directory Structure
 
-### 📁 **ai-features/**
-AI-related features and functionality documentation
-- `ai-region-sliding-bar-feature.md` - AI region selection sliding bar implementation
-- `ai-video-download-workflow-changes.md` - AI video download workflow improvements
-
-### 📁 **debugging/**
-Debugging guides and troubleshooting documentation
-- `ai-video-no-timeline-preview-analysis.md` - AI video timeline preview analysis
-- `debug_video_no_show_preview.md` - Video preview debugging guide
-
-### 📁 **features/**
-Feature specifications and implementation guides
-- `button.md` - Button component documentation
-- `remove-test-media-panel-button.md` - Media panel button removal guide
-- `video-timeline-preview-overlay-feature.md` - Timeline preview overlay feature
-
 ### 📁 **issues/**
 Known issues, bug reports, and analysis
-- `AI_VIDEO_TIMELINE_DRAG_ISSUE.md` - AI video timeline drag issue analysis
-- `ffmpeg-thumbnail-issues-analysis.md` - FFmpeg thumbnail generation issues
-
-### 📁 **video-processing/**
-Video processing, export, and optimization documentation
-- `video-export-analysis.md` - Video export performance analysis
-- `video-export-optimization.md` - Video export optimization strategies
-- `video-thumbnail-implementation.md` - Video thumbnail generation implementation
-
-### 📁 **archive_task/**
-Archived tasks and completed work documentation
-- `archive_task_documentation.md` - Archived tasks documentation
-
-### 📁 **deployment/**
-Deployment and infrastructure documentation
-- `docker_compose_documentation.md` - Docker Compose setup documentation
-- `netlify_documentation.md` - Netlify deployment documentation
-
-### 📁 **packages/**
-Package-specific documentation
-- `auth_package_documentation.md` - Authentication package documentation
-- `db_package_documentation.md` - Database package documentation
-
-### 📁 **project-info/**
-Project-level information and configuration
-- `CLAUDE.md` - Claude AI integration documentation
-- `ELECTRON_BUILD.md` - Electron build configuration and setup
-- `license_documentation.md` - License information
-- `package_json_documentation.md` - Package.json configuration documentation
-- `project_documentation.md` - Overall project structure documentation
-- `public_documentation.md` - Public assets documentation
-- `root_markdown_files_documentation.md` - Root markdown files documentation
+- `ai-video-no-timeline-preview-analysis.md` - AI video timeline preview analysis
+- `ai-video-timeline-preview-fix.md` - AI video timeline preview fix
+- `generated-images-export-issue.md` - Generated images export issue analysis
+- `timeline-cursor-alignment-analysis.md` - Timeline cursor alignment analysis
+- `video-thumbnail-generation-error.md` - Video thumbnail generation error analysis
 
 ### 📁 **technical/**
 Technical configuration and setup documentation, organized by category:
@@ -66,17 +23,27 @@ System architecture and component documentation
 - `stores_documentation.md` - State management stores documentation
 - `types_documentation.md` - TypeScript types documentation
 
+#### 🚀 **deployment/**
+Deployment and infrastructure documentation
+- `docker_compose_documentation.md` - Docker Compose setup documentation
+- `netlify_documentation.md` - Netlify deployment documentation
+
 #### 🛠️ **development/**
-Development tools and processes
-- `biome_documentation.md` - Biome configuration documentation
-- `migrations_documentation.md` - Database migrations documentation
-- `scripts_documentation.md` - Build and development scripts documentation
-- `turbo_documentation.md` - Turbo monorepo configuration documentation
+Development tools and processes (consolidated)
+- `development_documentation.md` - Unified development tools documentation (Biome, Drizzle migrations, Turborepo)
+
+#### 📦 **packages/**
+Package-specific documentation
+- `packages_documentation.md` - Combined authentication and database package documentation
 
 #### 🖥️ **platform/**
 Platform-specific integrations
 - `electron_documentation.md` - Electron application documentation
-- `github_documentation.md` - GitHub configuration documentation
+
+#### 📋 **project-info/**
+Project-level information and configuration
+- `package_json_documentation.md` - Package.json configuration documentation
+- `project_documentation.md` - Overall project structure documentation
 
 #### 🧪 **testing/**
 Testing documentation and guides
@@ -85,37 +52,28 @@ Testing documentation and guides
 
 ## 🔍 **How to Use This Documentation**
 
-1. **For Developers**: Start with `project-info/project_documentation.md` for project overview
-2. **For Features**: Check the `features/` folder for specific feature implementations
-3. **For Issues**: Look in the `issues/` folder for known problems and solutions
-4. **For AI Features**: Explore the `ai-features/` folder for AI-related functionality
-5. **For Video Processing**: Check `video-processing/` for export and optimization guides
-6. **For Debugging**: Use the `debugging/` folder for troubleshooting guides
-7. **For Deployment**: Check `deployment/` for setup and deployment guides
-8. **For Packages**: Look in `packages/` for package-specific documentation
-9. **For Technical Setup**: Use `technical/` for configuration and technical guides:
+1. **For Developers**: Start with `technical/project-info/project_documentation.md` for project overview
+2. **For Issues**: Look in the `issues/` folder for known problems and solutions
+3. **For Technical Setup**: Use `technical/` for configuration and technical guides:
    - `technical/architecture/` - System architecture and components
-   - `technical/development/` - Development tools and processes  
-   - `technical/platform/` - Platform-specific integrations
-   - `technical/testing/` - Testing documentation
-10. **For Project Info**: Check `project-info/` for project-level information
+   - `technical/development/` - Development tools and processes (Biome, Drizzle, Turborepo)
+   - `technical/deployment/` - Deployment and infrastructure setup
+   - `technical/packages/` - Package-specific documentation
+   - `technical/platform/` - Platform-specific integrations (Electron)
+   - `technical/project-info/` - Project-level information
+   - `technical/testing/` - Testing documentation (E2E)
 
 ## 📝 **Contributing to Documentation**
 
 When adding new documentation:
-- Place feature docs in `features/`
 - Place issue analysis in `issues/`
-- Place AI-related docs in `ai-features/`
-- Place video processing docs in `video-processing/`
-- Place debugging guides in `debugging/`
-- Place project-level info in `project-info/`
-- Place deployment guides in `deployment/`
-- Place package docs in `packages/`
 - Place technical configs in appropriate `technical/` subfolders:
   - Architecture docs in `technical/architecture/`
   - Development tools in `technical/development/`
+  - Deployment guides in `technical/deployment/`
+  - Package docs in `technical/packages/`
   - Platform integrations in `technical/platform/`
+  - Project info in `technical/project-info/`
   - Testing docs in `technical/testing/`
-- Place archived work in `archive_task/`
 
 Keep documentation up-to-date and well-organized for easy navigation and maintenance.
