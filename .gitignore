@@ -97,3 +97,15 @@ docs/technical/project-info/public_documentation.md
 
 # Issues documentation
 docs/issues/
+
+# Backup files
+*.backup
+*.bak
+*.tmp
+*.temp
+*.old
+*.orig
+*.swp
+*.swo
+*~
+.#*
