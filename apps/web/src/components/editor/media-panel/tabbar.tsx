@@ -83,7 +83,7 @@ export function TabBar() {
               key={tabKey}
             >
               <tab.icon className="!size-[1.1rem]" />
-              <span className="text-[0.65rem]">{tab.label}</span>
+              <span className="text-[0.65rem] select-none">{tab.label}</span>
             </div>
           );
         })}

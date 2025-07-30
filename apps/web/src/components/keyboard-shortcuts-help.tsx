@@ -199,7 +199,7 @@ export const KeyboardShortcutsHelp = () => {
           Shortcuts
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl overflow-y-auto">
+      <DialogContent className="max-w-2xl overflow-y-auto select-none">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Keyboard className="w-5 h-5" />

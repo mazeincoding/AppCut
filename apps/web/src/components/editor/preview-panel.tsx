@@ -469,7 +469,7 @@ export function PreviewPanel() {
           {hasAnyElements ? (
             <div
               ref={previewRef}
-              className="relative overflow-hidden border"
+              className="relative overflow-hidden border select-none"
               style={{
                 width: previewDimensions.width,
                 height: previewDimensions.height,
@@ -481,7 +481,7 @@ export function PreviewPanel() {
             >
               {renderBlurBackground()}
               {activeElements.length === 0 ? (
-                <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                <div className="absolute inset-0 flex items-center justify-center text-muted-foreground select-none">
                   No elements at current time
                 </div>
               ) : (
@@ -492,7 +492,7 @@ export function PreviewPanel() {
               {activeProject?.backgroundType === "blur" &&
                 blurBackgroundElements.length === 0 &&
                 activeElements.length > 0 && (
-                  <div className="absolute bottom-2 left-2 right-2 bg-black/70 text-white text-xs p-2 rounded">
+                  <div className="absolute bottom-2 left-2 right-2 bg-black/70 text-white text-xs p-2 rounded select-none">
                     Add a video or image to use blur background
                   </div>
                 )}
@@ -607,7 +607,7 @@ function FullscreenToolbar({
       data-toolbar
       className="flex items-center gap-2 p-1 pt-2 w-full text-white"
     >
-      <div className="flex items-center gap-1 text-[0.70rem] tabular-nums text-white/90">
+      <div className="flex items-center gap-1 text-[0.70rem] tabular-nums text-white/90 select-none">
         <span className="text-primary">
           {formatTimeCode(currentTime, "HH:MM:SS:FF", activeProject?.fps || 30)}
         </span>
@@ -723,7 +723,7 @@ function FullscreenPreview({
 }) {
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col">
-      <div className="flex-1 flex items-center justify-center bg-background">
+      <div className="flex-1 flex items-center justify-center bg-background select-none">
         <div
           className="relative overflow-hidden border border-border m-3"
           style={{
@@ -737,7 +737,7 @@ function FullscreenPreview({
         >
           {renderBlurBackground()}
           {activeElements.length === 0 ? (
-            <div className="absolute inset-0 flex items-center justify-center text-white/60">
+            <div className="absolute inset-0 flex items-center justify-center text-white/60 select-none">
               No elements at current time
             </div>
           ) : (
@@ -748,7 +748,7 @@ function FullscreenPreview({
           {activeProject?.backgroundType === "blur" &&
             blurBackgroundElements.length === 0 &&
             activeElements.length > 0 && (
-              <div className="absolute bottom-2 left-2 right-2 bg-black/70 text-white text-xs p-2 rounded">
+              <div className="absolute bottom-2 left-2 right-2 bg-black/70 text-white text-xs p-2 rounded select-none">
                 Add a video or image to use blur background
               </div>
             )}
@@ -828,7 +828,7 @@ function PreviewToolbar({
       <div>
         <p
           className={cn(
-            "text-[0.75rem] text-muted-foreground flex items-center gap-1",
+            "text-[0.75rem] text-muted-foreground flex items-center gap-1 select-none",
             !hasAnyElements && "opacity-50"
           )}
         >
@@ -840,7 +840,7 @@ function PreviewToolbar({
             )}
           </span>
           <span className="opacity-50">/</span>
-          <span className="tabular-nums">
+          <span className="tabular-nums ">
             {formatTimeCode(
               getTotalDuration(),
               "HH:MM:SS:FF",
