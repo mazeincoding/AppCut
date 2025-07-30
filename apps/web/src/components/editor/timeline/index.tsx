@@ -968,7 +968,7 @@ function TimelineToolbar({
           <div className="w-px h-6 bg-border mx-1" />
           {/* Time Display */}
           <div
-            className="text-xs text-muted-foreground font-mono px-2"
+            className="text-xs text-muted-foreground font-mono px-2 select-none"
             style={{ minWidth: "18ch", textAlign: "center" }}
           >
             {currentTime.toFixed(1)}s / {duration.toFixed(1)}s
@@ -1092,7 +1092,9 @@ function TimelineToolbar({
             <TooltipTrigger asChild>
               <Button variant="text" size="icon" onClick={toggleRippleEditing}>
                 <Link
-                  className={`h-4 w-4 ${rippleEditingEnabled ? "text-primary" : ""}`}
+                  className={`h-4 w-4 ${
+                    rippleEditingEnabled ? "text-primary" : ""
+                  }`}
                 />
               </Button>
             </TooltipTrigger>

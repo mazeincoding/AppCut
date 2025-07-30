@@ -95,7 +95,7 @@ export function DraggableMediaItem({
           <AspectRatio
             ratio={aspectRatio}
             className={cn(
-              "bg-accent relative overflow-hidden",
+              "bg-accent relative overflow-hidden select-none",
               rounded && "rounded-md",
               "[&::-webkit-drag-ghost]:opacity-0" // Webkit-specific ghost hiding
             )}
@@ -113,7 +113,7 @@ export function DraggableMediaItem({
           </AspectRatio>
           {showLabel && (
             <span
-              className="text-[0.7rem] text-muted-foreground truncate w-full text-left"
+              className="text-[0.7rem] text-muted-foreground truncate w-full text-left select-none"
               aria-label={name}
               title={name}
             >

@@ -80,7 +80,7 @@ export function EditorHeader() {
             onClick={handleNameClick}
             onKeyDown={(e) => e.key === "Enter" && handleNameClick()}
           >
-            <div className="truncate text-ellipsis overflow-clip max-w-40 xl:max-w-60">
+            <div className="truncate text-ellipsis overflow-clip max-w-40 xl:max-w-60 select-none">
               {activeProject?.name}
             </div>
           </span>
@@ -91,7 +91,7 @@ export function EditorHeader() {
 
   const centerContent = (
     <div className="flex items-center gap-2 text-xs">
-      <span>
+      <span className="select-none">
         {formatTimeCode(
           getTotalDuration(),
           "HH:MM:SS:FF",

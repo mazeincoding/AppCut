@@ -14,7 +14,7 @@ export function PropertyItem({
   return (
     <div
       className={cn(
-        "flex gap-2",
+        "flex gap-2 select-none",
         direction === "row"
           ? "items-center justify-between gap-6"
           : "flex-col gap-1",
