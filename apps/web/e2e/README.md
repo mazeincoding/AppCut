@@ -27,7 +27,7 @@ node large-file-test.js
 
 ## Directory Structure
 
-```
+```text
 e2e/
 ├── ui-tests/                   # UI component tests (19 ✓)
 │   ├── setup-verification.spec.ts      # Environment verification (7)

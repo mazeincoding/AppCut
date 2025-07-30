@@ -8,7 +8,8 @@ test.describe('OpenCut Video Export', () => {
     console.log('🚀 Starting video export test...');
     
     // Navigate to projects page first
-    await page.goto('http://localhost:3000/projects');
+    const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+    await page.goto(`${baseUrl}/projects`);
     await page.waitForLoadState('networkidle');
     
     // Create or navigate to a project
@@ -18,7 +19,7 @@ test.describe('OpenCut Video Export', () => {
       await page.waitForLoadState('networkidle');
     } else {
       // Navigate directly to editor
-      await page.goto('http://localhost:3000/editor/project/test-project');
+      await page.goto(`${baseUrl}/editor/project/test-project`);
       await page.waitForLoadState('networkidle');
     }
     
@@ -32,7 +33,7 @@ test.describe('OpenCut Video Export', () => {
     }
     
     const fileInput = page.locator('input[type="file"]');
-    const videoPath = path.join(__dirname, '../input/generated_4a2ba290.mp4');
+    const videoPath = process.env.TEST_VIDEO_PATH || path.join(__dirname, '../input/generated_4a2ba290.mp4');
     await fileInput.setInputFiles(videoPath);
     
     // Wait for video to process and appear in media panel
@@ -69,7 +70,7 @@ test.describe('OpenCut Video Export', () => {
     // Open export dialog using nav button
     console.log('📤 Opening export dialog...');
     
-    // Handle nextjs-portal overlay
+    // Workaround: Hide nextjs-portal overlay that can interfere with clicks
     await page.addStyleTag({
       content: 'nextjs-portal { display: none !important; }'
     });
@@ -143,7 +144,8 @@ test.describe('OpenCut Video Export', () => {
     console.log('🧪 Testing error handling...');
     
     // Navigate directly to editor without any media
-    await page.goto('http://localhost:3000/editor/project/empty-test');
+    const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+    await page.goto(`${baseUrl}/editor/project/empty-test`);
     await page.waitForLoadState('networkidle');
     
     // Try to click export button

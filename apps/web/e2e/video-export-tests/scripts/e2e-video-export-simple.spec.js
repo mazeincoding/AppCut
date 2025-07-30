@@ -5,13 +5,14 @@ test.describe('OpenCut Video Export - Simple', () => {
     console.log('🚀 Starting simple export dialog test...');
     
     // Navigate to editor
-    await page.goto('http://localhost:3000/editor/project/test');
+    const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+    await page.goto(`${baseUrl}/editor/project/test`);
     await page.waitForLoadState('networkidle');
     
     // Open export dialog
     console.log('📤 Opening export dialog...');
     
-    // Handle nextjs-portal overlay
+    // Workaround: Hide nextjs-portal overlay that can interfere with clicks
     await page.addStyleTag({
       content: 'nextjs-portal { display: none !important; }'
     });
