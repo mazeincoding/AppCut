@@ -84,8 +84,8 @@ export default function WhyNotCapcut() {
                 <p className="text-lg mb-6">
                   You dumbass. You thought CapCut was free, but no. Free means
                   they let you open the app. Everything else costs money. Basic
-                  shake effect? That'll be $20/month. A decent transition that isn't
-                  "fade"? Pay up, motherfucker.
+                  shake effect? That'll be $20/month. A decent transition that
+                  isn't "fade"? Pay up, motherfucker.
                 </p>
                 <p className="text-lg mb-6">
                   Here's my favorite piece of bullshit: You import an MP3 file -

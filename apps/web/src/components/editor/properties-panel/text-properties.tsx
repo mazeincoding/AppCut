@@ -71,6 +71,20 @@ export function TextProperties({
           </div>
         </PropertyItemValue>
       </PropertyItem>
+      <PropertyItem direction="row">
+        <PropertyItemLabel>Color</PropertyItemLabel>
+        <PropertyItemValue>
+          <Input
+            type="color"
+            value={element.color || "#ffffff"}
+            onChange={(e) => {
+              const color = e.target.value;
+              updateTextElement(trackId, element.id, { color });
+            }}
+            className="w-full cursor-pointer rounded-full"
+          />
+        </PropertyItemValue>
+      </PropertyItem>
     </div>
   );
 }

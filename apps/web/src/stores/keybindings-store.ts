@@ -39,6 +39,7 @@ interface KeybindingsState {
   keybindings: KeybindingConfig;
   isCustomized: boolean;
   keybindingsEnabled: boolean;
+  isRecording: boolean;
 
   // Actions
   updateKeybinding: (key: ShortcutKey, action: ActionWithOptionalArgs) => void;
@@ -48,6 +49,7 @@ interface KeybindingsState {
   exportKeybindings: () => KeybindingConfig;
   enableKeybindings: () => void;
   disableKeybindings: () => void;
+  setIsRecording: (isRecording: boolean) => void;
 
   // Validation
   validateKeybinding: (
@@ -66,6 +68,7 @@ export const useKeybindingsStore = create<KeybindingsState>()(
       keybindings: { ...defaultKeybindings },
       isCustomized: false,
       keybindingsEnabled: true,
+      isRecording: false,
 
       updateKeybinding: (key: ShortcutKey, action: ActionWithOptionalArgs) => {
         set((state) => {
@@ -141,6 +144,9 @@ export const useKeybindingsStore = create<KeybindingsState>()(
 
         return null;
       },
+      setIsRecording: (isRecording: boolean) => {
+        set({ isRecording });
+      },
 
       getKeybindingsForAction: (action: ActionWithOptionalArgs) => {
         const { keybindings } = get();
@@ -195,6 +201,7 @@ function generateKeybindingString(ev: KeyboardEvent): ShortcutKey | null {
 function getPressedKey(ev: KeyboardEvent): string | null {
   // Sometimes the property code is not available on the KeyboardEvent object
   const key = (ev.key ?? "").toLowerCase();
+  const code = ev.code ?? "";
 
   // Check arrow keys
   if (key.startsWith("arrow")) {
@@ -210,10 +217,22 @@ function getPressedKey(ev: KeyboardEvent): string | null {
   if (key === "backspace") return "backspace";
 
   // Check letter keys
-  const isLetter = key.length === 1 && key >= "a" && key <= "z";
-  if (isLetter) return key;
+  if (code.startsWith("Key")) {
+    const letter = code.slice(3).toLowerCase();
+    if (letter.length === 1 && letter >= "a" && letter <= "z") {
+      return letter;
+    }
+  }
 
-  // Check if number keys
+  // Check number keys using physical position for AZERTY support
+  if (code.startsWith("Digit")) {
+    const digit = code.slice(5);
+    if (digit.length === 1 && digit >= "0" && digit <= "9") {
+      return digit;
+    }
+  }
+
+  // Fallback for other layouts
   const isDigit = key.length === 1 && key >= "0" && key <= "9";
   if (isDigit) return key;
 

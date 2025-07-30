@@ -349,11 +349,10 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         if (aValue < bValue) return -1;
         if (aValue > bValue) return 1;
         return 0;
-      } else {
-        if (aValue > bValue) return -1;
-        if (aValue < bValue) return 1;
-        return 0;
       }
+      if (aValue > bValue) return -1;
+      if (aValue < bValue) return 1;
+      return 0;
     });
 
     return sortedProjects;

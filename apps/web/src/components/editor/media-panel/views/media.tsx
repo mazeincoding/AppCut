@@ -25,6 +25,7 @@ import {
 import { DraggableMediaItem } from "@/components/ui/draggable-item";
 import { useProjectStore } from "@/stores/project-store";
 import { useTimelineStore } from "@/stores/timeline-store";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function MediaView() {
   const { mediaItems, addMediaItem, removeMediaItem } = useMediaStore();
@@ -204,14 +205,14 @@ export function MediaView() {
         className={`h-full flex flex-col gap-1 transition-colors relative ${isDragOver ? "bg-accent/30" : ""}`}
         {...dragProps}
       >
-        <div className="p-3 pb-2">
+        <div className="p-3 pb-2 bg-panel">
           {/* Search and filter controls */}
           <div className="flex gap-2">
             <Select value={mediaFilter} onValueChange={setMediaFilter}>
-              <SelectTrigger className="w-[80px] h-full text-xs">
+              <SelectTrigger className="w-[80px] h-9 text-xs">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="">
+              <SelectContent>
                 <SelectItem value="all">All</SelectItem>
                 <SelectItem value="video">Video</SelectItem>
                 <SelectItem value="audio">Audio</SelectItem>
@@ -221,7 +222,7 @@ export function MediaView() {
             <Input
               type="text"
               placeholder="Search media..."
-              className="min-w-[60px] flex-1 h-full text-xs"
+              className="min-w-[60px] flex-1 h-9 text-xs"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -230,7 +231,7 @@ export function MediaView() {
               size="lg"
               onClick={handleFileSelect}
               disabled={isProcessing}
-              className="flex-none bg-transparent min-w-[30px] whitespace-nowrap overflow-hidden px-2 justify-center items-center"
+              className="flex-none bg-transparent min-w-[30px] whitespace-nowrap overflow-hidden px-2 justify-center items-center h-9"
             >
               {isProcessing ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -241,57 +242,59 @@ export function MediaView() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-3 pt-0">
-          {isDragOver || filteredMediaItems.length === 0 ? (
-            <MediaDragOverlay
-              isVisible={true}
-              isProcessing={isProcessing}
-              progress={progress}
-              onClick={handleFileSelect}
-              isEmptyState={filteredMediaItems.length === 0 && !isDragOver}
-            />
-          ) : (
-            <div
-              className="grid gap-2"
-              style={{
-                gridTemplateColumns: "repeat(auto-fill, 160px)",
-              }}
-            >
-              {/* Render each media item as a draggable button */}
-              {filteredMediaItems.map((item) => (
-                <ContextMenu key={item.id}>
-                  <ContextMenuTrigger>
-                    <DraggableMediaItem
-                      name={item.name}
-                      preview={renderPreview(item)}
-                      dragData={{
-                        id: item.id,
-                        type: item.type,
-                        name: item.name,
-                      }}
-                      showPlusOnDrag={false}
-                      onAddToTimeline={(currentTime) =>
-                        useTimelineStore
-                          .getState()
-                          .addMediaAtTime(item, currentTime)
-                      }
-                      rounded={false}
-                    />
-                  </ContextMenuTrigger>
-                  <ContextMenuContent>
-                    <ContextMenuItem>Export clips</ContextMenuItem>
-                    <ContextMenuItem
-                      variant="destructive"
-                      onClick={(e) => handleRemove(e, item.id)}
-                    >
-                      Delete
-                    </ContextMenuItem>
-                  </ContextMenuContent>
-                </ContextMenu>
-              ))}
-            </div>
-          )}
-        </div>
+        <ScrollArea className="h-full">
+          <div className="flex-1 p-3 pt-0">
+            {isDragOver || filteredMediaItems.length === 0 ? (
+              <MediaDragOverlay
+                isVisible={true}
+                isProcessing={isProcessing}
+                progress={progress}
+                onClick={handleFileSelect}
+                isEmptyState={filteredMediaItems.length === 0 && !isDragOver}
+              />
+            ) : (
+              <div
+                className="grid gap-2"
+                style={{
+                  gridTemplateColumns: "repeat(auto-fill, 160px)",
+                }}
+              >
+                {/* Render each media item as a draggable button */}
+                {filteredMediaItems.map((item) => (
+                  <ContextMenu key={item.id}>
+                    <ContextMenuTrigger>
+                      <DraggableMediaItem
+                        name={item.name}
+                        preview={renderPreview(item)}
+                        dragData={{
+                          id: item.id,
+                          type: item.type,
+                          name: item.name,
+                        }}
+                        showPlusOnDrag={false}
+                        onAddToTimeline={(currentTime) =>
+                          useTimelineStore
+                            .getState()
+                            .addMediaAtTime(item, currentTime)
+                        }
+                        rounded={false}
+                      />
+                    </ContextMenuTrigger>
+                    <ContextMenuContent>
+                      <ContextMenuItem>Export clips</ContextMenuItem>
+                      <ContextMenuItem
+                        variant="destructive"
+                        onClick={(e) => handleRemove(e, item.id)}
+                      >
+                        Delete
+                      </ContextMenuItem>
+                    </ContextMenuContent>
+                  </ContextMenu>
+                ))}
+              </div>
+            )}
+          </div>
+        </ScrollArea>
       </div>
     </>
   );

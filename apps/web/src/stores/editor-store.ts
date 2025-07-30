@@ -55,10 +55,9 @@ const findBestCanvasPreset = (aspectRatio: number): CanvasSize => {
     if (aspectRatio > 1) {
       // Landscape - use 1920 width
       return { width: 1920, height: Math.round(1920 / aspectRatio) };
-    } else {
-      // Portrait or square - use 1080 height
-      return { width: Math.round(1080 * aspectRatio), height: 1080 };
     }
+    // Portrait or square - use 1080 height
+    return { width: Math.round(1080 * aspectRatio), height: 1080 };
   }
 
   return { width: bestMatch.width, height: bestMatch.height };

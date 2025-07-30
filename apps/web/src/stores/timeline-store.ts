@@ -96,7 +96,11 @@ interface TimelineStore {
   removeTrack: (trackId: string) => void;
   removeTrackWithRipple: (trackId: string) => void;
   addElementToTrack: (trackId: string, element: CreateTimelineElement) => void;
-  removeElementFromTrack: (trackId: string, elementId: string) => void;
+  removeElementFromTrack: (
+    trackId: string,
+    elementId: string,
+    pushHistory?: boolean
+  ) => void;
   moveElementToTrack: (
     fromTrackId: string,
     toTrackId: string,
@@ -106,17 +110,20 @@ interface TimelineStore {
     trackId: string,
     elementId: string,
     trimStart: number,
-    trimEnd: number
+    trimEnd: number,
+    pushHistory?: boolean
   ) => void;
   updateElementDuration: (
     trackId: string,
     elementId: string,
-    duration: number
+    duration: number,
+    pushHistory?: boolean
   ) => void;
   updateElementStartTime: (
     trackId: string,
     elementId: string,
-    startTime: number
+    startTime: number,
+    pushHistory?: boolean
   ) => void;
   toggleTrackMute: (trackId: string) => void;
 
@@ -143,7 +150,7 @@ interface TimelineStore {
     trackId: string,
     elementId: string,
     newFile: File
-  ) => Promise<boolean>;
+  ) => Promise<{ success: boolean; error?: string }>;
 
   // Ripple editing functions
   updateElementStartTimeWithRipple: (
@@ -153,11 +160,13 @@ interface TimelineStore {
   ) => void;
   removeElementFromTrackWithRipple: (
     trackId: string,
-    elementId: string
+    elementId: string,
+    pushHistory?: boolean
   ) => void;
 
   // Computed values
   getTotalDuration: () => number;
+  getProjectThumbnail: (projectId: string) => Promise<string | null>;
 
   // History actions
   undo: () => void;
@@ -291,9 +300,8 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
                   { trackId, elementId },
                 ],
               };
-        } else {
-          return { selectedElements: [{ trackId, elementId }] };
         }
+        return { selectedElements: [{ trackId, elementId }] };
       });
     },
 
@@ -546,15 +554,17 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
             : track
         )
       );
+
+      get().selectElement(trackId, newElement.id);
     },
 
-    removeElementFromTrack: (trackId, elementId) => {
+    removeElementFromTrack: (trackId, elementId, pushHistory = true) => {
       const { rippleEditingEnabled } = get();
 
       if (rippleEditingEnabled) {
-        get().removeElementFromTrackWithRipple(trackId, elementId);
+        get().removeElementFromTrackWithRipple(trackId, elementId, pushHistory);
       } else {
-        get().pushHistory();
+        if (pushHistory) get().pushHistory();
         updateTracksAndSave(
           get()
             ._tracks.map((track) =>
@@ -572,12 +582,16 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       }
     },
 
-    removeElementFromTrackWithRipple: (trackId, elementId) => {
+    removeElementFromTrackWithRipple: (
+      trackId,
+      elementId,
+      pushHistory = true
+    ) => {
       const { _tracks, rippleEditingEnabled } = get();
 
       if (!rippleEditingEnabled) {
         // If ripple editing is disabled, use regular removal
-        get().removeElementFromTrack(trackId, elementId);
+        get().removeElementFromTrack(trackId, elementId, pushHistory);
         return;
       }
 
@@ -586,7 +600,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
 
       if (!element || !track) return;
 
-      get().pushHistory();
+      if (pushHistory) get().pushHistory();
 
       const elementStartTime = element.startTime;
       const elementDuration =
@@ -674,7 +688,8 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
                 (element) => element.id !== elementId
               ),
             };
-          } else if (track.id === toTrackId) {
+          }
+          if (track.id === toTrackId) {
             return {
               ...track,
               elements: [...track.elements, elementToMove],
@@ -687,8 +702,14 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       updateTracksAndSave(newTracks);
     },
 
-    updateElementTrim: (trackId, elementId, trimStart, trimEnd) => {
-      get().pushHistory();
+    updateElementTrim: (
+      trackId,
+      elementId,
+      trimStart,
+      trimEnd,
+      pushHistory = true
+    ) => {
+      if (pushHistory) get().pushHistory();
       updateTracksAndSave(
         get()._tracks.map((track) =>
           track.id === trackId
@@ -705,8 +726,13 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       );
     },
 
-    updateElementDuration: (trackId, elementId, duration) => {
-      get().pushHistory();
+    updateElementDuration: (
+      trackId,
+      elementId,
+      duration,
+      pushHistory = true
+    ) => {
+      if (pushHistory) get().pushHistory();
       updateTracksAndSave(
         get()._tracks.map((track) =>
           track.id === trackId
@@ -721,15 +747,23 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       );
     },
 
-    updateElementStartTime: (trackId, elementId, startTime) => {
-      get().pushHistory();
+    updateElementStartTime: (
+      trackId,
+      elementId,
+      startTime,
+      pushHistory = true
+    ) => {
+      if (pushHistory) get().pushHistory();
+      const clampedStartTime = Math.max(0, startTime);
       updateTracksAndSave(
         get()._tracks.map((track) =>
           track.id === trackId
             ? {
                 ...track,
                 elements: track.elements.map((element) =>
-                  element.id === elementId ? { ...element, startTime } : element
+                  element.id === elementId
+                    ? { ...element, startTime: clampedStartTime }
+                    : element
                 ),
               }
             : track
@@ -768,8 +802,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
 
         const updatedElements = currentTrack.elements.map((currentElement) => {
           if (currentElement.id === elementId && currentTrack.id === trackId) {
-            // Update the moved element
-            return { ...currentElement, startTime: newStartTime };
+            return { ...currentElement, startTime: Math.max(0, newStartTime) };
           }
 
           // Only apply ripple effects if we should process this track
@@ -1044,18 +1077,33 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
     },
 
     // Replace media for an element
-    replaceElementMedia: async (trackId, elementId, newFile) => {
+    replaceElementMedia: async (
+      trackId: string,
+      elementId: string,
+      newFile: File
+    ): Promise<{ success: boolean; error?: string }> => {
       const { _tracks } = get();
       const track = _tracks.find((t) => t.id === trackId);
       const element = track?.elements.find((c) => c.id === elementId);
 
-      if (!element || element.type !== "media") return false;
+      if (!element) {
+        return { success: false, error: "Timeline element not found" };
+      }
+
+      if (element.type !== "media") {
+        return {
+          success: false,
+          error: "Replace is only available for media clips",
+        };
+      }
 
       try {
         const mediaStore = useMediaStore.getState();
         const projectStore = useProjectStore.getState();
 
-        if (!projectStore.activeProject) return false;
+        if (!projectStore.activeProject) {
+          return { success: false, error: "No active project found" };
+        }
 
         // Import required media processing functions
         const {
@@ -1066,42 +1114,72 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
         } = await import("./media-store");
 
         const fileType = getFileType(newFile);
-        if (!fileType) return false;
+        if (!fileType) {
+          return {
+            success: false,
+            error:
+              "Unsupported file type. Please select a video, audio, or image file.",
+          };
+        }
 
         // Process the new media file
-        let mediaData: any = {
+        const mediaData: any = {
           name: newFile.name,
           type: fileType,
           file: newFile,
           url: URL.createObjectURL(newFile),
         };
 
-        // Get media-specific metadata
-        if (fileType === "image") {
-          const { width, height } = await getImageDimensions(newFile);
-          mediaData.width = width;
-          mediaData.height = height;
-        } else if (fileType === "video") {
-          const [duration, { thumbnailUrl, width, height }] = await Promise.all(
-            [getMediaDuration(newFile), generateVideoThumbnail(newFile)]
-          );
-          mediaData.duration = duration;
-          mediaData.thumbnailUrl = thumbnailUrl;
-          mediaData.width = width;
-          mediaData.height = height;
-        } else if (fileType === "audio") {
-          mediaData.duration = await getMediaDuration(newFile);
+        try {
+          // Get media-specific metadata
+          if (fileType === "image") {
+            const { width, height } = await getImageDimensions(newFile);
+            mediaData.width = width;
+            mediaData.height = height;
+          } else if (fileType === "video") {
+            const [duration, { thumbnailUrl, width, height }] =
+              await Promise.all([
+                getMediaDuration(newFile),
+                generateVideoThumbnail(newFile),
+              ]);
+            mediaData.duration = duration;
+            mediaData.thumbnailUrl = thumbnailUrl;
+            mediaData.width = width;
+            mediaData.height = height;
+          } else if (fileType === "audio") {
+            mediaData.duration = await getMediaDuration(newFile);
+          }
+        } catch (error) {
+          return {
+            success: false,
+            error: `Failed to process ${fileType} file: ${error instanceof Error ? error.message : "Unknown error"}`,
+          };
         }
 
         // Add new media item to store
-        await mediaStore.addMediaItem(projectStore.activeProject.id, mediaData);
+        try {
+          await mediaStore.addMediaItem(
+            projectStore.activeProject.id,
+            mediaData
+          );
+        } catch (error) {
+          return {
+            success: false,
+            error: `Failed to add media to project: ${error instanceof Error ? error.message : "Unknown error"}`,
+          };
+        }
 
         // Find the newly created media item
         const newMediaItem = mediaStore.mediaItems.find(
           (item) => item.file === newFile
         );
 
-        if (!newMediaItem) return false;
+        if (!newMediaItem) {
+          return {
+            success: false,
+            error: "Failed to create media item in project. Please try again.",
+          };
+        }
 
         get().pushHistory();
 
@@ -1127,15 +1205,13 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
           )
         );
 
-        return true;
+        return { success: true };
       } catch (error) {
-        console.log(
-          JSON.stringify({
-            error: "Failed to replace element media",
-            details: error,
-          })
-        );
-        return false;
+        console.error("Failed to replace element media:", error);
+        return {
+          success: false,
+          error: `Unexpected error: ${error instanceof Error ? error.message : "Unknown error"}`,
+        };
       }
     },
 
@@ -1155,6 +1231,43 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       );
 
       return Math.max(...trackEndTimes, 0);
+    },
+
+    getProjectThumbnail: async (projectId) => {
+      try {
+        const tracks = await storageService.loadTimeline(projectId);
+        const mediaItems = await storageService.loadAllMediaItems(projectId);
+
+        if (!tracks || !mediaItems.length) return null;
+
+        const firstMediaElement = tracks
+          .flatMap((track) => track.elements)
+          .filter((element) => element.type === "media")
+          .sort((a, b) => a.startTime - b.startTime)[0];
+
+        if (!firstMediaElement) return null;
+
+        const mediaItem = mediaItems.find(
+          (item) => item.id === firstMediaElement.mediaId
+        );
+        if (!mediaItem) return null;
+
+        if (mediaItem.type === "video" && mediaItem.file) {
+          const { generateVideoThumbnail } = await import(
+            "@/stores/media-store"
+          );
+          const { thumbnailUrl } = await generateVideoThumbnail(mediaItem.file);
+          return thumbnailUrl;
+        }
+        if (mediaItem.type === "image" && mediaItem.url) {
+          return mediaItem.url;
+        }
+
+        return null;
+      } catch (error) {
+        console.error("Failed to get project thumbnail:", error);
+        return null;
+      }
     },
 
     redo: () => {
@@ -1298,8 +1411,9 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
 
     findOrCreateTrack: (trackType) => {
       // Always create new text track to allow multiple text elements
+      // Insert text tracks at the top
       if (trackType === "text") {
-        return get().addTrack(trackType);
+        return get().insertTrackAt(trackType, 0);
       }
 
       const existingTrack = get()._tracks.find((t) => t.type === trackType);
@@ -1337,7 +1451,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
     },
 
     addTextAtTime: (item, currentTime = 0) => {
-      const targetTrackId = get().addTrack("text"); // Always create new text track to allow multiple text elements
+      const targetTrackId = get().insertTrackAt("text", 0); // Always create new text track at the top
 
       get().addElementToTrack(targetTrackId, {
         type: "text",
@@ -1380,7 +1494,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
     },
 
     addTextToNewTrack: (item) => {
-      const targetTrackId = get().addTrack("text"); // Always create new text track to allow multiple text elements
+      const targetTrackId = get().insertTrackAt("text", 0); // Always create new text track at the top
 
       get().addElementToTrack(targetTrackId, {
         type: "text",
