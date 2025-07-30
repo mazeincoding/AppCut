@@ -124,3 +124,6 @@ docs/technical/project-info/root_markdown_files_documentation.md
 
 # GitHub documentation
 docs/technical/platform/github_documentation.md
+# Playwright test reports
+playwright-report/
+test-results/
