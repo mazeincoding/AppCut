@@ -88,3 +88,6 @@ docs/complete_task/
 
 # VSCode settings
 .vscode/
+
+# Claude settings in web app
+apps/web/.claude/
