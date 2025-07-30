@@ -826,6 +826,18 @@ function PreviewToolbar({
     setCanvasSizeToOriginal(aspectRatio);
   };
 
+  const totalDuration = getTotalDuration();
+
+  const skipBackward = () => {
+    const newTime = Math.max(0, currentTime - 1);
+    setCurrentTime(newTime);
+  };
+
+  const skipForward = () => {
+    const newTime = Math.min(totalDuration, currentTime + 1);
+    setCurrentTime(newTime);
+  };
+
   if (isExpanded) {
     return (
       <FullscreenToolbar
@@ -871,19 +883,41 @@ function PreviewToolbar({
           </span>
         </p>
       </div>
-      <Button
-        variant="text"
-        size="icon"
-        onClick={toggle}
-        disabled={!hasAnyElements}
-        className="h-auto p-0"
-      >
-        {isPlaying ? (
-          <Pause className="h-3 w-3" />
-        ) : (
-          <Play className="h-3 w-3" />
-        )}
-      </Button>
+      <div className="flex items-center gap-1">
+        <Button
+          variant="text"
+          size="icon"
+          onClick={skipBackward}
+          disabled={!hasAnyElements}
+          className="h-auto p-0 text-white hover:text-white/80"
+          title="Skip backward 1s"
+        >
+          <SkipBack className="h-3 w-3" />
+        </Button>
+        <Button
+          variant="text"
+          size="icon"
+          onClick={toggle}
+          disabled={!hasAnyElements}
+          className="h-auto p-0 text-white hover:text-white/80"
+        >
+          {isPlaying ? (
+            <Pause className="h-3 w-3" />
+          ) : (
+            <Play className="h-3 w-3" />
+          )}
+        </Button>
+        <Button
+          variant="text"
+          size="icon"
+          onClick={skipForward}
+          disabled={!hasAnyElements}
+          className="h-auto p-0 text-white hover:text-white/80"
+          title="Skip forward 1s"
+        >
+          <SkipForward className="h-3 w-3" />
+        </Button>
+      </div>
       <div className="flex items-center gap-3">
         <BackgroundSettings />
         <DropdownMenu>
