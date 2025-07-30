@@ -1121,6 +1121,8 @@ function TimelineToolbar({
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
+
+        <div className="h-6 w-px bg-border mx-1" />
         <div className="flex items-center gap-1">
           <Button variant="text" size="icon" onClick={handleZoomOut}>
             <ZoomOut className="h-4 w-4" />
