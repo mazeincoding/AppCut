@@ -128,3 +128,4 @@ docs/technical/platform/github_documentation.md
 playwright-report/
 test-results/
 docs/
+apps/web/e2e/
