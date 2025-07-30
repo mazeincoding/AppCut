@@ -82,3 +82,6 @@ screenshots/
 
 # Completed tasks documentation
 docs/complete_task/
+
+# Kiro directory
+.kiro/
