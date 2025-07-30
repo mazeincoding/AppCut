@@ -94,3 +94,6 @@ apps/web/.claude/
 
 # Unnecessary documentation
 docs/technical/project-info/public_documentation.md
+
+# Issues documentation
+docs/issues/
