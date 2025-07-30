@@ -13,19 +13,20 @@ export const SITE_INFO = {
 export const EXTERNAL_TOOLS = [
   {
     name: "Marble",
-    description: "Modern headless CMS for content management",
+    description:
+      "Modern headless CMS for content management and the blog for OpenCut",
     url: "https://marblecms.com?utm_source=opencut",
     icon: "MarbleIcon" as const,
   },
   {
     name: "Vercel",
-    description: "Platform for frontend frameworks and static sites",
+    description: "Platform where we deploy and host OpenCut",
     url: "https://vercel.com?utm_source=opencut",
     icon: "VercelIcon" as const,
   },
   {
-    name: "DataBuddy",
-    description: "GDPR compliant analytics and user insights",
+    name: "Databuddy",
+    description: "GDPR compliant analytics and user insights for OpenCut",
     url: "https://databuddy.cc?utm_source=opencut",
     icon: "DataBuddyIcon" as const,
   },
