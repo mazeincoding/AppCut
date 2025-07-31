@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { ResizeState, TimelineElement, TimelineTrack } from "@/types/timeline";
 import { useMediaStore } from "@/stores/media-store";
 import { useTimelineStore } from "@/stores/timeline-store";
+import { TIMELINE_CONSTANTS } from "@/constants/timeline-constants";
 
 interface UseTimelineElementResizeProps {
   element: TimelineElement;
@@ -119,6 +120,15 @@ export function useTimelineElementResize({
         const newTrimStart = Math.min(maxAllowed, calculated);
         const trimDelta = newTrimStart - resizing.initialTrimStart;
         const newStartTime = element.startTime + trimDelta;
+
+        const newElementWidth =
+          (element.duration - newTrimStart - resizing.initialTrimEnd) *
+          TIMELINE_CONSTANTS.PIXELS_PER_SECOND *
+          zoomLevel;
+
+        if (newElementWidth < TIMELINE_CONSTANTS.ELEMENT_MIN_WIDTH) {
+          return;
+        }
 
         updateElementTrim(
           track.id,
