@@ -76,13 +76,23 @@ const AudioWaveform: React.FC<AudioWaveformProps> = ({
 
     return () => {
       mounted = false;
+      // Use a safer cleanup approach to avoid AbortError
       if (wavesurfer.current) {
         try {
-          wavesurfer.current.destroy();
+          // Wrap in setTimeout to avoid race conditions with AbortController
+          setTimeout(() => {
+            try {
+              if (wavesurfer.current) {
+                wavesurfer.current.destroy();
+                wavesurfer.current = null;
+              }
+            } catch (e) {
+              console.warn("Error during delayed WaveSurfer cleanup:", e);
+            }
+          }, 0);
         } catch (e) {
-          // Silently ignore destroy errors
+          console.warn("Error during WaveSurfer cleanup:", e);
         }
-        wavesurfer.current = null;
       }
     };
   }, [audioUrl, height]);
