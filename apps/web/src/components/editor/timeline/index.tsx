@@ -19,6 +19,7 @@ import {
   Link,
   ZoomIn,
   ZoomOut,
+  Bookmark,
 } from "lucide-react";
 import {
   Tooltip,
@@ -651,6 +652,30 @@ export function Timeline() {
                     );
                   }).filter(Boolean);
                 })()}
+                
+                {/* Bookmark markers */}
+                {(() => {
+                  const { activeProject } = useProjectStore.getState();
+                  if (!activeProject?.bookmarks?.length) return null;
+                  
+                  return activeProject.bookmarks.map((bookmarkTime, i) => (
+                                          <div
+                      key={`bookmark-${i}`}
+                      className="absolute top-0 h-10 w-0.5 !bg-primary cursor-pointer"
+                      style={{
+                        left: `${bookmarkTime * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel}px`,
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        usePlaybackStore.getState().seek(bookmarkTime);
+                      }}
+                    >
+                      <div className="absolute top-[-1px] left-[-5px] text-primary">
+                        <Bookmark className="h-3 w-3 fill-primary" />
+                      </div>
+                    </div>
+                  ));
+                })()}
               </div>
             </ScrollArea>
           </div>
@@ -773,6 +798,23 @@ export function Timeline() {
                           <ContextMenuItem onClick={(e) => e.stopPropagation()}>
                             Track settings (soon)
                           </ContextMenuItem>
+                          {activeProject?.bookmarks?.length && activeProject.bookmarks.length > 0 && (
+                            <>
+                              <ContextMenuItem disabled>Bookmarks</ContextMenuItem>
+                              {activeProject.bookmarks.map((bookmarkTime, i) => (
+                                <ContextMenuItem 
+                                  key={`bookmark-menu-${i}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    seek(bookmarkTime);
+                                  }}
+                                >
+                                  <Bookmark className="h-3 w-3 mr-2 inline-block" />
+                                  {bookmarkTime.toFixed(1)}s
+                                </ContextMenuItem>
+                              ))}
+                              </>
+                          )}
                         </ContextMenuContent>
                       </ContextMenu>
                     ))}
@@ -828,6 +870,7 @@ function TimelineToolbar({
     toggleRippleEditing,
   } = useTimelineStore();
   const { currentTime, duration, isPlaying, toggle } = usePlaybackStore();
+  const { toggleBookmark, isBookmarked } = useProjectStore();
 
   // Action handlers
   const handleSplitSelected = () => {
@@ -957,6 +1000,13 @@ function TimelineToolbar({
   const handleZoomSliderChange = (values: number[]) => {
     setZoomLevel(values[0]);
   };
+  
+  const handleToggleBookmark = async () => {
+    await toggleBookmark(currentTime);
+  };
+  
+  // Check if the current time is bookmarked
+  const currentBookmarked = isBookmarked(currentTime);
   return (
     <div className="border-b flex items-center justify-between px-2 py-1">
       <div className="flex items-center gap-1 w-full">
@@ -1087,6 +1137,17 @@ function TimelineToolbar({
               </Button>
             </TooltipTrigger>
             <TooltipContent>Delete element (Delete)</TooltipContent>
+          </Tooltip>
+          <div className="w-px h-6 bg-border mx-1" />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="text" size="icon" onClick={handleToggleBookmark}>
+                <Bookmark className={`h-4 w-4 ${currentBookmarked ? "fill-primary text-primary" : ""}`} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {currentBookmarked ? "Remove bookmark" : "Add bookmark"}
+            </TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </div>

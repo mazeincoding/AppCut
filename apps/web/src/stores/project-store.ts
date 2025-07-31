@@ -27,6 +27,11 @@ interface ProjectStore {
     options?: { backgroundColor?: string; blurIntensity?: number }
   ) => Promise<void>;
   updateProjectFps: (fps: number) => Promise<void>;
+  
+  // Bookmark methods
+  toggleBookmark: (time: number) => Promise<void>;
+  isBookmarked: (time: number) => boolean;
+  removeBookmark: (time: number) => Promise<void>;
 
   getFilteredAndSortedProjects: (
     searchQuery: string,
@@ -39,6 +44,97 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   savedProjects: [],
   isLoading: true,
   isInitialized: false,
+  
+  // Implementation of bookmark methods
+  toggleBookmark: async (time: number) => {
+    const { activeProject } = get();
+    if (!activeProject) return;
+    
+    // Round time to the nearest frame
+    const fps = activeProject.fps || 30;
+    const frameTime = Math.round(time * fps) / fps;
+    
+    const bookmarks = activeProject.bookmarks || [];
+    let updatedBookmarks: number[];
+    
+    // Check if already bookmarked
+    const bookmarkIndex = bookmarks.findIndex(
+      bookmark => Math.abs(bookmark - frameTime) < 0.001
+    );
+    
+    if (bookmarkIndex !== -1) {
+      // Remove bookmark
+      updatedBookmarks = bookmarks.filter((_, i) => i !== bookmarkIndex);
+    } else {
+      // Add bookmark
+      updatedBookmarks = [...bookmarks, frameTime].sort((a, b) => a - b);
+    }
+    
+    const updatedProject = {
+      ...activeProject,
+      bookmarks: updatedBookmarks,
+      updatedAt: new Date(),
+    };
+    
+    try {
+      await storageService.saveProject(updatedProject);
+      set({ activeProject: updatedProject });
+      await get().loadAllProjects(); // Refresh the list
+    } catch (error) {
+      console.error("Failed to update project bookmarks:", error);
+      toast.error("Failed to update bookmarks", {
+        description: "Please try again",
+      });
+    }
+  },
+  
+  isBookmarked: (time: number) => {
+    const { activeProject } = get();
+    if (!activeProject || !activeProject.bookmarks) return false;
+    
+    // Round time to the nearest frame
+    const fps = activeProject.fps || 30;
+    const frameTime = Math.round(time * fps) / fps;
+    
+    return activeProject.bookmarks.some(
+      bookmark => Math.abs(bookmark - frameTime) < 0.001
+    );
+  },
+  
+  removeBookmark: async (time: number) => {
+    const { activeProject } = get();
+    if (!activeProject || !activeProject.bookmarks) return;
+    
+    // Round time to the nearest frame
+    const fps = activeProject.fps || 30;
+    const frameTime = Math.round(time * fps) / fps;
+    
+    const updatedBookmarks = activeProject.bookmarks.filter(
+      bookmark => Math.abs(bookmark - frameTime) >= 0.001
+    );
+    
+    if (updatedBookmarks.length === activeProject.bookmarks.length) {
+      // No bookmark found to remove
+      return;
+    }
+    
+    const updatedProject = {
+      ...activeProject,
+      bookmarks: updatedBookmarks,
+      updatedAt: new Date(),
+    };
+    
+    try {
+      await storageService.saveProject(updatedProject);
+      set({ activeProject: updatedProject });
+      await get().loadAllProjects(); // Refresh the list
+    } catch (error) {
+      console.error("Failed to update project bookmarks:", error);
+      toast.error("Failed to remove bookmark", {
+        description: "Please try again",
+      });
+    }
+  },
 
   createNewProject: async (name: string) => {
     const newProject: TProject = {
@@ -50,6 +146,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       backgroundColor: "#000000",
       backgroundType: "color",
       blurIntensity: 8,
+      bookmarks: [],
     };
 
     set({ activeProject: newProject });
