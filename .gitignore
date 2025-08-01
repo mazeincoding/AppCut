@@ -21,10 +21,10 @@
 .tool-versions
 
 node_modules
-.cursorignore
 .turbo
 
 *.env
 
-# cursor
 bun.lockb
+.cursor/
+.vscode/
