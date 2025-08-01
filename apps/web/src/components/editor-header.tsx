@@ -11,6 +11,7 @@ import { KeyboardShortcutsHelp } from "./keyboard-shortcuts-help";
 import { useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { VideoThumbnailSettingsButton } from "./editor/video-thumbnail-settings-button";
 
 export function EditorHeader() {
   const { getTotalDuration } = useTimelineStore();
@@ -20,8 +21,7 @@ export function EditorHeader() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleExport = () => {
-    // TODO: Implement export functionality
-    // NOTE: This is already being worked on
+    // Export functionality to be implemented
     console.log("Export project");
     window.open("https://youtube.com/watch?v=dQw4w9WgXcQ", "_blank");
   };
@@ -104,6 +104,10 @@ export function EditorHeader() {
   const rightContent = (
     <nav className="flex items-center gap-2">
       <KeyboardShortcutsHelp />
+
+      {/* Simple Video Thumbnail Settings */}
+      <VideoThumbnailSettingsButton />
+
       <Button
         size="sm"
         variant="primary"

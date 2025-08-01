@@ -14,10 +14,11 @@ import {
   Copy,
   RefreshCw,
 } from "lucide-react";
-import { useMediaStore } from "@/stores/media-store";
+import { useMediaStore, getMediaAspectRatio } from "@/stores/media-store";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { usePlaybackStore } from "@/stores/playback-store";
 import AudioWaveform from "../audio-waveform";
+import { TimelineVideoThumbnailDisplay } from "./timeline-video-thumbnail-display";
 import { toast } from "sonner";
 import { TimelineElementProps, TrackType } from "@/types/timeline";
 import { useTimelineElementResize } from "@/hooks/use-timeline-element-resize";
@@ -26,6 +27,7 @@ import {
   TIMELINE_CONSTANTS,
   getTrackHeight,
 } from "@/constants/timeline-constants";
+import { loadVideoThumbnailSettings } from "@/lib/video-thumbnail-settings";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -194,18 +196,19 @@ export function TimelineElement({
       );
     }
 
-    const TILE_ASPECT_RATIO = 16 / 9;
-
     if (mediaItem.type === "image") {
-      // Calculate tile size based on 16:9 aspect ratio
+      // FIXED: Use actual media aspect ratio instead of forcing 16:9
       const trackHeight = getTrackHeight(track.type);
       const tileHeight = trackHeight - 8; // Account for padding
-      const tileWidth = tileHeight * TILE_ASPECT_RATIO;
+
+      // Use helper function to get proper aspect ratio
+      const mediaAspectRatio = getMediaAspectRatio(mediaItem);
+      const tileWidth = tileHeight * mediaAspectRatio;
 
       return (
         <div className="w-full h-full flex items-center justify-center">
           <div className="bg-[#004D52] py-3 w-full h-full relative">
-            {/* Background with tiled images */}
+            {/* FIXED: Better thumbnail display with proper aspect ratio */}
             <div
               className="absolute top-3 bottom-3 left-0 right-0"
               style={{
@@ -241,43 +244,93 @@ export function TimelineElement({
     const VIDEO_TILE_PADDING = 16;
     const OVERLAY_SPACE_MULTIPLIER = 1.5;
 
-    if (mediaItem.type === "video" && mediaItem.thumbnailUrl) {
+    if (mediaItem.type === "video") {
       const trackHeight = getTrackHeight(track.type);
-      const tileHeight = trackHeight - 8; // Match image padding
-      const tileWidth = tileHeight * TILE_ASPECT_RATIO;
 
-      return (
-        <div className="w-full h-full flex items-center justify-center">
-          <div className="bg-[#004D52] py-3 w-full h-full relative">
-            {/* Background with tiled thumbnails */}
-            <div
-              className="absolute top-3 bottom-3 left-0 right-0"
-              style={{
-                backgroundImage: mediaItem.thumbnailUrl
-                  ? `url(${mediaItem.thumbnailUrl})`
-                  : "none",
-                backgroundRepeat: "repeat-x",
-                backgroundSize: `${tileWidth}px ${tileHeight}px`,
-                backgroundPosition: "left center",
-                pointerEvents: "none",
-              }}
-              aria-label={`Tiled thumbnail of ${mediaItem.name}`}
-            />
-            {/* Overlay with vertical borders */}
-            <div
-              className="absolute top-3 bottom-3 left-0 right-0 pointer-events-none"
-              style={{
-                backgroundImage: `repeating-linear-gradient(
-                  to right,
-                  transparent 0px,
-                  transparent ${tileWidth - 1}px,
-                  rgba(255, 255, 255, 0.6) ${tileWidth - 1}px,
-                  rgba(255, 255, 255, 0.6) ${tileWidth}px
-                )`,
-                backgroundPosition: "left center",
-              }}
+      // Check if video thumbnails are enabled in settings
+      const videoThumbnailSettings = loadVideoThumbnailSettings();
+      const useVideoThumbnails =
+        videoThumbnailSettings.enabled && mediaItem.file;
+
+      console.log("🔍 Video element debug:", {
+        useVideoThumbnails,
+        settingsEnabled: videoThumbnailSettings.enabled,
+        hasFile: !!mediaItem.file,
+        pathname:
+          typeof window !== "undefined" ? window.location.pathname : "server",
+        mediaItemId: mediaItem.id,
+        mediaItemName: mediaItem.name,
+      });
+
+      if (useVideoThumbnails) {
+        // Use video thumbnails when enabled in settings
+        console.log(
+          "🎬 Rendering TimelineVideoThumbnailDisplay for",
+          mediaItem.id
+        );
+        return (
+          <div className="w-full h-full flex items-center justify-center">
+            <TimelineVideoThumbnailDisplay
+              key={`video-thumbnails-${mediaItem.id}`}
+              mediaItem={mediaItem}
+              track={track}
+              elementStartTime={elementStartTime}
+              elementDuration={effectiveDuration}
+              elementWidth={elementWidth}
+              elementHeight={trackHeight}
+              zoomLevel={zoomLevel}
+              className="py-1"
             />
           </div>
+        );
+      }
+
+      // Static thumbnails fallback when video thumbnails are disabled
+      if (mediaItem.thumbnailUrl) {
+        const tileHeight = trackHeight - 8; // Match image padding
+        const videoAspectRatio = getMediaAspectRatio(mediaItem);
+        const tileWidth = tileHeight * videoAspectRatio;
+
+        return (
+          <div className="w-full h-full flex items-center justify-center">
+            <div className="bg-[#004D52] py-3 w-full h-full relative">
+              {/* Static video thumbnail display with proper aspect ratio */}
+              <div
+                className="absolute top-3 bottom-3 left-0 right-0"
+                style={{
+                  backgroundImage: mediaItem.thumbnailUrl
+                    ? `url(${mediaItem.thumbnailUrl})`
+                    : "none",
+                  backgroundRepeat: "repeat-x",
+                  backgroundSize: `${tileWidth}px ${tileHeight}px`,
+                  backgroundPosition: "left center",
+                  pointerEvents: "none",
+                }}
+                aria-label={`Tiled thumbnail of ${mediaItem.name}`}
+              />
+              {/* Overlay with vertical borders */}
+              <div
+                className="absolute top-3 bottom-3 left-0 right-0 pointer-events-none"
+                style={{
+                  backgroundImage: `repeating-linear-gradient(
+                    to right,
+                    transparent 0px,
+                    transparent ${tileWidth - 1}px,
+                    rgba(255, 255, 255, 0.6) ${tileWidth - 1}px,
+                    rgba(255, 255, 255, 0.6) ${tileWidth}px
+                  )`,
+                  backgroundPosition: "left center",
+                }}
+              />
+            </div>
+          </div>
+        );
+      }
+
+      // Fallback for videos without thumbnails
+      return (
+        <div className="w-full h-full flex items-center justify-center bg-[#004D52]">
+          <div className="text-xs text-white/60">{mediaItem.name}</div>
         </div>
       );
     }
