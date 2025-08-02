@@ -42,6 +42,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { usePanelStore } from "@/stores/panel-store";
+import { MediaSkeletons } from "@/components/media-skeletons";
 
 function MediaItemWithContextMenu({
   item,
@@ -152,7 +153,7 @@ export function MediaView() {
   const [filteredMediaItems, setFilteredMediaItems] = useState(mediaItems);
 
   useEffect(() => {
-    let filtered = mediaItems.filter((item) => {
+    const filtered = mediaItems.filter((item) => {
       if (mediaFilter && mediaFilter !== "all" && item.type !== mediaFilter) {
         return false;
       }
@@ -280,34 +281,7 @@ export function MediaView() {
   const renderPreview = (item: MediaItem) => previewComponents.get(item.id);
 
   if (isLoading) {
-    return (
-      <div className="h-full flex flex-col gap-1 transition-colors relative">
-        {/* Search and filter controls skeleton */}
-        <div className="p-3 pb-2">
-          <div className="flex gap-2">
-            <Skeleton className="w-[80px] h-10" /> {/* Filter dropdown */}
-            <Skeleton className="flex-1 h-10" /> {/* Search input */}
-          </div>
-        </div>
-        {/* Media grid skeleton */}
-        <div className="flex-1 overflow-y-auto p-3 pt-0">
-          <div
-            className="grid gap-2"
-            style={{
-              gridTemplateColumns: "repeat(auto-fill, 160px)",
-            }}
-          >
-            {/* thumbnail skeletons */}
-            {Array.from({ length: initialMediaCount }).map((_, i) => (
-              <div key={i} className="flex flex-col gap-2 w-28 h-28">
-                <Skeleton className="w-full aspect-video" />
-                <Skeleton className="w-full h-4" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+    return <MediaSkeletons count={initialMediaCount} view={mediaViewMode} />;
   }
 
   return (
