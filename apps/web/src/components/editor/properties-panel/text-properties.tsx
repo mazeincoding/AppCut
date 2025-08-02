@@ -6,6 +6,7 @@ import { useTimelineStore } from "@/stores/timeline-store";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch"; // Add Switch import
 import { useState } from "react";
 import {
   PropertyItem,
@@ -220,14 +221,33 @@ export function TextProperties({
           />
         </PropertyItemValue>
       </PropertyItem>
-      <PropertyItem direction="row">
-        <PropertyItemLabel>Background</PropertyItemLabel>
+      <PropertyItem direction="column">
+        <div className="flex items-center justify-between">
+          <PropertyItemLabel>Background</PropertyItemLabel>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="transparent-bg-toggle"
+              checked={element.backgroundColor === "transparent"}
+              onCheckedChange={(isChecked) => {
+                // When turning transparency on, set to "transparent"
+                // When turning off, default to black or a stored previous color
+                const newColor = isChecked ? "transparent" : "#000000";
+                updateTextElement(trackId, element.id, {
+                  backgroundColor: newColor,
+                });
+              }}
+            />
+            <label htmlFor="transparent-bg-toggle" className="text-sm font-medium">
+              Transparent
+            </label>
+          </div>
+        </div>
         <PropertyItemValue>
           <Input
             type="color"
             value={
               element.backgroundColor === "transparent"
-                ? "#000000"
+                ? "#000000" // Display black in picker when transparent is active
                 : element.backgroundColor || "#000000"
             }
             onChange={(e) => {
@@ -235,6 +255,7 @@ export function TextProperties({
               updateTextElement(trackId, element.id, { backgroundColor });
             }}
             className="w-full cursor-pointer rounded-full"
+            disabled={element.backgroundColor === "transparent"}
           />
         </PropertyItemValue>
       </PropertyItem>
