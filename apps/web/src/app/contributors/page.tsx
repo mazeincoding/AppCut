@@ -5,8 +5,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
-import { GithubIcon } from "@/components/icons";
+import {
+  GithubIcon,
+  MarbleIcon,
+  VercelIcon,
+  DataBuddyIcon,
+} from "@/components/icons";
 import { Badge } from "@/components/ui/badge";
+import { EXTERNAL_TOOLS } from "@/constants/site";
 
 export const metadata: Metadata = {
   title: "Contributors - OpenCut",
@@ -39,7 +45,7 @@ async function getContributors(): Promise<Contributor[]> {
           "User-Agent": "OpenCut-Web-App",
         },
         next: { revalidate: 600 }, // 10 minutes
-      }
+      } as RequestInit
     );
 
     if (!response.ok) {
@@ -71,8 +77,8 @@ export default async function ContributorsPage() {
 
       <main className="relative">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-muted/20 to-transparent rounded-full blur-3xl" />
-          <div className="absolute top-1/2 -left-40 w-80 h-80 bg-gradient-to-tr from-muted/10 to-transparent rounded-full blur-3xl" />
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-linear-to-br from-muted/20 to-transparent rounded-full blur-3xl" />
+          <div className="absolute top-1/2 -left-40 w-80 h-80 bg-linear-to-tr from-muted/10 to-transparent rounded-full blur-3xl" />
         </div>
 
         <div className="relative container mx-auto px-4 py-16">
@@ -132,8 +138,8 @@ export default async function ContributorsPage() {
                       className="group block flex-1"
                     >
                       <div className="relative mx-auto max-w-md">
-                        <div className="absolute inset-0 bg-gradient-to-r from-muted/50 to-muted/30 rounded-2xl blur group-hover:blur-md transition-all duration-300" />
-                        <Card className="relative bg-background/80 backdrop-blur-sm border-2 group-hover:border-muted-foreground/20 transition-all duration-300 group-hover:shadow-xl">
+                        <div className="absolute inset-0 bg-linear-to-r from-muted/50 to-muted/30 rounded-2xl blur-sm group-hover:blur-md transition-all duration-300" />
+                        <Card className="relative bg-background/80 backdrop-blur-xs border-2 group-hover:border-muted-foreground/20 transition-all duration-300 group-hover:shadow-xl">
                           <CardContent className="p-8 text-center">
                             <div className="relative mb-6">
                               <Avatar className="h-24 w-24 mx-auto ring-4 ring-background shadow-2xl">
@@ -235,6 +241,53 @@ export default async function ContributorsPage() {
                 </Link>
               </div>
             )}
+
+            <div className="mt-6 mb-20">
+              <div className="text-center mb-12">
+                <h2 className="text-2xl font-semibold mb-2">External Tools</h2>
+                <p className="text-muted-foreground">
+                  Tools we use to build OpenCut
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                {EXTERNAL_TOOLS.map((tool, index) => {
+                  const IconComponent = {
+                    MarbleIcon,
+                    VercelIcon,
+                    DataBuddyIcon,
+                  }[tool.icon];
+
+                  return (
+                    <Link
+                      key={tool.name}
+                      href={tool.url}
+                      target="_blank"
+                      className="group block"
+                      style={{
+                        animationDelay: `${index * 100}ms`,
+                      }}
+                    >
+                      <Card className="h-full bg-background/80 backdrop-blur-xs border-2 group-hover:border-muted-foreground/20 transition-all duration-300 group-hover:shadow-xl">
+                        <CardContent className="p-6 text-center h-full flex flex-col">
+                          <div className="mb-4">
+                            <div className="w-12 h-12 mx-auto rounded-full bg-muted/50 flex items-center justify-center group-hover:bg-muted/70 transition-colors">
+                              <IconComponent className="h-6 w-6" size={24} />
+                            </div>
+                          </div>
+                          <h3 className="font-semibold text-lg mb-2 group-hover:text-foreground/80 transition-colors">
+                            {tool.name}
+                          </h3>
+                          <p className="text-sm text-muted-foreground flex-1">
+                            {tool.description}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
 
             <div className="mt-32 text-center">
               <div className="max-w-2xl mx-auto">

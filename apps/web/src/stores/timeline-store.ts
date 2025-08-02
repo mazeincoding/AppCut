@@ -126,6 +126,7 @@ interface TimelineStore {
     pushHistory?: boolean
   ) => void;
   toggleTrackMute: (trackId: string) => void;
+  toggleElementHidden: (trackId: string, elementId: string) => void;
 
   // Split operations for elements
   splitElement: (
@@ -864,6 +865,24 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       updateTracksAndSave(
         get()._tracks.map((track) =>
           track.id === trackId ? { ...track, muted: !track.muted } : track
+        )
+      );
+    },
+
+    toggleElementHidden: (trackId, elementId) => {
+      get().pushHistory();
+      updateTracksAndSave(
+        get()._tracks.map((track) =>
+          track.id === trackId
+            ? {
+                ...track,
+                elements: track.elements.map((element) =>
+                  element.id === elementId
+                    ? { ...element, hidden: !element.hidden }
+                    : element
+                ),
+              }
+            : track
         )
       );
     },

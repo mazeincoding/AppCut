@@ -1,4 +1,6 @@
 import { cn } from "@/lib/utils";
+import { ChevronDown } from "lucide-react";
+import { useState } from "react";
 
 interface PropertyItemProps {
   direction?: "row" | "column";
@@ -17,7 +19,7 @@ export function PropertyItem({
         "flex gap-2",
         direction === "row"
           ? "items-center justify-between gap-6"
-          : "flex-col gap-1",
+          : "flex-col gap-1.5",
         className
       )}
     >
@@ -33,7 +35,11 @@ export function PropertyItemLabel({
   children: React.ReactNode;
   className?: string;
 }) {
-  return <label className={cn("text-xs", className)}>{children}</label>;
+  return (
+    <label className={cn("text-xs text-muted-foreground", className)}>
+      {children}
+    </label>
+  );
 }
 
 export function PropertyItemValue({
@@ -43,5 +49,36 @@ export function PropertyItemValue({
   children: React.ReactNode;
   className?: string;
 }) {
-  return <div className={cn("flex-1", className)}>{children}</div>;
+  return <div className={cn("flex-1 text-sm", className)}>{children}</div>;
+}
+
+interface PropertyGroupProps {
+  title: string;
+  children: React.ReactNode;
+  defaultExpanded?: boolean;
+  className?: string;
+}
+
+export function PropertyGroup({
+  title,
+  children,
+  defaultExpanded = true,
+  className,
+}: PropertyGroupProps) {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+
+  return (
+    <PropertyItem direction="column" className={cn("gap-3", className)}>
+      <div
+        className="flex items-center gap-1.5 cursor-pointer"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <PropertyItemLabel className="cursor-pointer">
+          {title}
+        </PropertyItemLabel>
+        <ChevronDown className={cn("size-3", !isExpanded && "-rotate-90")} />
+      </div>
+      {isExpanded && <PropertyItemValue>{children}</PropertyItemValue>}
+    </PropertyItem>
+  );
 }

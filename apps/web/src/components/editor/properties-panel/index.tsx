@@ -67,7 +67,7 @@ export function PropertiesPanel() {
         <div className="flex flex-col gap-1">
           <Label className="text-xs text-muted-foreground">Frame rate:</Label>
           <Select
-            value={(activeProject?.fps || 30).toString()}
+            value={(activeProject?.fps || "N/A").toString()}
             onValueChange={handleFpsChange}
           >
             <SelectTrigger className="w-32 h-6 text-xs">

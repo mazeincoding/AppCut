@@ -24,8 +24,8 @@ export default function TermsPage() {
       <Header />
       <main className="relative">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-muted/20 to-transparent rounded-full blur-3xl" />
-          <div className="absolute top-1/2 -left-40 w-80 h-80 bg-gradient-to-tr from-muted/10 to-transparent rounded-full blur-3xl" />
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-linear-to-br from-muted/20 to-transparent rounded-full blur-3xl" />
+          <div className="absolute top-1/2 -left-40 w-80 h-80 bg-linear-to-tr from-muted/10 to-transparent rounded-full blur-3xl" />
         </div>
         <div className="relative container mx-auto px-4 py-16">
           <div className="max-w-4xl mx-auto">
@@ -47,7 +47,7 @@ export default function TermsPage() {
                 editor.
               </p>
             </div>
-            <Card className="bg-background/80 backdrop-blur-sm border-2 border-muted/30">
+            <Card className="bg-background/80 backdrop-blur-xs border-2 border-muted/30">
               <CardContent className="p-8 text-base leading-relaxed space-y-8">
                 <section>
                   <h2 className="text-2xl font-semibold mb-4">

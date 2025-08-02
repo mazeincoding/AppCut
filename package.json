@@ -22,5 +22,8 @@
   "dependencies": {
     "next": "^15.3.4",
     "wavesurfer.js": "^7.9.8"
-  }
+  },
+  "trustedDependencies": [
+    "@tailwindcss/oxide"
+  ]
 }

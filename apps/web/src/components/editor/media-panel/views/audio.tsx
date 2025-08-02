@@ -9,6 +9,7 @@ export function AudioView() {
     <div className="h-full flex flex-col gap-2 p-4">
       <Input
         placeholder="Search songs and artists"
+        className="bg-panel-accent"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />

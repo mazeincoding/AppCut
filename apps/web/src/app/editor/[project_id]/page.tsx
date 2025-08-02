@@ -32,39 +32,121 @@ export default function Editor() {
     setPropertiesPanel,
   } = usePanelStore();
 
-  const { activeProject, loadProject, createNewProject } = useProjectStore();
+  const {
+    activeProject,
+    loadProject,
+    createNewProject,
+    isInvalidProjectId,
+    markProjectIdAsInvalid,
+  } = useProjectStore();
   const params = useParams();
   const router = useRouter();
   const projectId = params.project_id as string;
   const handledProjectIds = useRef<Set<string>>(new Set());
+  const isInitializingRef = useRef<boolean>(false);
 
   usePlaybackControls();
 
   useEffect(() => {
-    const initProject = async () => {
-      if (!projectId) return;
+    let isCancelled = false;
 
+    const initProject = async () => {
+      if (!projectId) {
+        return;
+      }
+
+      // Prevent duplicate initialization
+      if (isInitializingRef.current) {
+        return;
+      }
+
+      // Check if project is already loaded
       if (activeProject?.id === projectId) {
         return;
       }
 
+      // Check global invalid tracking first (most important for preventing duplicates)
+      if (isInvalidProjectId(projectId)) {
+        return;
+      }
+
+      // Check if we've already handled this project ID locally
       if (handledProjectIds.current.has(projectId)) {
         return;
       }
 
+      // Mark as initializing to prevent race conditions
+      isInitializingRef.current = true;
+      handledProjectIds.current.add(projectId);
+
       try {
         await loadProject(projectId);
-      } catch (error) {
-        handledProjectIds.current.add(projectId);
 
-        const newProjectId = await createNewProject("Untitled Project");
-        router.replace(`/editor/${newProjectId}`);
-        return;
+        // Check if component was unmounted during async operation
+        if (isCancelled) {
+          return;
+        }
+
+        // Project loaded successfully
+        isInitializingRef.current = false;
+      } catch (error) {
+        // Check if component was unmounted during async operation
+        if (isCancelled) {
+          return;
+        }
+
+        // More specific error handling - only create new project for actual "not found" errors
+        const isProjectNotFound =
+          error instanceof Error &&
+          (error.message.includes("not found") ||
+            error.message.includes("does not exist") ||
+            error.message.includes("Project not found"));
+
+        if (isProjectNotFound) {
+          // Mark this project ID as invalid globally BEFORE creating project
+          markProjectIdAsInvalid(projectId);
+
+          try {
+            const newProjectId = await createNewProject("Untitled Project");
+
+            // Check again if component was unmounted
+            if (isCancelled) {
+              return;
+            }
+
+            router.replace(`/editor/${newProjectId}`);
+          } catch (createError) {
+            console.error("Failed to create new project:", createError);
+          }
+        } else {
+          // For other errors (storage issues, corruption, etc.), don't create new project
+          console.error(
+            "Project loading failed with recoverable error:",
+            error
+          );
+          // Remove from handled set so user can retry
+          handledProjectIds.current.delete(projectId);
+        }
+
+        isInitializingRef.current = false;
       }
     };
 
     initProject();
-  }, [projectId, activeProject?.id, loadProject, createNewProject, router]);
+
+    // Cleanup function to cancel async operations
+    return () => {
+      isCancelled = true;
+      isInitializingRef.current = false;
+    };
+  }, [
+    projectId,
+    loadProject,
+    createNewProject,
+    router,
+    isInvalidProjectId,
+    markProjectIdAsInvalid,
+  ]);
 
   return (
     <EditorProvider>
@@ -85,7 +167,7 @@ export default function Editor() {
               {/* Main content area */}
               <ResizablePanelGroup
                 direction="horizontal"
-                className="h-full w-full gap-[0.19rem] px-2"
+                className="h-full w-full gap-[0.19rem] px-3"
               >
                 {/* Tools Panel */}
                 <ResizablePanel
@@ -93,7 +175,7 @@ export default function Editor() {
                   minSize={15}
                   maxSize={40}
                   onResize={setToolsPanel}
-                  className="min-w-0"
+                  className="min-w-0 rounded-sm"
                 >
                   <MediaPanel />
                 </ResizablePanel>
@@ -132,7 +214,7 @@ export default function Editor() {
               minSize={15}
               maxSize={70}
               onResize={setTimeline}
-              className="min-h-0 px-2 pb-2"
+              className="min-h-0 px-3 pb-3"
             >
               <Timeline />
             </ResizablePanel>

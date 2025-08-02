@@ -5,6 +5,8 @@ import { MediaView } from "./views/media";
 import { useMediaPanelStore, Tab } from "./store";
 import { TextView } from "./views/text";
 import { AudioView } from "./views/audio";
+import { Separator } from "@/components/ui/separator";
+import { SettingsView } from "./views/settings";
 
 export function MediaPanel() {
   const { activeTab } = useMediaPanelStore();
@@ -43,12 +45,14 @@ export function MediaPanel() {
         Adjustment view coming soon...
       </div>
     ),
+    settings: <SettingsView />,
   };
 
   return (
-    <div className="h-full flex flex-col bg-panel rounded-sm">
+    <div className="h-full flex bg-panel">
       <TabBar />
-      <div className="flex-1 overflow-y-auto">{viewMap[activeTab]}</div>
+      <Separator orientation="vertical" />
+      <div className="flex-1 overflow-hidden">{viewMap[activeTab]}</div>
     </div>
   );
 }
