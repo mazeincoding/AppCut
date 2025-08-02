@@ -63,6 +63,8 @@ class StorageService {
       backgroundColor: project.backgroundColor,
       backgroundType: project.backgroundType,
       blurIntensity: project.blurIntensity,
+      bookmarks: project.bookmarks,
+      fps: project.fps,
     };
 
     await this.projectsAdapter.set(project.id, serializedProject);
@@ -83,6 +85,8 @@ class StorageService {
       backgroundColor: serializedProject.backgroundColor,
       backgroundType: serializedProject.backgroundType,
       blurIntensity: serializedProject.blurIntensity,
+      bookmarks: serializedProject.bookmarks,
+      fps: serializedProject.fps,
     };
   }
 

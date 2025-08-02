@@ -122,8 +122,8 @@ export default function RoadmapPage() {
       <Header />
       <main className="relative">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-muted/20 to-transparent rounded-full blur-3xl" />
-          <div className="absolute top-1/2 -left-40 w-80 h-80 bg-gradient-to-tr from-muted/10 to-transparent rounded-full blur-3xl" />
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-linear-to-br from-muted/20 to-transparent rounded-full blur-3xl" />
+          <div className="absolute top-1/2 -left-40 w-80 h-80 bg-linear-to-tr from-muted/10 to-transparent rounded-full blur-3xl" />
         </div>
         <div className="relative container mx-auto px-4 py-16">
           <div className="max-w-4xl mx-auto">
@@ -148,7 +148,7 @@ export default function RoadmapPage() {
               {roadmapItems.map((item, index) => (
                 <div key={index} className="relative">
                   <div className="flex items-start gap-2">
-                    <span className="text-lg font-medium text-muted-foreground select-none leading-[1.5]">
+                    <span className="text-lg font-medium text-muted-foreground select-none leading-normal">
                       {index + 1}.
                     </span>
                     <div className="flex-1 pt-[2px]">
@@ -156,13 +156,13 @@ export default function RoadmapPage() {
                         <h3 className="font-medium text-lg">{item.title}</h3>
                         <Badge
                           className={cn("shadow-none", {
-                            "!bg-green-500 text-white":
+                            "bg-green-500! text-white":
                               item.status.type === "complete",
-                            "!bg-yellow-500 text-white":
+                            "bg-yellow-500! text-white":
                               item.status.type === "pending",
-                            "!bg-blue-500 text-white":
+                            "bg-blue-500! text-white":
                               item.status.type === "info",
-                            "!bg-foreground/10 text-accent-foreground":
+                            "bg-foreground/10! text-accent-foreground":
                               item.status.type === "default",
                           })}
                         >

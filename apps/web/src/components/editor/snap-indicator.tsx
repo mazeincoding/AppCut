@@ -3,6 +3,7 @@
 import { SnapPoint } from "@/hooks/use-timeline-snapping";
 import { TIMELINE_CONSTANTS } from "@/constants/timeline-constants";
 import type { TimelineTrack } from "@/types/timeline";
+import { useState, useEffect } from "react";
 
 interface SnapIndicatorProps {
   snapPoint: SnapPoint | null;
@@ -11,6 +12,7 @@ interface SnapIndicatorProps {
   tracks: TimelineTrack[];
   timelineRef: React.RefObject<HTMLDivElement>;
   trackLabelsRef?: React.RefObject<HTMLDivElement>;
+  tracksScrollRef: React.RefObject<HTMLDivElement>;
 }
 
 export function SnapIndicator({
@@ -20,7 +22,29 @@ export function SnapIndicator({
   tracks,
   timelineRef,
   trackLabelsRef,
+  tracksScrollRef,
 }: SnapIndicatorProps) {
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  // Track scroll position to lock snap indicator to frame
+  useEffect(() => {
+    const tracksViewport = tracksScrollRef.current?.querySelector(
+      "[data-radix-scroll-area-viewport]"
+    ) as HTMLElement;
+
+    if (!tracksViewport) return;
+
+    const handleScroll = () => {
+      setScrollLeft(tracksViewport.scrollLeft);
+    };
+
+    // Set initial scroll position
+    setScrollLeft(tracksViewport.scrollLeft);
+
+    tracksViewport.addEventListener("scroll", handleScroll);
+    return () => tracksViewport.removeEventListener("scroll", handleScroll);
+  }, [tracksScrollRef]);
+
   if (!isVisible || !snapPoint) {
     return null;
   }
@@ -34,13 +58,14 @@ export function SnapIndicator({
       ? trackLabelsRef.current.offsetWidth
       : 0;
 
-  const leftPosition =
-    trackLabelsWidth +
+  // Calculate position locked to timeline content (accounting for scroll)
+  const timelinePosition =
     snapPoint.time * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel;
+  const leftPosition = trackLabelsWidth + timelinePosition - scrollLeft;
 
   return (
     <div
-      className="absolute pointer-events-none z-[90]"
+      className="absolute pointer-events-none z-90"
       style={{
         left: `${leftPosition}px`,
         top: 0,

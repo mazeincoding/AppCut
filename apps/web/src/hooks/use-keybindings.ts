@@ -24,6 +24,15 @@ export function useKeybindingsListener() {
       const boundAction = keybindings[binding];
       if (!boundAction) return;
 
+      const activeElement = document.activeElement;
+      const isTextInput =
+        activeElement &&
+        (activeElement.tagName === "INPUT" ||
+          activeElement.tagName === "TEXTAREA" ||
+          (activeElement as HTMLElement).isContentEditable);
+
+      if (isTextInput) return;
+
       ev.preventDefault();
 
       // Handle actions with default arguments

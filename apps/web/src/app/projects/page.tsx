@@ -86,7 +86,7 @@ export default function ProjectsPage() {
         });
       }
     },
-    [thumbnailCache]
+    []
   );
 
   const handleCreateProject = async () => {
@@ -142,7 +142,7 @@ export default function ProjectsPage() {
           href="/"
           className="flex items-center gap-1 hover:text-muted-foreground transition-colors"
         >
-          <ChevronLeft className="!size-5 shrink-0" />
+          <ChevronLeft className="size-5! shrink-0" />
           <span className="text-sm font-medium">Back</span>
         </Link>
         <div className="block md:hidden">
@@ -153,7 +153,7 @@ export default function ProjectsPage() {
                 size="sm"
                 onClick={handleCancelSelection}
               >
-                <X className="!size-4" />
+                <X className="size-4!" />
                 Cancel
               </Button>
               {selectedProjects.size > 0 && (
@@ -162,7 +162,7 @@ export default function ProjectsPage() {
                   size="sm"
                   onClick={() => setIsBulkDeleteDialogOpen(true)}
                 >
-                  <Trash2 className="!size-4" />
+                  <Trash2 className="size-4!" />
                   Delete ({selectedProjects.size})
                 </Button>
               )}
@@ -192,7 +192,7 @@ export default function ProjectsPage() {
             {isSelectionMode ? (
               <div className="flex items-center gap-2">
                 <Button variant="outline" onClick={handleCancelSelection}>
-                  <X className="!size-4" />
+                  <X className="size-4!" />
                   Cancel
                 </Button>
                 {selectedProjects.size > 0 && (
@@ -200,7 +200,7 @@ export default function ProjectsPage() {
                     variant="destructive"
                     onClick={() => setIsBulkDeleteDialogOpen(true)}
                   >
-                    <Trash2 className="!size-4" />
+                    <Trash2 className="size-4!" />
                     Delete Selected ({selectedProjects.size})
                   </Button>
                 )}
@@ -399,7 +399,7 @@ function ProjectCard({
       >
         {isSelectionMode && (
           <div className="absolute top-3 left-3 z-10">
-            <div className="w-5 h-5 rounded bg-background/80 backdrop-blur-sm border flex items-center justify-center">
+            <div className="w-5 h-5 rounded bg-background/80 backdrop-blur-xs border flex items-center justify-center">
               <Checkbox
                 checked={isSelected}
                 onCheckedChange={(checked) =>
@@ -426,7 +426,7 @@ function ProjectCard({
             />
           ) : (
             <div className="w-full h-full bg-muted/50 flex items-center justify-center">
-              <Video className="h-12 w-12 flex-shrink-0 text-muted-foreground" />
+              <Video className="h-12 w-12 shrink-0 text-muted-foreground" />
             </div>
           )}
         </div>
@@ -501,7 +501,7 @@ function ProjectCard({
 
         <div className="space-y-1">
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <Calendar className="!size-4" />
+            <Calendar className="size-4!" />
             <span>Created {formatDate(project.createdAt)}</span>
           </div>
         </div>
@@ -543,7 +543,7 @@ function ProjectCard({
 function CreateButton({ onClick }: { onClick?: () => void }) {
   return (
     <Button className="flex" onClick={onClick}>
-      <Plus className="!size-4" />
+      <Plus className="size-4!" />
       <span className="text-sm font-medium">New project</span>
     </Button>
   );
