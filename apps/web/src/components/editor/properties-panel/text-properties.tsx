@@ -7,7 +7,7 @@ import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch"; // Add Switch import
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   PropertyItem,
   PropertyItemLabel,
@@ -30,6 +30,9 @@ export function TextProperties({
   const [opacityInput, setOpacityInput] = useState(
     Math.round(element.opacity * 100).toString()
   );
+
+  // Track the last selected color for toggling
+  const lastSelectedColor = useRef("#000000");
 
   const parseAndValidateNumber = (
     value: string,
@@ -85,6 +88,20 @@ export function TextProperties({
     );
     setOpacityInput(opacityPercent.toString());
     updateTextElement(trackId, element.id, { opacity: opacityPercent / 100 });
+  };
+
+  // Update last selected color when a new color is picked
+  const handleColorChange = (color: string) => {
+    if (color !== "transparent") {
+      lastSelectedColor.current = color;
+    }
+    updateTextElement(trackId, element.id, { backgroundColor: color });
+  };
+
+  // Toggle between transparent and last selected color
+  const handleTransparentToggle = (isTransparent: boolean) => {
+    const newColor = isTransparent ? "transparent" : lastSelectedColor.current;
+    updateTextElement(trackId, element.id, { backgroundColor: newColor });
   };
 
   return (
@@ -228,14 +245,7 @@ export function TextProperties({
             <Switch
               id="transparent-bg-toggle"
               checked={element.backgroundColor === "transparent"}
-              onCheckedChange={(isChecked) => {
-                // When turning transparency on, set to "transparent"
-                // When turning off, default to black or a stored previous color
-                const newColor = isChecked ? "transparent" : "#000000";
-                updateTextElement(trackId, element.id, {
-                  backgroundColor: newColor,
-                });
-              }}
+              onCheckedChange={handleTransparentToggle}
             />
             <label htmlFor="transparent-bg-toggle" className="text-sm font-medium">
               Transparent
@@ -247,13 +257,10 @@ export function TextProperties({
             type="color"
             value={
               element.backgroundColor === "transparent"
-                ? "#000000" // Display black in picker when transparent is active
+                ? lastSelectedColor.current
                 : element.backgroundColor || "#000000"
             }
-            onChange={(e) => {
-              const backgroundColor = e.target.value;
-              updateTextElement(trackId, element.id, { backgroundColor });
-            }}
+            onChange={(e) => handleColorChange(e.target.value)}
             className="w-full cursor-pointer rounded-full"
             disabled={element.backgroundColor === "transparent"}
           />
