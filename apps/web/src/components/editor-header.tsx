@@ -8,6 +8,8 @@ import {
   SquarePen,
   Trash,
   Sun,
+  Settings,
+  LucidePanelsLeftBottom,
 } from "lucide-react";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { HeaderBase } from "./header-base";
@@ -21,6 +23,10 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuCheckboxItem,
 } from "./ui/dropdown-menu";
 import Link from "next/link";
 import { RenameProjectDialog } from "./rename-project-dialog";
@@ -29,6 +35,7 @@ import { useRouter } from "next/navigation";
 import { FaDiscord } from "react-icons/fa6";
 import { useTheme } from "next-themes";
 import { usePlaybackStore } from "@/stores/playback-store";
+import { usePanelStore } from "@/stores/panel-store";
 
 export function EditorHeader() {
   const { getTotalDuration } = useTimelineStore();
@@ -38,6 +45,7 @@ export function EditorHeader() {
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const router = useRouter();
   const { theme, setTheme } = useTheme();
+  const { togglePanelMinimized, minimizedPanels } = usePanelStore();
 
   const handleExport = () => {
     // TODO: Implement export functionality
@@ -126,6 +134,47 @@ export function EditorHeader() {
         onConfirm={handleDelete}
         projectName={activeProject?.name || ""}
       />
+
+            <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button size="icon" variant="text" className="h-7">
+            <Settings className="!size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <LucidePanelsLeftBottom className="size-4" />
+              Panels</DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuCheckboxItem
+                checked={!minimizedPanels.includes("media")}
+                onCheckedChange={() => togglePanelMinimized("media")}
+              >
+                Media
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={!minimizedPanels.includes("preview")}
+                onCheckedChange={() => togglePanelMinimized("preview")}
+              >
+                Preview
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={!minimizedPanels.includes("properties")}
+                onCheckedChange={() => togglePanelMinimized("properties")}
+              >
+                Properties
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={!minimizedPanels.includes("timeline")}
+                onCheckedChange={() => togglePanelMinimized("timeline")}
+              >
+                Timeline
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 

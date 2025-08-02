@@ -30,6 +30,7 @@ export default function Editor() {
     setTimeline,
     propertiesPanel,
     setPropertiesPanel,
+    minimizedPanels,
   } = usePanelStore();
 
   const {
@@ -148,76 +149,113 @@ export default function Editor() {
     markProjectIdAsInvalid,
   ]);
 
+  const handleHorizontalLayout = (sizes: number[]) => {
+    const visiblePanels = [
+      !minimizedPanels.includes("media"),
+      !minimizedPanels.includes("preview"),
+      !minimizedPanels.includes("properties"),
+    ];
+    const visibleSizes = sizes.filter((_, i) => visiblePanels[i]);
+    let sizeIndex = 0;
+    if (visiblePanels[0]) setToolsPanel(visibleSizes[sizeIndex++] || 0);
+    if (visiblePanels[1]) setPreviewPanel(visibleSizes[sizeIndex++] || 0);
+    if (visiblePanels[2]) setPropertiesPanel(visibleSizes[sizeIndex++] || 0);
+  };
+
+  const handleVerticalLayout = (sizes: number[]) => {
+    const visiblePanels = [
+      true, // Main content is always visible
+      !minimizedPanels.includes("timeline"),
+    ];
+    const visibleSizes = sizes.filter((_, i) => visiblePanels[i]);
+    let sizeIndex = 0;
+    if (visiblePanels[0]) setMainContent(visibleSizes[sizeIndex++] || 0);
+    if (visiblePanels[1]) setTimeline(visibleSizes[sizeIndex++] || 0);
+  };
+
+  const horizontalLayoutKey = minimizedPanels.join("-").toString();
+  const verticalLayoutKey = minimizedPanels.includes("timeline").toString();
+
   return (
     <EditorProvider>
       <div className="h-screen w-screen flex flex-col bg-background overflow-hidden">
         <EditorHeader />
         <div className="flex-1 min-h-0 min-w-0">
           <ResizablePanelGroup
+            key={verticalLayoutKey}
             direction="vertical"
+            onLayout={handleVerticalLayout}
             className="h-full w-full gap-[0.18rem]"
           >
             <ResizablePanel
               defaultSize={mainContent}
               minSize={30}
               maxSize={85}
-              onResize={setMainContent}
               className="min-h-0"
             >
               {/* Main content area */}
               <ResizablePanelGroup
+                key={horizontalLayoutKey}
                 direction="horizontal"
+                onLayout={handleHorizontalLayout}
                 className="h-full w-full gap-[0.19rem] px-3"
               >
                 {/* Tools Panel */}
-                <ResizablePanel
-                  defaultSize={toolsPanel}
-                  minSize={15}
-                  maxSize={40}
-                  onResize={setToolsPanel}
-                  className="min-w-0 rounded-sm"
-                >
-                  <MediaPanel />
-                </ResizablePanel>
+                {!minimizedPanels.includes("media") && (
+                  <ResizablePanel
+                    defaultSize={toolsPanel}
+                    minSize={15}
+                    maxSize={40}
+                    className="min-w-0 rounded-sm"
+                  >
+                    <MediaPanel />
+                  </ResizablePanel>
+                )}
 
-                <ResizableHandle withHandle />
+                {!minimizedPanels.includes("media") && !minimizedPanels.includes("preview") && (
+                  <ResizableHandle withHandle />
+                )}
 
                 {/* Preview Area */}
-                <ResizablePanel
-                  defaultSize={previewPanel}
-                  minSize={30}
-                  onResize={setPreviewPanel}
-                  className="min-w-0 min-h-0 flex-1"
-                >
-                  <PreviewPanel />
-                </ResizablePanel>
+                {!minimizedPanels.includes("preview") && (
+                  <ResizablePanel
+                    defaultSize={previewPanel}
+                    minSize={30}
+                    className="min-w-0 min-h-0 flex-1"
+                  >
+                    <PreviewPanel />
+                  </ResizablePanel>
+                )}
 
-                <ResizableHandle withHandle />
+                {!minimizedPanels.includes("preview") &&
+                  !minimizedPanels.includes("properties") && <ResizableHandle withHandle />}
 
-                <ResizablePanel
-                  defaultSize={propertiesPanel}
-                  minSize={15}
-                  maxSize={40}
-                  onResize={setPropertiesPanel}
-                  className="min-w-0"
-                >
-                  <PropertiesPanel />
-                </ResizablePanel>
+                {!minimizedPanels.includes("properties") && (
+                  <ResizablePanel
+                    defaultSize={propertiesPanel}
+                    minSize={15}
+                    maxSize={40}
+                    className="min-w-0"
+                  >
+                    <PropertiesPanel />
+                  </ResizablePanel>
+                )}
               </ResizablePanelGroup>
             </ResizablePanel>
 
-            <ResizableHandle withHandle />
+            {!minimizedPanels.includes("timeline") && <ResizableHandle withHandle />}
 
             {/* Timeline */}
-            <ResizablePanel
-              defaultSize={timeline}
-              minSize={15}
-              maxSize={70}
-              onResize={setTimeline}
-              className="min-h-0 px-3 pb-3"
-            >
-              <Timeline />
-            </ResizablePanel>
+            {!minimizedPanels.includes("timeline") && (
+              <ResizablePanel
+                defaultSize={timeline}
+                minSize={15}
+                maxSize={70}
+                className="min-h-0 px-3 pb-3"
+              >
+                <Timeline />
+              </ResizablePanel>
+            )}
           </ResizablePanelGroup>
         </div>
         <Onboarding />

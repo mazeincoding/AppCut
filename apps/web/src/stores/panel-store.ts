@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+export type PanelName = "media" | "preview" | "properties" | "timeline";
+
 const DEFAULT_PANEL_SIZES = {
   toolsPanel: 45,
   previewPanel: 75,
@@ -19,6 +21,9 @@ interface PanelState {
 
   mediaViewMode: "grid" | "list";
 
+  // Panel states
+  minimizedPanels: PanelName[];
+
   // Actions
   setToolsPanel: (size: number) => void;
   setPreviewPanel: (size: number) => void;
@@ -26,6 +31,9 @@ interface PanelState {
   setMainContent: (size: number) => void;
   setTimeline: (size: number) => void;
   setMediaViewMode: (mode: "grid" | "list") => void;
+
+  // Panel state actions
+  togglePanelMinimized: (panel: PanelName) => void;
 }
 
 export const usePanelStore = create<PanelState>()(
@@ -36,6 +44,9 @@ export const usePanelStore = create<PanelState>()(
 
       mediaViewMode: "grid" as const,
 
+      // Default panel states
+      minimizedPanels: [],
+
       // Actions
       setToolsPanel: (size) => set({ toolsPanel: size }),
       setPreviewPanel: (size) => set({ previewPanel: size }),
@@ -43,9 +54,18 @@ export const usePanelStore = create<PanelState>()(
       setMainContent: (size) => set({ mainContent: size }),
       setTimeline: (size) => set({ timeline: size }),
       setMediaViewMode: (mode) => set({ mediaViewMode: mode }),
+
+      // Panel state actions
+      togglePanelMinimized: (panel) =>
+        set((state) => ({
+          minimizedPanels: state.minimizedPanels.includes(panel)
+            ? state.minimizedPanels.filter((p) => p !== panel)
+            : [...state.minimizedPanels, panel],
+        })),
     }),
     {
       name: "panel-sizes",
     }
   )
 );
+
