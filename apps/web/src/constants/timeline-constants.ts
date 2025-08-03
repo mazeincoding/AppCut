@@ -7,18 +7,18 @@ export const TRACK_COLORS: Record<
 > = {
   media: {
     solid: "bg-blue-500",
-    background: "bg-blue-500/20",
-    border: "border-white/80",
+    background: "",
+    border: "",
   },
   text: {
-    solid: "bg-[#9C4937]",
-    background: "bg-[#9C4937]",
-    border: "border-white/80",
+    solid: "bg-[#5DBAA0]",
+    background: "bg-[#5DBAA0]",
+    border: "",
   },
   audio: {
     solid: "bg-green-500",
-    background: "bg-green-500/20",
-    border: "border-white/80",
+    background: "bg-[#915DBE]",
+    border: "",
   },
 } as const;
 
@@ -34,7 +34,7 @@ export function getTrackElementClasses(type: TrackType) {
 
 // Track height definitions
 export const TRACK_HEIGHTS: Record<TrackType, number> = {
-  media: 65,
+  media: 60,
   text: 25,
   audio: 50,
 } as const;

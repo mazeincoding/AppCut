@@ -68,45 +68,51 @@ export function TimelineTrackContent({
     elementDuration: number,
     excludeElementId?: string
   ) => {
-    if (!snappingEnabled) {
-      // Use frame snapping if project has FPS, otherwise use decimal snapping
-      const projectStore = useProjectStore.getState();
-      const projectFps = projectStore.activeProject?.fps || 30;
-      return snapTimeToFrame(dropTime, projectFps);
+    // Always apply frame snapping first
+    const projectStore = useProjectStore.getState();
+    const projectFps = projectStore.activeProject?.fps || 30;
+    let finalTime = snapTimeToFrame(dropTime, projectFps);
+
+    // Additionally apply element snapping if enabled
+    if (snappingEnabled) {
+      // Try snapping both start and end edges for drops
+      const startSnapResult = snapElementEdge(
+        dropTime,
+        elementDuration,
+        tracks,
+        currentTime,
+        zoomLevel,
+        excludeElementId,
+        true // snap to start edge
+      );
+
+      const endSnapResult = snapElementEdge(
+        dropTime,
+        elementDuration,
+        tracks,
+        currentTime,
+        zoomLevel,
+        excludeElementId,
+        false // snap to end edge
+      );
+
+      // Choose the snap result with the smaller distance (closer snap)
+      let bestSnapResult = startSnapResult;
+      if (
+        endSnapResult.snapPoint &&
+        (!startSnapResult.snapPoint ||
+          endSnapResult.snapDistance < startSnapResult.snapDistance)
+      ) {
+        bestSnapResult = endSnapResult;
+      }
+
+      // Only use element snapping if it found a snap point, otherwise keep frame-snapped time
+      if (bestSnapResult.snapPoint) {
+        finalTime = bestSnapResult.snappedTime;
+      }
     }
 
-    // Try snapping both start and end edges for drops
-    const startSnapResult = snapElementEdge(
-      dropTime,
-      elementDuration,
-      tracks,
-      currentTime,
-      zoomLevel,
-      excludeElementId,
-      true // snap to start edge
-    );
-
-    const endSnapResult = snapElementEdge(
-      dropTime,
-      elementDuration,
-      tracks,
-      currentTime,
-      zoomLevel,
-      excludeElementId,
-      false // snap to end edge
-    );
-
-    // Choose the snap result with the smaller distance (closer snap)
-    let bestSnapResult = startSnapResult;
-    if (
-      endSnapResult.snapPoint &&
-      (!startSnapResult.snapPoint ||
-        endSnapResult.snapDistance < startSnapResult.snapDistance)
-    ) {
-      bestSnapResult = endSnapResult;
-    }
-
-    return bestSnapResult.snappedTime;
+    return finalTime;
   };
 
   const timelineRef = useRef<HTMLDivElement>(null);
@@ -148,9 +154,13 @@ export function TimelineTrackContent({
       );
       const adjustedTime = Math.max(0, mouseTime - dragState.clickOffsetTime);
 
-      // Apply snapping if enabled
-      let finalTime = adjustedTime;
+      // Always apply frame snapping first
+      const projectStore = useProjectStore.getState();
+      const projectFps = projectStore.activeProject?.fps || 30;
+      let finalTime = snapTimeToFrame(adjustedTime, projectFps);
       let snapPoint = null;
+
+      // Additionally apply element snapping if enabled
       if (snappingEnabled) {
         // Find the element being dragged to get its duration
         let elementDuration = 5; // fallback duration
@@ -196,18 +206,16 @@ export function TimelineTrackContent({
           bestSnapResult = endSnapResult;
         }
 
-        finalTime = bestSnapResult.snappedTime;
-        snapPoint = bestSnapResult.snapPoint;
+        // Only use element snapping if it found a snap point, otherwise keep frame-snapped time
+        if (bestSnapResult.snapPoint) {
+          finalTime = bestSnapResult.snappedTime;
+          snapPoint = bestSnapResult.snapPoint;
+        }
 
         // Notify parent component about snap point change
         onSnapPointChange?.(snapPoint);
       } else {
-        // Use frame snapping if project has FPS, otherwise use decimal snapping
-        const projectStore = useProjectStore.getState();
-        const projectFps = projectStore.activeProject?.fps || 30;
-        finalTime = snapTimeToFrame(adjustedTime, projectFps);
-
-        // Clear snap point when not snapping
+        // Clear snap point when element snapping is disabled
         onSnapPointChange?.(null);
       }
 

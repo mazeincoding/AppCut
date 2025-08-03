@@ -19,6 +19,10 @@ import {
   Link,
   ZoomIn,
   ZoomOut,
+  Bookmark,
+  Eye,
+  MicOff,
+  Mic,
 } from "lucide-react";
 import {
   Tooltip,
@@ -543,7 +547,7 @@ export function Timeline() {
         {/* Timeline Header with Ruler */}
         <div className="flex bg-panel sticky top-0 z-10">
           {/* Track Labels Header */}
-          <div className="w-48 flex-shrink-0 bg-panel border-r flex items-center justify-between px-3 py-2">
+          <div className="w-28 shrink-0 bg-panel border-r flex items-center justify-between px-3 py-2">
             {/* Empty space */}
             <span className="text-sm font-medium text-muted-foreground opacity-0">
               .
@@ -651,6 +655,30 @@ export function Timeline() {
                     );
                   }).filter(Boolean);
                 })()}
+
+                {/* Bookmark markers */}
+                {(() => {
+                  const { activeProject } = useProjectStore.getState();
+                  if (!activeProject?.bookmarks?.length) return null;
+
+                  return activeProject.bookmarks.map((bookmarkTime, i) => (
+                    <div
+                      key={`bookmark-${i}`}
+                      className="absolute top-0 h-10 w-0.5 !bg-primary cursor-pointer"
+                      style={{
+                        left: `${bookmarkTime * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel}px`,
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        usePlaybackStore.getState().seek(bookmarkTime);
+                      }}
+                    >
+                      <div className="absolute top-[-1px] left-[-5px] text-primary">
+                        <Bookmark className="h-3 w-3 fill-primary" />
+                      </div>
+                    </div>
+                  ));
+                })()}
               </div>
             </ScrollArea>
           </div>
@@ -662,7 +690,7 @@ export function Timeline() {
           {tracks.length > 0 && (
             <div
               ref={trackLabelsRef}
-              className="w-48 flex-shrink-0 border-r border-black overflow-y-auto z-[200] bg-panel"
+              className="w-28 shrink-0 border-r overflow-y-auto z-100 bg-panel"
               data-track-labels
             >
               <ScrollArea className="w-full h-full" ref={trackLabelsScrollRef}>
@@ -670,17 +698,24 @@ export function Timeline() {
                   {tracks.map((track) => (
                     <div
                       key={track.id}
-                      className="flex items-center px-3 border-b border-muted/30 group bg-foreground/5"
+                      className="flex items-center px-3 group"
                       style={{ height: `${getTrackHeight(track.type)}px` }}
                     >
-                      <div className="flex items-center flex-1 min-w-0">
+                      <div className="flex items-center justify-end flex-1 min-w-0 gap-2">
+                        {track.muted ? (
+                          <MicOff
+                            className="h-4 w-4 text-destructive cursor-pointer"
+                            onClick={() => toggleTrackMute(track.id)}
+                          />
+                        ) : (
+                          <Mic
+                            className="h-4 w-4 text-muted-foreground cursor-pointer"
+                            onClick={() => toggleTrackMute(track.id)}
+                          />
+                        )}
+                        <Eye className="h-4 w-4 text-muted-foreground" />
                         <TrackIcon track={track} />
                       </div>
-                      {track.muted && (
-                        <span className="ml-2 text-xs text-red-500 font-semibold flex-shrink-0">
-                          Muted
-                        </span>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -735,7 +770,7 @@ export function Timeline() {
                       <ContextMenu key={track.id}>
                         <ContextMenuTrigger asChild>
                           <div
-                            className="absolute left-0 right-0 border-b border-muted/30 py-[0.05rem]"
+                            className="absolute left-0 right-0"
                             style={{
                               top: `${getCumulativeHeightBefore(
                                 tracks,
@@ -761,7 +796,7 @@ export function Timeline() {
                             />
                           </div>
                         </ContextMenuTrigger>
-                        <ContextMenuContent className="z-[200]">
+                        <ContextMenuContent className="z-200">
                           <ContextMenuItem
                             onClick={(e) => {
                               e.stopPropagation();
@@ -791,13 +826,13 @@ function TrackIcon({ track }: { track: TimelineTrack }) {
   return (
     <>
       {track.type === "media" && (
-        <Video className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+        <Video className="w-4 h-4 shrink-0 text-muted-foreground" />
       )}
       {track.type === "text" && (
-        <TypeIcon className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+        <TypeIcon className="w-4 h-4 shrink-0 text-muted-foreground" />
       )}
       {track.type === "audio" && (
-        <Music className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+        <Music className="w-4 h-4 shrink-0 text-muted-foreground" />
       )}
     </>
   );
@@ -828,6 +863,7 @@ function TimelineToolbar({
     toggleRippleEditing,
   } = useTimelineStore();
   const { currentTime, duration, isPlaying, toggle } = usePlaybackStore();
+  const { toggleBookmark, isBookmarked } = useProjectStore();
 
   // Action handlers
   const handleSplitSelected = () => {
@@ -957,6 +993,13 @@ function TimelineToolbar({
   const handleZoomSliderChange = (values: number[]) => {
     setZoomLevel(values[0]);
   };
+
+  const handleToggleBookmark = async () => {
+    await toggleBookmark(currentTime);
+  };
+
+  // Check if the current time is bookmarked
+  const currentBookmarked = isBookmarked(currentTime);
   return (
     <div className="border-b flex items-center justify-between px-2 py-1">
       <div className="flex items-center gap-1 w-full">
@@ -1088,6 +1131,19 @@ function TimelineToolbar({
             </TooltipTrigger>
             <TooltipContent>Delete element (Delete)</TooltipContent>
           </Tooltip>
+          <div className="w-px h-6 bg-border mx-1" />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="text" size="icon" onClick={handleToggleBookmark}>
+                <Bookmark
+                  className={`h-4 w-4 ${currentBookmarked ? "fill-primary text-primary" : ""}`}
+                />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {currentBookmarked ? "Remove bookmark" : "Add bookmark"}
+            </TooltipContent>
+          </Tooltip>
         </TooltipProvider>
       </div>
       <div className="flex items-center gap-1">
@@ -1121,6 +1177,8 @@ function TimelineToolbar({
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
+
+        <div className="h-6 w-px bg-border mx-1" />
         <div className="flex items-center gap-1">
           <Button variant="text" size="icon" onClick={handleZoomOut}>
             <ZoomOut className="h-4 w-4" />
