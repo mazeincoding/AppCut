@@ -283,7 +283,7 @@ export function PreviewPanel() {
 
     // Use the first media element for background (could be enhanced to use primary/focused element)
     const backgroundElement = blurBackgroundElements[0];
-    const { element, mediaItem } = backgroundElement;
+    const { element, track, mediaItem } = backgroundElement;
 
     if (!mediaItem) return null;
 
@@ -307,6 +307,7 @@ export function PreviewPanel() {
             trimStart={element.trimStart}
             trimEnd={element.trimEnd}
             clipDuration={element.duration}
+            trackMuted={track.muted}
             className="w-full h-full object-cover"
           />
         </div>
@@ -431,6 +432,7 @@ export function PreviewPanel() {
               trimStart={element.trimStart}
               trimEnd={element.trimEnd}
               clipDuration={element.duration}
+              trackMuted={elementData.track.muted}
             />
           </div>
         );
