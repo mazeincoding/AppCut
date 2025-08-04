@@ -39,6 +39,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useProjectStore } from "@/stores/project-store";
 import { useTimelineStore } from "@/stores/timeline-store";
 import type { TProject } from "@/types/project";
+import { cn } from "@/lib/utils";
 
 export default function ProjectsPage() {
   const {
@@ -388,9 +389,9 @@ function ProjectCard({
 
   const cardContent = (
     <Card
-      className={`overflow-hidden bg-background border-none p-0 transition-all ${
-        isSelectionMode && isSelected ? "ring-2 ring-primary" : ""
-      }`}
+      className={cn("overflow-hidden bg-background  p-0 transition-all", {
+        "ring-2 ring-primary": isSelectionMode && isSelected,
+      })}
     >
       <div
         className={`relative aspect-square bg-muted transition-opacity ${
@@ -399,14 +400,14 @@ function ProjectCard({
       >
         {isSelectionMode && (
           <div className="absolute top-3 left-3 z-10">
-            <div className="w-5 h-5 rounded bg-background/80 backdrop-blur-xs border flex items-center justify-center">
+            <div className="w-5 h-5 rounded bg-transparent border flex items-center justify-center">
               <Checkbox
                 checked={isSelected}
                 onCheckedChange={(checked) =>
                   onSelect?.(project.id, checked as boolean)
                 }
                 onClick={(e) => e.stopPropagation()}
-                className="w-4 h-4"
+                className="w-4 h-4 bg-white"
               />
             </div>
           </div>
@@ -432,9 +433,9 @@ function ProjectCard({
         </div>
       </div>
 
-      <CardContent className="px-0 pt-5 flex flex-col gap-1">
+      <CardContent className="px-3 pt-3 flex flex-col gap-1">
         <div className="flex items-start justify-between">
-          <h3 className="font-medium text-sm leading-snug group-hover:text-foreground/90 transition-colors line-clamp-2">
+          <h3 className="font-medium text-sm leading-snug group-hover:text-foreground/90 transition-colors truncate">
             {project.name}
           </h3>
           {!isSelectionMode && (
