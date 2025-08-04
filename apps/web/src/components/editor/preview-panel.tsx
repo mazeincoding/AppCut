@@ -5,15 +5,24 @@ import { TimelineElement, TimelineTrack } from "@/types/timeline";
 import { useMediaStore, type MediaItem } from "@/stores/media-store";
 import { usePlaybackStore } from "@/stores/playback-store";
 import { useEditorStore } from "@/stores/editor-store";
+import { useAspectRatio } from "@/hooks/use-aspect-ratio";
 import { VideoPlayer } from "@/components/ui/video-player";
 import { AudioPlayer } from "@/components/ui/audio-player";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { Play, Pause, Expand, SkipBack, SkipForward } from "lucide-react";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { formatTimeCode } from "@/lib/time";
 import { EditableTimecode } from "@/components/ui/editable-timecode";
 import { FONT_CLASS_MAP } from "@/lib/font-config";
+import { BackgroundSettings } from "../background-settings";
 import { useProjectStore } from "@/stores/project-store";
 import { TextElementDragState } from "@/types/editor";
 
@@ -225,7 +234,6 @@ export function PreviewPanel() {
 
     tracks.forEach((track) => {
       track.elements.forEach((element) => {
-        if (element.hidden) return;
         const elementStart = element.startTime;
         const elementEnd =
           element.startTime +
@@ -275,7 +283,7 @@ export function PreviewPanel() {
 
     // Use the first media element for background (could be enhanced to use primary/focused element)
     const backgroundElement = blurBackgroundElements[0];
-    const { element, mediaItem } = backgroundElement;
+    const { element, track, mediaItem } = backgroundElement;
 
     if (!mediaItem) return null;
 
@@ -299,6 +307,7 @@ export function PreviewPanel() {
             trimStart={element.trimStart}
             trimEnd={element.trimEnd}
             clipDuration={element.duration}
+            trackMuted={track.muted}
             className="w-full h-full object-cover"
           />
         </div>
@@ -399,11 +408,11 @@ export function PreviewPanel() {
         return (
           <div
             key={element.id}
-            className="absolute inset-0 bg-linear-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center"
+            className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center"
           >
             <div className="text-center">
               <div className="text-2xl mb-2">🎬</div>
-              <p className="text-xs text-foreground">{element.name}</p>
+              <p className="text-xs text-white">{element.name}</p>
             </div>
           </div>
         );
@@ -423,6 +432,7 @@ export function PreviewPanel() {
               trimStart={element.trimStart}
               trimEnd={element.trimEnd}
               clipDuration={element.duration}
+              trackMuted={elementData.track.muted}
             />
           </div>
         );
@@ -467,10 +477,10 @@ export function PreviewPanel() {
 
   return (
     <>
-      <div className="h-full w-full flex flex-col min-h-0 min-w-0 bg-panel rounded-sm relative">
+      <div className="h-full w-full flex flex-col min-h-0 min-w-0 bg-panel rounded-sm">
         <div
           ref={containerRef}
-          className="flex-1 flex flex-col items-center justify-center min-h-0 min-w-0"
+          className="flex-1 flex flex-col items-center justify-center p-3 min-h-0 min-w-0"
         >
           <div className="flex-1" />
           {hasAnyElements ? (
@@ -480,7 +490,7 @@ export function PreviewPanel() {
               style={{
                 width: previewDimensions.width,
                 height: previewDimensions.height,
-                background:
+                backgroundColor:
                   activeProject?.backgroundType === "blur"
                     ? "transparent"
                     : activeProject?.backgroundColor || "#000000",
@@ -612,9 +622,9 @@ function FullscreenToolbar({
   return (
     <div
       data-toolbar
-      className="flex items-center gap-2 p-1 pt-2 w-full text-foreground relative"
+      className="flex items-center gap-2 p-1 pt-2 w-full text-white"
     >
-      <div className="flex items-center gap-1 text-[0.70rem] tabular-nums text-foreground/90">
+      <div className="flex items-center gap-1 text-[0.70rem] tabular-nums text-white/90">
         <EditableTimecode
           time={currentTime}
           duration={totalDuration}
@@ -622,7 +632,7 @@ function FullscreenToolbar({
           fps={activeProject?.fps || 30}
           onTimeChange={seek}
           disabled={!hasAnyElements}
-          className="text-foreground/90 hover:bg-white/10"
+          className="text-white/90 hover:bg-white/10"
         />
         <span className="opacity-50">/</span>
         <span>
@@ -640,7 +650,7 @@ function FullscreenToolbar({
           size="icon"
           onClick={skipBackward}
           disabled={!hasAnyElements}
-          className="h-auto p-0 text-foreground"
+          className="h-auto p-0 text-white hover:text-white/80"
           title="Skip backward 1s"
         >
           <SkipBack className="h-3 w-3" />
@@ -650,7 +660,7 @@ function FullscreenToolbar({
           size="icon"
           onClick={toggle}
           disabled={!hasAnyElements}
-          className="h-auto p-0 text-foreground hover:text-foreground/80"
+          className="h-auto p-0 text-white hover:text-white/80"
         >
           {isPlaying ? (
             <Pause className="h-3 w-3" />
@@ -663,7 +673,7 @@ function FullscreenToolbar({
           size="icon"
           onClick={skipForward}
           disabled={!hasAnyElements}
-          className="h-auto p-0 text-foreground hover:text-foreground/80"
+          className="h-auto p-0 text-white hover:text-white/80"
           title="Skip forward 1s"
         >
           <SkipForward className="h-3 w-3" />
@@ -673,7 +683,7 @@ function FullscreenToolbar({
       <div className="flex-1 flex items-center gap-2">
         <div
           className={cn(
-            "relative h-1 rounded-full cursor-pointer flex-1 bg-foreground/20",
+            "relative h-1 rounded-full cursor-pointer flex-1 bg-white/20",
             !hasAnyElements && "opacity-50 cursor-not-allowed"
           )}
           onClick={hasAnyElements ? handleTimelineClick : undefined}
@@ -682,13 +692,13 @@ function FullscreenToolbar({
         >
           <div
             className={cn(
-              "absolute top-0 left-0 h-full rounded-full bg-foreground",
+              "absolute top-0 left-0 h-full rounded-full bg-white",
               !isDragging && "duration-100"
             )}
             style={{ width: `${progress}%` }}
           />
           <div
-            className="absolute top-1/2 w-3 h-3 rounded-full -translate-y-1/2 -translate-x-1/2 shadow-xs bg-foreground border border-black/20"
+            className="absolute top-1/2 w-3 h-3 rounded-full -translate-y-1/2 -translate-x-1/2 shadow-sm bg-white border border-black/20"
             style={{ left: `${progress}%` }}
           />
         </div>
@@ -697,11 +707,11 @@ function FullscreenToolbar({
       <Button
         variant="text"
         size="icon"
-        className="size-4! text-foreground/80 hover:text-foreground"
+        className="!size-4 text-white/80 hover:text-white"
         onClick={onToggleExpanded}
         title="Exit fullscreen (Esc)"
       >
-        <Expand className="size-4!" />
+        <Expand className="!size-4" />
       </Button>
     </div>
   );
@@ -735,14 +745,14 @@ function FullscreenPreview({
   getTotalDuration: () => number;
 }) {
   return (
-    <div className="fixed inset-0 z-9999 flex flex-col">
+    <div className="fixed inset-0 z-[9999] flex flex-col">
       <div className="flex-1 flex items-center justify-center bg-background">
         <div
           className="relative overflow-hidden border border-border m-3"
           style={{
             width: previewDimensions.width,
             height: previewDimensions.height,
-            background:
+            backgroundColor:
               activeProject?.backgroundType === "blur"
                 ? "#1a1a1a"
                 : activeProject?.backgroundColor || "#1a1a1a",
@@ -767,7 +777,7 @@ function FullscreenPreview({
             )}
         </div>
       </div>
-      <div className="p-4 bg-background">
+      <div className="p-4 bg-black">
         <FullscreenToolbar
           hasAnyElements={hasAnyElements}
           onToggleExpanded={toggleExpanded}
@@ -798,7 +808,37 @@ function PreviewToolbar({
   toggle: () => void;
   getTotalDuration: () => number;
 }) {
-  const { isPlaying } = usePlaybackStore();
+  const { isPlaying, seek } = usePlaybackStore();
+  const { setCanvasSize, setCanvasSizeToOriginal } = useEditorStore();
+  const { activeProject } = useProjectStore();
+  const {
+    currentPreset,
+    isOriginal,
+    getOriginalAspectRatio,
+    getDisplayName,
+    canvasPresets,
+  } = useAspectRatio();
+
+  const handlePresetSelect = (preset: { width: number; height: number }) => {
+    setCanvasSize({ width: preset.width, height: preset.height });
+  };
+
+  const handleOriginalSelect = () => {
+    const aspectRatio = getOriginalAspectRatio();
+    setCanvasSizeToOriginal(aspectRatio);
+  };
+
+  const totalDuration = getTotalDuration();
+
+  const skipBackward = () => {
+    const newTime = Math.max(0, currentTime - 1);
+    setCurrentTime(newTime);
+  };
+
+  const skipForward = () => {
+    const newTime = Math.min(totalDuration, currentTime + 1);
+    setCurrentTime(newTime);
+  };
 
   if (isExpanded) {
     return (
@@ -818,15 +858,50 @@ function PreviewToolbar({
   return (
     <div
       data-toolbar
-      className="flex justify-between gap-2 px-1.5 pr-4 py-1.5 border border-border/50 w-auto absolute bottom-4 right-4 bg-black/20 rounded-full backdrop-blur-l text-white"
+      className="flex items-end justify-between gap-2 p-1 pt-2 w-full"
     >
-      <div className="flex items-center gap-2">
+      <div>
+        <p
+          className={cn(
+            "text-[0.75rem] text-muted-foreground flex items-center gap-1 w-[10rem]",
+            !hasAnyElements && "opacity-50"
+          )}
+        >
+          <EditableTimecode
+            time={currentTime}
+            duration={getTotalDuration()}
+            format="HH:MM:SS:FF"
+            fps={activeProject?.fps || 30}
+            onTimeChange={seek}
+            disabled={!hasAnyElements}
+          />
+          <span className="opacity-50">/</span>
+          <span className="tabular-nums">
+            {formatTimeCode(
+              getTotalDuration(),
+              "HH:MM:SS:FF",
+              activeProject?.fps || 30
+            )}
+          </span>
+        </p>
+      </div>
+      <div className="flex items-center gap-1">
+        <Button
+          variant="text"
+          size="icon"
+          onClick={skipBackward}
+          disabled={!hasAnyElements}
+          className="h-auto p-0 text-white hover:text-white/80"
+          title="Skip backward 1s"
+        >
+          <SkipBack className="h-3 w-3" />
+        </Button>
         <Button
           variant="text"
           size="icon"
           onClick={toggle}
           disabled={!hasAnyElements}
-          className="h-auto p-0"
+          className="h-auto p-0 text-white hover:text-white/80"
         >
           {isPlaying ? (
             <Pause className="h-3 w-3" />
@@ -837,11 +912,56 @@ function PreviewToolbar({
         <Button
           variant="text"
           size="icon"
-          className="size-4!"
+          onClick={skipForward}
+          disabled={!hasAnyElements}
+          className="h-auto p-0 text-white hover:text-white/80"
+          title="Skip forward 1s"
+        >
+          <SkipForward className="h-3 w-3" />
+        </Button>
+      </div>
+      <div className="flex items-center gap-3">
+        <BackgroundSettings />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              size="sm"
+              className="!bg-panel-accent text-foreground/85 text-[0.70rem] h-4 rounded-none border border-muted-foreground px-0.5 py-0 font-light"
+              disabled={!hasAnyElements}
+            >
+              {getDisplayName()}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onClick={handleOriginalSelect}
+              className={cn("text-xs", isOriginal && "font-semibold")}
+            >
+              Original
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            {canvasPresets.map((preset) => (
+              <DropdownMenuItem
+                key={preset.name}
+                onClick={() => handlePresetSelect(preset)}
+                className={cn(
+                  "text-xs",
+                  currentPreset?.name === preset.name && "font-semibold"
+                )}
+              >
+                {preset.name}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <Button
+          variant="text"
+          size="icon"
+          className="!size-4 text-muted-foreground"
           onClick={onToggleExpanded}
           title="Enter fullscreen"
         >
-          <Expand className="size-4!" />
+          <Expand className="!size-4" />
         </Button>
       </div>
     </div>
