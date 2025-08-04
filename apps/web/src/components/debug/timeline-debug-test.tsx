@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 import { TIMELINE_CONSTANTS } from "@/constants/timeline-constants";
 import { useTimelineZoom } from "@/hooks/use-timeline-zoom";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { useMediaStore } from "@/stores/media-store";
 import { useProjectStore } from "@/stores/project-store";
 import { useTimelineStore } from "@/stores/timeline-store";
@@ -68,7 +67,7 @@ export function TimelineDebugTest() {
     isInTimeline: true,
   });
 
-  const calculateDynamicWidth = () => {
+  const calculateDynamicWidth = useCallback(() => {
     const containerWidth = timelineRef.current?.clientWidth;
     const dynamicTimelineWidth = Math.max(
       (duration || 0) * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel,
@@ -91,11 +90,11 @@ export function TimelineDebugTest() {
     console.log("🔍 Timeline Debug Test:", newDebugData);
 
     return dynamicTimelineWidth;
-  };
+  }, [zoomLevel, duration, currentTime]);
 
   useEffect(() => {
     calculateDynamicWidth();
-  }, [zoomLevel, duration, currentTime]);
+  }, [zoomLevel, duration, currentTime, calculateDynamicWidth]);
 
   useEffect(() => {
     const resizeObserver = new ResizeObserver(() => {
@@ -236,6 +235,7 @@ export function TimelineDebugTest() {
         multiple
         className="hidden"
         onChange={handleFileChange}
+        aria-label="Upload media files"
       />
 
       <Card>

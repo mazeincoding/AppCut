@@ -57,16 +57,7 @@ export function useVideoThumbnails({
 
   const { currentTime, isPlaying } = usePlaybackStore();
 
-  if (process.env.NODE_ENV === 'development') {
-    console.log("🎣 useVideoThumbnails hook initialized:", {
-      mediaId,
-      elementStartTime,
-      elementDuration,
-      enabled,
-      zoomLevel,
-      options,
-    });
-  }
+
 
   const { mediaItems } = useMediaStore();
 
@@ -146,10 +137,7 @@ export function useVideoThumbnails({
   // Generate thumbnails for this media item
   const generateThumbnails = useCallback(async () => {
     if (!enabled || !mediaItem?.file) {
-      console.log("Thumbnail generation skipped:", {
-        enabled,
-        hasFile: !!mediaItem?.file,
-      });
+
       return;
     }
 
@@ -170,9 +158,7 @@ export function useVideoThumbnails({
       // Set initial thumbnail based on current time
       updateCurrentThumbnail(currentTime);
 
-      console.log(
-        `Generated ${thumbnails.length} video thumbnails for ${mediaId}`
-      );
+
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to generate thumbnails";
@@ -196,7 +182,7 @@ export function useVideoThumbnails({
     clearVideoThumbnailsForMedia(mediaId);
     setAllThumbnails([]);
     setCurrentThumbnail(null);
-    console.log(`Cleared video thumbnails for ${mediaId}`);
+
   }, [mediaId]);
 
   // Preload thumbnails

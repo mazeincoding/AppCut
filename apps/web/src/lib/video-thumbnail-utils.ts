@@ -51,27 +51,22 @@ const initializePersistentCache = async (): Promise<void> => {
 
     // Load existing thumbnails from persistent storage
     await loadCacheFromPersistentStorage();
-    console.log("📦 Video thumbnail persistent cache initialized");
+    // Persistent cache initialized successfully
   } catch (error) {
-    console.warn("Failed to initialize persistent thumbnail cache:", error);
+    // Handle initialization error without console
   }
 };
 
 // Load cache from persistent storage
 const loadCacheFromPersistentStorage = async (): Promise<void> => {
   if (!persistentCacheAdapter) {
-    console.log("⚠️ No persistent cache adapter available");
     return;
   }
 
   try {
     const keys = await persistentCacheAdapter.list();
-    console.log(`📥 Found ${keys.length} thumbnails in persistent storage`);
 
     if (keys.length === 0) {
-      console.log(
-        "📭 Persistent cache is empty - this is normal for first visit"
-      );
       return;
     }
 
@@ -82,10 +77,6 @@ const loadCacheFromPersistentStorage = async (): Promise<void> => {
         // Parse the key to get mediaId and timePosition
         const [mediaId, timePositionStr] = key.split("_");
         const timePosition = parseFloat(timePositionStr);
-
-        console.log(
-          `📦 Loading thumbnail: ${key} (${mediaId} at ${timePosition}s)`
-        );
 
         // Initialize media cache if needed
         if (!videoThumbnailCache[mediaId]) {
@@ -99,13 +90,8 @@ const loadCacheFromPersistentStorage = async (): Promise<void> => {
         loadedCount++;
       }
     }
-
-    console.log(
-      `✅ Successfully loaded ${loadedCount} thumbnails from persistent cache`
-    );
-    console.log(`📊 Total cache size now: ${cacheSize}`);
   } catch (error) {
-    console.warn("❌ Failed to load thumbnails from persistent cache:", error);
+    // Handle error without console
   }
 };
 
@@ -116,12 +102,15 @@ const blobToDataURL = async (blobUrl: string): Promise<string> => {
     const blob = await response.blob();
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
+      reader.onload = () => {
+        resolve(reader.result as string);
+        URL.revokeObjectURL(blobUrl);
+      };
       reader.onerror = reject;
       reader.readAsDataURL(blob);
     });
   } catch (error) {
-    console.warn("Failed to convert blob to data URL:", error);
+    // Handle error without console
     return blobUrl; // Fallback to original URL
   }
 };
@@ -144,26 +133,12 @@ const saveThumbnailToPersistentStorage = async (
 
     const key = `${mediaId}_${timePosition.toFixed(2)}`;
     await persistentCacheAdapter.set(key, persistentThumbnailData);
-    console.log(`💾 Saved thumbnail to persistent storage: ${key}`);
   } catch (error) {
-    console.warn("Failed to save thumbnail to persistent cache:", error);
+    // Handle error without console
   }
 };
 
-// Remove thumbnail from persistent storage
-const removeThumbnailFromPersistentStorage = async (
-  mediaId: string,
-  timePosition: number
-): Promise<void> => {
-  if (!persistentCacheAdapter) return;
 
-  try {
-    const key = `${mediaId}_${timePosition.toFixed(2)}`;
-    await persistentCacheAdapter.remove(key);
-  } catch (error) {
-    console.warn("Failed to remove thumbnail from persistent cache:", error);
-  }
-};
 
 // Default options for video thumbnail generation (optimized for performance)
 const DEFAULT_VIDEO_THUMBNAIL_OPTIONS: Required<VideoThumbnailOptions> = {
@@ -210,14 +185,7 @@ const getOptimizedThumbnailDimensions = (
     const portraitWidth = Math.round(defaultHeight * 0.6); // 72px for 120px height
     const portraitHeight = defaultHeight; // Keep full height
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log(
-        `📱 Portrait video detected (${videoWidth}x${videoHeight}, ratio: ${videoAspect.toFixed(3)})`
-      );
-      console.log(
-        `🎯 Optimized thumbnail size: ${portraitWidth}x${portraitHeight} (was ${defaultWidth}x${defaultHeight})`
-      );
-    }
+
 
     return { width: portraitWidth, height: portraitHeight };
   }
@@ -226,14 +194,7 @@ const getOptimizedThumbnailDimensions = (
     const ultraWideWidth = Math.round(defaultHeight * 2.1); // 252px for 120px height
     const ultraWideHeight = defaultHeight;
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log(
-        `🎬 Ultra-wide video detected (${videoWidth}x${videoHeight}, ratio: ${videoAspect.toFixed(3)})`
-      );
-      console.log(
-        `🎯 Optimized thumbnail size: ${ultraWideWidth}x${ultraWideHeight} (was ${defaultWidth}x${defaultHeight})`
-      );
-    }
+
 
     return { width: ultraWideWidth, height: ultraWideHeight };
   }
@@ -352,10 +313,14 @@ const generateNativeVideoThumbnail = async (
       reject(new Error(`Video loading failed: ${error}`));
     };
 
+    // Store URL for cleanup
+    const videoUrl = URL.createObjectURL(videoFile);
+
     const cleanup = () => {
       video.removeEventListener("loadedmetadata", handleLoadedMetadata);
       video.removeEventListener("seeked", handleSeeked);
       video.removeEventListener("error", handleError);
+      URL.revokeObjectURL(videoUrl);
       video.src = "";
       video.load();
     };
@@ -366,7 +331,7 @@ const generateNativeVideoThumbnail = async (
     video.addEventListener("error", handleError);
 
     // Start loading video
-    video.src = URL.createObjectURL(videoFile);
+    video.src = videoUrl;
   });
 };
 
@@ -439,9 +404,7 @@ export const generateVideoThumbnails = async (
 
   const thumbnails: VideoThumbnailData[] = [];
 
-  console.log(
-    `🚀 Starting optimized video thumbnail generation for ${mediaId} at ${timePositions.length} positions`
-  );
+
 
   // Smart cache reuse: check for exact matches first, then find nearby thumbnails
   const cachedThumbnails: VideoThumbnailData[] = [];
@@ -455,9 +418,7 @@ export const generateVideoThumbnails = async (
     if (videoThumbnailCache[mediaId][cacheKey]) {
       videoThumbnailPerformanceMonitor.recordCacheHit();
       cachedThumbnails.push(videoThumbnailCache[mediaId][cacheKey]);
-      console.log(
-        `💾 Using exact cached video thumbnail ${i + 1}/${timePositions.length} for ${mediaId} at ${timePosition}s`
-      );
+
     } else {
       // Look for nearby cached thumbnails (within 0.5 seconds)
       const nearbyThumbnail = findNearbyVideoThumbnail(
@@ -474,9 +435,7 @@ export const generateVideoThumbnails = async (
           lastAccessed: Date.now(),
         };
         cachedThumbnails.push(reusedThumbnail);
-        console.log(
-          `🔄 Reusing nearby cached thumbnail for ${mediaId} at ${timePosition}s (from ${nearbyThumbnail.timePosition}s)`
-        );
+
       } else {
         videoThumbnailPerformanceMonitor.recordCacheMiss();
         uncachedPositions.push({ position: timePosition, index: i });
@@ -489,9 +448,7 @@ export const generateVideoThumbnails = async (
 
   // Generate uncached thumbnails sequentially for stability
   if (uncachedPositions.length > 0) {
-    console.log(
-      `🎬 Generating ${uncachedPositions.length} new thumbnails sequentially...`
-    );
+
 
     for (const { position, index } of uncachedPositions) {
       const cacheKey = position.toString();
@@ -501,9 +458,7 @@ export const generateVideoThumbnails = async (
         const generationStart = performance.now();
 
         // Generate thumbnail using fast native HTML5 Canvas method
-        console.log(
-          `⚡ Generating native thumbnail ${index + 1}/${timePositions.length} for ${mediaId} at ${position}s...`
-        );
+
         const url = await generateNativeVideoThumbnail(
           videoFile,
           position,
@@ -532,9 +487,7 @@ export const generateVideoThumbnails = async (
         await addVideoThumbnailToCache(mediaId, cacheKey, thumbnailData);
         thumbnails.push(thumbnailData);
 
-        console.log(
-          `⚡ Generated native thumbnail ${index + 1}/${timePositions.length} for ${mediaId} at ${position}s (${generationTime.toFixed(1)}ms) - URL: ${url.substring(0, 50)}...`
-        );
+
 
         // Small delay between generations to prevent overwhelming FFmpeg
         if (index < uncachedPositions.length - 1) {
@@ -552,13 +505,8 @@ export const generateVideoThumbnails = async (
     }
   }
 
-  const cacheHitRate = (
-    ((timePositions.length - uncachedPositions.length) / timePositions.length) *
-    100
-  ).toFixed(1);
-  console.log(
-    `🎉 Completed thumbnail generation for ${mediaId}: ${thumbnails.length}/${timePositions.length} successful (${cacheHitRate}% cache hit rate)`
-  );
+
+
   return thumbnails;
 };
 
@@ -579,17 +527,7 @@ const calculateVideoThumbnailPositions = (
   // Ensure minimum thumbnails for very short videos
   const finalThumbnailCount = Math.max(2, actualThumbnailCount);
 
-  console.log(
-    `🎯 Zoom-responsive thumbnail calculation for ${duration}s video: ${finalThumbnailCount} thumbnails`,
-    {
-      duration,
-      intervalSeconds,
-      calculatedFromInterval,
-      maxThumbnails,
-      finalThumbnailCount,
-      zoomAware: true,
-    }
-  );
+
 
   // Always spread thumbnails evenly across the duration for better coverage
   if (finalThumbnailCount <= 1) {
@@ -602,10 +540,7 @@ const calculateVideoThumbnailPositions = (
     }
   }
 
-  console.log(
-    `📊 Calculated ${positions.length} thumbnail positions for ${duration}s video:`,
-    positions
-  );
+
   return positions;
 };
 
@@ -671,7 +606,7 @@ const evictOldestVideoThumbnails = (): void => {
     }
   }
 
-  console.log(`Evicted ${toRemove} old thumbnails from cache`);
+
 };
 
 /**
@@ -733,7 +668,7 @@ export const clearVideoThumbnailsForMedia = (mediaId: string): void => {
 
   delete videoThumbnailCache[mediaId];
   cacheSize -= thumbnailCount;
-  console.log(`Cleared ${thumbnailCount} thumbnails for media ${mediaId}`);
+
 };
 
 /**
@@ -749,13 +684,11 @@ export const clearAllVideoThumbnails = async (): Promise<void> => {
   if (persistentCacheAdapter) {
     try {
       await persistentCacheAdapter.clear();
-      console.log("Cleared all thumbnails from persistent cache");
+      // Cleared all thumbnails from persistent cache
     } catch (error) {
-      console.warn("Failed to clear persistent cache:", error);
+      // Handle error without console
     }
   }
-
-  console.log("Cleared all thumbnails from cache");
 };
 
 /**
@@ -790,9 +723,7 @@ const cleanupExpiredVideoThumbnails = (): void => {
     }
   }
 
-  if (removedCount > 0) {
-    console.log(`Cleaned up ${removedCount} expired thumbnails`);
-  }
+
 };
 
 /**
@@ -805,7 +736,7 @@ export const startVideoThumbnailCacheCleanup = (): void => {
     cleanupExpiredVideoThumbnails();
   }, cacheConfig.cleanupInterval);
 
-  console.log("Started automatic video thumbnail cache cleanup");
+
 };
 
 /**
@@ -815,7 +746,7 @@ export const stopVideoThumbnailCacheCleanup = (): void => {
   if (cleanupIntervalId) {
     clearInterval(cleanupIntervalId);
     cleanupIntervalId = null;
-    console.log("Stopped automatic video thumbnail cache cleanup");
+
   }
 };
 
@@ -833,7 +764,7 @@ export const configureVideoThumbnailCache = (
     startVideoThumbnailCacheCleanup();
   }
 
-  console.log("Updated video thumbnail cache configuration:", cacheConfig);
+
 };
 
 /**
@@ -861,31 +792,30 @@ export const preloadVideoThumbnails = async (
   videoDuration: number,
   options: VideoThumbnailOptions = {}
 ): Promise<void> => {
-  console.log(`Preloading video thumbnails for ${mediaId}...`);
   await generateVideoThumbnails(mediaId, videoFile, videoDuration, options);
-  console.log(`Finished preloading video thumbnails for ${mediaId}`);
 };
 
 // Initialize cache cleanup and persistent storage on module load
 if (typeof window !== "undefined") {
   startVideoThumbnailCacheCleanup();
 
-  // Initialize persistent cache with detailed logging
-  console.log("🚀 Initializing video thumbnail persistent cache...");
+  // Initialize persistent cache
   initializePersistentCache()
     .then(() => {
-      console.log("✅ Persistent cache initialization complete");
-      console.log(
-        "📊 Cache stats after loading:",
-        getVideoThumbnailCacheStats()
-      );
+      // Persistent cache initialization complete
     })
-    .catch((error) => {
-      console.warn(
-        "❌ Failed to initialize persistent thumbnail cache:",
-        error
-      );
+    .catch(() => {
+      // Handle initialization error without console
     });
+
+  // Better cleanup on page visibility change
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      stopVideoThumbnailCacheCleanup();
+    } else {
+      startVideoThumbnailCacheCleanup();
+    }
+  });
 
   // Cleanup on page unload
   window.addEventListener("beforeunload", () => {

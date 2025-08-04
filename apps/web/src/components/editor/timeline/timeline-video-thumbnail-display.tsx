@@ -41,14 +41,7 @@ export function TimelineVideoThumbnailDisplay({
   const { currentTime } = usePlaybackStore();
   const [thumbnailTiles, setThumbnailTiles] = useState<ThumbnailTile[]>([]);
 
-  console.log("🎭 TimelineVideoThumbnailDisplay mounted for:", {
-    mediaId: mediaItem.id,
-    mediaName: mediaItem.name,
-    hasFile: !!mediaItem.file,
-    elementDuration,
-    elementWidth,
-    elementHeight,
-  });
+
 
   const {
     currentThumbnail,
@@ -72,18 +65,7 @@ export function TimelineVideoThumbnailDisplay({
 
   // Calculate thumbnail tiles for display with aspect ratio awareness
   const calculatedTiles = useMemo(() => {
-    console.log("🧮 Calculating thumbnail tiles:", {
-      allThumbnails: allThumbnails.length,
-      elementWidth,
-      elementDuration,
-      zoomLevel,
-      thumbnails: allThumbnails.map((t: any) => ({
-        time: t.timePosition,
-        url: t.url.substring(0, 30) + "...",
-        dimensions: `${t.width}x${t.height}`,
-        aspectRatio: (t.width / t.height).toFixed(3),
-      })),
-    });
+
 
     const tiles: ThumbnailTile[] = [];
     const pixelsPerSecond = TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel;
@@ -94,7 +76,7 @@ export function TimelineVideoThumbnailDisplay({
     );
 
     if (sortedThumbnails.length === 0) {
-      console.log("⚠️ No thumbnails available for tiling");
+
       return tiles;
     }
 
@@ -110,9 +92,7 @@ export function TimelineVideoThumbnailDisplay({
     // Calculate exact tile width to perfectly fill available space
     const exactTileWidth = availableWidth / thumbnailCount;
 
-    console.log(
-      `🎯 Seamless thumbnail layout: ${exactTileWidth.toFixed(1)}px per tile (total: ${availableWidth}px)`
-    );
+
 
     sortedThumbnails.forEach((thumbnail, index) => {
       // Use exact positioning to eliminate gaps
@@ -132,18 +112,7 @@ export function TimelineVideoThumbnailDisplay({
       });
     });
 
-    console.log("🎨 Generated aspect-aware thumbnail tiles:", {
-      tilesCount: tiles.length,
-      hasPortraitThumbnails,
-      isLoading,
-      elementWidth,
-      thumbnailDetails: allThumbnails.map((t: any) => ({
-        time: t.timePosition,
-        hasUrl: !!t.url,
-        aspect: (t.width / t.height).toFixed(3),
-        isPortrait: t.width < t.height,
-      })),
-    });
+
 
     return tiles;
   }, [allThumbnails, elementWidth, elementDuration, zoomLevel, isLoading]);
@@ -155,35 +124,18 @@ export function TimelineVideoThumbnailDisplay({
 
   // Enhanced thumbnail generation with better UX
   useEffect(() => {
-    console.log("🚀 Enhanced thumbnail generation check:", {
-      mediaType: mediaItem.type,
-      thumbnailCount: allThumbnails.length,
-      isLoading,
-      hasStaticThumbnail: !!mediaItem.thumbnailUrl,
-      preloadOnMount: !!preload,
-      zoomLevel,
-      lastZoomLevel: lastZoomLevel.current,
-      elementWidth,
-      hasTriggeredGeneration: hasTriggeredGeneration.current,
-    });
+
 
     if (mediaItem.type === "video" && !isLoading) {
       // Initial load: Start generation in background while showing large poster frame
       if (allThumbnails.length === 0 && !hasTriggeredGeneration.current) {
-        console.log(
-          "🎬 Starting background video thumbnail generation for",
-          mediaItem.id,
-          "at zoom",
-          zoomLevel
-        );
+
         hasTriggeredGeneration.current = true;
         lastZoomLevel.current = zoomLevel;
 
         // Small delay to let the large image render first, then start generation
         setTimeout(() => {
-          console.log(
-            "🎬 Beginning video thumbnail generation in background..."
-          );
+
           preload();
         }, 100);
       }
@@ -193,35 +145,18 @@ export function TimelineVideoThumbnailDisplay({
 
         if (isZoomingIn && zoomLevel > 1.2) {
           // Zooming in: generate more thumbnails
-          console.log(
-            "🔍 Zoom increased, generating more detailed video thumbnails:",
-            {
-              oldZoom: lastZoomLevel.current,
-              newZoom: zoomLevel,
-              currentThumbnails: allThumbnails.length,
-            }
-          );
+
           lastZoomLevel.current = zoomLevel;
           // Clear existing thumbnails and generate new ones optimized for current zoom
-          console.log(
-            "🧹 Clearing existing thumbnails before regenerating for new zoom level"
-          );
+
           clearThumbnails();
           setTimeout(() => {
-            console.log(
-              "🎬 Generating new detailed video thumbnails for zoom level",
-              zoomLevel
-            );
+
             generateThumbnails();
           }, 200);
         } else if (!isZoomingIn) {
           // Zooming out: smart reuse of cached thumbnails
-          console.log("🔄 Zoom decreased, reusing cached video thumbnails:", {
-            oldZoom: lastZoomLevel.current,
-            newZoom: zoomLevel,
-            currentThumbnails: allThumbnails.length,
-            action: "smart_reuse",
-          });
+
           lastZoomLevel.current = zoomLevel;
           // Trigger regeneration with current cache - this will reuse existing thumbnails
           generateThumbnails();
@@ -253,14 +188,7 @@ export function TimelineVideoThumbnailDisplay({
     return relativeTime * pixelsPerSecond;
   }, [currentTime, elementStartTime, elementDuration, zoomLevel]);
 
-  console.log("🎬 TimelineVideoThumbnailDisplay render state:", {
-    mediaType: mediaItem.type,
-    elementWidth,
-    hasTriggeredGeneration: hasTriggeredGeneration.current,
-    thumbnailUrls: allThumbnails.map(
-      (t: any) => t.url.substring(0, 30) + "..."
-    ),
-  });
+
 
   // Enhanced loading state: Show large poster frame while generating thumbnails
   if (isLoading && allThumbnails.length === 0) {
