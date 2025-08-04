@@ -14,7 +14,10 @@ import { HeaderBase } from "./header-base";
 import { formatTimeCode } from "@/lib/time";
 import { useProjectStore } from "@/stores/project-store";
 import { KeyboardShortcutsHelp } from "./keyboard-shortcuts-help";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { VideoThumbnailSettingsButton } from "./editor/video-thumbnail-settings-button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,8 +43,7 @@ export function EditorHeader() {
   const { theme, setTheme } = useTheme();
 
   const handleExport = () => {
-    // TODO: Implement export functionality
-    // NOTE: This is already being worked on
+    // Export functionality to be implemented
     console.log("Export project");
     window.open("https://youtube.com/watch?v=dQw4w9WgXcQ", "_blank");
   };
@@ -148,6 +150,10 @@ export function EditorHeader() {
   const rightContent = (
     <nav className="flex items-center gap-2">
       <KeyboardShortcutsHelp />
+
+      {/* Simple Video Thumbnail Settings */}
+      <VideoThumbnailSettingsButton />
+
       <Button
         size="sm"
         className="h-8 text-xs !bg-linear-to-r from-cyan-400 to-blue-500 text-white hover:opacity-85 transition-opacity"

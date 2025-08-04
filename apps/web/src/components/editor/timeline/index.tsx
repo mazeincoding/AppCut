@@ -105,11 +105,17 @@ export function Timeline() {
 
   // Old marquee selection removed - using new SelectionBox component instead
 
-  // Dynamic timeline width calculation based on playhead position and duration
-  const dynamicTimelineWidth = Math.max(
+  // Dynamic timeline width calculation - timeline expands to show content
+  const contentBasedWidth = Math.max(
     (duration || 0) * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel, // Base width from duration
-    (currentTime + 30) * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel, // Width to show current time + 30 seconds buffer
-    timelineRef.current?.clientWidth || 1000 // Minimum width
+    (currentTime + 30) * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel // Width to show current time + 30 seconds buffer
+  );
+
+  // FINAL FIX: Timeline should always be wide enough to show content properly
+  // The issue was that containerWidth was often smaller than needed content width
+  const dynamicTimelineWidth = Math.max(
+    contentBasedWidth,
+    2000 // Ensure minimum reasonable width for timeline functionality
   );
 
   // Scroll synchronization and auto-scroll to playhead
