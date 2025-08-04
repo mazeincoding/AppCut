@@ -5,6 +5,8 @@ import { Tab, tabs, useMediaPanelStore } from "./store";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+
 
 export function TabBar() {
   const { activeTab, setActiveTab } = useMediaPanelStore();
@@ -76,13 +78,20 @@ export function TabBar() {
           return (
             <div
               className={cn(
-                "flex flex-col gap-0.5 items-center cursor-pointer opacity-100 hover:opacity-75",
+                "flex z-[100] flex-col gap-0.5 items-center cursor-pointer",
                 activeTab === tabKey ? "text-primary !opacity-100" : "text-muted-foreground"
               )}
               onClick={() => setActiveTab(tabKey)}
               key={tabKey}
             >
-              <tab.icon className="size-[1.1rem]!" />
+              <Tooltip delayDuration={10}>
+                <TooltipTrigger asChild>
+                  <tab.icon className="size-[1.1rem]! opacity-100 hover:opacity-75" />
+                </TooltipTrigger>
+                <TooltipContent side="right" align="center" variant="sidebar" sideOffset={8}>
+                  <div className="dark:text-base-gray-950 text-black text-sm font-medium leading-none dark:text-white">{tab.label}</div>
+                </TooltipContent>
+              </Tooltip>
             </div>
           );
         })}
