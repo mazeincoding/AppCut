@@ -247,22 +247,26 @@ export function TimelineElement({
       const useVideoThumbnails =
         videoThumbnailSettings.enabled && mediaItem.file;
 
-      console.log("🔍 Video element debug:", {
-        useVideoThumbnails,
-        settingsEnabled: videoThumbnailSettings.enabled,
-        hasFile: !!mediaItem.file,
-        pathname:
-          typeof window !== "undefined" ? window.location.pathname : "server",
-        mediaItemId: mediaItem.id,
-        mediaItemName: mediaItem.name,
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.log("🔍 Video element debug:", {
+          useVideoThumbnails,
+          settingsEnabled: videoThumbnailSettings.enabled,
+          hasFile: !!mediaItem.file,
+          pathname:
+            typeof window !== "undefined" ? window.location.pathname : "server",
+          mediaItemId: mediaItem.id,
+          mediaItemName: mediaItem.name,
+        });
+      }
 
       if (useVideoThumbnails) {
         // Use video thumbnails when enabled in settings
-        console.log(
-          "🎬 Rendering TimelineVideoThumbnailDisplay for",
-          mediaItem.id
-        );
+        if (process.env.NODE_ENV === 'development') {
+          console.log(
+            "🎬 Rendering TimelineVideoThumbnailDisplay for",
+            mediaItem.id
+          );
+        }
         return (
           <div className="w-full h-full flex items-center justify-center">
             <TimelineVideoThumbnailDisplay

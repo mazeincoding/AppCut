@@ -57,14 +57,17 @@ export function useVideoThumbnails({
 
   const { currentTime, isPlaying } = usePlaybackStore();
 
-  console.log("🎣 useVideoThumbnails hook initialized:", {
-    mediaId,
-    elementStartTime,
-    elementDuration,
-    enabled,
-    zoomLevel,
-    options,
-  });
+  if (process.env.NODE_ENV === 'development') {
+    console.log("🎣 useVideoThumbnails hook initialized:", {
+      mediaId,
+      elementStartTime,
+      elementDuration,
+      enabled,
+      zoomLevel,
+      options,
+    });
+  }
+
   const { mediaItems } = useMediaStore();
 
   // Load settings and calculate optimal options
@@ -174,7 +177,7 @@ export function useVideoThumbnails({
       const errorMessage =
         err instanceof Error ? err.message : "Failed to generate thumbnails";
       setError(errorMessage);
-      console.error("Video thumbnail generation failed:", err);
+      // Video thumbnail generation failed - handle error appropriately
     } finally {
       setIsLoading(false);
     }
@@ -214,7 +217,7 @@ export function useVideoThumbnails({
       setAllThumbnails(existingThumbnails);
       updateCurrentThumbnail(currentTime);
     } catch (err) {
-      console.error("Failed to preload video thumbnails:", err);
+      // Failed to preload video thumbnails - handle error appropriately
     }
   }, [
     enabled,

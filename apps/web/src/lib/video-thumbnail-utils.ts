@@ -210,12 +210,14 @@ const getOptimizedThumbnailDimensions = (
     const portraitWidth = Math.round(defaultHeight * 0.6); // 72px for 120px height
     const portraitHeight = defaultHeight; // Keep full height
 
-    console.log(
-      `📱 Portrait video detected (${videoWidth}x${videoHeight}, ratio: ${videoAspect.toFixed(3)})`
-    );
-    console.log(
-      `🎯 Optimized thumbnail size: ${portraitWidth}x${portraitHeight} (was ${defaultWidth}x${defaultHeight})`
-    );
+    if (process.env.NODE_ENV === 'development') {
+      console.log(
+        `📱 Portrait video detected (${videoWidth}x${videoHeight}, ratio: ${videoAspect.toFixed(3)})`
+      );
+      console.log(
+        `🎯 Optimized thumbnail size: ${portraitWidth}x${portraitHeight} (was ${defaultWidth}x${defaultHeight})`
+      );
+    }
 
     return { width: portraitWidth, height: portraitHeight };
   }
@@ -224,12 +226,14 @@ const getOptimizedThumbnailDimensions = (
     const ultraWideWidth = Math.round(defaultHeight * 2.1); // 252px for 120px height
     const ultraWideHeight = defaultHeight;
 
-    console.log(
-      `🎬 Ultra-wide video detected (${videoWidth}x${videoHeight}, ratio: ${videoAspect.toFixed(3)})`
-    );
-    console.log(
-      `🎯 Optimized thumbnail size: ${ultraWideWidth}x${ultraWideHeight} (was ${defaultWidth}x${defaultHeight})`
-    );
+    if (process.env.NODE_ENV === 'development') {
+      console.log(
+        `🎬 Ultra-wide video detected (${videoWidth}x${videoHeight}, ratio: ${videoAspect.toFixed(3)})`
+      );
+      console.log(
+        `🎯 Optimized thumbnail size: ${ultraWideWidth}x${ultraWideHeight} (was ${defaultWidth}x${defaultHeight})`
+      );
+    }
 
     return { width: ultraWideWidth, height: ultraWideHeight };
   }
@@ -537,25 +541,12 @@ export const generateVideoThumbnails = async (
           await new Promise((resolve) => setTimeout(resolve, 100));
         }
       } catch (error) {
-        console.error(
-          `❌ Failed to generate native thumbnail ${index + 1}/${timePositions.length} at ${position}s:`,
-          error
-        );
+        // Failed to generate native thumbnail - handle error appropriately
 
         // Provide helpful information for native video thumbnail errors
         if (error instanceof Error) {
-          if (error.message.includes("Canvas context not available")) {
-            console.warn(`💡 Canvas context unavailable. This could be due to:
-            1. Browser doesn't support Canvas API
-            2. Hardware acceleration disabled
-            3. Memory constraints`);
-          } else if (error.message.includes("Video loading failed")) {
-            console.warn(`💡 Video loading failed. This could be due to:
-            1. Unsupported video format
-            2. Corrupted video file
-            3. Browser codec limitations
-            4. File access restrictions`);
-          }
+          // Handle specific error types appropriately
+          // Canvas context or video loading errors should be handled by the calling code
         }
       }
     }
