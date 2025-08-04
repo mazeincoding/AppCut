@@ -77,8 +77,8 @@ export default async function ContributorsPage() {
 
       <main className="relative">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-muted/20 to-transparent rounded-full blur-3xl" />
-          <div className="absolute top-1/2 -left-40 w-80 h-80 bg-gradient-to-tr from-muted/10 to-transparent rounded-full blur-3xl" />
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-linear-to-br from-muted/20 to-transparent rounded-full blur-3xl" />
+          <div className="absolute top-1/2 -left-40 w-80 h-80 bg-linear-to-tr from-muted/10 to-transparent rounded-full blur-3xl" />
         </div>
 
         <div className="relative container mx-auto px-4 py-16">
@@ -138,8 +138,8 @@ export default async function ContributorsPage() {
                       className="group block flex-1"
                     >
                       <div className="relative mx-auto max-w-md">
-                        <div className="absolute inset-0 bg-gradient-to-r from-muted/50 to-muted/30 rounded-2xl blur group-hover:blur-md transition-all duration-300" />
-                        <Card className="relative bg-background/80 backdrop-blur-sm border-2 group-hover:border-muted-foreground/20 transition-all duration-300 group-hover:shadow-xl">
+                        <div className="absolute inset-0 bg-linear-to-r from-muted/50 to-muted/30 rounded-2xl blur-sm group-hover:blur-md transition-all duration-300" />
+                        <Card className="relative bg-background/80 backdrop-blur-xs border-2 group-hover:border-muted-foreground/20 transition-all duration-300 group-hover:shadow-xl">
                           <CardContent className="p-8 text-center">
                             <div className="relative mb-6">
                               <Avatar className="h-24 w-24 mx-auto ring-4 ring-background shadow-2xl">
@@ -268,7 +268,7 @@ export default async function ContributorsPage() {
                         animationDelay: `${index * 100}ms`,
                       }}
                     >
-                      <Card className="h-full bg-background/80 backdrop-blur-sm border-2 group-hover:border-muted-foreground/20 transition-all duration-300 group-hover:shadow-xl">
+                      <Card className="h-full bg-background/80 backdrop-blur-xs border-2 group-hover:border-muted-foreground/20 transition-all duration-300 group-hover:shadow-xl">
                         <CardContent className="p-6 text-center h-full flex flex-col">
                           <div className="mb-4">
                             <div className="w-12 h-12 mx-auto rounded-full bg-muted/50 flex items-center justify-center group-hover:bg-muted/70 transition-colors">

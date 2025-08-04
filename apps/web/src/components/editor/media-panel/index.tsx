@@ -6,6 +6,9 @@ import { useMediaPanelStore, Tab } from "./store";
 import { TextView } from "./views/text";
 import { StickerView } from "./views/stickers";
 import { AudioView } from "./views/audio";
+import { SoundsView } from "./views/sounds";
+import { Separator } from "@/components/ui/separator";
+import { SettingsView } from "./views/settings";
 
 export function MediaPanel() {
   const { activeTab } = useMediaPanelStore();
@@ -14,7 +17,8 @@ export function MediaPanel() {
     media: <MediaView />,
     audio: (
       <div className="p-4 text-muted-foreground">Audio view coming soon...</div>
-    ),
+     ),
+    sounds: <SoundsView />,
     text: <TextView />,
     stickers: <StickerView />,
     effects: (
@@ -42,12 +46,14 @@ export function MediaPanel() {
         Adjustment view coming soon...
       </div>
     ),
+    settings: <SettingsView />,
   };
 
   return (
-    <div className="h-full flex flex-col bg-panel rounded-sm">
+    <div className="h-full flex bg-panel">
       <TabBar />
-      <div className="flex-1 overflow-y-auto">{viewMap[activeTab]}</div>
+      <Separator orientation="vertical" />
+      <div className="flex-1 overflow-hidden">{viewMap[activeTab]}</div>
     </div>
   );
 }

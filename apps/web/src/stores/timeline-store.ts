@@ -126,6 +126,7 @@ interface TimelineStore {
     pushHistory?: boolean
   ) => void;
   toggleTrackMute: (trackId: string) => void;
+  toggleElementHidden: (trackId: string, elementId: string) => void;
 
   // Split operations for elements
   splitElement: (
@@ -868,6 +869,24 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       );
     },
 
+    toggleElementHidden: (trackId, elementId) => {
+      get().pushHistory();
+      updateTracksAndSave(
+        get()._tracks.map((track) =>
+          track.id === trackId
+            ? {
+                ...track,
+                elements: track.elements.map((element) =>
+                  element.id === elementId
+                    ? { ...element, hidden: !element.hidden }
+                    : element
+                ),
+              }
+            : track
+        )
+      );
+    },
+
     updateTextElement: (trackId, elementId, updates) => {
       get().pushHistory();
       updateTracksAndSave(
@@ -1426,16 +1445,24 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
 
     addMediaAtTime: (item, currentTime = 0) => {
       const trackType = item.type === "audio" ? "audio" : "media";
-      const targetTrackId = get().findOrCreateTrack(trackType);
-
       const duration =
         item.duration || TIMELINE_CONSTANTS.DEFAULT_IMAGE_DURATION;
 
-      if (get().checkElementOverlap(targetTrackId, currentTime, duration)) {
-        toast.error(
-          "Cannot place element here - it would overlap with existing elements"
-        );
-        return false;
+      // Get all tracks of the right type
+      const tracks = get()._tracks.filter((t) => t.type === trackType);
+
+      // Try to find a track with no overlap
+      let targetTrackId = null;
+      for (const track of tracks) {
+        if (!get().checkElementOverlap(track.id, currentTime, duration)) {
+          targetTrackId = track.id;
+          break;
+        }
+      }
+
+      // If no free track found, create a new one
+      if (!targetTrackId) {
+        targetTrackId = get().addTrack(trackType);
       }
 
       get().addElementToTrack(targetTrackId, {

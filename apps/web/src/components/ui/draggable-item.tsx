@@ -24,6 +24,7 @@ export interface DraggableMediaItemProps {
   showPlusOnDrag?: boolean;
   showLabel?: boolean;
   rounded?: boolean;
+  variant?: "card" | "compact";
 }
 
 export function DraggableMediaItem({
@@ -37,6 +38,7 @@ export function DraggableMediaItem({
   showPlusOnDrag = true,
   showLabel = true,
   rounded = true,
+  variant = "card",
 }: DraggableMediaItemProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
@@ -88,49 +90,69 @@ export function DraggableMediaItem({
 
   return (
     <>
-      <div ref={dragRef} className="relative group w-28 h-28">
-        <div
-          className={`flex flex-col gap-1 p-0 h-auto w-full relative cursor-default ${className}`}
-        >
-          <AspectRatio
-            ratio={aspectRatio}
+      {variant === "card" ? (
+        <div ref={dragRef} className="relative group w-28 h-28">
+          <div
+            className={`flex flex-col gap-1 p-0 h-auto w-full relative cursor-default ${className}`}
+          >
+            <AspectRatio
+              ratio={aspectRatio}
+              className={cn(
+                "bg-panel-accent relative overflow-hidden",
+                rounded && "rounded-md",
+                "[&::-webkit-drag-ghost]:opacity-0" // Webkit-specific ghost hiding
+              )}
+              draggable={true}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+            >
+              {preview}
+              {!isDragging && (
+                <PlusButton
+                  className="opacity-0 group-hover:opacity-100"
+                  onClick={handleAddToTimeline}
+                />
+              )}
+            </AspectRatio>
+            {showLabel && (
+              <span
+                className="text-[0.7rem] text-muted-foreground truncate w-full text-left"
+                aria-label={name}
+                title={name}
+              >
+                {name.length > 8
+                  ? `${name.slice(0, 16)}...${name.slice(-3)}`
+                  : name}
+              </span>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div ref={dragRef} className="relative group w-full">
+          <div
             className={cn(
-              "bg-accent relative overflow-hidden",
-              rounded && "rounded-md",
-              "[&::-webkit-drag-ghost]:opacity-0" // Webkit-specific ghost hiding
+              "h-10 flex items-center gap-3 cursor-default w-full",
+              "[&::-webkit-drag-ghost]:opacity-0",
+              className
             )}
             draggable={true}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            {preview}
-            {!isDragging && (
-              <PlusButton
-                className="opacity-0 group-hover:opacity-100"
-                onClick={handleAddToTimeline}
-              />
-            )}
-          </AspectRatio>
-          {showLabel && (
-            <span
-              className="text-[0.7rem] text-muted-foreground truncate w-full text-left"
-              aria-label={name}
-              title={name}
-            >
-              {name.length > 8
-                ? `${name.slice(0, 16)}...${name.slice(-3)}`
-                : name}
-            </span>
-          )}
+            <div className="w-6 h-6 flex-shrink-0 rounded overflow-hidden">
+              {preview}
+            </div>
+            <span className="text-sm truncate flex-1 w-full">{name}</span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Custom drag preview */}
       {isDragging &&
         typeof document !== "undefined" &&
         createPortal(
           <div
-            className="fixed pointer-events-none z-[9999]"
+            className="fixed pointer-events-none z-9999"
             style={{
               left: dragPosition.x - 40, // Center the preview (half of 80px)
               top: dragPosition.y - 40, // Center the preview (half of 80px)
@@ -139,7 +161,7 @@ export function DraggableMediaItem({
             <div className="w-[80px]">
               <AspectRatio
                 ratio={1}
-                className="relative rounded-md overflow-hidden shadow-2xl ring ring-primary"
+                className="relative rounded-md overflow-hidden shadow-2xl ring-3 ring-primary"
               >
                 <div className="w-full h-full [&_img]:w-full [&_img]:h-full [&_img]:object-cover [&_img]:rounded-none">
                   {preview}
@@ -171,7 +193,10 @@ function PlusButton({
   const button = (
     <Button
       size="icon"
-      className={cn("absolute bottom-2 right-2 size-4", className)}
+      className={cn(
+        "absolute bottom-2 right-2 size-4 bg-background text-foreground",
+        className
+      )}
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -179,7 +204,7 @@ function PlusButton({
       }}
       title={tooltipText}
     >
-      <Plus className="!size-3" />
+      <Plus className="size-3!" />
     </Button>
   );
 

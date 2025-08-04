@@ -30,6 +30,7 @@ export interface StorageConfig {
   projectsDb: string;
   mediaDb: string;
   timelineDb: string;
+  savedSoundsDb: string;
   version: number;
 }
 
@@ -37,6 +38,7 @@ export interface StorageConfig {
 export type SerializedProject = Omit<TProject, "createdAt" | "updatedAt"> & {
   createdAt: string;
   updatedAt: string;
+  bookmarks?: number[];
 };
 
 // Extend FileSystemDirectoryHandle with missing async iterator methods

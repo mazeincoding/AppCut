@@ -32,7 +32,7 @@ export function TextView() {
       <DraggableMediaItem
         name="Default text"
         preview={
-          <div className="flex items-center justify-center w-full h-full bg-accent rounded">
+          <div className="flex items-center justify-center w-full h-full bg-panel-accent rounded">
             <span className="text-xs select-none">Default text</span>
           </div>
         }

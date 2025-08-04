@@ -46,9 +46,9 @@ export function Handlebars({ children }: HandlebarsProps) {
   const rightGradient = useTransform(rightHandleX, [0, width + 10], [0, 100]);
 
   return (
-    <div className="flex justify-center gap-4 leading-[4rem] mt-0 md:mt-2">
-      <div ref={containerRef} className="relative -rotate-[2.76deg] mt-2">
-        <div className="absolute inset-0 w-full h-full rounded-2xl border border-yellow-500 flex justify-between z-[1]">
+    <div className="flex justify-center gap-4 leading-16">
+      <div ref={containerRef} className="relative -rotate-[2.76deg] mt-0.5">
+        <div className="absolute inset-0 w-full h-full rounded-2xl border border-yellow-500 flex justify-between z-1">
           <motion.div
             className="absolute z-10 left-0 h-full border border-yellow-500 w-7 rounded-full bg-accent flex items-center justify-center select-none"
             style={{
@@ -62,7 +62,7 @@ export function Handlebars({ children }: HandlebarsProps) {
             whileDrag={{ scale: 1.1, cursor: "grabbing" }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
           >
-            <div className="w-2 h-8 rounded-full bg-yellow-500"></div>
+            <div className="w-2 h-8 rounded-full bg-yellow-500" />
           </motion.div>
 
           <motion.div
@@ -81,7 +81,7 @@ export function Handlebars({ children }: HandlebarsProps) {
             whileDrag={{ scale: 1.1, cursor: "grabbing" }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
           >
-            <div className="w-2 h-8 rounded-full bg-yellow-500"></div>
+            <div className="w-2 h-8 rounded-full bg-yellow-500" />
           </motion.div>
         </div>
 

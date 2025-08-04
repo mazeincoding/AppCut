@@ -49,10 +49,7 @@ export function SelectionBox({
   return (
     <div
       ref={selectionBoxRef}
-      className="absolute pointer-events-none z-50"
-      style={{
-        backgroundColor: "hsl(var(--foreground) / 0.1)",
-      }}
+      className="absolute pointer-events-none z-50 bg-foreground/10"
     />
   );
 }
