@@ -14,8 +14,8 @@ export const metadata = baseMetaData;
 
 const protectedRoutes = [
   {
-    path: "/api/waitlist",
-    method: "POST",
+    path: "/none",
+    method: "GET",
   },
 ];
 

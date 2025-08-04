@@ -15,7 +15,7 @@ import { create } from "zustand";
 
 export type Tab =
   | "media"
-  | "audio"
+  | "sounds"
   | "text"
   | "stickers"
   | "effects"
@@ -30,9 +30,9 @@ export const tabs: { [key in Tab]: { icon: LucideIcon; label: string } } = {
     icon: VideoIcon,
     label: "Media",
   },
-  audio: {
+  sounds: {
     icon: MusicIcon,
-    label: "Audio",
+    label: "Sounds",
   },
   text: {
     icon: TypeIcon,

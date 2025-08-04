@@ -381,7 +381,7 @@ export function PreviewPanel() {
               textDecoration: element.textDecoration,
               padding: "4px 8px",
               borderRadius: "2px",
-              whiteSpace: "nowrap",
+              whiteSpace: "pre-wrap",
               // Fallback for system fonts that don't have classes
               ...(fontClassName === "" && { fontFamily: element.fontFamily }),
             }}

@@ -4,7 +4,7 @@ import { TabBar } from "./tabbar";
 import { MediaView } from "./views/media";
 import { useMediaPanelStore, Tab } from "./store";
 import { TextView } from "./views/text";
-import { AudioView } from "./views/audio";
+import { SoundsView } from "./views/sounds";
 import { Separator } from "@/components/ui/separator";
 import { SettingsView } from "./views/settings";
 
@@ -13,7 +13,7 @@ export function MediaPanel() {
 
   const viewMap: Record<Tab, React.ReactNode> = {
     media: <MediaView />,
-    audio: <AudioView />,
+    sounds: <SoundsView />,
     text: <TextView />,
     stickers: (
       <div className="p-4 text-muted-foreground">

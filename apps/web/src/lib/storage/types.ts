@@ -30,6 +30,7 @@ export interface StorageConfig {
   projectsDb: string;
   mediaDb: string;
   timelineDb: string;
+  savedSoundsDb: string;
   version: number;
 }
 

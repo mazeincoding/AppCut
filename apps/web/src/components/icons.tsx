@@ -163,25 +163,3 @@ export function DataBuddyIcon({
     </svg>
   );
 }
-
-export function SquareSlashIcon({
-  className,
-  size = 24,
-}: {
-  className?: string;
-  size?: number;
-}) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={size}
-      height={size}
-      className={className}
-      fill="none"
-      viewBox="0 0 256 256"
-    >
-      <rect width="18" height="18" x="3" y="3" rx="2" />
-      <line x1="9" x2="15" y1="15" y2="9" />
-    </svg>
-  );
-}

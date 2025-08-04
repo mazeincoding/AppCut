@@ -1,6 +1,6 @@
 "use client";
 
-import { ScrollArea } from "../../ui/scroll-area";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "../../ui/button";
 import {
   Scissors,
@@ -746,12 +746,7 @@ export function Timeline() {
               containerRef={tracksContainerRef}
               isActive={selectionBox?.isActive || false}
             />
-            <ScrollArea
-              className="w-full h-full"
-              ref={tracksScrollRef}
-              type="scroll"
-              showHorizontalScrollbar
-            >
+            <ScrollArea className="w-full h-full" ref={tracksScrollRef}>
               <div
                 className="relative flex-1"
                 style={{
