@@ -61,7 +61,7 @@ export function TabBar() {
   }, []);
 
   return (
-    <div className="flex">
+    <div className="flex pt-4">
       <ScrollButton
         direction="left"
         onClick={scrollToStart}
@@ -69,7 +69,7 @@ export function TabBar() {
       />
       <div
         ref={scrollContainerRef}
-        className="h-12 bg-panel-accent px-3 flex justify-start items-center gap-5 overflow-x-auto scrollbar-x-hidden relative w-full"
+        className="h-full px-4 flex flex-col justify-start items-center gap-5 overflow-x-auto scrollbar-x-hidden relative w-full"
       >
         {(Object.keys(tabs) as Tab[]).map((tabKey) => {
           const tab = tabs[tabKey];
@@ -82,8 +82,7 @@ export function TabBar() {
               onClick={() => setActiveTab(tabKey)}
               key={tabKey}
             >
-              <tab.icon className="!size-[1.1rem]" />
-              <span className="text-[0.65rem]">{tab.label}</span>
+              <tab.icon className="size-[1.1rem]!" />
             </div>
           );
         })}
@@ -114,10 +113,10 @@ function ScrollButton({
     <div className="bg-panel-accent w-12 h-full flex items-center justify-center">
       <Button
         size="icon"
-        className="rounded-[0.4rem] w-4 h-7 !bg-foreground/10"
+        className="rounded-[0.4rem] w-4 h-7 bg-foreground/10!"
         onClick={onClick}
       >
-        <Icon className="!size-4 text-foreground" />
+        <Icon className="size-4! text-foreground" />
       </Button>
     </div>
   );

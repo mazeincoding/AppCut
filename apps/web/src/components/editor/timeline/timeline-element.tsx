@@ -1,18 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "../../ui/button";
 import {
-  MoreVertical,
   Scissors,
   Trash2,
-  SplitSquareHorizontal,
-  Music,
-  ChevronRight,
-  ChevronLeft,
-  Type,
   Copy,
   RefreshCw,
+  EyeOff,
+  Eye,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { useMediaStore, getMediaAspectRatio } from "@/stores/media-store";
 import { useTimelineStore } from "@/stores/timeline-store";
@@ -20,7 +16,7 @@ import { usePlaybackStore } from "@/stores/playback-store";
 import AudioWaveform from "../audio-waveform";
 import { TimelineVideoThumbnailDisplay } from "./timeline-video-thumbnail-display";
 import { toast } from "sonner";
-import { TimelineElementProps, TrackType } from "@/types/timeline";
+import { TimelineElementProps } from "@/types/timeline";
 import { useTimelineElementResize } from "@/hooks/use-timeline-element-resize";
 import {
   getTrackElementClasses,
@@ -28,16 +24,6 @@ import {
   getTrackHeight,
 } from "@/constants/timeline-constants";
 import { loadVideoThumbnailSettings } from "@/lib/video-thumbnail-settings";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-} from "../../ui/dropdown-menu";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -62,30 +48,27 @@ export function TimelineElement({
     removeElementFromTrackWithRipple,
     dragState,
     splitElement,
-    splitAndKeepLeft,
-    splitAndKeepRight,
-    separateAudio,
     addElementToTrack,
     replaceElementMedia,
     rippleEditingEnabled,
+    toggleElementHidden,
   } = useTimelineStore();
   const { currentTime } = usePlaybackStore();
 
-  const [elementMenuOpen, setElementMenuOpen] = useState(false);
+  const mediaItem =
+    element.type === "media"
+      ? mediaItems.find((item) => item.id === element.mediaId)
+      : null;
+  const isAudio = mediaItem?.type === "audio";
 
-  const {
-    resizing,
-    isResizing,
-    handleResizeStart,
-    handleResizeMove,
-    handleResizeEnd,
-  } = useTimelineElementResize({
-    element,
-    track,
-    zoomLevel,
-    onUpdateTrim: updateElementTrim,
-    onUpdateDuration: updateElementDuration,
-  });
+  const { resizing, handleResizeStart, handleResizeMove, handleResizeEnd } =
+    useTimelineElementResize({
+      element,
+      track,
+      zoomLevel,
+      onUpdateTrim: updateElementTrim,
+      onUpdateDuration: updateElementDuration,
+    });
 
   const effectiveDuration =
     element.duration - element.trimStart - element.trimEnd;
@@ -143,6 +126,11 @@ export function TimelineElement({
     }
   };
 
+  const handleToggleElementHidden = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    toggleElementHidden(track.id, element.id);
+  };
+
   const handleReplaceClip = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (element.type !== "media") {
@@ -179,9 +167,7 @@ export function TimelineElement({
     if (element.type === "text") {
       return (
         <div className="w-full h-full flex items-center justify-start pl-2">
-          <span className="text-xs text-foreground/80 truncate">
-            {element.content}
-          </span>
+          <span className="text-xs text-white truncate">{element.content}</span>
         </div>
       );
     }
@@ -196,7 +182,10 @@ export function TimelineElement({
       );
     }
 
-    if (mediaItem.type === "image") {
+    if (
+      mediaItem.type === "image" ||
+      (mediaItem.type === "video" && mediaItem.thumbnailUrl)
+    ) {
       // FIXED: Use actual media aspect ratio instead of forcing 16:9
       const trackHeight = getTrackHeight(track.type);
       const tileHeight = trackHeight - 8; // Account for padding
@@ -205,16 +194,22 @@ export function TimelineElement({
       const mediaAspectRatio = getMediaAspectRatio(mediaItem);
       const tileWidth = tileHeight * mediaAspectRatio;
 
+      const imageUrl =
+        mediaItem.type === "image" ? mediaItem.url : mediaItem.thumbnailUrl;
+      const isImage = mediaItem.type === "image";
+
       return (
         <div className="w-full h-full flex items-center justify-center">
-          <div className="bg-[#004D52] py-3 w-full h-full relative">
+          <div
+            className={`w-full h-full relative ${
+              isSelected ? "bg-primary" : "bg-[#004D52]"
+            } py-3`}
+          >
             {/* FIXED: Better thumbnail display with proper aspect ratio */}
             <div
-              className="absolute top-3 bottom-3 left-0 right-0"
+              className={`absolute top-[0.15rem] bottom-[0.15rem] left-0 right-0`}
               style={{
-                backgroundImage: mediaItem.url
-                  ? `url(${mediaItem.url})`
-                  : "none",
+                backgroundImage: imageUrl ? `url(${imageUrl})` : "none",
                 backgroundRepeat: "repeat-x",
                 backgroundSize: `${tileWidth}px ${tileHeight}px`,
                 backgroundPosition: "left center",
@@ -280,6 +275,7 @@ export function TimelineElement({
               elementHeight={trackHeight}
               zoomLevel={zoomLevel}
               className="py-1"
+
             />
           </div>
         );
@@ -383,9 +379,9 @@ export function TimelineElement({
           <div
             className={`relative h-full rounded-[0.15rem] cursor-pointer overflow-hidden ${getTrackElementClasses(
               track.type
-            )} ${isSelected ? "border-b-[0.5px] border-t-[0.5px] border-foreground" : ""} ${
+            )} ${isSelected ? "" : ""} ${
               isBeingDragged ? "z-50" : "z-10"
-            }`}
+            } ${element.hidden ? "opacity-50" : ""}`}
             onClick={(e) => onElementClick && onElementClick(e, element)}
             onMouseDown={handleElementMouseDown}
             onContextMenu={(e) =>
@@ -396,14 +392,24 @@ export function TimelineElement({
               {renderElementContent()}
             </div>
 
+            {element.hidden && (
+              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center pointer-events-none">
+                {isAudio ? (
+                  <VolumeX className="h-6 w-6 text-white" />
+                ) : (
+                  <EyeOff className="h-6 w-6 text-white" />
+                )}
+              </div>
+            )}
+
             {isSelected && (
               <>
                 <div
-                  className="absolute left-0 top-0 bottom-0 w-1 cursor-w-resize bg-foreground z-50"
+                  className="absolute left-0 top-0 bottom-0 w-[0.2rem] cursor-w-resize bg-primary z-50"
                   onMouseDown={(e) => handleResizeStart(e, element.id, "left")}
                 />
                 <div
-                  className="absolute right-0 top-0 bottom-0 w-1 cursor-e-resize bg-foreground z-50"
+                  className="absolute right-0 top-0 bottom-0 w-[0.2rem] cursor-e-resize bg-primary z-50"
                   onMouseDown={(e) => handleResizeStart(e, element.id, "right")}
                 />
               </>
@@ -411,10 +417,33 @@ export function TimelineElement({
           </div>
         </div>
       </ContextMenuTrigger>
-      <ContextMenuContent className="z-[200]">
+      <ContextMenuContent className="z-200">
         <ContextMenuItem onClick={handleElementSplitContext}>
           <Scissors className="h-4 w-4 mr-2" />
           Split at playhead
+        </ContextMenuItem>
+        <ContextMenuItem onClick={handleToggleElementHidden}>
+          {isAudio ? (
+            element.hidden ? (
+              <Volume2 className="h-4 w-4 mr-2" />
+            ) : (
+              <VolumeX className="h-4 w-4 mr-2" />
+            )
+          ) : element.hidden ? (
+            <Eye className="h-4 w-4 mr-2" />
+          ) : (
+            <EyeOff className="h-4 w-4 mr-2" />
+          )}
+          <span>
+            {isAudio
+              ? element.hidden
+                ? "Unmute"
+                : "Mute"
+              : element.hidden
+                ? "Show"
+                : "Hide"}{" "}
+            {element.type === "text" ? "text" : "clip"}
+          </span>
         </ContextMenuItem>
         <ContextMenuItem onClick={handleElementDuplicateContext}>
           <Copy className="h-4 w-4 mr-2" />

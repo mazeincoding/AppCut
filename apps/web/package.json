@@ -70,6 +70,7 @@
     "zustand": "^5.0.2"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.11",
     "@tailwindcss/typography": "^0.5.16",
     "@types/bun": "latest",
     "@types/pg": "^8.15.4",
@@ -78,7 +79,7 @@
     "cross-env": "^7.0.3",
     "drizzle-kit": "^0.31.4",
     "postcss": "^8",
-    "tailwindcss": "^3.4.1",
+    "tailwindcss": "^4.1.11",
     "tsx": "^4.7.1",
     "typescript": "^5.8.3"
   }
