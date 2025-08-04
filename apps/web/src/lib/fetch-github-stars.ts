@@ -1,29 +1,56 @@
-export async function getStars(): Promise<string> {
+"use cache";
+
+import { CACHE_DURATION_SECONDS, FALLBACK_STARS } from "@/constants/gh-vars";
+import { formatCompactNumber } from "./format-numbers";
+
+interface GitHubRepoData {
+  stargazers_count: number;
+}
+
+const revalidate = CACHE_DURATION_SECONDS;
+
+export async function getGitHubStars(): Promise<string> {
   try {
-    const res = await fetch(
+    const response = await fetch(
       "https://api.github.com/repos/OpenCut-app/OpenCut",
       {
-        next: { revalidate: 3600 },
+        headers: {
+          Accept: "application/vnd.github.v3+json",
+          "User-Agent": "OpenCut-App",
+        },
+        next: {
+          revalidate,
+          tags: ["github-stars"],
+        },
       }
     );
 
-    if (!res.ok) {
-      throw new Error(`GitHub API error: ${res.status} ${res.statusText}`);
+    if (!response.ok) {
+      if ([403, 429].includes(response.status)) {
+        console.warn("GitHub API rate limited, using fallback");
+        return FALLBACK_STARS;
+      }
+      throw new Error(
+        `GitHub API error: ${response.status} ${response.statusText}`
+      );
     }
-    const data = (await res.json()) as { stargazers_count: number };
-    const count = data.stargazers_count;
 
-    if (typeof count !== "number") {
+    const data: GitHubRepoData = await response.json();
+
+    if (
+      typeof data.stargazers_count !== "number" ||
+      data.stargazers_count < 0
+    ) {
       throw new Error("Invalid stargazers_count from GitHub API");
     }
 
-    if (count >= 1_000_000)
-      return (count / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
-    if (count >= 1000)
-      return (count / 1000).toFixed(1).replace(/\.0$/, "") + "k";
-    return count.toString();
+    return formatCompactNumber(data.stargazers_count);
   } catch (error) {
     console.error("Failed to fetch GitHub stars:", error);
-    return "1.5k";
+    return FALLBACK_STARS;
   }
+}
+
+export async function refreshGitHubStars(): Promise<string> {
+  return await getGitHubStars();
 }
