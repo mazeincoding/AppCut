@@ -426,15 +426,9 @@ export function Timeline() {
 
   // --- Scroll synchronization effect ---
   useEffect(() => {
-    const rulerViewport = rulerScrollRef.current?.querySelector(
-      "[data-radix-scroll-area-viewport]"
-    ) as HTMLElement;
-    const tracksViewport = tracksScrollRef.current?.querySelector(
-      "[data-radix-scroll-area-viewport]"
-    ) as HTMLElement;
-    const trackLabelsViewport = trackLabelsScrollRef.current?.querySelector(
-      "[data-radix-scroll-area-viewport]"
-    ) as HTMLElement;
+    const rulerViewport = rulerScrollRef.current;
+    const tracksViewport = tracksScrollRef.current;
+    const trackLabelsViewport = trackLabelsScrollRef.current;
 
     if (!rulerViewport || !tracksViewport) return;
 
