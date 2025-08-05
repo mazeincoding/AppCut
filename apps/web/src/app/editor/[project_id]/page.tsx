@@ -150,7 +150,7 @@ export default function Editor() {
 
   return (
     <EditorProvider>
-      <div className="h-screen w-screen flex flex-col bg-background overflow-hidden">
+      <div className="h-screen w-screen flex flex-col overflow-hidden">
         <EditorHeader />
         <div className="flex-1 min-h-0 min-w-0">
           <ResizablePanelGroup

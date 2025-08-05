@@ -173,7 +173,7 @@ export function EditorHeader() {
       leftContent={leftContent}
       centerContent={centerContent}
       rightContent={rightContent}
-      className="bg-background h-[3.2rem] px-3 items-center mt-0.5"
+      className="h-[3.2rem] px-3 items-center"
     />
   );
 }

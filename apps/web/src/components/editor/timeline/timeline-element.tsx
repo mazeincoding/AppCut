@@ -203,7 +203,7 @@ export function TimelineElement({
             }`}
           >
             <div
-              className={`absolute top-[0.15rem] bottom-[0.15rem] left-0 right-0`}
+              className="absolute top-[0.15rem] bottom-[0.15rem] left-0 right-0"
               style={{
                 backgroundImage: imageUrl ? `url(${imageUrl})` : "none",
                 backgroundRepeat: "repeat-x",

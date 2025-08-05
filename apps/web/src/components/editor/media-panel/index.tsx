@@ -49,10 +49,10 @@ export function MediaPanel() {
   };
 
   return (
-    <div className="h-full flex bg-panel">
+    <div className="h-full flex flex-col-reverse md:flex-row bg-panel">
       <TabBar />
       <Separator orientation="vertical" />
-      <div className="flex-1 overflow-hidden">{viewMap[activeTab]}</div>
+      <div className="flex-1">{viewMap[activeTab]}</div>
     </div>
   );
 }
