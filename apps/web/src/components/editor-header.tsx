@@ -29,6 +29,7 @@ import { useRouter } from "next/navigation";
 import { FaDiscord } from "react-icons/fa6";
 import { useTheme } from "next-themes";
 import { usePlaybackStore } from "@/stores/playback-store";
+import { ExportDialog } from "./editor/renderer/export-dialog";
 
 export function EditorHeader() {
   const { getTotalDuration } = useTimelineStore();
@@ -38,13 +39,6 @@ export function EditorHeader() {
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const router = useRouter();
   const { theme, setTheme } = useTheme();
-
-  const handleExport = () => {
-    // TODO: Implement export functionality
-    // NOTE: This is already being worked on
-    console.log("Export project");
-    window.open("https://youtube.com/watch?v=dQw4w9WgXcQ", "_blank");
-  };
 
   const handleNameSave = async (newName: string) => {
     console.log("handleNameSave", newName);
@@ -148,14 +142,15 @@ export function EditorHeader() {
   const rightContent = (
     <nav className="flex items-center gap-2">
       <KeyboardShortcutsHelp />
-      <Button
-        size="sm"
-        className="h-8 text-xs !bg-linear-to-r from-cyan-400 to-blue-500 text-white hover:opacity-85 transition-opacity"
-        onClick={handleExport}
-      >
-        <Download className="h-4 w-4" />
-        <span className="text-sm pr-1">Export</span>
-      </Button>
+      <ExportDialog>
+        <Button
+          size="sm"
+          className="h-8 text-xs !bg-linear-to-r from-cyan-400 to-blue-500 text-white hover:opacity-85 transition-opacity"
+        >
+          <Download className="h-4 w-4" />
+          <span className="text-sm pr-1">Export</span>
+        </Button>
+      </ExportDialog>
       <Button
         size="icon"
         variant="text"

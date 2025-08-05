@@ -17,6 +17,7 @@ import { useProjectStore } from "@/stores/project-store";
 import { EditorProvider } from "@/components/editor-provider";
 import { usePlaybackControls } from "@/hooks/use-playback-controls";
 import { Onboarding } from "@/components/onboarding";
+import { CanvasPreviewPanel } from "@/components/editor/renderer/canvas-preview-panel";
 
 export default function Editor() {
   const {
@@ -189,7 +190,8 @@ export default function Editor() {
                   onResize={setPreviewPanel}
                   className="min-w-0 min-h-0 flex-1"
                 >
-                  <PreviewPanel />
+                  {/* <PreviewPanel /> */}
+                  <CanvasPreviewPanel />
                 </ResizablePanel>
 
                 <ResizableHandle withHandle />

@@ -28,3 +28,4 @@ node_modules
 
 # cursor
 bun.lockb
+.DS_Store
