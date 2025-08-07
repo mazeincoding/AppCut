@@ -5,6 +5,9 @@ FROM base AS builder
 
 WORKDIR /app
 
+ARG FREESOUND_CLIENT_ID
+ARG FREESOUND_API_KEY
+
 COPY package.json package.json
 COPY bun.lock bun.lock
 COPY turbo.json turbo.json
@@ -59,3 +62,4 @@ ENV HOSTNAME="0.0.0.0"
 
 
 CMD ["bun", "apps/web/server.js"]
+
