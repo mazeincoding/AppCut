@@ -50,6 +50,9 @@ services:
     build:
       context: .
       dockerfile: ./apps/web/Dockerfile
+      args:
+        - FREESOUND_CLIENT_ID=${FREESOUND_CLIENT_ID}
+        - FREESOUND_API_KEY=${FREESOUND_API_KEY}
     restart: unless-stopped
     ports:
       - "3100:3000" # app is running on 3000 so we run this at 3100
