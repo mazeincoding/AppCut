@@ -68,8 +68,8 @@ export const trimVideo = async (
 ): Promise<Blob> => {
   const ffmpeg = await initFFmpeg();
 
-  const inputName = "input.mp4";
-  const outputName = "output.mp4";
+  const inputName = 'input.mp4';
+  const outputName = 'output.mp4';
 
   // Set up progress callback
   if (onProgress) {

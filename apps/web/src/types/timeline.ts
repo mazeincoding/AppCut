@@ -14,10 +14,24 @@ interface BaseTimelineElement {
   hidden?: boolean;
 }
 
+export interface CropSettings {
+  enabled: boolean;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 // Media element that references MediaStore
 export interface MediaElement extends BaseTimelineElement {
   type: "media";
   mediaId: string;
+  x?: number;
+  y?: number;
+  scale?: number;
+  rotation?: number;
+  opacity?: number;
+  crop?: CropSettings;
 }
 
 // Text element with embedded text data

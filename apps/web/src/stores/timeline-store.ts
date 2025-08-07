@@ -5,6 +5,7 @@ import {
   CreateTimelineElement,
   TimelineTrack,
   TextElement,
+  MediaElement,
   DragData,
   sortTracksByOrder,
   ensureMainTrack,
@@ -124,6 +125,10 @@ interface TimelineStore {
     elementId: string,
     startTime: number,
     pushHistory?: boolean
+  ) => void;
+  updateElementProperties: (
+    elementId: string,
+    properties: Partial<Omit<MediaElement, 'id' | 'type'> & Omit<TextElement, 'id' | 'type'>>
   ) => void;
   toggleTrackMute: (trackId: string) => void;
   toggleElementHidden: (trackId: string, elementId: string) => void;
@@ -769,6 +774,18 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
               }
             : track
         )
+      );
+    },
+
+    updateElementProperties: (elementId, properties) => {
+      get().pushHistory();
+      updateTracksAndSave(
+        get()._tracks.map((track) => ({
+          ...track,
+          elements: track.elements.map((element) =>
+            element.id === elementId ? { ...element, ...properties } : element
+          )
+        }))
       );
     },
 
