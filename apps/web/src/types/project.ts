@@ -9,4 +9,5 @@ export interface TProject {
   backgroundType?: "color" | "blur";
   blurIntensity?: number; // in pixels (4, 8, 18)
   fps?: number;
+  bookmarks?: number[];
 }

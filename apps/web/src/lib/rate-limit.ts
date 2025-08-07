@@ -8,9 +8,9 @@ const redis = new Redis({
   token: env.UPSTASH_REDIS_REST_TOKEN,
 });
 
-export const waitlistRateLimit = new Ratelimit({
+export const baseRateLimit = new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(5, "1 m"), // 5 requests per minute
+  limiter: Ratelimit.slidingWindow(100, "1 m"), // 100 requests per minute
   analytics: true,
-  prefix: "waitlist-rate-limit",
+  prefix: "rate-limit",
 });

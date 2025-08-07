@@ -9,28 +9,30 @@ import {
   SlidersHorizontalIcon,
   LucideIcon,
   TypeIcon,
+  SettingsIcon,
 } from "lucide-react";
 import { create } from "zustand";
 
 export type Tab =
   | "media"
-  | "audio"
+  | "sounds"
   | "text"
   | "stickers"
   | "effects"
   | "transitions"
   | "captions"
   | "filters"
-  | "adjustment";
+  | "adjustment"
+  | "settings";
 
 export const tabs: { [key in Tab]: { icon: LucideIcon; label: string } } = {
   media: {
     icon: VideoIcon,
     label: "Media",
   },
-  audio: {
+  sounds: {
     icon: MusicIcon,
-    label: "Audio",
+    label: "Sounds",
   },
   text: {
     icon: TypeIcon,
@@ -59,6 +61,10 @@ export const tabs: { [key in Tab]: { icon: LucideIcon; label: string } } = {
   adjustment: {
     icon: SlidersHorizontalIcon,
     label: "Adjustment",
+  },
+  settings: {
+    icon: SettingsIcon,
+    label: "Settings",
   },
 };
 

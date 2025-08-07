@@ -57,11 +57,3 @@ export const verifications = pgTable("verifications", {
     () => /* @__PURE__ */ new Date()
   ),
 }).enableRLS();
-
-export const waitlist = pgTable("waitlist", {
-  id: text("id").primaryKey(),
-  email: text("email").notNull().unique(),
-  createdAt: timestamp("created_at")
-    .$defaultFn(() => /* @__PURE__ */ new Date())
-    .notNull(),
-}).enableRLS();

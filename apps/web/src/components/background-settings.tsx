@@ -3,7 +3,7 @@ import { Button } from "./ui/button";
 import { BackgroundIcon } from "./icons";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { colors } from "@/data/colors";
+import { colors } from "@/data/colors/solid";
 import { useProjectStore } from "@/stores/project-store";
 import { PipetteIcon } from "lucide-react";
 
@@ -40,12 +40,12 @@ export function BackgroundSettings() {
         <Button
           variant="text"
           size="icon"
-          className="!size-4 border border-muted-foreground"
+          className="size-4! border border-muted-foreground"
         >
-          <BackgroundIcon className="!size-3" />
+          <BackgroundIcon className="size-3!" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="flex flex-col items-start w-[20rem] h-[16rem] overflow-hidden p-0">
+      <PopoverContent className="flex flex-col items-start w-[20rem] h-64 overflow-hidden p-0">
         <div className="flex items-center justify-between w-full gap-2 z-10 bg-popover p-3">
           <h2 className="text-sm">Background</h2>
           <div className="flex items-center gap-2 text-sm">
@@ -100,7 +100,7 @@ function ColorView({
 }) {
   return (
     <div className="w-full h-full">
-      <div className="absolute top-8 left-0 w-[calc(100%-1rem)] h-12 bg-gradient-to-b from-popover to-transparent pointer-events-none" />
+      <div className="absolute top-8 left-0 w-[calc(100%-1rem)] h-12 bg-linear-to-b from-popover to-transparent pointer-events-none" />
       <div className="grid grid-cols-4 gap-2 w-full h-full p-3 pt-0 overflow-auto">
         <div className="w-full aspect-square rounded-sm cursor-pointer border border-foreground/15 hover:border-primary flex items-center justify-center">
           <PipetteIcon className="size-4" />

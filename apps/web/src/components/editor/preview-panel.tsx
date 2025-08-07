@@ -5,7 +5,6 @@ import { TimelineElement, TimelineTrack } from "@/types/timeline";
 import { useMediaStore, type MediaItem } from "@/stores/media-store";
 import { usePlaybackStore } from "@/stores/playback-store";
 import { useEditorStore } from "@/stores/editor-store";
-import { useAspectRatio } from "@/hooks/use-aspect-ratio";
 import { VideoPlayer } from "@/components/ui/video-player";
 import { AudioPlayer } from "@/components/ui/audio-player";
 import { Button } from "@/components/ui/button";
@@ -22,7 +21,6 @@ import { cn } from "@/lib/utils";
 import { formatTimeCode } from "@/lib/time";
 import { EditableTimecode } from "@/components/ui/editable-timecode";
 import { FONT_CLASS_MAP } from "@/lib/font-config";
-import { BackgroundSettings } from "../background-settings";
 import { useProjectStore } from "@/stores/project-store";
 import { TextElementDragState } from "@/types/editor";
 
@@ -36,7 +34,7 @@ export function PreviewPanel() {
     const { tracks, getTotalDuration, updateTextElement } = useTimelineStore();
     const { mediaItems } = useMediaStore();
     const { currentTime, toggle, setCurrentTime, isPlaying } = usePlaybackStore();
-    const { canvasSize } = useEditorStore();
+    const { canvasSize, setCanvasSize, setCanvasSizeToOriginal } = useEditorStore();
     const previewRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [previewDimensions, setPreviewDimensions] = useState({
@@ -234,6 +232,7 @@ export function PreviewPanel() {
 
         tracks.forEach((track) => {
             track.elements.forEach((element) => {
+                if (element.hidden) return;
                 const elementStart = element.startTime;
                 const elementEnd =
                     element.startTime +
@@ -378,7 +377,7 @@ export function PreviewPanel() {
                             textDecoration: element.textDecoration,
                             padding: "4px 8px",
                             borderRadius: "2px",
-                            whiteSpace: "nowrap",
+                            whiteSpace: "pre-wrap",
                             // Fallback for system fonts that don't have classes
                             ...(fontClassName === "" && {
                                 fontFamily: element.fontFamily,
@@ -422,7 +421,7 @@ export function PreviewPanel() {
                     >
                         <div className="text-center">
                             <div className="text-2xl mb-2">🎬</div>
-                            <p className="text-xs text-white">{element.name}</p>
+                            <p className="text-xs text-foreground">{element.name}</p>
                         </div>
                     </div>
                 );
@@ -561,7 +560,7 @@ export function PreviewPanel() {
 
     return (
         <>
-            <div className="h-full w-full flex flex-col min-h-0 min-w-0 bg-panel rounded-sm">
+            <div className="h-full w-full flex flex-col min-h-0 min-w-0 bg-panel rounded-sm relative">
                 <div
                     ref={containerRef}
                     className="flex-1 flex flex-col items-center justify-center p-3 min-h-0 min-w-0"
@@ -574,7 +573,7 @@ export function PreviewPanel() {
                             style={{
                                 width: previewDimensions.width,
                                 height: previewDimensions.height,
-                                backgroundColor:
+                                background:
                                     activeProject?.backgroundType === "blur"
                                         ? "transparent"
                                         : activeProject?.backgroundColor ||
@@ -844,7 +843,7 @@ function FullscreenPreview({
                     style={{
                         width: previewDimensions.width,
                         height: previewDimensions.height,
-                        backgroundColor:
+                        background:
                             activeProject?.backgroundType === "blur"
                                 ? "#1a1a1a"
                                 : activeProject?.backgroundColor || "#1a1a1a",
@@ -869,7 +868,7 @@ function FullscreenPreview({
                         )}
                 </div>
             </div>
-            <div className="p-4 bg-black">
+            <div className="p-4 bg-background">
                 <FullscreenToolbar
                     hasAnyElements={hasAnyElements}
                     onToggleExpanded={toggleExpanded}
@@ -901,24 +900,7 @@ function PreviewToolbar({
     getTotalDuration: () => number;
 }) {
     const { isPlaying, seek } = usePlaybackStore();
-    const { setCanvasSize, setCanvasSizeToOriginal } = useEditorStore();
     const { activeProject } = useProjectStore();
-    const {
-        currentPreset,
-        isOriginal,
-        getOriginalAspectRatio,
-        getDisplayName,
-        canvasPresets,
-    } = useAspectRatio();
-
-    const handlePresetSelect = (preset: { width: number; height: number }) => {
-        setCanvasSize({ width: preset.width, height: preset.height });
-    };
-
-    const handleOriginalSelect = () => {
-        const aspectRatio = getOriginalAspectRatio();
-        setCanvasSizeToOriginal(aspectRatio);
-    };
 
     if (isExpanded) {
         return (
@@ -979,43 +961,6 @@ function PreviewToolbar({
                 )}
             </Button>
             <div className="flex items-center gap-3">
-                <BackgroundSettings />
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button
-                            size="sm"
-                            className="!bg-panel-accent text-foreground/85 text-[0.70rem] h-4 rounded-none border border-muted-foreground px-0.5 py-0 font-light"
-                            disabled={!hasAnyElements}
-                        >
-                            {getDisplayName()}
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                            onClick={handleOriginalSelect}
-                            className={cn(
-                                "text-xs",
-                                isOriginal && "font-semibold"
-                            )}
-                        >
-                            Original
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        {canvasPresets.map((preset) => (
-                            <DropdownMenuItem
-                                key={preset.name}
-                                onClick={() => handlePresetSelect(preset)}
-                                className={cn(
-                                    "text-xs",
-                                    currentPreset?.name === preset.name &&
-                                        "font-semibold"
-                                )}
-                            >
-                                {preset.name}
-                            </DropdownMenuItem>
-                        ))}
-                    </DropdownMenuContent>
-                </DropdownMenu>
                 <Button
                     variant="text"
                     size="icon"

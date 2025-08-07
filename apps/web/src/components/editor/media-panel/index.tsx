@@ -4,14 +4,16 @@ import { TabBar } from "./tabbar";
 import { MediaView } from "./views/media";
 import { useMediaPanelStore, Tab } from "./store";
 import { TextView } from "./views/text";
-import { AudioView } from "./views/audio";
+import { SoundsView } from "./views/sounds";
+import { Separator } from "@/components/ui/separator";
+import { SettingsView } from "./views/settings";
 
 export function MediaPanel() {
   const { activeTab } = useMediaPanelStore();
 
   const viewMap: Record<Tab, React.ReactNode> = {
     media: <MediaView />,
-    audio: <AudioView />,
+    sounds: <SoundsView />,
     text: <TextView />,
     stickers: (
       <div className="p-4 text-muted-foreground">
@@ -43,12 +45,14 @@ export function MediaPanel() {
         Adjustment view coming soon...
       </div>
     ),
+    settings: <SettingsView />,
   };
 
   return (
-    <div className="h-full flex flex-col bg-panel rounded-sm">
+    <div className="h-full flex bg-panel">
       <TabBar />
-      <div className="flex-1 overflow-y-auto">{viewMap[activeTab]}</div>
+      <Separator orientation="vertical" />
+      <div className="flex-1 overflow-hidden">{viewMap[activeTab]}</div>
     </div>
   );
 }
