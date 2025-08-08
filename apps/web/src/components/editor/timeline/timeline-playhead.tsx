@@ -126,7 +126,7 @@ export function TimelinePlayhead({
   return (
     <div
       ref={playheadRef}
-      className="absolute pointer-events-auto z-50"
+      className="absolute pointer-events-auto z-45"
       style={{
         left: `${leftPosition}px`,
         top: 0,
