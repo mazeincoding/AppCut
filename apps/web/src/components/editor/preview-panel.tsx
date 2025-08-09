@@ -301,6 +301,7 @@ export function PreviewPanel() {
             trimEnd={element.trimEnd}
             clipDuration={element.duration}
             className="w-full h-full object-cover"
+            trackMuted={true}
           />
         </div>
       );
@@ -424,6 +425,7 @@ export function PreviewPanel() {
               trimStart={element.trimStart}
               trimEnd={element.trimEnd}
               clipDuration={element.duration}
+              trackMuted={elementData.track.muted}
             />
           </div>
         );
