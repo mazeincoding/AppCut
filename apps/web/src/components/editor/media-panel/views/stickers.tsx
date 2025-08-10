@@ -75,7 +75,7 @@ function StickerItem({ iconName, onAdd, isAdding }: StickerItemProps) {
         <TooltipTrigger asChild>
           <div
             className={cn(
-              "relative group aspect-square rounded-lg border bg-background/50 backdrop-blur-sm overflow-hidden cursor-pointer transition-all",
+              "relative group aspect-square rounded-lg border border-border/60 bg-muted/70 overflow-hidden cursor-pointer transition-all",
               "hover:border-primary hover:shadow-lg hover:scale-105",
               isAdding && "opacity-50 pointer-events-none"
             )}
