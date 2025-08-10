@@ -77,6 +77,7 @@ function StickerItem({ iconName, onAdd, isAdding }: StickerItemProps) {
             className={cn(
               "relative group aspect-square rounded-lg border border-border/60 bg-muted/70 overflow-hidden cursor-pointer transition-all",
               "hover:border-primary hover:shadow-lg hover:scale-105",
+              "max-w-[200px] mx-auto",
               isAdding && "opacity-50 pointer-events-none"
             )}
             onMouseEnter={() => setIsHovered(true)}
