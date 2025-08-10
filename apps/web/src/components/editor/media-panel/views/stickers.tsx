@@ -77,7 +77,6 @@ function StickerItem({ iconName, onAdd, isAdding }: StickerItemProps) {
             className={cn(
               "relative group aspect-square rounded-lg border border-border/60 bg-muted/70 overflow-hidden cursor-pointer transition-all",
               "hover:border-primary hover:shadow-lg hover:scale-105",
-              "min-w-[50px] min-h-[50px] max-w-[80px] max-h-[80px]",
               isAdding && "opacity-50 pointer-events-none"
             )}
             onMouseEnter={() => setIsHovered(true)}
@@ -166,6 +165,7 @@ export function StickersView() {
     setSelectedCategory,
     setSelectedCollection,
     setSearchInCategory,
+    setViewMode,
     loadCollections,
     searchStickers,
     downloadSticker,
@@ -324,7 +324,7 @@ export function StickersView() {
         )}
       </div>
 
-      <div className="px-3 pt-2">
+      <div className="px-3 pt-2 pb-2">
         <Tabs
           value={selectedCategory}
           onValueChange={(v) => setSelectedCategory(v as any)}
@@ -372,7 +372,7 @@ export function StickersView() {
                 </Tooltip>
               </TooltipProvider>
             </div>
-            <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(50px, 80px))' }}>
+            <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(60px, 1fr))' }}>
               {recentStickers.slice(0, 12).map((iconName) => (
                 <StickerItem
                   key={iconName}
@@ -410,7 +410,7 @@ export function StickersView() {
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
             ) : (
-              <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(50px, 80px))' }}>
+              <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(60px, 1fr))' }}>
                 {iconsToDisplay.map((iconName) => (
                   <StickerItem
                     key={iconName}
@@ -426,6 +426,25 @@ export function StickersView() {
 
         {viewMode === "search" && (
           <div className="mt-3">
+            {searchQuery && (
+              <div className="flex items-center justify-between mb-3 p-2 bg-muted/50 rounded-lg">
+                <span className="text-sm text-muted-foreground">
+                  Showing results for "{searchQuery}"
+                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-6 px-2 text-xs bg-blue-600 hover:bg-blue-700 text-white border-blue-600 hover:border-blue-700"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setLocalSearchQuery("");
+                    setViewMode("browse");
+                  }}
+                >
+                  Clear
+                </Button>
+              </div>
+            )}
             {isSearching ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -437,7 +456,7 @@ export function StickersView() {
                     {searchResults.total} results
                   </span>
                 </div>
-                <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(50px, 80px))' }}>
+                <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(60px, 1fr))' }}>
                   {iconsToDisplay.map((iconName) => (
                     <StickerItem
                       key={iconName}
@@ -538,6 +557,21 @@ export function StickersView() {
             )}
           </div>
         )}
+        <div className="mt-4">
+          <p className="text-[11px] leading-tight text-muted-foreground text-center">
+            Stickers powered by
+            {" "}
+            <a
+              href="https://iconify.design"
+              target="_blank"
+              rel="noreferrer"
+              className="underline-offset-2 hover:underline"
+            >
+              Iconify
+            </a>
+            . Icons are subject to their respective licenses.
+          </p>
+        </div>
       </ScrollArea>
     </div>
   );
