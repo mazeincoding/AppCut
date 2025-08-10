@@ -77,6 +77,7 @@ function StickerItem({ iconName, onAdd, isAdding }: StickerItemProps) {
             className={cn(
               "relative group aspect-square rounded-lg border border-border/60 bg-muted/70 overflow-hidden cursor-pointer transition-all",
               "hover:border-primary hover:shadow-lg hover:scale-105",
+              "min-w-[50px] min-h-[50px] max-w-[80px] max-h-[80px]",
               isAdding && "opacity-50 pointer-events-none"
             )}
             onMouseEnter={() => setIsHovered(true)}
@@ -371,8 +372,8 @@ export function StickersView() {
                 </Tooltip>
               </TooltipProvider>
             </div>
-            <div className="grid grid-cols-4 gap-2">
-              {recentStickers.slice(0, 8).map((iconName) => (
+            <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(50px, 80px))' }}>
+              {recentStickers.slice(0, 12).map((iconName) => (
                 <StickerItem
                   key={iconName}
                   iconName={iconName}
@@ -409,7 +410,7 @@ export function StickersView() {
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
             ) : (
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(50px, 80px))' }}>
                 {iconsToDisplay.map((iconName) => (
                   <StickerItem
                     key={iconName}
@@ -436,7 +437,7 @@ export function StickersView() {
                     {searchResults.total} results
                   </span>
                 </div>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(50px, 80px))' }}>
                   {iconsToDisplay.map((iconName) => (
                     <StickerItem
                       key={iconName}
