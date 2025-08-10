@@ -174,6 +174,7 @@ export function StickersView() {
 
   const [addingSticker, setAddingSticker] = useState<string | null>(null);
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
+  const [collectionsToShow, setCollectionsToShow] = useState(20);
 
   useEffect(() => {
     if (Object.keys(collections).length === 0) {
@@ -292,6 +293,7 @@ export function StickersView() {
               onClick={() => {
                 setLocalSearchQuery("");
                 setSearchQuery("");
+                setViewMode("browse");
               }}
             >
               <X className="h-3 w-3" />
@@ -531,7 +533,7 @@ export function StickersView() {
                       </h3>
                       <div className="grid grid-cols-1 gap-2">
                         {filteredCollections
-                          .slice(0, 20)
+                          .slice(0, collectionsToShow)
                           .map(([prefix, collection]) => (
                             <Button
                               key={prefix}
@@ -551,6 +553,21 @@ export function StickersView() {
                             </Button>
                           ))}
                       </div>
+                      {filteredCollections.length > collectionsToShow && (
+                        <div className="mt-3 text-center">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCollectionsToShow(prev => prev + 20)}
+                            className="gap-2"
+                          >
+                            Load More Collections
+                            <span className="text-xs text-muted-foreground">
+                              ({collectionsToShow} of {filteredCollections.length})
+                            </span>
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   )}
               </>
