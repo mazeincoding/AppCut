@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { env } from "@/env";
 import { baseRateLimit } from "@/lib/rate-limit";
+import { isFreesoundConfigured } from "@/lib/transcription-utils";
 
 const searchParamsSchema = z.object({
   q: z.string().max(500, "Query too long").optional(),
@@ -95,6 +96,23 @@ export async function GET(request: NextRequest) {
 
     if (!success) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
+    // Check Freesound configuration
+    const freesoundCheck = isFreesoundConfigured();
+    if (!freesoundCheck.configured) {
+      console.error(
+        "Missing environment variables:",
+        JSON.stringify(freesoundCheck.missingVars)
+      );
+
+      return NextResponse.json(
+        {
+          error: "Sound search not configured",
+          message: `Sound search requires environment variables: ${freesoundCheck.missingVars.join(", ")}. Check README for setup instructions.`,
+        },
+        { status: 503 }
+      );
     }
 
     const { searchParams } = new URL(request.url);

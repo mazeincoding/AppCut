@@ -11,3 +11,12 @@ export function isTranscriptionConfigured() {
 
   return { configured: missingVars.length === 0, missingVars };
 }
+
+export function isFreesoundConfigured() {
+  const missingVars = [];
+
+  if (!env.FREESOUND_CLIENT_ID) missingVars.push("FREESOUND_CLIENT_ID");
+  if (!env.FREESOUND_API_KEY) missingVars.push("FREESOUND_API_KEY");
+
+  return { configured: missingVars.length === 0, missingVars };
+}
