@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Call Modal transcription service
-    const response = await fetch(env.MODAL_TRANSCRIPTION_URL, {
+    const response = await fetch(env.MODAL_TRANSCRIPTION_URL!, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

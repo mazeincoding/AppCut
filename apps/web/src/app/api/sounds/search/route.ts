@@ -168,7 +168,7 @@ export async function GET(request: NextRequest) {
 
     const params = new URLSearchParams({
       query: query || "",
-      token: env.FREESOUND_API_KEY,
+      token: env.FREESOUND_API_KEY!,
       page: page.toString(),
       page_size: pageSize.toString(),
       sort: sortParam,

@@ -70,8 +70,8 @@ export async function POST(request: NextRequest) {
 
     // Initialize R2 client
     const client = new AwsClient({
-      accessKeyId: env.R2_ACCESS_KEY_ID,
-      secretAccessKey: env.R2_SECRET_ACCESS_KEY,
+      accessKeyId: env.R2_ACCESS_KEY_ID!,
+      secretAccessKey: env.R2_SECRET_ACCESS_KEY!,
     });
 
     // Generate unique filename with timestamp
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
 
     // Create presigned URL
     const url = new URL(
-      `https://${env.R2_BUCKET_NAME}.${env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com/${fileName}`
+      `https://${env.R2_BUCKET_NAME!}.${env.CLOUDFLARE_ACCOUNT_ID!}.r2.cloudflarestorage.com/${fileName}`
     );
 
     url.searchParams.set("X-Amz-Expires", "3600"); // 1 hour expiry
