@@ -82,6 +82,24 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => ({
   speed: 1.0,
 
   play: () => {
+    const state = get();
+
+    const actualContentDuration = useTimelineStore
+      .getState()
+      .getTotalDuration();
+    const effectiveDuration =
+      actualContentDuration > 0 ? actualContentDuration : state.duration;
+
+    if (effectiveDuration > 0) {
+      const fps = useProjectStore.getState().activeProject?.fps ?? 30;
+      const frameOffset = 1 / fps;
+      const endThreshold = Math.max(0, effectiveDuration - frameOffset);
+
+      if (state.currentTime >= endThreshold) {
+        get().seek(0);
+      }
+    }
+
     set({ isPlaying: true });
     startTimer(get);
   },

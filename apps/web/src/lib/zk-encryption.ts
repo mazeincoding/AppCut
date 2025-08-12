@@ -25,7 +25,7 @@ export async function encryptWithRandomKey(
   const cryptoKey = await crypto.subtle.importKey(
     "raw",
     key,
-    { name: " " },
+    { name: "AES-GCM" },
     false,
     ["encrypt"]
   );
