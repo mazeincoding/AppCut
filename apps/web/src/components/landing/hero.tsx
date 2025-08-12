@@ -14,13 +14,13 @@ import { useState } from "react";
 export function Hero() {
   const [bgError, setBgError] = useState(false);
   return (
-    <div className="min-h-[calc(100vh-4.5rem)] supports-[height:100dvh]:min-h-[calc(100dvh-4.5rem)] flex flex-col justify-between items-center text-center px-4">
+    <div className="min-h-[calc(100vh-4.5rem)] supports-[height:100dvh]:min-h-[calc(100dvh-4.5rem)] flex flex-col justify-between items-center text-center px-4 relative">
       {!bgError && (
         <Image
-          className="absolute top-0 left-0 -z-50 size-full object-cover invert dark:invert-0 opacity-85"
+          className="absolute top-0 left-0 -z-50 object-cover invert dark:invert-0 opacity-85"
           src="/landing-page-dark.png"
-          height={1903.5}
-          width={1269}
+          fill
+          sizes="100vw"
           alt="Landing page background"
           onError={() => setBgError(true)}
           priority
