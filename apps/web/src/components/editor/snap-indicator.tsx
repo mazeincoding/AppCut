@@ -28,9 +28,7 @@ export function SnapIndicator({
 
   // Track scroll position to lock snap indicator to frame
   useEffect(() => {
-    const tracksViewport = tracksScrollRef.current?.querySelector(
-      "[data-radix-scroll-area-viewport]"
-    ) as HTMLElement;
+    const tracksViewport = tracksScrollRef.current;
 
     if (!tracksViewport) return;
 

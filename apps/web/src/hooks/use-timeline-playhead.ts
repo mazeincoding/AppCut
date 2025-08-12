@@ -119,12 +119,8 @@ export function useTimelinePlayhead({
 
   // Auto-scroll function during dragging
   const performAutoScroll = useCallback(() => {
-    const rulerViewport = rulerScrollRef.current?.querySelector(
-      "[data-radix-scroll-area-viewport]"
-    ) as HTMLElement;
-    const tracksViewport = tracksScrollRef.current?.querySelector(
-      "[data-radix-scroll-area-viewport]"
-    ) as HTMLElement;
+    const rulerViewport = rulerScrollRef.current;
+    const tracksViewport = tracksScrollRef.current;
 
     if (!rulerViewport || !tracksViewport || !isScrubbing) return;
 
@@ -240,12 +236,8 @@ export function useTimelinePlayhead({
     // Only auto-scroll during playback, not during manual interactions
     if (!isPlaying || isScrubbing) return;
 
-    const rulerViewport = rulerScrollRef.current?.querySelector(
-      "[data-radix-scroll-area-viewport]"
-    ) as HTMLElement;
-    const tracksViewport = tracksScrollRef.current?.querySelector(
-      "[data-radix-scroll-area-viewport]"
-    ) as HTMLElement;
+    const rulerViewport = rulerScrollRef.current;
+    const tracksViewport = tracksScrollRef.current;
     if (!rulerViewport || !tracksViewport) return;
 
     const playheadPx = playheadPosition * 50 * zoomLevel; // TIMELINE_CONSTANTS.PIXELS_PER_SECOND = 50

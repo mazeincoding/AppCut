@@ -14,8 +14,18 @@ import { cn } from "@/lib/utils";
 import { formatTimeCode } from "@/lib/time";
 import { EditableTimecode } from "@/components/ui/editable-timecode";
 import { FONT_CLASS_MAP } from "@/lib/font-config";
-import { useProjectStore } from "@/stores/project-store";
+import { DEFAULT_CANVAS_SIZE, useProjectStore } from "@/stores/project-store";
 import { TextElementDragState } from "@/types/editor";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { LayoutGuideOverlay } from "./layout-guide-overlay";
+import { Label } from "../ui/label";
+import { SocialsIcon } from "../icons";
+import { PLATFORM_LAYOUTS, type PlatformLayout } from "@/stores/editor-store";
 
 interface ActiveElement {
   element: TimelineElement;
@@ -26,8 +36,8 @@ interface ActiveElement {
 export function PreviewPanel() {
   const { tracks, getTotalDuration, updateTextElement } = useTimelineStore();
   const { mediaItems } = useMediaStore();
-  const { currentTime, toggle, setCurrentTime, isPlaying } = usePlaybackStore();
-  const { canvasSize } = useEditorStore();
+  const { currentTime, toggle, setCurrentTime } = usePlaybackStore();
+  const { activeProject } = useProjectStore();
   const previewRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [previewDimensions, setPreviewDimensions] = useState({
@@ -35,7 +45,8 @@ export function PreviewPanel() {
     height: 0,
   });
   const [isExpanded, setIsExpanded] = useState(false);
-  const { activeProject } = useProjectStore();
+
+  const canvasSize = activeProject?.canvasSize || DEFAULT_CANVAS_SIZE;
   const [dragState, setDragState] = useState<TextElementDragState>({
     isDragging: false,
     elementId: null,
@@ -223,7 +234,8 @@ export function PreviewPanel() {
   const getActiveElements = (): ActiveElement[] => {
     const activeElements: ActiveElement[] = [];
 
-    tracks.forEach((track) => {
+    // Iterate tracks from bottom to top so topmost track renders last (on top)
+    ;[...tracks].reverse().forEach((track) => {
       track.elements.forEach((element) => {
         if (element.hidden) return;
         const elementStart = element.startTime;
@@ -300,6 +312,7 @@ export function PreviewPanel() {
             trimEnd={element.trimEnd}
             clipDuration={element.duration}
             className="w-full h-full object-cover"
+            trackMuted={true}
           />
         </div>
       );
@@ -343,7 +356,7 @@ export function PreviewPanel() {
       return (
         <div
           key={element.id}
-          className="absolute flex items-center justify-center cursor-grab"
+          className="absolute cursor-grab"
           onMouseDown={(e) =>
             handleTextMouseDown(e, element, elementData.track.id)
           }
@@ -364,7 +377,7 @@ export function PreviewPanel() {
                 canvasSize.height) *
                 100
             }%`,
-            transform: `translate(-50%, -50%) rotate(${element.rotation}deg) scale(${scaleRatio})`,
+            transform: `translate(-50%, -50%) rotate(${element.rotation}deg)`,
             opacity: element.opacity,
             zIndex: 100 + index, // Text elements on top
           }}
@@ -372,16 +385,16 @@ export function PreviewPanel() {
           <div
             className={fontClassName}
             style={{
-              fontSize: `${element.fontSize}px`,
+              fontSize: `${element.fontSize * scaleRatio}px`,
               color: element.color,
               backgroundColor: element.backgroundColor,
               textAlign: element.textAlign,
               fontWeight: element.fontWeight,
               fontStyle: element.fontStyle,
               textDecoration: element.textDecoration,
-              padding: "4px 8px",
-              borderRadius: "2px",
-              whiteSpace: "pre-wrap",
+              padding: `${4 * scaleRatio}px ${8 * scaleRatio}px`,
+              borderRadius: `${2 * scaleRatio}px`,
+              whiteSpace: "nowrap",
               // Fallback for system fonts that don't have classes
               ...(fontClassName === "" && { fontFamily: element.fontFamily }),
             }}
@@ -423,6 +436,7 @@ export function PreviewPanel() {
               trimStart={element.trimStart}
               trimEnd={element.trimEnd}
               clipDuration={element.duration}
+              trackMuted={elementData.track.muted}
             />
           </div>
         );
@@ -448,7 +462,7 @@ export function PreviewPanel() {
       // Audio elements (no visual representation)
       if (mediaItem.type === "audio") {
         return (
-          <div key={element.id} className="absolute inset-0">
+          <div key={element.id} className="absolute inset-0" style={{ pointerEvents: "none" }}>
             <AudioPlayer
               src={mediaItem.url!}
               clipStartTime={element.startTime}
@@ -496,13 +510,7 @@ export function PreviewPanel() {
                   renderElement(elementData, index)
                 )
               )}
-              {activeProject?.backgroundType === "blur" &&
-                blurBackgroundElements.length === 0 &&
-                activeElements.length > 0 && (
-                  <div className="absolute bottom-2 left-2 right-2 bg-black/70 text-white text-xs p-2 rounded">
-                    Add a video or image to use blur background
-                  </div>
-                )}
+              <LayoutGuideOverlay />
             </div>
           ) : null}
 
@@ -758,13 +766,7 @@ function FullscreenPreview({
               renderElement(elementData, index)
             )
           )}
-          {activeProject?.backgroundType === "blur" &&
-            blurBackgroundElements.length === 0 &&
-            activeElements.length > 0 && (
-              <div className="absolute bottom-2 left-2 right-2 bg-black/70 text-white text-xs p-2 rounded">
-                Add a video or image to use blur background
-              </div>
-            )}
+          <LayoutGuideOverlay />
         </div>
       </div>
       <div className="p-4 bg-background">
@@ -799,6 +801,7 @@ function PreviewToolbar({
   getTotalDuration: () => number;
 }) {
   const { isPlaying } = usePlaybackStore();
+  const { layoutGuide, toggleLayoutGuide } = useEditorStore();
 
   if (isExpanded) {
     return (
@@ -818,7 +821,7 @@ function PreviewToolbar({
   return (
     <div
       data-toolbar
-      className="flex justify-between gap-2 px-1.5 pr-4 py-1.5 border border-border/50 w-auto absolute bottom-4 right-4 bg-black/20 rounded-full backdrop-blur-l text-white"
+      className="flex justify-end gap-2 h-auto pb-5 pr-5 pt-4 w-full"
     >
       <div className="flex items-center gap-2">
         <Button
@@ -834,6 +837,54 @@ function PreviewToolbar({
             <Play className="h-3 w-3" />
           )}
         </Button>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="text"
+              size="icon"
+              className="h-auto p-0 mr-1"
+              title="Toggle layout guide"
+            >
+              <SocialsIcon className="!size-6" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80">
+            <div className="grid gap-4">
+              <div className="space-y-2">
+                <h4 className="font-medium leading-none">Layout guide</h4>
+                <p className="text-sm text-muted-foreground">
+                  Show platform-specific layout guides to help align your
+                  content with interface elements like profile pictures,
+                  usernames, and interaction buttons.
+                </p>
+              </div>
+              <div className="grid gap-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="none"
+                    checked={layoutGuide.platform === null}
+                    onCheckedChange={() =>
+                      toggleLayoutGuide(layoutGuide.platform || "tiktok")
+                    }
+                  />
+                  <Label htmlFor="none">None</Label>
+                </div>
+                {Object.entries(PLATFORM_LAYOUTS).map(([platform, label]) => (
+                  <div key={platform} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={platform}
+                      checked={layoutGuide.platform === platform}
+                      onCheckedChange={() =>
+                        toggleLayoutGuide(platform as PlatformLayout)
+                      }
+                    />
+                    <Label htmlFor={platform}>{label}</Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
         <Button
           variant="text"
           size="icon"

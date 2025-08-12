@@ -10,17 +10,16 @@ import {
   ensureMainTrack,
   validateElementTrackCompatibility,
 } from "@/types/timeline";
-import { useEditorStore } from "./editor-store";
 import {
   useMediaStore,
   getMediaAspectRatio,
   type MediaItem,
 } from "./media-store";
+import { findBestCanvasPreset } from "@/lib/editor-utils";
 import { storageService } from "@/lib/storage/storage-service";
 import { useProjectStore } from "./project-store";
 import { generateUUID } from "@/lib/utils";
 import { TIMELINE_CONSTANTS } from "@/constants/timeline-constants";
-import { toast } from "sonner";
 import { checkElementOverlaps, resolveElementOverlaps } from "@/lib/timeline";
 
 // Helper function to manage element naming with suffixes
@@ -533,9 +532,10 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
           mediaItem &&
           (mediaItem.type === "image" || mediaItem.type === "video")
         ) {
-          const editorStore = useEditorStore.getState();
-          editorStore.setCanvasSizeFromAspectRatio(
-            getMediaAspectRatio(mediaItem)
+          const projectStore = useProjectStore.getState();
+          projectStore.updateCanvasSize(
+            findBestCanvasPreset(getMediaAspectRatio(mediaItem)),
+            "original"
           );
         }
 
