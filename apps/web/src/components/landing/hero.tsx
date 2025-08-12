@@ -9,17 +9,23 @@ import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import { Handlebars } from "./handlebars";
 import Link from "next/link";
+import { useState } from "react";
 
 export function Hero() {
+  const [bgError, setBgError] = useState(false);
   return (
     <div className="min-h-[calc(100vh-4.5rem)] supports-[height:100dvh]:min-h-[calc(100dvh-4.5rem)] flex flex-col justify-between items-center text-center px-4">
-      <Image
-        className="absolute top-0 left-0 -z-50 size-full object-cover invert dark:invert-0 opacity-85"
-        src="/landing-page-bg.png"
-        height={1903.5}
-        width={1269}
-        alt="landing-page.bg"
-      />
+      {!bgError && (
+        <Image
+          className="absolute top-0 left-0 -z-50 size-full object-cover invert dark:invert-0 opacity-85"
+          src="/landing-page-dark.png"
+          height={1903.5}
+          width={1269}
+          alt="Landing page background"
+          onError={() => setBgError(true)}
+          priority
+        />
+      )}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
