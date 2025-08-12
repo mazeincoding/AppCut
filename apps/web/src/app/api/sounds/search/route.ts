@@ -101,15 +101,19 @@ export async function GET(request: NextRequest) {
     // Check Freesound configuration
     const freesoundCheck = isFreesoundConfigured();
     if (!freesoundCheck.configured) {
+      // Log missing variables server-side only
       console.error(
-        "Missing environment variables:",
-        JSON.stringify(freesoundCheck.missingVars)
+        "Sound search not configured - missing environment variables:",
+        freesoundCheck.missingVars
       );
 
       return NextResponse.json(
         {
           error: "Sound search not configured",
-          message: `Sound search requires environment variables: ${freesoundCheck.missingVars.join(", ")}. Check README for setup instructions.`,
+          message: "Sound search is not configured",
+          ...(env.NODE_ENV !== "production" && {
+            missingVars: freesoundCheck.missingVars,
+          }),
         },
         { status: 503 }
       );
