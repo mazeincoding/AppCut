@@ -21,8 +21,8 @@ import {
   ZoomOut,
   Bookmark,
   Eye,
-  MicOff,
-  Mic,
+  VolumeOff,
+  Volume2,
 } from "lucide-react";
 import {
   Tooltip,
@@ -798,12 +798,12 @@ export function Timeline() {
                     >
                       <div className="flex items-center justify-end flex-1 min-w-0 gap-2">
                         {track.muted ? (
-                          <MicOff
+                          <VolumeOff
                             className="h-4 w-4 text-destructive cursor-pointer"
                             onClick={() => toggleTrackMute(track.id)}
                           />
                         ) : (
-                          <Mic
+                          <Volume2
                             className="h-4 w-4 text-muted-foreground cursor-pointer"
                             onClick={() => toggleTrackMute(track.id)}
                           />
