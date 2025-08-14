@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useStickersStore } from "@/stores/stickers-store";
 import { useMediaStore } from "@/stores/media-store";
 import { useProjectStore } from "@/stores/project-store";
@@ -21,7 +21,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
@@ -37,8 +37,8 @@ import {
   ICONIFY_HOSTS,
   POPULAR_COLLECTIONS,
 } from "@/lib/iconify-api";
-import { generateUUID } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 interface StickerItemProps {
   iconName: string;
@@ -85,7 +85,7 @@ function StickerItem({ iconName, onAdd, isAdding }: StickerItemProps) {
             onClick={() => !isAdding && onAdd(iconName)}
           >
             <div className="w-full h-full p-4 flex items-center justify-center">
-              <img
+              <Image
                 src={
                   hostIndex === 0
                     ? getIconSvgUrl(iconName, { width: 64, height: 64 })
@@ -98,6 +98,8 @@ function StickerItem({ iconName, onAdd, isAdding }: StickerItemProps) {
                       )
                 }
                 alt={displayName}
+                width={64}
+                height={64}
                 className="w-full h-full object-contain"
                 onError={() => {
                   const next = hostIndex + 1;
@@ -108,6 +110,7 @@ function StickerItem({ iconName, onAdd, isAdding }: StickerItemProps) {
                   }
                 }}
                 loading="lazy"
+                unoptimized
               />
             </div>
 
@@ -271,7 +274,7 @@ export function StickersView() {
         });
       }
 
-      return icons.slice(0, 100) // first 100 limit
+      return icons.slice(0, 100); // first 100 limit
     }
 
     return [];
@@ -375,7 +378,12 @@ export function StickersView() {
                 </Tooltip>
               </TooltipProvider>
             </div>
-            <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(60px, 1fr))' }}>
+            <div
+              className="grid gap-2"
+              style={{
+                gridTemplateColumns: "repeat(auto-fit, minmax(60px, 1fr))",
+              }}
+            >
               {recentStickers.slice(0, 12).map((iconName) => (
                 <StickerItem
                   key={iconName}
@@ -413,7 +421,12 @@ export function StickersView() {
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
             ) : (
-              <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(60px, 1fr))' }}>
+              <div
+                className="grid gap-2"
+                style={{
+                  gridTemplateColumns: "repeat(auto-fit, minmax(60px, 1fr))",
+                }}
+              >
                 {iconsToDisplay.map((iconName) => (
                   <StickerItem
                     key={iconName}
@@ -459,7 +472,12 @@ export function StickersView() {
                     {searchResults.total} results
                   </span>
                 </div>
-                <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(60px, 1fr))' }}>
+                <div
+                  className="grid gap-2"
+                  style={{
+                    gridTemplateColumns: "repeat(auto-fit, minmax(60px, 1fr))",
+                  }}
+                >
                   {iconsToDisplay.map((iconName) => (
                     <StickerItem
                       key={iconName}
@@ -559,12 +577,15 @@ export function StickersView() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setCollectionsToShow(prev => prev + 20)}
+                            onClick={() =>
+                              setCollectionsToShow((prev) => prev + 20)
+                            }
                             className="gap-2"
                           >
                             Load More Collections
                             <span className="text-xs text-muted-foreground">
-                              ({collectionsToShow} of {filteredCollections.length})
+                              ({collectionsToShow} of{" "}
+                              {filteredCollections.length})
                             </span>
                           </Button>
                         </div>
@@ -577,8 +598,7 @@ export function StickersView() {
         )}
         <div className="mt-4">
           <p className="text-[11px] leading-tight text-muted-foreground text-center">
-            Stickers powered by
-            {" "}
+            Stickers powered by{" "}
             <a
               href="https://iconify.design"
               target="_blank"

@@ -5,7 +5,6 @@ import {
   searchIcons,
   downloadSvgAsText,
   svgToFile,
-  POPULAR_COLLECTIONS,
   type IconSet,
   type CollectionInfo,
   type IconSearchResult,
