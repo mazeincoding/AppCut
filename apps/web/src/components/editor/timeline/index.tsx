@@ -12,6 +12,7 @@ import {
   SplitSquareHorizontal,
   Pause,
   Play,
+  SkipBack,
   Video,
   Music,
   TypeIcon,
@@ -607,7 +608,11 @@ export function Timeline() {
       onMouseEnter={() => setIsInTimeline(true)}
       onMouseLeave={() => setIsInTimeline(false)}
     >
-      <TimelineToolbar zoomLevel={zoomLevel} setZoomLevel={setZoomLevel} />
+      <TimelineToolbar
+        zoomLevel={zoomLevel}
+        setZoomLevel={setZoomLevel}
+        seek={seek}
+      />
 
       {/* Timeline Container */}
       <div
@@ -931,9 +936,11 @@ function TrackIcon({ track }: { track: TimelineTrack }) {
 function TimelineToolbar({
   zoomLevel,
   setZoomLevel,
+  seek,
 }: {
   zoomLevel: number;
   setZoomLevel: (zoom: number) => void;
+  seek: (time: number) => void;
 }) {
   const {
     tracks,
@@ -955,7 +962,6 @@ function TimelineToolbar({
   const { currentTime, duration, isPlaying, toggle } = usePlaybackStore();
   const { toggleBookmark, isBookmarked } = useProjectStore();
 
-  // Action handlers
   const handleSplitSelected = () => {
     if (selectedElements.length === 0) return;
     let splitCount = 0;
@@ -1071,7 +1077,6 @@ function TimelineToolbar({
     clearSelectedElements();
   };
 
-  // Zoom handlers
   const handleZoomIn = () => {
     setZoomLevel(Math.min(4, zoomLevel + 0.25));
   };
@@ -1088,13 +1093,11 @@ function TimelineToolbar({
     await toggleBookmark(currentTime);
   };
 
-  // Check if the current time is bookmarked
   const currentBookmarked = isBookmarked(currentTime);
   return (
     <div className="border-b flex items-center justify-between px-2 py-1">
       <div className="flex items-center gap-1 w-full">
         <TooltipProvider delayDuration={500}>
-          {/* Play/Pause Button */}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -1114,15 +1117,26 @@ function TimelineToolbar({
               {isPlaying ? "Pause (Space)" : "Play (Space)"}
             </TooltipContent>
           </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="text"
+                size="icon"
+                onClick={() => seek(0)}
+                className="mr-2"
+              >
+                <SkipBack className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Return to Start (Home / Enter)</TooltipContent>
+          </Tooltip>
           <div className="w-px h-6 bg-border mx-1" />
-          {/* Time Display */}
           <div
             className="text-xs text-muted-foreground font-mono px-2"
             style={{ minWidth: "18ch", textAlign: "center" }}
           >
             {currentTime.toFixed(1)}s / {duration.toFixed(1)}s
           </div>
-          {/* Test Clip Button - for debugging */}
           {tracks.length === 0 && (
             <>
               <div className="w-px h-6 bg-border mx-1" />

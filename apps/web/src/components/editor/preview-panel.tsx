@@ -235,7 +235,7 @@ export function PreviewPanel() {
     const activeElements: ActiveElement[] = [];
 
     // Iterate tracks from bottom to top so topmost track renders last (on top)
-    ;[...tracks].reverse().forEach((track) => {
+    [...tracks].reverse().forEach((track) => {
       track.elements.forEach((element) => {
         if (element.hidden) return;
         const elementStart = element.startTime;
@@ -356,7 +356,7 @@ export function PreviewPanel() {
       return (
         <div
           key={element.id}
-          className="absolute flex items-center justify-center cursor-grab"
+          className="absolute cursor-grab"
           onMouseDown={(e) =>
             handleTextMouseDown(e, element, elementData.track.id)
           }
@@ -377,7 +377,7 @@ export function PreviewPanel() {
                 canvasSize.height) *
                 100
             }%`,
-            transform: `translate(-50%, -50%) rotate(${element.rotation}deg) scale(${scaleRatio})`,
+            transform: `translate(-50%, -50%) rotate(${element.rotation}deg)`,
             opacity: element.opacity,
             zIndex: 100 + index, // Text elements on top
           }}
@@ -385,16 +385,16 @@ export function PreviewPanel() {
           <div
             className={fontClassName}
             style={{
-              fontSize: `${element.fontSize}px`,
+              fontSize: `${element.fontSize * scaleRatio}px`,
               color: element.color,
               backgroundColor: element.backgroundColor,
               textAlign: element.textAlign,
               fontWeight: element.fontWeight,
               fontStyle: element.fontStyle,
               textDecoration: element.textDecoration,
-              padding: "4px 8px",
-              borderRadius: "2px",
-              whiteSpace: "pre-wrap",
+              padding: `${4 * scaleRatio}px ${8 * scaleRatio}px`,
+              borderRadius: `${2 * scaleRatio}px`,
+              whiteSpace: "nowrap",
               // Fallback for system fonts that don't have classes
               ...(fontClassName === "" && { fontFamily: element.fontFamily }),
             }}
@@ -436,7 +436,7 @@ export function PreviewPanel() {
               trimStart={element.trimStart}
               trimEnd={element.trimEnd}
               clipDuration={element.duration}
-              trackMuted={elementData.track.muted}
+              trackMuted={element.muted || elementData.track.muted}
             />
           </div>
         );
@@ -462,14 +462,18 @@ export function PreviewPanel() {
       // Audio elements (no visual representation)
       if (mediaItem.type === "audio") {
         return (
-          <div key={element.id} className="absolute inset-0" style={{ pointerEvents: "none" }}>
+          <div
+            key={element.id}
+            className="absolute inset-0"
+            style={{ pointerEvents: "none" }}
+          >
             <AudioPlayer
               src={mediaItem.url!}
               clipStartTime={element.startTime}
               trimStart={element.trimStart}
               trimEnd={element.trimEnd}
               clipDuration={element.duration}
-              trackMuted={elementData.track.muted}
+              trackMuted={element.muted || elementData.track.muted}
             />
           </div>
         );

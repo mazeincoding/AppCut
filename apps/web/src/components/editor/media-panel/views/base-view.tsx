@@ -11,12 +11,19 @@ interface BaseViewProps {
     content: React.ReactNode;
   }[];
   className?: string;
+  ref?: React.RefObject<HTMLDivElement>;
 }
 
-function ViewContent({ children }: { children: React.ReactNode }) {
+function ViewContent({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
     <ScrollArea className="flex-1">
-      <div className="p-5">{children}</div>
+      <div className={`p-5 h-full ${className}`}>{children}</div>
     </ScrollArea>
   );
 }
@@ -26,11 +33,12 @@ export function BaseView({
   defaultTab,
   tabs,
   className = "",
+  ref,
 }: BaseViewProps) {
   return (
-    <div className={`h-full flex flex-col ${className}`}>
+    <div className={`h-full flex flex-col ${className}`} ref={ref}>
       {!tabs || tabs.length === 0 ? (
-        <ViewContent>{children}</ViewContent>
+        <ViewContent className={className}>{children}</ViewContent>
       ) : (
         <Tabs defaultValue={defaultTab} className="flex flex-col h-full">
           <div className="px-3 pt-4 pb-0">

@@ -29,10 +29,10 @@ const getElementNameWithSuffix = (
 ): string => {
   // Remove existing suffixes to prevent accumulation
   const baseName = originalName
-    .replace(/ \(left\)$/, "")
-    .replace(/ \(right\)$/, "")
-    .replace(/ \(audio\)$/, "")
-    .replace(/ \(split \d+\)$/, "");
+    .replace(/ \(left\)$/i, "")
+    .replace(/ \(right\)$/i, "")
+    .replace(/ \(audio\)$/i, "")
+    .replace(/ \(split \d+\)$/i, "");
 
   return `${baseName} (${suffix})`;
 };
@@ -126,6 +126,7 @@ interface TimelineStore {
   ) => void;
   toggleTrackMute: (trackId: string) => void;
   toggleElementHidden: (trackId: string, elementId: string) => void;
+  toggleElementMuted: (trackId: string, elementId: string) => void;
 
   // Split operations for elements
   splitElement: (
@@ -322,7 +323,6 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
     addTrack: (type) => {
       get().pushHistory();
 
-      // Generate proper track name based on type
       const trackName =
         type === "media"
           ? "Media Track"
@@ -347,7 +347,6 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
     insertTrackAt: (type, index) => {
       get().pushHistory();
 
-      // Generate proper track name based on type
       const trackName =
         type === "media"
           ? "Media Track"
@@ -392,13 +391,6 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
 
       get().pushHistory();
 
-      // If track has no elements, just remove it normally
-      if (trackToRemove.elements.length === 0) {
-        updateTracksAndSave(_tracks.filter((track) => track.id !== trackId));
-        return;
-      }
-
-      // Find all the time ranges occupied by elements in the track being removed
       const occupiedRanges = trackToRemove.elements.map((element) => ({
         startTime: element.startTime,
         endTime:
@@ -406,10 +398,8 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
           (element.duration - element.trimStart - element.trimEnd),
       }));
 
-      // Sort ranges by start time
       occupiedRanges.sort((a, b) => a.startTime - b.startTime);
 
-      // Merge overlapping ranges to get consolidated gaps
       const mergedRanges: Array<{
         startTime: number;
         endTime: number;
@@ -426,11 +416,9 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
         } else {
           const lastRange = mergedRanges[mergedRanges.length - 1];
           if (range.startTime <= lastRange.endTime) {
-            // Overlapping or adjacent ranges, merge them
             lastRange.endTime = Math.max(lastRange.endTime, range.endTime);
             lastRange.duration = lastRange.endTime - lastRange.startTime;
           } else {
-            // Non-overlapping range, add as new
             mergedRanges.push({
               startTime: range.startTime,
               endTime: range.endTime,
@@ -440,17 +428,14 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
         }
       }
 
-      // Remove the track and apply ripple effects to remaining tracks
       const updatedTracks = _tracks
         .filter((track) => track.id !== trackId)
         .map((track) => {
           const updatedElements = track.elements.map((element) => {
             let newStartTime = element.startTime;
 
-            // Process gaps from right to left (latest to earliest) to avoid cumulative shifts
             for (let i = mergedRanges.length - 1; i >= 0; i--) {
               const gap = mergedRanges[i];
-              // If this element starts after the gap, shift it left by the gap duration
               if (newStartTime >= gap.endTime) {
                 newStartTime -= gap.duration;
               }
@@ -462,7 +447,6 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
             };
           });
 
-          // Check for overlaps and resolve them if necessary
           const hasOverlaps = checkElementOverlaps(updatedElements);
           if (hasOverlaps) {
             const resolvedElements = resolveElementOverlaps(updatedElements);
@@ -478,33 +462,28 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
     addElementToTrack: (trackId, elementData) => {
       get().pushHistory();
 
-      // Validate element type matches track type
       const track = get()._tracks.find((t) => t.id === trackId);
       if (!track) {
         console.error("Track not found:", trackId);
         return;
       }
 
-      // Use utility function for validation
       const validation = validateElementTrackCompatibility(elementData, track);
       if (!validation.isValid) {
         console.error(validation.errorMessage);
         return;
       }
 
-      // For media elements, validate mediaId exists
       if (elementData.type === "media" && !elementData.mediaId) {
         console.error("Media element must have mediaId");
         return;
       }
 
-      // For text elements, validate required text properties
       if (elementData.type === "text" && !elementData.content) {
         console.error("Text element must have content");
         return;
       }
 
-      // Check if this is the first element being added to the timeline
       const currentState = get();
       const totalElementsInTimeline = currentState._tracks.reduce(
         (total, track) => total + track.elements.length,
@@ -518,10 +497,9 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
         startTime: elementData.startTime || 0,
         trimStart: 0,
         trimEnd: 0,
-      } as TimelineElement; // Type assertion since we trust the caller passes valid data
+        ...(elementData.type === "media" ? { muted: false } : {}),
+      } as TimelineElement;
 
-      // If this is the first element and it's a media element, automatically set the project canvas size
-      // to match the media's aspect ratio and FPS (for videos)
       if (isFirstElement && newElement.type === "media") {
         const mediaStore = useMediaStore.getState();
         const mediaItem = mediaStore.mediaItems.find(
@@ -539,7 +517,6 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
           );
         }
 
-        // Set project FPS from the first video element
         if (mediaItem && mediaItem.type === "video" && mediaItem.fps) {
           const projectStore = useProjectStore.getState();
           if (projectStore.activeProject) {
@@ -591,7 +568,6 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       const { _tracks, rippleEditingEnabled } = get();
 
       if (!rippleEditingEnabled) {
-        // If ripple editing is disabled, use regular removal
         get().removeElementFromTrack(trackId, elementId, pushHistory);
         return;
       }
@@ -608,15 +584,12 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
         element.duration - element.trimStart - element.trimEnd;
       const elementEndTime = elementStartTime + elementDuration;
 
-      // Remove the element and shift all elements that come after it
       const updatedTracks = _tracks
         .map((currentTrack) => {
-          // Only apply ripple effects to the same track unless multi-track ripple is enabled
           const shouldApplyRipple = currentTrack.id === trackId;
 
           const updatedElements = currentTrack.elements
             .filter((currentElement) => {
-              // Remove the target element
               if (
                 currentElement.id === elementId &&
                 currentTrack.id === trackId
@@ -626,12 +599,10 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
               return true;
             })
             .map((currentElement) => {
-              // Only apply ripple effects if we should process this track
               if (!shouldApplyRipple) {
                 return currentElement;
               }
 
-              // Shift elements that start after the removed element
               if (currentElement.startTime >= elementEndTime) {
                 return {
                   ...currentElement,
@@ -644,10 +615,8 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
               return currentElement;
             });
 
-          // Check for overlaps and resolve them if necessary
           const hasOverlaps = checkElementOverlaps(updatedElements);
           if (hasOverlaps) {
-            // Resolve overlaps by adjusting element positions
             const resolvedElements = resolveElementOverlaps(updatedElements);
             return { ...currentTrack, elements: resolvedElements };
           }
@@ -670,7 +639,6 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
 
       if (!elementToMove || !toTrack) return;
 
-      // Validate element type compatibility with target track
       const validation = validateElementTrackCompatibility(
         elementToMove,
         toTrack
@@ -776,7 +744,6 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       const { _tracks, rippleEditingEnabled } = get();
 
       if (!rippleEditingEnabled) {
-        // If ripple editing is disabled, use regular update
         get().updateElementStartTime(trackId, elementId, newStartTime);
         return;
       }
@@ -796,9 +763,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
         newStartTime + (element.duration - element.trimStart - element.trimEnd);
       const timeDelta = newStartTime - oldStartTime;
 
-      // Update tracks based on multi-track ripple setting
       const updatedTracks = _tracks.map((currentTrack) => {
-        // Only apply ripple effects to the same track unless multi-track ripple is enabled
         const shouldApplyRipple = currentTrack.id === trackId;
 
         const updatedElements = currentTrack.elements.map((currentElement) => {
@@ -806,12 +771,10 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
             return { ...currentElement, startTime: Math.max(0, newStartTime) };
           }
 
-          // Only apply ripple effects if we should process this track
           if (!shouldApplyRipple) {
             return currentElement;
           }
 
-          // For ripple editing, we need to move elements that come after the moved element
           const currentElementStart = currentElement.startTime;
           const currentElementEnd =
             currentElement.startTime +
@@ -819,19 +782,14 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
               currentElement.trimStart -
               currentElement.trimEnd);
 
-          // If moving element to the right (positive delta)
           if (timeDelta > 0) {
-            // Move elements that start after the original position of the moved element
             if (currentElementStart >= oldEndTime) {
               return {
                 ...currentElement,
                 startTime: currentElementStart + timeDelta,
               };
             }
-          }
-          // If moving element to the left (negative delta)
-          else if (timeDelta < 0) {
-            // Move elements that start after the new position of the moved element
+          } else if (timeDelta < 0) {
             if (
               currentElementStart >= newEndTime &&
               currentElementStart >= oldStartTime
@@ -846,10 +804,8 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
           return currentElement;
         });
 
-        // Check for overlaps and resolve them if necessary
         const hasOverlaps = checkElementOverlaps(updatedElements);
         if (hasOverlaps) {
-          // Resolve overlaps by adjusting element positions
           const resolvedElements = resolveElementOverlaps(updatedElements);
           return { ...currentTrack, elements: resolvedElements };
         }
@@ -879,6 +835,24 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
                 elements: track.elements.map((element) =>
                   element.id === elementId
                     ? { ...element, hidden: !element.hidden }
+                    : element
+                ),
+              }
+            : track
+        )
+      );
+    },
+
+    toggleElementMuted: (trackId, elementId) => {
+      get().pushHistory();
+      updateTracksAndSave(
+        get()._tracks.map((track) =>
+          track.id === trackId
+            ? {
+                ...track,
+                elements: track.elements.map((element) =>
+                  element.id === elementId && element.type === "media"
+                    ? { ...element, muted: !element.muted }
                     : element
                 ),
               }
@@ -1050,12 +1024,10 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
 
       get().pushHistory();
 
-      // Find existing audio track or prepare to create one
       const existingAudioTrack = _tracks.find((t) => t.type === "audio");
       const audioElementId = generateUUID();
 
       if (existingAudioTrack) {
-        // Add audio element to existing audio track
         updateTracksAndSave(
           get()._tracks.map((track) =>
             track.id === existingAudioTrack.id
@@ -1074,7 +1046,6 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
           )
         );
       } else {
-        // Create new audio track with the audio element in a single atomic update
         const newAudioTrack: TimelineTrack = {
           id: generateUUID(),
           name: "Audio Track",
@@ -1124,7 +1095,6 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
           return { success: false, error: "No active project found" };
         }
 
-        // Import required media processing functions
         const {
           getFileType,
           getImageDimensions,
@@ -1141,7 +1111,6 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
           };
         }
 
-        // Process the new media file
         const mediaData: any = {
           name: newFile.name,
           type: fileType,
@@ -1150,7 +1119,6 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
         };
 
         try {
-          // Get media-specific metadata
           if (fileType === "image") {
             const { width, height } = await getImageDimensions(newFile);
             mediaData.width = width;
@@ -1175,7 +1143,6 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
           };
         }
 
-        // Add new media item to store
         try {
           await mediaStore.addMediaItem(
             projectStore.activeProject.id,
@@ -1188,7 +1155,6 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
           };
         }
 
-        // Find the newly created media item
         const newMediaItem = mediaStore.mediaItems.find(
           (item) => item.file === newFile
         );
@@ -1202,7 +1168,6 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
 
         get().pushHistory();
 
-        // Update the timeline element to reference the new media
         updateTracksAndSave(
           _tracks.map((track) =>
             track.id === trackId
@@ -1214,7 +1179,6 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
                           ...c,
                           mediaId: newMediaItem.id,
                           name: newMediaItem.name,
-                          // Update duration if the new media has a different duration
                           duration: newMediaItem.duration || c.duration,
                         }
                       : c
@@ -1355,22 +1319,18 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       });
     },
 
-    // Persistence methods
     loadProjectTimeline: async (projectId) => {
       try {
         const tracks = await storageService.loadTimeline(projectId);
         if (tracks) {
           updateTracks(tracks);
         } else {
-          // No timeline saved yet, initialize with default
           const defaultTracks = ensureMainTrack([]);
           updateTracks(defaultTracks);
         }
-        // Clear history when loading a project
         set({ history: [], redoStack: [] });
       } catch (error) {
         console.error("Failed to load timeline:", error);
-        // Initialize with default on error
         const defaultTracks = ensureMainTrack([]);
         updateTracks(defaultTracks);
         set({ history: [], redoStack: [] });
@@ -1429,8 +1389,6 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
     },
 
     findOrCreateTrack: (trackType) => {
-      // Always create new text track to allow multiple text elements
-      // Insert text tracks at the top
       if (trackType === "text") {
         return get().insertTrackAt(trackType, 0);
       }
@@ -1448,10 +1406,8 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
       const duration =
         item.duration || TIMELINE_CONSTANTS.DEFAULT_IMAGE_DURATION;
 
-      // Get all tracks of the right type
       const tracks = get()._tracks.filter((t) => t.type === trackType);
 
-      // Try to find a track with no overlap
       let targetTrackId = null;
       for (const track of tracks) {
         if (!get().checkElementOverlap(track.id, currentTime, duration)) {
@@ -1460,7 +1416,6 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
         }
       }
 
-      // If no free track found, create a new one
       if (!targetTrackId) {
         targetTrackId = get().addTrack(trackType);
       }
@@ -1473,12 +1428,13 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
         startTime: currentTime,
         trimStart: 0,
         trimEnd: 0,
+        muted: false,
       });
       return true;
     },
 
     addTextAtTime: (item, currentTime = 0) => {
-      const targetTrackId = get().insertTrackAt("text", 0); // Always create new text track at the top
+      const targetTrackId = get().insertTrackAt("text", 0);
 
       get().addElementToTrack(targetTrackId, {
         type: "text",
@@ -1516,12 +1472,13 @@ export const useTimelineStore = create<TimelineStore>((set, get) => {
         startTime: 0,
         trimStart: 0,
         trimEnd: 0,
+        muted: false,
       });
       return true;
     },
 
     addTextToNewTrack: (item) => {
-      const targetTrackId = get().insertTrackAt("text", 0); // Always create new text track at the top
+      const targetTrackId = get().insertTrackAt("text", 0);
 
       get().addElementToTrack(targetTrackId, {
         type: "text",

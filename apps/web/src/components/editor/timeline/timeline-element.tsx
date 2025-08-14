@@ -50,6 +50,7 @@ export function TimelineElement({
     replaceElementMedia,
     rippleEditingEnabled,
     toggleElementHidden,
+    toggleElementMuted,
   } = useTimelineStore();
   const { currentTime } = usePlaybackStore();
 
@@ -57,7 +58,7 @@ export function TimelineElement({
     element.type === "media"
       ? mediaItems.find((item) => item.id === element.mediaId)
       : null;
-  const isAudio = mediaItem?.type === "audio";
+  const hasAudio = mediaItem?.type === "audio" || mediaItem?.type === "video";
 
   const { resizing, handleResizeStart, handleResizeMove, handleResizeEnd } =
     useTimelineElementResize({
@@ -124,8 +125,12 @@ export function TimelineElement({
     }
   };
 
-  const handleToggleElementHidden = (e: React.MouseEvent) => {
+  const handleToggleElementContext = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (hasAudio && element.type === "media") {
+      toggleElementMuted(track.id, element.id);
+      return;
+    }
     toggleElementHidden(track.id, element.id);
   };
 
@@ -246,6 +251,8 @@ export function TimelineElement({
     }
   };
 
+  const isMuted = element.type === "media" ? element.muted === true : false;
+
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
@@ -279,9 +286,9 @@ export function TimelineElement({
               {renderElementContent()}
             </div>
 
-            {element.hidden && (
+            {(hasAudio ? isMuted : element.hidden) && (
               <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center pointer-events-none">
-                {isAudio ? (
+                {hasAudio ? (
                   <VolumeX className="h-6 w-6 text-white" />
                 ) : (
                   <EyeOff className="h-6 w-6 text-white" />
@@ -309,9 +316,9 @@ export function TimelineElement({
           <Scissors className="h-4 w-4 mr-2" />
           Split at playhead
         </ContextMenuItem>
-        <ContextMenuItem onClick={handleToggleElementHidden}>
-          {isAudio ? (
-            element.hidden ? (
+        <ContextMenuItem onClick={handleToggleElementContext}>
+          {hasAudio ? (
+            isMuted ? (
               <Volume2 className="h-4 w-4 mr-2" />
             ) : (
               <VolumeX className="h-4 w-4 mr-2" />
@@ -322,8 +329,8 @@ export function TimelineElement({
             <EyeOff className="h-4 w-4 mr-2" />
           )}
           <span>
-            {isAudio
-              ? element.hidden
+            {hasAudio
+              ? isMuted
                 ? "Unmute"
                 : "Mute"
               : element.hidden
