@@ -1,5 +1,6 @@
-import { Eye, EyeOff, X } from "lucide-react";
+"use client";
 
+import { Eye, EyeOff, X } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { Button } from "./button";
 import { forwardRef, ComponentProps } from "react";
