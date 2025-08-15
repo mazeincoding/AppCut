@@ -25,6 +25,7 @@ export interface DraggableMediaItemProps {
   showLabel?: boolean;
   rounded?: boolean;
   variant?: "card" | "compact";
+  isDraggable?: boolean;
 }
 
 export function DraggableMediaItem({
@@ -39,11 +40,14 @@ export function DraggableMediaItem({
   showLabel = true,
   rounded = true,
   variant = "card",
+  isDraggable = true,
 }: DraggableMediaItemProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
   const dragRef = useRef<HTMLDivElement>(null);
-  const currentTime = usePlaybackStore((state) => state.currentTime);
+  const currentTime = isDraggable
+    ? usePlaybackStore((state) => state.currentTime)
+    : 0;
 
   const handleAddToTimeline = () => {
     onAddToTimeline?.(currentTime);
@@ -100,11 +104,11 @@ export function DraggableMediaItem({
               className={cn(
                 "bg-panel-accent relative overflow-hidden",
                 rounded && "rounded-md",
-                "[&::-webkit-drag-ghost]:opacity-0" // Webkit-specific ghost hiding
+                isDraggable && "[&::-webkit-drag-ghost]:opacity-0" // Webkit-specific ghost hiding
               )}
-              draggable={true}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
+              draggable={isDraggable}
+              onDragStart={isDraggable ? handleDragStart : undefined}
+              onDragEnd={isDraggable ? handleDragEnd : undefined}
             >
               {preview}
               {!isDragging && (
@@ -132,12 +136,12 @@ export function DraggableMediaItem({
           <div
             className={cn(
               "h-10 flex items-center gap-3 cursor-default w-full",
-              "[&::-webkit-drag-ghost]:opacity-0",
+              isDraggable && "[&::-webkit-drag-ghost]:opacity-0",
               className
             )}
-            draggable={true}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
+            draggable={isDraggable}
+            onDragStart={isDraggable ? handleDragStart : undefined}
+            onDragEnd={isDraggable ? handleDragEnd : undefined}
           >
             <div className="w-6 h-6 flex-shrink-0 rounded overflow-hidden">
               {preview}
@@ -148,7 +152,8 @@ export function DraggableMediaItem({
       )}
 
       {/* Custom drag preview */}
-      {isDragging &&
+      {isDraggable &&
+        isDragging &&
         typeof document !== "undefined" &&
         createPortal(
           <div
@@ -194,7 +199,7 @@ function PlusButton({
     <Button
       size="icon"
       className={cn(
-        "absolute bottom-2 right-2 size-4 bg-background text-foreground",
+        "absolute bottom-2 right-2 size-4 bg-background hover:bg-panel text-foreground",
         className
       )}
       onClick={(e) => {

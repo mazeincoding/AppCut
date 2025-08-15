@@ -1,4 +1,5 @@
 import { DraggableMediaItem } from "@/components/ui/draggable-item";
+import { BaseView } from "./base-view";
 import { TIMELINE_CONSTANTS } from "@/constants/timeline-constants";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { type TextElement } from "@/types/timeline";
@@ -28,7 +29,7 @@ const textData: TextElement = {
 
 export function TextView() {
   return (
-    <div className="p-4">
+    <BaseView>
       <DraggableMediaItem
         name="Default text"
         preview={
@@ -48,6 +49,6 @@ export function TextView() {
         }
         showLabel={false}
       />
-    </div>
+    </BaseView>
   );
 }

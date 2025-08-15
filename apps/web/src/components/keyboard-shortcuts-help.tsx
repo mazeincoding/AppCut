@@ -19,96 +19,7 @@ import {
   DialogTrigger,
 } from "./ui/dialog";
 
-const ShortcutItem = ({
-  shortcut,
-  isRecording,
-  onStartRecording,
-}: {
-  shortcut: KeyboardShortcut;
-  isRecording: boolean;
-  onStartRecording: (shortcut: KeyboardShortcut) => void;
-}) => {
-  // Filter out lowercase duplicates for display - if both "j" and "J" exist, only show "J"
-  const displayKeys = shortcut.keys.filter((key: string) => {
-    if (
-      key.includes("Cmd") &&
-      shortcut.keys.includes(key.replace("Cmd", "Ctrl"))
-    )
-      return false;
-
-    return true;
-  });
-
-  return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        {shortcut.icon && (
-          <div className="text-muted-foreground">{shortcut.icon}</div>
-        )}
-        <span className="text-sm">{shortcut.description}</span>
-      </div>
-      <div className="flex items-center gap-1">
-        {displayKeys.map((key: string, index: number) => (
-          <div key={key} className="flex items-center gap-1">
-            <div className="flex items-center">
-              {key.split("+").map((keyPart: string, partIndex: number) => {
-                const keyId = `${shortcut.id}-${index}-${partIndex}`;
-                return (
-                  <EditableShortcutKey
-                    key={keyId}
-                    isRecording={isRecording}
-                    onStartRecording={() => onStartRecording(shortcut)}
-                  >
-                    {keyPart}
-                  </EditableShortcutKey>
-                );
-              })}
-            </div>
-            {index < displayKeys.length - 1 && (
-              <span className="text-xs text-muted-foreground">or</span>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-const EditableShortcutKey = ({
-  children,
-  isRecording,
-  onStartRecording,
-}: {
-  children: React.ReactNode;
-  isRecording: boolean;
-  onStartRecording: () => void;
-}) => {
-  const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onStartRecording();
-  };
-
-  return (
-    <Button
-      variant="text"
-      size="sm"
-      className={`inline-flex font-sans text-xs rounded px-2 min-w-6 min-h-6 leading-none items-center justify-center shadow-xs border mr-1 cursor-pointer hover:bg-opacity-80 ${
-        isRecording
-          ? "border-primary bg-primary/10"
-          : "border bg-accent"
-      }`}
-      onClick={handleClick}
-      title={
-        isRecording ? "Press any key combination..." : "Click to edit shortcut"
-      }
-    >
-      {children}
-    </Button>
-  );
-};
-
-export const KeyboardShortcutsHelp = () => {
+export function KeyboardShortcutsHelp() {
   const [open, setOpen] = useState(false);
   const [recordingShortcut, setRecordingShortcut] =
     useState<KeyboardShortcut | null>(null);
@@ -199,8 +110,8 @@ export const KeyboardShortcutsHelp = () => {
           Shortcuts
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col p-0">
+        <DialogHeader className="flex-shrink-0 p-6 pb-4">
           <DialogTitle className="flex items-center gap-2">
             <Keyboard className="w-5 h-5" />
             Keyboard Shortcuts
@@ -211,40 +122,124 @@ export const KeyboardShortcutsHelp = () => {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {categories.map((category) => (
-            <div key={category} className="flex flex-col gap-1">
-              <h3 className="text-xs text-muted-foreground uppercase tracking-wide font-medium">
-                {category}
-              </h3>
-              <div className="space-y-0.5">
-                {shortcuts
-                  .filter((shortcut) => shortcut.category === category)
-                  .map((shortcut) => (
-                    <ShortcutItem
-                      key={shortcut.action}
-                      shortcut={shortcut}
-                      isRecording={
-                        shortcut.action === recordingShortcut?.action
-                      }
-                      onStartRecording={handleStartRecording}
-                    />
-                  ))}
+        <div className="overflow-y-auto flex-grow scrollbar-thin">
+          <div className="space-y-6 p-6">
+            {categories.map((category) => (
+              <div key={category} className="flex flex-col gap-1">
+                <h3 className="text-xs text-muted-foreground uppercase tracking-wide font-medium">
+                  {category}
+                </h3>
+                <div className="space-y-0.5">
+                  {shortcuts
+                    .filter((shortcut) => shortcut.category === category)
+                    .map((shortcut) => (
+                      <ShortcutItem
+                        key={shortcut.action}
+                        shortcut={shortcut}
+                        isRecording={
+                          shortcut.action === recordingShortcut?.action
+                        }
+                        onStartRecording={handleStartRecording}
+                      />
+                    ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-        <DialogFooter>
-          <Button
-            size="sm"
-            className="mt-4"
-            variant="destructive"
-            onClick={resetToDefaults}
-          >
+        <DialogFooter className="flex-shrink-0 p-6 pt-4">
+          <Button size="sm" variant="destructive" onClick={resetToDefaults}>
             Reset to Default
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-};
+}
+
+function ShortcutItem({
+  shortcut,
+  isRecording,
+  onStartRecording,
+}: {
+  shortcut: KeyboardShortcut;
+  isRecording: boolean;
+  onStartRecording: (shortcut: KeyboardShortcut) => void;
+}) {
+  // Filter out lowercase duplicates for display - if both "j" and "J" exist, only show "J"
+  const displayKeys = shortcut.keys.filter((key: string) => {
+    if (
+      key.includes("Cmd") &&
+      shortcut.keys.includes(key.replace("Cmd", "Ctrl"))
+    )
+      return false;
+
+    return true;
+  });
+
+  return (
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        {shortcut.icon && (
+          <div className="text-muted-foreground">{shortcut.icon}</div>
+        )}
+        <span className="text-sm">{shortcut.description}</span>
+      </div>
+      <div className="flex items-center gap-1">
+        {displayKeys.map((key: string, index: number) => (
+          <div key={key} className="flex items-center gap-1">
+            <div className="flex items-center">
+              {key.split("+").map((keyPart: string, partIndex: number) => {
+                const keyId = `${shortcut.id}-${index}-${partIndex}`;
+                return (
+                  <EditableShortcutKey
+                    key={keyId}
+                    isRecording={isRecording}
+                    onStartRecording={() => onStartRecording(shortcut)}
+                  >
+                    {keyPart}
+                  </EditableShortcutKey>
+                );
+              })}
+            </div>
+            {index < displayKeys.length - 1 && (
+              <span className="text-xs text-muted-foreground">or</span>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function EditableShortcutKey({
+  children,
+  isRecording,
+  onStartRecording,
+}: {
+  children: React.ReactNode;
+  isRecording: boolean;
+  onStartRecording: () => void;
+}) {
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onStartRecording();
+  };
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      className={`font-sans px-2 min-w-6 min-h-6 leading-none mr-1 hover:bg-opacity-80 ${
+        isRecording ? "border-primary bg-primary/10" : "border bg-accent/50"
+      }`}
+      onClick={handleClick}
+      title={
+        isRecording ? "Press any key combination..." : "Click to edit shortcut"
+      }
+    >
+      {children}
+    </Button>
+  );
+}

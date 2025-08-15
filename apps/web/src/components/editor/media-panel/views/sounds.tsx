@@ -1,7 +1,7 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -32,6 +32,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 
 export function SoundsView() {
   return (
@@ -96,35 +97,30 @@ function SoundEffectsView() {
     null
   );
 
-  // Scroll position persistence
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const { scrollAreaRef, handleScroll } = useInfiniteScroll({
+    onLoadMore: loadMore,
+    hasMore: hasNextPage,
+    isLoading: isLoadingMore || isSearching,
+  });
 
-  // Load saved sounds and restore scroll position when component mounts
   useEffect(() => {
     loadSavedSounds();
 
     if (scrollAreaRef.current && scrollPosition > 0) {
       const timeoutId = setTimeout(() => {
         scrollAreaRef.current?.scrollTo({ top: scrollPosition });
-      }, 100); // Small delay to ensure content is rendered
+      }, 100);
 
       return () => clearTimeout(timeoutId);
     }
-  }, []); // Only run on mount
+  }, []);
 
-  // Track scroll position changes and handle infinite scroll
-  const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
-    const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
+  const handleScrollWithPosition = (event: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop } = event.currentTarget;
     setScrollPosition(scrollTop);
-
-    // Trigger loadMore when scrolled to within 200px of bottom
-    const nearBottom = scrollTop + clientHeight >= scrollHeight - 200;
-    if (nearBottom && hasNextPage && !isLoadingMore && !isSearching) {
-      loadMore();
-    }
+    handleScroll(event);
   };
-
-  // Use your existing design, just swap the data source
+  
   const displayedSounds = useMemo(() => {
     const sounds = searchQuery ? searchResults : topSoundEffects;
     return sounds;
@@ -199,7 +195,7 @@ function SoundEffectsView() {
         <ScrollArea
           className="flex-1 h-full"
           ref={scrollAreaRef}
-          onScrollCapture={handleScroll}
+          onScrollCapture={handleScrollWithPosition}
         >
           <div className="flex flex-col gap-4">
             {isLoading && !searchQuery && (

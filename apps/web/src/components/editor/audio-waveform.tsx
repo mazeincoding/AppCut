@@ -20,7 +20,7 @@ const AudioWaveform: React.FC<AudioWaveformProps> = ({
   useEffect(() => {
     let mounted = true;
     let ws = wavesurfer.current;
-    
+
     const initWaveSurfer = async () => {
       if (!waveformRef.current || !audioUrl) return;
 
@@ -90,7 +90,7 @@ const AudioWaveform: React.FC<AudioWaveformProps> = ({
       const wsToDestroy = ws;
       // Detach from ref immediately
       wavesurfer.current = null;
-      
+
       // Wait a tick to destroy so any pending operations can complete
       requestAnimationFrame(() => {
         try {
@@ -111,13 +111,13 @@ const AudioWaveform: React.FC<AudioWaveformProps> = ({
     return () => {
       // Mark component as unmounted
       mounted = false;
-      
+
       // Store reference to current wavesurfer instance
       const wsToDestroy = wavesurfer.current;
-      
+
       // Immediately clear the ref to prevent accessing it after unmount
       wavesurfer.current = null;
-      
+
       // If we have an instance to clean up, do it safely
       if (wsToDestroy) {
         // Delay destruction to avoid race conditions

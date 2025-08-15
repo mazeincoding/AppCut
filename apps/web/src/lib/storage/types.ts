@@ -18,6 +18,8 @@ export interface MediaFileData {
   width?: number;
   height?: number;
   duration?: number;
+  ephemeral?: boolean;
+  sourceStickerIconName?: string;
   // File will be stored separately in OPFS
 }
 

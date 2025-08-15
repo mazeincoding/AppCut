@@ -28,3 +28,5 @@ node_modules
 
 # cursor
 bun.lockb
+apps/transcription/__pycache__
+apps/transcription/env

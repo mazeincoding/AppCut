@@ -1,17 +1,8 @@
 "use client";
 
 import { Button } from "./ui/button";
-import {
-  ChevronDown,
-  ArrowLeft,
-  Download,
-  SquarePen,
-  Trash,
-  Sun,
-} from "lucide-react";
-import { useTimelineStore } from "@/stores/timeline-store";
+import { ChevronDown, ArrowLeft, SquarePen, Trash, Sun } from "lucide-react";
 import { HeaderBase } from "./header-base";
-import { formatTimeCode } from "@/lib/time";
 import { useProjectStore } from "@/stores/project-store";
 import { KeyboardShortcutsHelp } from "./keyboard-shortcuts-help";
 import { useState } from "react";
@@ -28,23 +19,15 @@ import { DeleteProjectDialog } from "./delete-project-dialog";
 import { useRouter } from "next/navigation";
 import { FaDiscord } from "react-icons/fa6";
 import { useTheme } from "next-themes";
-import { usePlaybackStore } from "@/stores/playback-store";
+import { TransitionUpIcon } from "./icons";
+import { PanelPresetSelector } from "./panel-preset-selector";
 
 export function EditorHeader() {
-  const { getTotalDuration } = useTimelineStore();
-  const { currentTime } = usePlaybackStore();
   const { activeProject, renameProject, deleteProject } = useProjectStore();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const router = useRouter();
   const { theme, setTheme } = useTheme();
-
-  const handleExport = () => {
-    // TODO: Implement export functionality
-    // NOTE: This is already being worked on
-    console.log("Export project");
-    window.open("https://youtube.com/watch?v=dQw4w9WgXcQ", "_blank");
-  };
 
   const handleNameSave = async (newName: string) => {
     console.log("handleNameSave", newName);
@@ -78,7 +61,7 @@ export function EditorHeader() {
             <span className="text-[0.85rem] mr-2">{activeProject?.name}</span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-40">
+        <DropdownMenuContent align="start" className="w-40 z-100">
           <Link href="/projects">
             <DropdownMenuItem className="flex items-center gap-1.5">
               <ArrowLeft className="h-4 w-4" />
@@ -129,33 +112,11 @@ export function EditorHeader() {
     </div>
   );
 
-  const centerContent = (
-    <div className="flex items-center gap-2 text-xs">
-      <span className="text-foreground tabular-nums">
-        {formatTimeCode(currentTime, "HH:MM:SS:FF", activeProject?.fps || 30)}
-      </span>
-      <span className="text-foreground/50">/</span>
-      <span className="text-foreground/50 tabular-nums">
-        {formatTimeCode(
-          getTotalDuration(),
-          "HH:MM:SS:FF",
-          activeProject?.fps || 30
-        )}
-      </span>
-    </div>
-  );
-
   const rightContent = (
     <nav className="flex items-center gap-2">
+      <PanelPresetSelector />
       <KeyboardShortcutsHelp />
-      <Button
-        size="sm"
-        className="h-8 text-xs !bg-linear-to-r from-cyan-400 to-blue-500 text-white hover:opacity-85 transition-opacity"
-        onClick={handleExport}
-      >
-        <Download className="h-4 w-4" />
-        <span className="text-sm pr-1">Export</span>
-      </Button>
+      <ExportButton />
       <Button
         size="icon"
         variant="text"
@@ -171,9 +132,32 @@ export function EditorHeader() {
   return (
     <HeaderBase
       leftContent={leftContent}
-      centerContent={centerContent}
       rightContent={rightContent}
       className="bg-background h-[3.2rem] px-3 items-center mt-0.5"
     />
+  );
+}
+
+function ExportButton() {
+  const handleExport = () => {
+    // TODO: Implement export functionality
+    // NOTE: This is already being worked on
+    console.log("Export project");
+    window.open("https://youtube.com/watch?v=dQw4w9WgXcQ", "_blank");
+  };
+
+  return (
+    <button
+      className="flex items-center gap-1.5 bg-[#38BDF8] text-white rounded-md px-[0.12rem] py-[0.12rem] cursor-pointer hover:brightness-95 transition-all duration-200"
+      onClick={handleExport}
+    >
+      <div className="flex items-center gap-1.5 bg-linear-270 from-[#2567EC] to-[#37B6F7] rounded-[0.8rem] px-4 py-1 relative shadow-[0_1px_3px_0px_rgba(0,0,0,0.65)]">
+        <TransitionUpIcon className="z-50" />
+        <span className="text-[0.875rem] z-50">Export</span>
+        <div className="absolute w-full h-full left-0 top-0 bg-linear-to-t from-white/0 to-white/50 z-10 rounded-[0.8rem] flex items-center justify-center">
+          <div className="absolute w-[calc(100%-2px)] h-[calc(100%-2px)] top-[0.08rem] bg-linear-270 from-[#2567EC] to-[#37B6F7] z-50 rounded-[0.8rem]"></div>
+        </div>
+      </div>
+    </button>
   );
 }

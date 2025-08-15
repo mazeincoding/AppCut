@@ -5,8 +5,10 @@ import { MediaView } from "./views/media";
 import { useMediaPanelStore, Tab } from "./store";
 import { TextView } from "./views/text";
 import { SoundsView } from "./views/sounds";
+import { StickersView } from "./views/stickers";
 import { Separator } from "@/components/ui/separator";
 import { SettingsView } from "./views/settings";
+import { Captions } from "./views/captions";
 
 export function MediaPanel() {
   const { activeTab } = useMediaPanelStore();
@@ -15,11 +17,7 @@ export function MediaPanel() {
     media: <MediaView />,
     sounds: <SoundsView />,
     text: <TextView />,
-    stickers: (
-      <div className="p-4 text-muted-foreground">
-        Stickers view coming soon...
-      </div>
-    ),
+    stickers: <StickersView />,
     effects: (
       <div className="p-4 text-muted-foreground">
         Effects view coming soon...
@@ -30,11 +28,7 @@ export function MediaPanel() {
         Transitions view coming soon...
       </div>
     ),
-    captions: (
-      <div className="p-4 text-muted-foreground">
-        Captions view coming soon...
-      </div>
-    ),
+    captions: <Captions />,
     filters: (
       <div className="p-4 text-muted-foreground">
         Filters view coming soon...

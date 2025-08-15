@@ -2,12 +2,13 @@
 
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { formatTimeCode, parseTimeCode } from "@/lib/time";
+import { formatTimeCode, parseTimeCode, TimeCode } from "@/lib/time";
+import { DEFAULT_FPS } from "@/stores/project-store";
 
 interface EditableTimecodeProps {
   time: number;
   duration?: number;
-  format?: "MM:SS" | "HH:MM:SS" | "HH:MM:SS:CS" | "HH:MM:SS:FF";
+  format?: TimeCode;
   fps?: number;
   onTimeChange?: (time: number) => void;
   className?: string;
@@ -18,7 +19,7 @@ export function EditableTimecode({
   time,
   duration,
   format = "HH:MM:SS:FF",
-  fps = 30,
+  fps = DEFAULT_FPS,
   onTimeChange,
   className,
   disabled = false,

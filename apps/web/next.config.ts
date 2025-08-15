@@ -30,6 +30,18 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "avatars.githubusercontent.com",
       },
+      {
+        protocol: "https",
+        hostname: "api.iconify.design",
+      },
+      {
+        protocol: "https",
+        hostname: "api.simplesvg.com",
+      },
+      {
+        protocol: "https",
+        hostname: "api.unisvg.com",
+      },
     ],
   },
 };

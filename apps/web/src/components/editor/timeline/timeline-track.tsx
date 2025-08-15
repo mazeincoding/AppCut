@@ -4,11 +4,10 @@ import { useRef, useState, useEffect } from "react";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { useMediaStore } from "@/stores/media-store";
 import { toast } from "sonner";
+import { processMediaFiles } from "@/lib/media-processing";
 import { TimelineElement } from "./timeline-element";
 import {
   TimelineTrack,
-  sortTracksByOrder,
-  ensureMainTrack,
   getMainTrack,
   canElementGoOnTrack,
 } from "@/types/timeline";
@@ -16,12 +15,13 @@ import { usePlaybackStore } from "@/stores/playback-store";
 import type {
   TimelineElement as TimelineElementType,
   DragData,
+  TrackType,
 } from "@/types/timeline";
 import {
   snapTimeToFrame,
   TIMELINE_CONSTANTS,
 } from "@/constants/timeline-constants";
-import { useProjectStore } from "@/stores/project-store";
+import { DEFAULT_FPS, useProjectStore } from "@/stores/project-store";
 import { useTimelineSnapping, SnapPoint } from "@/hooks/use-timeline-snapping";
 
 export function TimelineTrackContent({
@@ -70,7 +70,7 @@ export function TimelineTrackContent({
   ) => {
     // Always apply frame snapping first
     const projectStore = useProjectStore.getState();
-    const projectFps = projectStore.activeProject?.fps || 30;
+    const projectFps = projectStore.activeProject?.fps || DEFAULT_FPS;
     let finalTime = snapTimeToFrame(dropTime, projectFps);
 
     // Additionally apply element snapping if enabled
@@ -156,7 +156,7 @@ export function TimelineTrackContent({
 
       // Always apply frame snapping first
       const projectStore = useProjectStore.getState();
-      const projectFps = projectStore.activeProject?.fps || 30;
+      const projectFps = projectStore.activeProject?.fps || DEFAULT_FPS;
       let finalTime = snapTimeToFrame(adjustedTime, projectFps);
       let snapPoint = null;
 
@@ -689,8 +689,9 @@ export function TimelineTrackContent({
     const hasMediaItem = e.dataTransfer.types.includes(
       "application/x-media-item"
     );
+    const hasFiles = e.dataTransfer.files?.length > 0;
 
-    if (!hasTimelineElement && !hasMediaItem) return;
+    if (!hasTimelineElement && !hasMediaItem && !hasFiles) return;
 
     const trackContainer = e.currentTarget.querySelector(
       ".track-elements-container"
@@ -703,7 +704,7 @@ export function TimelineTrackContent({
     const newStartTime =
       mouseX / (TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel);
     const projectStore = useProjectStore.getState();
-    const projectFps = projectStore.activeProject?.fps || 30;
+    const projectFps = projectStore.activeProject?.fps || DEFAULT_FPS;
     const snappedTime = snapTimeToFrame(newStartTime, projectFps);
 
     // Calculate drop position relative to tracks
@@ -1050,6 +1051,50 @@ export function TimelineTrackContent({
             trimEnd: 0,
           });
         }
+      } else if (hasFiles) {
+        // External file drops
+        const { activeProject } = useProjectStore.getState();
+        const { addMediaItem } = useMediaStore.getState();
+        const { addElementToTrack } = useTimelineStore.getState();
+
+        if (!activeProject) {
+          toast.error("No active project");
+          return;
+        }
+
+        // Process and add files to new timeline tracks at playhead position
+        processMediaFiles(e.dataTransfer.files)
+          .then(async (processedItems) => {
+            for (const processedItem of processedItems) {
+              await addMediaItem(activeProject.id, processedItem);
+              const currentMediaItems = useMediaStore.getState().mediaItems;
+              const addedItem = currentMediaItems.find(
+                (item) =>
+                  item.name === processedItem.name &&
+                  item.url === processedItem.url
+              );
+
+              if (addedItem) {
+                const trackType: TrackType =
+                  addedItem.type === "audio" ? "audio" : "media";
+                const targetTrackId = insertTrackAt(trackType, 0);
+
+                addElementToTrack(targetTrackId, {
+                  type: "media",
+                  mediaId: addedItem.id,
+                  name: addedItem.name,
+                  duration: addedItem.duration || 5,
+                  startTime: currentTime,
+                  trimStart: 0,
+                  trimEnd: 0,
+                });
+              }
+            }
+          })
+          .catch((error) => {
+            console.error("Error processing external files:", error);
+            toast.error("Failed to process dropped files");
+          });
       }
     } catch (error) {
       console.error("Error handling drop:", error);

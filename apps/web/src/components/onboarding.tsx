@@ -79,7 +79,7 @@ export function Onboarding() {
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[425px] outline-hidden!">
+      <DialogContent className="sm:max-w-[425px] !outline-none">
         <DialogTitle>
           <span className="sr-only">{getStepTitle()}</span>
         </DialogTitle>
