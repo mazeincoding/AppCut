@@ -74,6 +74,8 @@ class StorageService {
       blurIntensity: project.blurIntensity,
       bookmarks: project.bookmarks,
       fps: project.fps,
+      canvasSize: project.canvasSize,
+      canvasMode: project.canvasMode,
     };
 
     await this.projectsAdapter.set(project.id, serializedProject);
@@ -96,6 +98,8 @@ class StorageService {
       blurIntensity: serializedProject.blurIntensity,
       bookmarks: serializedProject.bookmarks,
       fps: serializedProject.fps,
+      canvasSize: serializedProject.canvasSize,
+      canvasMode: serializedProject.canvasMode,
     };
   }
 
@@ -138,6 +142,7 @@ class StorageService {
       width: mediaItem.width,
       height: mediaItem.height,
       duration: mediaItem.duration,
+      ephemeral: mediaItem.ephemeral,
     };
 
     await mediaMetadataAdapter.set(mediaItem.id, metadata);
@@ -157,8 +162,22 @@ class StorageService {
 
     if (!file || !metadata) return null;
 
-    // Create new object URL for the file
-    const url = URL.createObjectURL(file);
+    let url: string;
+    if (metadata.type === "image" && (!file.type || file.type === "")) {
+      try {
+        const text = await file.text();
+        if (text.trim().startsWith("<svg")) {
+          const svgBlob = new Blob([text], { type: "image/svg+xml" });
+          url = URL.createObjectURL(svgBlob);
+        } else {
+          url = URL.createObjectURL(file);
+        }
+      } catch {
+        url = URL.createObjectURL(file);
+      }
+    } else {
+      url = URL.createObjectURL(file);
+    }
 
     return {
       id: metadata.id,
@@ -169,7 +188,7 @@ class StorageService {
       width: metadata.width,
       height: metadata.height,
       duration: metadata.duration,
-      // thumbnailUrl would need to be regenerated or cached separately
+      ephemeral: metadata.ephemeral,
     };
   }
 

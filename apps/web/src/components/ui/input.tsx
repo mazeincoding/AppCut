@@ -1,10 +1,12 @@
-import * as React from "react";
-import { Eye, EyeOff, X } from "lucide-react";
+"use client";
 
+import { Eye, EyeOff, X } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { Button } from "./button";
+import { forwardRef, ComponentProps } from "react";
+import { useState } from "react";
 
-interface InputProps extends React.ComponentProps<"input"> {
+interface InputProps extends ComponentProps<"input"> {
   showPassword?: boolean;
   onShowPasswordChange?: (show: boolean) => void;
   showClearIcon?: boolean;
@@ -12,7 +14,7 @@ interface InputProps extends React.ComponentProps<"input"> {
   containerClassName?: string;
 }
 
-const Input = React.forwardRef<HTMLInputElement, InputProps>(
+const Input = forwardRef<HTMLInputElement, InputProps>(
   (
     {
       className,
@@ -29,7 +31,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     },
     ref
   ) => {
-    const [isFocused, setIsFocused] = React.useState(false);
+    const [isFocused, setIsFocused] = useState(false);
 
     const isPassword = type === "password";
     const showPasswordToggle = isPassword && onShowPasswordChange;

@@ -12,6 +12,7 @@ import {
   SplitSquareHorizontal,
   Pause,
   Play,
+  SkipBack,
   Video,
   Music,
   TypeIcon,
@@ -21,8 +22,8 @@ import {
   ZoomOut,
   Bookmark,
   Eye,
-  MicOff,
-  Mic,
+  VolumeOff,
+  Volume2,
 } from "lucide-react";
 import {
   Tooltip,
@@ -40,8 +41,10 @@ import { useTimelineStore } from "@/stores/timeline-store";
 import { useMediaStore } from "@/stores/media-store";
 import { usePlaybackStore } from "@/stores/playback-store";
 import { useProjectStore } from "@/stores/project-store";
+
 import { useTimelineZoom } from "@/hooks/use-timeline-zoom";
 import { processMediaFiles } from "@/lib/media-processing";
+
 import { toast } from "sonner";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { TimelineTrackContent } from "./timeline-track";
@@ -609,7 +612,11 @@ export function Timeline() {
       onMouseEnter={() => setIsInTimeline(true)}
       onMouseLeave={() => setIsInTimeline(false)}
     >
-      <TimelineToolbar zoomLevel={zoomLevel} setZoomLevel={setZoomLevel} />
+      <TimelineToolbar
+        zoomLevel={zoomLevel}
+        setZoomLevel={setZoomLevel}
+        seek={seek}
+      />
 
       {/* Timeline Container */}
       <div
@@ -800,12 +807,12 @@ export function Timeline() {
                     >
                       <div className="flex items-center justify-end flex-1 min-w-0 gap-2">
                         {track.muted ? (
-                          <MicOff
+                          <VolumeOff
                             className="h-4 w-4 text-destructive cursor-pointer"
                             onClick={() => toggleTrackMute(track.id)}
                           />
                         ) : (
-                          <Mic
+                          <Volume2
                             className="h-4 w-4 text-muted-foreground cursor-pointer"
                             onClick={() => toggleTrackMute(track.id)}
                           />
@@ -933,9 +940,11 @@ function TrackIcon({ track }: { track: TimelineTrack }) {
 function TimelineToolbar({
   zoomLevel,
   setZoomLevel,
+  seek,
 }: {
   zoomLevel: number;
   setZoomLevel: (zoom: number) => void;
+  seek: (time: number) => void;
 }) {
   const {
     tracks,
@@ -957,7 +966,6 @@ function TimelineToolbar({
   const { currentTime, duration, isPlaying, toggle, seek } = usePlaybackStore();
   const { toggleBookmark, isBookmarked } = useProjectStore();
 
-  // Action handlers
   const handleSplitSelected = () => {
     if (selectedElements.length === 0) return;
     let splitCount = 0;
@@ -1073,7 +1081,6 @@ function TimelineToolbar({
     clearSelectedElements();
   };
 
-  // Zoom handlers
   const handleZoomIn = () => {
     setZoomLevel(Math.min(4, zoomLevel + 0.25));
   };
@@ -1090,13 +1097,11 @@ function TimelineToolbar({
     await toggleBookmark(currentTime);
   };
 
-  // Check if the current time is bookmarked
   const currentBookmarked = isBookmarked(currentTime);
   return (
     <div className="border-b flex items-center justify-between px-2 py-1">
       <div className="flex items-center gap-1 w-full">
         <TooltipProvider delayDuration={500}>
-          {/* Play/Pause Button */}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -1116,6 +1121,19 @@ function TimelineToolbar({
               {isPlaying ? "Pause (Space)" : "Play (Space)"}
             </TooltipContent>
           </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="text"
+                size="icon"
+                onClick={() => seek(0)}
+                className="mr-2"
+              >
+                <SkipBack className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Return to Start (Home / Enter)</TooltipContent>
+          </Tooltip>
           <div className="w-px h-6 bg-border mx-1" />
           {/* Time Display */}
           <div className="flex flex-row items-center justify-center px-2">
@@ -1134,7 +1152,6 @@ function TimelineToolbar({
               {formatTimeCode(duration, "HH:MM:SS:FF")}
             </div>
           </div>
-          {/* Test Clip Button - for debugging */}
           {tracks.length === 0 && (
             <>
               <div className="w-px h-6 bg-border mx-1" />

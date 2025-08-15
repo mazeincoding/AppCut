@@ -30,6 +30,7 @@ import { FaDiscord } from "react-icons/fa6";
 import { useTheme } from "next-themes";
 import { usePlaybackStore } from "@/stores/playback-store";
 import { TransitionUpIcon } from "./icons";
+import { PanelPresetSelector } from "./panel-preset-selector";
 
 export function EditorHeader() {
   const { getTotalDuration } = useTimelineStore();
@@ -125,6 +126,7 @@ export function EditorHeader() {
 
   const rightContent = (
     <nav className="flex items-center gap-2">
+      <PanelPresetSelector />
       <KeyboardShortcutsHelp />
       <ExportButton />
       <Button
@@ -161,7 +163,7 @@ function ExportButton() {
       className="flex items-center gap-1.5 bg-[#38BDF8] text-white rounded-md px-[0.1rem] py-[0.1rem] cursor-pointer hover:brightness-95 transition-all duration-200"
       onClick={handleExport}
     >
-      <div className="flex items-center gap-1.5 bg-linear-270 from-[#2567EC] to-[#37B6F7] rounded-[0.8rem] px-4 py-1 relative shadow-[0_1px_3px_0px_rgba(0,0,0,0.45)]">
+            <div className="flex items-center gap-1.5 bg-linear-270 from-[#2567EC] to-[#37B6F7] rounded-[0.8rem] px-4 py-1 relative shadow-[0_1px_3px_0px_rgba(0,0,0,0.45)]">
         <TransitionUpIcon className="z-50" />
         <span className="text-[0.875rem] z-50">Export</span>
         <div className="absolute w-full h-full left-0 top-0 bg-linear-to-t from-white/0 to-white/50 z-10 rounded-[0.8rem] flex items-center justify-center">

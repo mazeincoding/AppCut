@@ -234,7 +234,8 @@ export function PreviewPanel() {
   const getActiveElements = (): ActiveElement[] => {
     const activeElements: ActiveElement[] = [];
 
-    tracks.forEach((track) => {
+    // Iterate tracks from bottom to top so topmost track renders last (on top)
+    [...tracks].reverse().forEach((track) => {
       track.elements.forEach((element) => {
         if (element.hidden) return;
         const elementStart = element.startTime;
@@ -311,6 +312,7 @@ export function PreviewPanel() {
             trimEnd={element.trimEnd}
             clipDuration={element.duration}
             className="w-full h-full object-cover"
+            trackMuted={true}
           />
         </div>
       );
@@ -354,7 +356,7 @@ export function PreviewPanel() {
       return (
         <div
           key={element.id}
-          className="absolute flex items-center justify-center cursor-grab"
+          className="absolute cursor-grab"
           onMouseDown={(e) =>
             handleTextMouseDown(e, element, elementData.track.id)
           }
@@ -375,7 +377,7 @@ export function PreviewPanel() {
                 canvasSize.height) *
                 100
             }%`,
-            transform: `translate(-50%, -50%) rotate(${element.rotation}deg) scale(${scaleRatio})`,
+            transform: `translate(-50%, -50%) rotate(${element.rotation}deg)`,
             opacity: element.opacity,
             zIndex: 100 + index, // Text elements on top
           }}
@@ -383,16 +385,16 @@ export function PreviewPanel() {
           <div
             className={fontClassName}
             style={{
-              fontSize: `${element.fontSize}px`,
+              fontSize: `${element.fontSize * scaleRatio}px`,
               color: element.color,
               backgroundColor: element.backgroundColor,
               textAlign: element.textAlign,
               fontWeight: element.fontWeight,
               fontStyle: element.fontStyle,
               textDecoration: element.textDecoration,
-              padding: "4px 8px",
-              borderRadius: "2px",
-              whiteSpace: "pre-wrap",
+              padding: `${4 * scaleRatio}px ${8 * scaleRatio}px`,
+              borderRadius: `${2 * scaleRatio}px`,
+              whiteSpace: "nowrap",
               // Fallback for system fonts that don't have classes
               ...(fontClassName === "" && { fontFamily: element.fontFamily }),
             }}
@@ -434,6 +436,7 @@ export function PreviewPanel() {
               trimStart={element.trimStart}
               trimEnd={element.trimEnd}
               clipDuration={element.duration}
+              trackMuted={element.muted || elementData.track.muted}
             />
           </div>
         );
@@ -459,14 +462,18 @@ export function PreviewPanel() {
       // Audio elements (no visual representation)
       if (mediaItem.type === "audio") {
         return (
-          <div key={element.id} className="absolute inset-0">
+          <div
+            key={element.id}
+            className="absolute inset-0"
+            style={{ pointerEvents: "none" }}
+          >
             <AudioPlayer
               src={mediaItem.url!}
               clipStartTime={element.startTime}
               trimStart={element.trimStart}
               trimEnd={element.trimEnd}
               clipDuration={element.duration}
-              trackMuted={elementData.track.muted}
+              trackMuted={element.muted || elementData.track.muted}
             />
           </div>
         );
@@ -508,13 +515,6 @@ export function PreviewPanel() {
                 )
               )}
               <LayoutGuideOverlay />
-              {activeProject?.backgroundType === "blur" &&
-                blurBackgroundElements.length === 0 &&
-                activeElements.length > 0 && (
-                  <div className="absolute bottom-2 left-2 right-2 bg-black/70 text-white text-xs p-2 rounded">
-                    Add a video or image to use blur background
-                  </div>
-                )}
             </div>
           ) : null}
 
@@ -771,13 +771,6 @@ function FullscreenPreview({
             )
           )}
           <LayoutGuideOverlay />
-          {activeProject?.backgroundType === "blur" &&
-            blurBackgroundElements.length === 0 &&
-            activeElements.length > 0 && (
-              <div className="absolute bottom-2 left-2 right-2 bg-black/70 text-white text-xs p-2 rounded">
-                Add a video or image to use blur background
-              </div>
-            )}
         </div>
       </div>
       <div className="p-4 bg-background">

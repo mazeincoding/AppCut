@@ -146,6 +146,7 @@ export function MediaView() {
 
   useEffect(() => {
     let filtered = mediaItems.filter((item) => {
+      if (item.ephemeral) return false;
       if (mediaFilter && mediaFilter !== "all" && item.type !== mediaFilter) {
         return false;
       }
