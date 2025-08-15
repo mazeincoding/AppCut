@@ -10,12 +10,13 @@ import {
   type IconSearchResult,
 } from "@/lib/iconify-api";
 
+export type StickerCategory = "all" | "general" | "brands" | "emoji";
+
 interface StickersStore {
   searchQuery: string;
-  selectedCategory: "all" | "general" | "brands" | "emoji";
+  selectedCategory: StickerCategory;
   selectedCollection: string | null;
   viewMode: "search" | "browse" | "collection";
-  searchInCategory: boolean;
 
   collections: Record<string, IconSet>;
   currentCollection: CollectionInfo | null;
@@ -27,12 +28,9 @@ interface StickersStore {
   isDownloading: boolean;
 
   setSearchQuery: (query: string) => void;
-  setSelectedCategory: (
-    category: "all" | "general" | "brands" | "emoji"
-  ) => void;
+  setSelectedCategory: (category: StickerCategory) => void;
   setSelectedCollection: (collection: string | null) => void;
   setViewMode: (mode: "search" | "browse" | "collection") => void;
-  setSearchInCategory: (searchInCategory: boolean) => void;
 
   loadCollections: () => Promise<void>;
   loadCollection: (prefix: string) => Promise<void>;
@@ -50,7 +48,6 @@ export const useStickersStore = create<StickersStore>((set, get) => ({
   selectedCategory: "all",
   selectedCollection: null,
   viewMode: "browse",
-  searchInCategory: false,
 
   collections: {},
   currentCollection: null,
@@ -86,8 +83,6 @@ export const useStickersStore = create<StickersStore>((set, get) => ({
 
   setViewMode: (mode) => set({ viewMode: mode }),
 
-  setSearchInCategory: (searchInCategory) => set({ searchInCategory }),
-
   loadCollections: async () => {
     set({ isLoadingCollections: true });
     try {
@@ -119,28 +114,23 @@ export const useStickersStore = create<StickersStore>((set, get) => ({
       return;
     }
 
-    const { searchInCategory, selectedCategory } = get();
+    const { selectedCategory } = get();
 
     set({ isSearching: true, viewMode: "search" });
     try {
-      let searchParams: any = { limit: 100 };
+      let category: string | undefined;
 
-      if (searchInCategory && selectedCategory !== "all") {
+      if (selectedCategory !== "all") {
         if (selectedCategory === "general") {
-          searchParams.category = "General";
+          category = "General";
         } else if (selectedCategory === "brands") {
-          searchParams.category = "Brands / Social";
+          category = "Brands / Social";
         } else if (selectedCategory === "emoji") {
-          searchParams.category = "Emoji";
+          category = "Emoji";
         }
       }
 
-      const results = await searchIcons(
-        query,
-        searchParams.limit,
-        undefined,
-        searchParams.category
-      );
+      const results = await searchIcons(query, 100, undefined, category);
       set({ searchResults: results });
     } catch (error) {
       console.error("Search failed:", error);

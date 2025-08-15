@@ -142,6 +142,7 @@ class StorageService {
       width: mediaItem.width,
       height: mediaItem.height,
       duration: mediaItem.duration,
+      ephemeral: mediaItem.ephemeral,
     };
 
     await mediaMetadataAdapter.set(mediaItem.id, metadata);
@@ -187,6 +188,7 @@ class StorageService {
       width: metadata.width,
       height: metadata.height,
       duration: metadata.duration,
+      ephemeral: metadata.ephemeral,
     };
   }
 
