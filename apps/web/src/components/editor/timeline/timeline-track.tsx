@@ -21,7 +21,7 @@ import {
   snapTimeToFrame,
   TIMELINE_CONSTANTS,
 } from "@/constants/timeline-constants";
-import { useProjectStore } from "@/stores/project-store";
+import { DEFAULT_FPS, useProjectStore } from "@/stores/project-store";
 import { useTimelineSnapping, SnapPoint } from "@/hooks/use-timeline-snapping";
 
 export function TimelineTrackContent({
@@ -70,7 +70,7 @@ export function TimelineTrackContent({
   ) => {
     // Always apply frame snapping first
     const projectStore = useProjectStore.getState();
-    const projectFps = projectStore.activeProject?.fps || 30;
+    const projectFps = projectStore.activeProject?.fps || DEFAULT_FPS;
     let finalTime = snapTimeToFrame(dropTime, projectFps);
 
     // Additionally apply element snapping if enabled
@@ -156,7 +156,7 @@ export function TimelineTrackContent({
 
       // Always apply frame snapping first
       const projectStore = useProjectStore.getState();
-      const projectFps = projectStore.activeProject?.fps || 30;
+      const projectFps = projectStore.activeProject?.fps || DEFAULT_FPS;
       let finalTime = snapTimeToFrame(adjustedTime, projectFps);
       let snapPoint = null;
 
@@ -704,7 +704,7 @@ export function TimelineTrackContent({
     const newStartTime =
       mouseX / (TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel);
     const projectStore = useProjectStore.getState();
-    const projectFps = projectStore.activeProject?.fps || 30;
+    const projectFps = projectStore.activeProject?.fps || DEFAULT_FPS;
     const snappedTime = snapTimeToFrame(newStartTime, projectFps);
 
     // Calculate drop position relative to tracks

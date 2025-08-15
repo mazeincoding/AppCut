@@ -1,17 +1,8 @@
 "use client";
 
 import { Button } from "./ui/button";
-import {
-  ChevronDown,
-  ArrowLeft,
-  Download,
-  SquarePen,
-  Trash,
-  Sun,
-} from "lucide-react";
-import { useTimelineStore } from "@/stores/timeline-store";
+import { ChevronDown, ArrowLeft, SquarePen, Trash, Sun } from "lucide-react";
 import { HeaderBase } from "./header-base";
-import { formatTimeCode } from "@/lib/time";
 import { useProjectStore } from "@/stores/project-store";
 import { KeyboardShortcutsHelp } from "./keyboard-shortcuts-help";
 import { useState } from "react";
@@ -28,13 +19,10 @@ import { DeleteProjectDialog } from "./delete-project-dialog";
 import { useRouter } from "next/navigation";
 import { FaDiscord } from "react-icons/fa6";
 import { useTheme } from "next-themes";
-import { usePlaybackStore } from "@/stores/playback-store";
 import { TransitionUpIcon } from "./icons";
 import { PanelPresetSelector } from "./panel-preset-selector";
 
 export function EditorHeader() {
-  const { getTotalDuration } = useTimelineStore();
-  const { currentTime } = usePlaybackStore();
   const { activeProject, renameProject, deleteProject } = useProjectStore();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
@@ -160,14 +148,14 @@ function ExportButton() {
 
   return (
     <button
-      className="flex items-center gap-1.5 bg-[#38BDF8] text-white rounded-md px-[0.1rem] py-[0.1rem] cursor-pointer hover:brightness-95 transition-all duration-200"
+      className="flex items-center gap-1.5 bg-[#38BDF8] text-white rounded-md px-[0.12rem] py-[0.12rem] cursor-pointer hover:brightness-95 transition-all duration-200"
       onClick={handleExport}
     >
-            <div className="flex items-center gap-1.5 bg-linear-270 from-[#2567EC] to-[#37B6F7] rounded-[0.8rem] px-4 py-1 relative shadow-[0_1px_3px_0px_rgba(0,0,0,0.45)]">
+      <div className="flex items-center gap-1.5 bg-linear-270 from-[#2567EC] to-[#37B6F7] rounded-[0.8rem] px-4 py-1 relative shadow-[0_1px_3px_0px_rgba(0,0,0,0.65)]">
         <TransitionUpIcon className="z-50" />
         <span className="text-[0.875rem] z-50">Export</span>
         <div className="absolute w-full h-full left-0 top-0 bg-linear-to-t from-white/0 to-white/50 z-10 rounded-[0.8rem] flex items-center justify-center">
-          <div className="absolute w-[calc(100%-4px)] h-[calc(100%-4px)] top-[0.12rem] bg-linear-270 from-[#2567EC] to-[#37B6F7] z-50 rounded-lg" />
+          <div className="absolute w-[calc(100%-2px)] h-[calc(100%-2px)] top-[0.08rem] bg-linear-270 from-[#2567EC] to-[#37B6F7] z-50 rounded-[0.8rem]"></div>
         </div>
       </div>
     </button>

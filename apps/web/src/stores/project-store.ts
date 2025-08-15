@@ -8,6 +8,7 @@ import { generateUUID } from "@/lib/utils";
 import { CanvasSize, CanvasMode } from "@/types/editor";
 
 export const DEFAULT_CANVAS_SIZE: CanvasSize = { width: 1920, height: 1080 };
+export const DEFAULT_FPS = 30;
 
 const DEFAULT_PROJECT: TProject = {
   id: generateUUID(),
@@ -19,7 +20,7 @@ const DEFAULT_PROJECT: TProject = {
   backgroundType: "color",
   blurIntensity: 8,
   bookmarks: [],
-  fps: 30,
+  fps: DEFAULT_FPS,
   canvasSize: DEFAULT_CANVAS_SIZE,
   canvasMode: "preset",
 };
@@ -77,7 +78,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     if (!activeProject) return;
 
     // Round time to the nearest frame
-    const fps = activeProject.fps || 30;
+    const fps = activeProject.fps || DEFAULT_FPS;
     const frameTime = Math.round(time * fps) / fps;
 
     const bookmarks = activeProject.bookmarks || [];
@@ -119,7 +120,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     if (!activeProject || !activeProject.bookmarks) return false;
 
     // Round time to the nearest frame
-    const fps = activeProject.fps || 30;
+    const fps = activeProject.fps || DEFAULT_FPS;
     const frameTime = Math.round(time * fps) / fps;
 
     return activeProject.bookmarks.some(
@@ -132,7 +133,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     if (!activeProject || !activeProject.bookmarks) return;
 
     // Round time to the nearest frame
-    const fps = activeProject.fps || 30;
+    const fps = activeProject.fps || DEFAULT_FPS;
     const frameTime = Math.round(time * fps) / fps;
 
     const updatedBookmarks = activeProject.bookmarks.filter(

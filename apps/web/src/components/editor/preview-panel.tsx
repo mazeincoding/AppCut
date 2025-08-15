@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { formatTimeCode } from "@/lib/time";
 import { EditableTimecode } from "@/components/ui/editable-timecode";
 import { FONT_CLASS_MAP } from "@/lib/font-config";
-import { DEFAULT_CANVAS_SIZE, useProjectStore } from "@/stores/project-store";
+import { DEFAULT_CANVAS_SIZE, DEFAULT_FPS, useProjectStore } from "@/stores/project-store";
 import { TextElementDragState } from "@/types/editor";
 import {
   Popover,
@@ -631,7 +631,7 @@ function FullscreenToolbar({
           time={currentTime}
           duration={totalDuration}
           format="HH:MM:SS:FF"
-          fps={activeProject?.fps || 30}
+          fps={activeProject?.fps || DEFAULT_FPS}
           onTimeChange={seek}
           disabled={!hasAnyElements}
           className="text-foreground/90 hover:bg-white/10"
@@ -641,7 +641,7 @@ function FullscreenToolbar({
           {formatTimeCode(
             totalDuration,
             "HH:MM:SS:FF",
-            activeProject?.fps || 30
+            activeProject?.fps || DEFAULT_FPS
           )}
         </span>
       </div>

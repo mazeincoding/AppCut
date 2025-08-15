@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useActionHandler } from "@/constants/actions";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { usePlaybackStore } from "@/stores/playback-store";
-import { useProjectStore } from "@/stores/project-store";
+import { DEFAULT_FPS, useProjectStore } from "@/stores/project-store";
 import { toast } from "sonner";
 
 export function useEditorActions() {
@@ -66,7 +66,7 @@ export function useEditorActions() {
   useActionHandler(
     "frame-step-forward",
     () => {
-      const projectFps = activeProject?.fps || 30;
+      const projectFps = activeProject?.fps || DEFAULT_FPS;
       seek(Math.min(duration, currentTime + 1 / projectFps));
     },
     undefined
@@ -75,7 +75,7 @@ export function useEditorActions() {
   useActionHandler(
     "frame-step-backward",
     () => {
-      const projectFps = activeProject?.fps || 30;
+      const projectFps = activeProject?.fps || DEFAULT_FPS;
       seek(Math.max(0, currentTime - 1 / projectFps));
     },
     undefined

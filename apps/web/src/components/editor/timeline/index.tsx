@@ -40,7 +40,7 @@ import {
 import { useTimelineStore } from "@/stores/timeline-store";
 import { useMediaStore } from "@/stores/media-store";
 import { usePlaybackStore } from "@/stores/playback-store";
-import { useProjectStore } from "@/stores/project-store";
+import { DEFAULT_FPS, useProjectStore } from "@/stores/project-store";
 
 import { useTimelineZoom } from "@/hooks/use-timeline-zoom";
 import { processMediaFiles } from "@/lib/media-processing";
@@ -612,11 +612,7 @@ export function Timeline() {
       onMouseEnter={() => setIsInTimeline(true)}
       onMouseLeave={() => setIsInTimeline(false)}
     >
-      <TimelineToolbar
-        zoomLevel={zoomLevel}
-        setZoomLevel={setZoomLevel}
-        seek={seek}
-      />
+      <TimelineToolbar zoomLevel={zoomLevel} setZoomLevel={setZoomLevel} />
 
       {/* Timeline Container */}
       <div
@@ -940,11 +936,9 @@ function TrackIcon({ track }: { track: TimelineTrack }) {
 function TimelineToolbar({
   zoomLevel,
   setZoomLevel,
-  seek,
 }: {
   zoomLevel: number;
   setZoomLevel: (zoom: number) => void;
-  seek: (time: number) => void;
 }) {
   const {
     tracks,
@@ -964,7 +958,7 @@ function TimelineToolbar({
     toggleRippleEditing,
   } = useTimelineStore();
   const { currentTime, duration, isPlaying, toggle, seek } = usePlaybackStore();
-  const { toggleBookmark, isBookmarked } = useProjectStore();
+  const { toggleBookmark, isBookmarked, activeProject } = useProjectStore();
 
   const handleSplitSelected = () => {
     if (selectedElements.length === 0) return;
@@ -1141,7 +1135,7 @@ function TimelineToolbar({
               time={currentTime}
               duration={duration}
               format="HH:MM:SS:FF"
-              fps={30}
+              fps={activeProject?.fps ?? DEFAULT_FPS}
               onTimeChange={seek}
               className="text-center"
             />

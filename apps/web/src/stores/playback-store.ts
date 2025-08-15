@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { PlaybackState, PlaybackControls } from "@/types/playback";
 import { useTimelineStore } from "@/stores/timeline-store";
-import { useProjectStore } from "./project-store";
+import { DEFAULT_FPS, useProjectStore } from "./project-store";
 
 interface PlaybackStore extends PlaybackState, PlaybackControls {
   setDuration: (duration: number) => void;
@@ -37,9 +37,9 @@ const startTimer = (store: () => PlaybackStore) => {
         // When content completes, pause just before the end so we can see the last frame
         const projectFps = useProjectStore.getState().activeProject?.fps;
         if (!projectFps)
-          console.error("Project FPS is not set, assuming 30fps");
+          console.error("Project FPS is not set, assuming " + DEFAULT_FPS + "fps");
 
-        const frameOffset = 1 / (projectFps ?? 30); // Stop 1 frame before end based on project FPS
+        const frameOffset = 1 / (projectFps ?? DEFAULT_FPS); // Stop 1 frame before end based on project FPS
         const stopTime = Math.max(0, effectiveDuration - frameOffset);
 
         state.pause();
@@ -91,7 +91,7 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => ({
       actualContentDuration > 0 ? actualContentDuration : state.duration;
 
     if (effectiveDuration > 0) {
-      const fps = useProjectStore.getState().activeProject?.fps ?? 30;
+      const fps = useProjectStore.getState().activeProject?.fps ?? DEFAULT_FPS;
       const frameOffset = 1 / fps;
       const endThreshold = Math.max(0, effectiveDuration - frameOffset);
 

@@ -1,12 +1,14 @@
 // Time-related utility functions
 
+import { DEFAULT_FPS } from "@/stores/project-store";
+
 export type TimeCode = "MM:SS" | "HH:MM:SS" | "HH:MM:SS:CS" | "HH:MM:SS:FF";
 
 // Helper function to format time in various formats (MM:SS, HH:MM:SS, HH:MM:SS:CS, HH:MM:SS:FF)
 export const formatTimeCode = (
   timeInSeconds: number,
   format: TimeCode = "HH:MM:SS:CS",
-  fps = 30
+  fps = DEFAULT_FPS
 ): string => {
   const hours = Math.floor(timeInSeconds / 3600);
   const minutes = Math.floor((timeInSeconds % 3600) / 60);
@@ -29,7 +31,7 @@ export const formatTimeCode = (
 export const parseTimeCode = (
   timeCode: string,
   format: TimeCode = "HH:MM:SS:CS",
-  fps = 30
+  fps = DEFAULT_FPS
 ): number | null => {
   if (!timeCode || typeof timeCode !== "string") return null;
 

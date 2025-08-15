@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { ResizeState, TimelineElement, TimelineTrack } from "@/types/timeline";
 import { useMediaStore } from "@/stores/media-store";
 import { useTimelineStore } from "@/stores/timeline-store";
-import { useProjectStore } from "@/stores/project-store";
+import { DEFAULT_FPS, useProjectStore } from "@/stores/project-store";
 import { snapTimeToFrame } from "@/constants/timeline-constants";
 
 interface UseTimelineElementResizeProps {
@@ -113,7 +113,7 @@ export function useTimelineElementResize({
 
     // Get project FPS for frame snapping
     const projectStore = useProjectStore.getState();
-    const projectFps = projectStore.activeProject?.fps || 30;
+    const projectFps = projectStore.activeProject?.fps || DEFAULT_FPS;
 
     if (resizing.side === "left") {
       // Left resize - different behavior for media vs text/image elements

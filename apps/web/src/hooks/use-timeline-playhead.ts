@@ -1,5 +1,5 @@
 import { snapTimeToFrame } from "@/constants/timeline-constants";
-import { useProjectStore } from "@/stores/project-store";
+import { DEFAULT_FPS, useProjectStore } from "@/stores/project-store";
 import { usePlaybackStore } from "@/stores/playback-store";
 import { useState, useEffect, useCallback, useRef } from "react";
 
@@ -86,7 +86,7 @@ export function useTimelinePlayhead({
       const rawTime = Math.max(0, Math.min(duration, x / (50 * zoomLevel)));
       // Use frame snapping for playhead scrubbing
       const projectStore = useProjectStore.getState();
-      const projectFps = projectStore.activeProject?.fps || 30;
+      const projectFps = projectStore.activeProject?.fps || DEFAULT_FPS;
       const time = snapTimeToFrame(rawTime, projectFps);
 
       // Debug logging
