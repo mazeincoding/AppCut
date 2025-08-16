@@ -80,25 +80,25 @@ export function StickersView() {
         <Separator className="my-4" />
         <TabsContent
           value="all"
-          className="p-5 pt-0 mt-0 flex-1 flex flex-col min-h-0"
+          className="px-3 pt-0 mt-0 flex-1 flex flex-col min-h-0"
         >
           <StickersContentView category="all" />
         </TabsContent>
         <TabsContent
           value="general"
-          className="p-5 pt-0 mt-0 flex-1 flex flex-col min-h-0"
+          className="px-3 pt-0 mt-0 flex-1 flex flex-col min-h-0"
         >
           <StickersContentView category="general" />
         </TabsContent>
         <TabsContent
           value="brands"
-          className="p-5 pt-0 mt-0 flex-1 flex flex-col min-h-0"
+          className="px-3 pt-0 mt-0 flex-1 flex flex-col min-h-0"
         >
           <StickersContentView category="brands" />
         </TabsContent>
         <TabsContent
           value="emoji"
-          className="p-5 pt-0 mt-0 flex-1 flex flex-col min-h-0"
+          className="px-3 pt-0 mt-0 flex-1 flex flex-col min-h-0"
         >
           <StickersContentView category="emoji" />
         </TabsContent>
@@ -363,7 +363,7 @@ function StickersContentView({ category }: { category: StickerCategory }) {
 
   return (
     <div className="flex flex-col gap-5 mt-1 h-full">
-      <div className="space-y-3 pl-2">
+      <div className="space-y-3">
         <InputWithBack
           isExpanded={isInCollection}
           setIsExpanded={(expanded) => {
@@ -391,7 +391,7 @@ function StickersContentView({ category }: { category: StickerCategory }) {
           ref={scrollAreaRef}
           onScrollCapture={handleScroll}
         >
-          <div className="flex flex-col gap-4 h-full px-2">
+          <div className="flex flex-col gap-4 h-full">
             {recentStickers.length > 0 && viewMode === "browse" && (
               <div className="h-full">
                 <div className="flex items-center gap-2 mb-2">
