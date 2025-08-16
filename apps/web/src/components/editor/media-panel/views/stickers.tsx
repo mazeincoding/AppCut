@@ -111,16 +111,22 @@ function StickerGrid({
   icons,
   onAdd,
   addingSticker,
+  capSize = false,
 }: {
   icons: string[];
   onAdd: (iconName: string) => void;
   addingSticker: string | null;
+  capSize?: boolean;
 }) {
   return (
     <div
       className="grid gap-2"
       style={{
-        gridTemplateColumns: "repeat(auto-fill, 112px)",
+        gridTemplateColumns: capSize
+          ? "repeat(auto-fill, minmax(var(--sticker-min, 96px), var(--sticker-max, 160px)))"
+          : "repeat(auto-fit, minmax(var(--sticker-min, 96px), 1fr))",
+        ["--sticker-min" as any]: "96px",
+        ...(capSize ? ({ ["--sticker-max"]: "160px" } as any) : {}),
       }}
     >
       {icons.map((iconName) => (
@@ -129,6 +135,7 @@ function StickerGrid({
           iconName={iconName}
           onAdd={onAdd}
           isAdding={addingSticker === iconName}
+          capSize={capSize}
         />
       ))}
     </div>
@@ -148,7 +155,7 @@ function CollectionGrid({
   onSelectCollection: (prefix: string) => void;
 }) {
   return (
-    <div className="grid grid-cols-1 gap-2 h-full overflow-hidden">
+    <div className="grid grid-cols-1 gap-2">
       {collections.map((collection) => (
         <CollectionItem
           key={collection.prefix}
@@ -198,6 +205,7 @@ function StickersContentView({ category }: { category: StickerCategory }) {
     searchStickers,
     downloadSticker,
     clearRecentStickers,
+    setSelectedCategory,
   } = useStickersStore();
 
   const [addingSticker, setAddingSticker] = useState<string | null>(null);
@@ -355,7 +363,7 @@ function StickersContentView({ category }: { category: StickerCategory }) {
 
   return (
     <div className="flex flex-col gap-5 mt-1 h-full">
-      <div className="space-y-3">
+      <div className="space-y-3 pl-2">
         <InputWithBack
           isExpanded={isInCollection}
           setIsExpanded={(expanded) => {
@@ -363,7 +371,15 @@ function StickersContentView({ category }: { category: StickerCategory }) {
               setSelectedCollection(null);
             }
           }}
-          placeholder="Search icons..."
+          placeholder={
+            category === "all"
+              ? "Search all stickers"
+              : category === "general"
+                ? "Search icons"
+                : category === "brands"
+                  ? "Search brands"
+                  : "Search Emojis"
+          }
           value={localSearchQuery}
           onChange={setLocalSearchQuery}
         />
@@ -375,7 +391,7 @@ function StickersContentView({ category }: { category: StickerCategory }) {
           ref={scrollAreaRef}
           onScrollCapture={handleScroll}
         >
-          <div className="flex flex-col gap-4 h-full">
+          <div className="flex flex-col gap-4 h-full px-2">
             {recentStickers.length > 0 && viewMode === "browse" && (
               <div className="h-full">
                 <div className="flex items-center gap-2 mb-2">
@@ -401,6 +417,7 @@ function StickersContentView({ category }: { category: StickerCategory }) {
                   icons={recentStickers.slice(0, 12)}
                   onAdd={handleAddSticker}
                   addingSticker={addingSticker}
+                  capSize
                 />
               </div>
             )}
@@ -442,12 +459,32 @@ function StickersContentView({ category }: { category: StickerCategory }) {
                       icons={iconsToDisplay}
                       onAdd={handleAddSticker}
                       addingSticker={addingSticker}
+                      capSize
                     />
                   </>
                 ) : searchQuery ? (
-                  <EmptyView
-                    message={`No stickers found for "${searchQuery}"`}
-                  />
+                  <div className="flex flex-col items-center justify-center py-8 gap-3">
+                    <EmptyView
+                      message={`No stickers found for "${searchQuery}"`}
+                    />
+                    {category !== "all" && (
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          const q = localSearchQuery || searchQuery;
+                          if (q) {
+                            setSearchQuery(q);
+                          }
+                          setSelectedCategory("all");
+                          if (q) {
+                            searchStickers(q);
+                          }
+                        }}
+                      >
+                        Search in all icons
+                      </Button>
+                    )}
+                  </div>
                 ) : null}
               </div>
             )}
@@ -525,9 +562,10 @@ interface StickerItemProps {
   iconName: string;
   onAdd: (iconName: string) => void;
   isAdding?: boolean;
+  capSize?: boolean;
 }
 
-function StickerItem({ iconName, onAdd, isAdding }: StickerItemProps) {
+function StickerItem({ iconName, onAdd, isAdding, capSize = false }: StickerItemProps) {
   const [imageError, setImageError] = useState(false);
   const [hostIndex, setHostIndex] = useState(0);
 
@@ -561,6 +599,11 @@ function StickerItem({ iconName, onAdd, isAdding }: StickerItemProps) {
         width={64}
         height={64}
         className="w-full h-full object-contain"
+        style={
+          capSize
+            ? { maxWidth: "var(--sticker-max, 160px)", maxHeight: "var(--sticker-max, 160px)" }
+            : undefined
+        }
         onError={() => {
           const next = hostIndex + 1;
           if (next < ICONIFY_HOSTS.length) {
@@ -598,6 +641,7 @@ function StickerItem({ iconName, onAdd, isAdding }: StickerItemProps) {
             rounded={true}
             variant="card"
             className=""
+            containerClassName="w-full"
             isDraggable={false}
           />
           {isAdding && (
