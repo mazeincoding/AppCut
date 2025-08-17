@@ -12,6 +12,8 @@ import { createPortal } from "react-dom";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePlaybackStore } from "@/stores/playback-store";
+import { useMediaPreviewStore } from "@/stores/media-preview-store";
+import type { MediaItem } from "@/stores/media-store";
 
 export interface DraggableMediaItemProps {
   name: string;
@@ -26,6 +28,7 @@ export interface DraggableMediaItemProps {
   rounded?: boolean;
   variant?: "card" | "compact";
   isDraggable?: boolean;
+  mediaItem?: MediaItem;
 }
 
 export function DraggableMediaItem({
@@ -41,6 +44,7 @@ export function DraggableMediaItem({
   rounded = true,
   variant = "card",
   isDraggable = true,
+  mediaItem,
 }: DraggableMediaItemProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
@@ -48,6 +52,14 @@ export function DraggableMediaItem({
   const currentTime = isDraggable
     ? usePlaybackStore((state) => state.currentTime)
     : 0;
+
+  const { setPreviewMedia } = useMediaPreviewStore();
+
+  const handleDoubleClick = () => {
+    if (mediaItem) {
+      setPreviewMedia(mediaItem);
+    }
+  };
 
   const handleAddToTimeline = () => {
     onAddToTimeline?.(currentTime);
@@ -95,7 +107,11 @@ export function DraggableMediaItem({
   return (
     <>
       {variant === "card" ? (
-        <div ref={dragRef} className="relative group w-28 h-28">
+        <div
+          ref={dragRef}
+          className="relative group w-28 h-28"
+          onDoubleClick={handleDoubleClick}
+        >
           <div
             className={`flex flex-col gap-1 p-0 h-auto w-full relative cursor-default ${className}`}
           >
@@ -132,7 +148,11 @@ export function DraggableMediaItem({
           </div>
         </div>
       ) : (
-        <div ref={dragRef} className="relative group w-full">
+        <div
+          ref={dragRef}
+          className="relative group w-full"
+          onDoubleClick={handleDoubleClick}
+        >
           <div
             className={cn(
               "h-10 flex items-center gap-3 cursor-default w-full",
