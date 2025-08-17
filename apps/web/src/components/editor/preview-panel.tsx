@@ -726,109 +726,116 @@ function FullscreenToolbar({
   };
 
   return (
-    <div
-      data-toolbar
-      className="flex items-center gap-2 p-1 pt-2 w-full text-foreground relative"
-    >
-      <div className="flex items-center gap-1 text-[0.70rem] tabular-nums text-foreground/90">
-        <EditableTimecode
-          time={getCurrentTime()}
-          duration={totalDuration}
-          format="HH:MM:SS:FF"
-          fps={activeProject?.fps || DEFAULT_FPS}
-          onTimeChange={isMediaPreviewMode ? setMediaCurrentTime : seek}
-          disabled={!hasAnyElements && !isMediaPreviewMode}
-          className="text-foreground/90 hover:bg-white/10"
-        />
-        <span className="opacity-50">/</span>
-        <span>
-          {formatTimeCode(
-            totalDuration,
-            "HH:MM:SS:FF",
-            activeProject?.fps || DEFAULT_FPS
-          )}
-        </span>
-      </div>
-
-      <div className="flex items-center gap-1">
-        <Button
-          variant="text"
-          size="icon"
-          onClick={skipBackward}
-          disabled={!hasAnyElements && !isMediaPreviewMode}
-          className="h-auto p-0 text-foreground"
-          title="Skip backward 1s"
-          type="button"
-        >
-          <SkipBack className="h-3 w-3" />
-        </Button>
-        <Button
-          variant="text"
-          size="icon"
-          onClick={getCurrentToggle()}
-          disabled={!hasAnyElements && !isMediaPreviewMode}
-          className="h-auto p-0 text-foreground hover:text-foreground/80"
-          type="button"
-        >
-          {getCurrentIsPlaying() ? (
-            <Pause className="h-3 w-3" />
-          ) : (
-            <Play className="h-3 w-3" />
-          )}
-        </Button>
-        <Button
-          variant="text"
-          size="icon"
-          onClick={skipForward}
-          disabled={!hasAnyElements && !isMediaPreviewMode}
-          className="h-auto p-0 text-foreground hover:text-foreground/80"
-          title="Skip forward 1s"
-          type="button"
-        >
-          <SkipForward className="h-3 w-3" />
-        </Button>
-      </div>
-
-      <div className="flex-1 flex items-center gap-2">
-        <div
-          className={cn(
-            "relative h-1 rounded-full cursor-pointer flex-1 bg-foreground/20",
-            (!hasAnyElements && !isMediaPreviewMode) && "opacity-50 cursor-not-allowed"
-          )}
-          onClick={(hasAnyElements || isMediaPreviewMode) ? handleTimelineClick : undefined}
-          onMouseDown={(hasAnyElements || isMediaPreviewMode) ? handleTimelineDrag : undefined}
-          style={{ userSelect: "none" }}
-        >
-          <div
-            className={cn(
-              "absolute top-0 left-0 h-full rounded-full bg-foreground",
-              !isDragging && "duration-100"
-            )}
-            style={{ width: `${progress}%` }}
-          />
-          <div
-            className="absolute top-1/2 w-3 h-3 rounded-full -translate-y-1/2 -translate-x-1/2 shadow-xs bg-foreground border border-black/20"
-            style={{ left: `${progress}%` }}
-          />
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2">
+    <div className="flex flex-col gap-3 w-full text-foreground">
+      {/* Top row - Preview mode toggle centered */}
+      <div className="flex justify-center">
         <PreviewModeToggle
           isMediaPreviewMode={!!isMediaPreviewMode}
           togglePreviewMode={togglePreviewMode ?? (() => {})}
           previewMedia={previewMedia ?? null}
         />
-        <Button
-          variant="text"
-          size="icon"
-          className="size-4! text-foreground/80 hover:text-foreground"
-          onClick={onToggleExpanded}
-          title="Exit fullscreen (Esc)"
-          type="button"
-        >
-          <Expand className="size-4!" />
-        </Button>
+      </div>
+      
+      {/* Bottom row - Playback controls */}
+      <div
+        data-toolbar
+        className="flex items-center gap-2 p-1 w-full relative"
+      >
+        <div className="flex items-center gap-1 text-[0.70rem] tabular-nums text-foreground/90">
+          <EditableTimecode
+            time={getCurrentTime()}
+            duration={totalDuration}
+            format="HH:MM:SS:FF"
+            fps={activeProject?.fps || DEFAULT_FPS}
+            onTimeChange={isMediaPreviewMode ? setMediaCurrentTime : seek}
+            disabled={!hasAnyElements && !isMediaPreviewMode}
+            className="text-foreground/90 hover:bg-white/10"
+          />
+          <span className="opacity-50">/</span>
+          <span>
+            {formatTimeCode(
+              totalDuration,
+              "HH:MM:SS:FF",
+              activeProject?.fps || DEFAULT_FPS
+            )}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-1">
+          <Button
+            variant="text"
+            size="icon"
+            onClick={skipBackward}
+            disabled={!hasAnyElements && !isMediaPreviewMode}
+            className="h-auto p-0 text-foreground"
+            title="Skip backward 1s"
+            type="button"
+          >
+            <SkipBack className="h-3 w-3" />
+          </Button>
+          <Button
+            variant="text"
+            size="icon"
+            onClick={getCurrentToggle()}
+            disabled={!hasAnyElements && !isMediaPreviewMode}
+            className="h-auto p-0 text-foreground hover:text-foreground/80"
+            type="button"
+          >
+            {getCurrentIsPlaying() ? (
+              <Pause className="h-3 w-3" />
+            ) : (
+              <Play className="h-3 w-3" />
+            )}
+          </Button>
+          <Button
+            variant="text"
+            size="icon"
+            onClick={skipForward}
+            disabled={!hasAnyElements && !isMediaPreviewMode}
+            className="h-auto p-0 text-foreground hover:text-foreground/80"
+            title="Skip forward 1s"
+            type="button"
+          >
+            <SkipForward className="h-3 w-3" />
+          </Button>
+        </div>
+
+        <div className="flex-1 flex items-center gap-2">
+          <div
+            className={cn(
+              "relative h-1 rounded-full cursor-pointer flex-1 bg-foreground/20",
+              (!hasAnyElements && !isMediaPreviewMode) && "opacity-50 cursor-not-allowed"
+            )}
+            onClick={(hasAnyElements || isMediaPreviewMode) ? handleTimelineClick : undefined}
+            onMouseDown={(hasAnyElements || isMediaPreviewMode) ? handleTimelineDrag : undefined}
+            style={{ userSelect: "none" }}
+          >
+            <div
+              className={cn(
+                "absolute top-0 left-0 h-full rounded-full bg-foreground",
+                !isDragging && "duration-100"
+              )}
+              style={{ width: `${progress}%` }}
+            />
+            <div
+              className="absolute top-1/2 w-3 h-3 rounded-full -translate-y-1/2 -translate-x-1/2 shadow-xs bg-foreground border border-black/20"
+              style={{ left: `${progress}%` }}
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="text"
+            size="icon"
+            className="size-4! text-foreground/80 hover:text-foreground"
+            onClick={onToggleExpanded}
+            title="Exit fullscreen (Esc)"
+            type="button"
+          >
+            <Expand className="size-4!" />
+          </Button>
+        </div>
       </div>
     </div>
   );
