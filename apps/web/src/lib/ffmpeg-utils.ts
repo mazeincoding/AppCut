@@ -169,15 +169,6 @@ export const getVideoInfo = async (
   }
 };
 
-function parseFrameRate(r_frame_rate: string) {
-  let r: number;
-  if (r_frame_rate.indexOf("/") > 0) {
-    const [n, m] = r_frame_rate.split("/");
-    r = parseFloat(n) / parseFloat(m);
-  }
-  r =  parseFloat(r_frame_rate);
-  return Number.isFinite(r) && r > 0 ? r : 0;
-}
 
 export const convertToWebM = async (
   videoFile: File,
@@ -464,4 +455,16 @@ const generateSilentAudio = async (durationSeconds: number): Promise<Blob> => {
       // Silent cleanup
     }
   }
+};
+
+// r_frame_rate from ffprobe, for example "60000/1001", "30"
+const parseFrameRate = (r_frame_rate: string) => {
+  let r: number;
+  if (r_frame_rate.indexOf("/") > 0) {
+    const [n, m] = r_frame_rate.split("/");
+    r = parseFloat(n) / parseFloat(m);
+  } else {
+    r =  parseFloat(r_frame_rate);
+  }
+  return Number.isFinite(r) && r > 0 ? r : 0;
 };
