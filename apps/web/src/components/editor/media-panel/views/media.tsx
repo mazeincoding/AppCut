@@ -502,6 +502,7 @@ function GridView({
             }
             rounded={false}
             variant="card"
+            mediaItem={item}
           />
         </MediaItemWithContextMenu>
       ))}
@@ -541,6 +542,7 @@ function ListView({
               useTimelineStore.getState().addMediaAtTime(item, currentTime)
             }
             variant="compact"
+            mediaItem={item}
           />
         </MediaItemWithContextMenu>
       ))}

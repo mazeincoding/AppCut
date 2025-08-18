@@ -9,7 +9,8 @@ import { VideoPlayer } from "@/components/ui/video-player";
 import { AudioPlayer } from "@/components/ui/audio-player";
 import { Button } from "@/components/ui/button";
 import { Play, Pause, Expand, SkipBack, SkipForward } from "lucide-react";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import type React from "react";
 import { cn } from "@/lib/utils";
 import { formatTimeCode } from "@/lib/time";
 import { EditableTimecode } from "@/components/ui/editable-timecode";
@@ -26,7 +27,7 @@ import { LayoutGuideOverlay } from "./layout-guide-overlay";
 import { Label } from "../ui/label";
 import { SocialsIcon } from "../icons";
 import { PLATFORM_LAYOUTS, type PlatformLayout } from "@/stores/editor-store";
-
+import { useMediaPreviewStore } from "@/stores/media-preview-store";
 interface ActiveElement {
   element: TimelineElement;
   track: TimelineTrack;
@@ -60,6 +61,8 @@ export function PreviewPanel() {
     elementWidth: 0,
     elementHeight: 0,
   });
+
+  const {mediaCurrentTime, isMediaPreviewMode, previewMedia, togglePreviewMode, clearPreview, mediaIsPlaying, setMediaCurrentTime,setMediaIsPlaying} = useMediaPreviewStore();
 
   useEffect(() => {
     const updatePreviewSize = () => {
@@ -483,6 +486,72 @@ export function PreviewPanel() {
     return null;
   };
 
+  const renderMediaPreview = () => {
+    if(!previewMedia){
+      return (
+        <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+          No media selected for preview
+        </div>
+      )
+    }
+    if(previewMedia.type === "video" && previewMedia.url) {
+      return (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <VideoPlayer
+            src={previewMedia.url}
+            poster={previewMedia.thumbnailUrl}
+            clipStartTime={mediaCurrentTime}
+            trimStart={0}
+            trimEnd={0}
+            clipDuration={previewMedia.duration ?? 0}
+            trackMuted={false}
+            isPlaying={mediaIsPlaying}
+            onTimeUpdate={(time)=>setMediaCurrentTime(time)}
+            onPlay={()=>setMediaIsPlaying(true)}
+            onPause={()=>setMediaIsPlaying(false)}
+          />
+        </div>
+      )
+    }
+
+    if(previewMedia.type === "image" && previewMedia.url){
+      return (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <img
+            src={previewMedia.url}
+            alt={previewMedia.name}
+            className="max-w-full max-h-full object-contain"
+            draggable={false}
+          />
+        </div>
+      );
+    }
+    
+    if(previewMedia.type === "audio" && previewMedia.url){
+      return (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 p-8">
+          <div className="text-6xl">🔉</div>
+          <div className="text-lg font-medium text-foreground truncate max-w-40">{previewMedia.name}</div>
+          
+          <div className="w-3/4 max-w-md">
+            <AudioPlayer
+              src={previewMedia.url}
+              clipStartTime={mediaCurrentTime}
+              trimStart={0}
+              trimEnd={0}
+              clipDuration={previewMedia.duration ?? 0}
+              trackMuted={false}
+              isPlaying={mediaIsPlaying}
+              onTimeUpdate={(time)=> setMediaCurrentTime(time)}
+              onPlay={()=> setMediaIsPlaying(true)}
+              onPause={()=> setMediaIsPlaying(false)}
+            />
+          </div>
+        </div>
+      );
+    }
+    return null;
+  }
   return (
     <>
       <div className="h-full w-full flex flex-col min-h-0 min-w-0 bg-panel rounded-sm relative">
@@ -491,33 +560,36 @@ export function PreviewPanel() {
           className="flex-1 flex flex-col items-center justify-center min-h-0 min-w-0"
         >
           <div className="flex-1" />
-          {hasAnyElements ? (
-            <div
-              ref={previewRef}
-              className="relative overflow-hidden border"
-              style={{
-                width: previewDimensions.width,
-                height: previewDimensions.height,
-                background:
-                  activeProject?.backgroundType === "blur"
-                    ? "transparent"
-                    : activeProject?.backgroundColor || "#000000",
-              }}
-            >
-              {renderBlurBackground()}
-              {activeElements.length === 0 ? (
-                <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                  No elements at current time
-                </div>
-              ) : (
-                activeElements.map((elementData, index) =>
-                  renderElement(elementData, index)
-                )
-              )}
-              <LayoutGuideOverlay />
-            </div>
-          ) : null}
-
+          <div
+            ref={previewRef}
+            className="relative overflow-hidden border"
+            style={{
+              width: previewDimensions.width,
+              height: previewDimensions.height,
+              background:
+                activeProject?.backgroundType === "blur"
+                  ? "transparent"
+                  : activeProject?.backgroundColor || "#000000",
+            }}
+          >
+            {isMediaPreviewMode ? (
+              renderMediaPreview()
+            ) : (
+              <>
+                {renderBlurBackground()}
+                {activeElements.length === 0 ? (
+                  <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                    No elements at current time
+                  </div>
+                ) : (
+                  activeElements.map((elementData, index) =>
+                    renderElement(elementData, index)
+                  )
+                )}
+                <LayoutGuideOverlay />
+              </>
+            )}
+          </div>
           <div className="flex-1" />
 
           <PreviewToolbar
@@ -528,6 +600,10 @@ export function PreviewPanel() {
             setCurrentTime={setCurrentTime}
             toggle={toggle}
             getTotalDuration={getTotalDuration}
+            isMediaPreviewMode={!!isMediaPreviewMode}
+            togglePreviewMode={togglePreviewMode ?? (() => {})}
+            previewMedia={previewMedia ?? null}
+            clearPreview={clearPreview}
           />
         </div>
       </div>
@@ -546,6 +622,11 @@ export function PreviewPanel() {
           setCurrentTime={setCurrentTime}
           toggle={toggle}
           getTotalDuration={getTotalDuration}
+          isMediaPreviewMode={!!isMediaPreviewMode}
+          previewMedia={previewMedia ?? null}
+          renderMediaPreview={renderMediaPreview}
+          togglePreviewMode={togglePreviewMode ?? (() => {})}
+          clearPreview={clearPreview}
         />
       )}
     </>
@@ -559,6 +640,10 @@ function FullscreenToolbar({
   setCurrentTime,
   toggle,
   getTotalDuration,
+  isMediaPreviewMode,
+  togglePreviewMode,
+  previewMedia,
+  clearPreview,
 }: {
   hasAnyElements: boolean;
   onToggleExpanded: () => void;
@@ -566,25 +651,43 @@ function FullscreenToolbar({
   setCurrentTime: (time: number) => void;
   toggle: () => void;
   getTotalDuration: () => number;
+  isMediaPreviewMode?: boolean;
+  togglePreviewMode?: () => void;
+  previewMedia?: MediaItem | null;
+  clearPreview?: () => void;
 }) {
   const { isPlaying, seek } = usePlaybackStore();
+  const { mediaIsPlaying, mediaCurrentTime, setMediaCurrentTime, toggleMediaPlayback } = useMediaPreviewStore(); // Add these
   const { activeProject } = useProjectStore();
   const [isDragging, setIsDragging] = useState(false);
 
-  const totalDuration = getTotalDuration();
-  const progress = totalDuration > 0 ? (currentTime / totalDuration) * 100 : 0;
+  const getCurrentTime = () => isMediaPreviewMode ? mediaCurrentTime : currentTime;
+  const getCurrentDuration = () => isMediaPreviewMode ? (previewMedia?.duration ?? 0) : getTotalDuration();
+  const getCurrentIsPlaying = () => isMediaPreviewMode ? mediaIsPlaying : isPlaying;
+  const getCurrentToggle = () => isMediaPreviewMode ? toggleMediaPlayback : toggle;
+  
+  const handleTimeChange = (time: number) => {
+    if (isMediaPreviewMode) {
+      setMediaCurrentTime(time);
+    } else {
+      setCurrentTime(time);
+    }
+  };
+
+  const totalDuration = getCurrentDuration();
+  const progress = totalDuration > 0 ? (getCurrentTime() / totalDuration) * 100 : 0;
 
   const handleTimelineClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!hasAnyElements) return;
+    if (!hasAnyElements && !isMediaPreviewMode) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const percentage = Math.max(0, Math.min(1, clickX / rect.width));
     const newTime = percentage * totalDuration;
-    setCurrentTime(Math.max(0, Math.min(newTime, totalDuration)));
+    handleTimeChange(Math.max(0, Math.min(newTime, totalDuration)));
   };
 
   const handleTimelineDrag = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!hasAnyElements) return;
+    if (!hasAnyElements && !isMediaPreviewMode) return;
     e.preventDefault();
     e.stopPropagation();
     const rect = e.currentTarget.getBoundingClientRect();
@@ -595,7 +698,7 @@ function FullscreenToolbar({
       const dragX = moveEvent.clientX - rect.left;
       const percentage = Math.max(0, Math.min(1, dragX / rect.width));
       const newTime = percentage * totalDuration;
-      setCurrentTime(Math.max(0, Math.min(newTime, totalDuration)));
+      handleTimeChange(Math.max(0, Math.min(newTime, totalDuration)));
     };
 
     const handleMouseUp = () => {
@@ -612,109 +715,131 @@ function FullscreenToolbar({
   };
 
   const skipBackward = () => {
-    const newTime = Math.max(0, currentTime - 1);
-    setCurrentTime(newTime);
+    const currentTimeValue = getCurrentTime();
+    const newTime = Math.max(0, currentTimeValue - 1);
+    handleTimeChange(newTime);
   };
 
   const skipForward = () => {
-    const newTime = Math.min(totalDuration, currentTime + 1);
-    setCurrentTime(newTime);
+    const currentTimeValue = getCurrentTime();
+    const newTime = Math.min(totalDuration, currentTimeValue + 1);
+    handleTimeChange(newTime);
   };
 
   return (
-    <div
-      data-toolbar
-      className="flex items-center gap-2 p-1 pt-2 w-full text-foreground relative"
-    >
-      <div className="flex items-center gap-1 text-[0.70rem] tabular-nums text-foreground/90">
-        <EditableTimecode
-          time={currentTime}
-          duration={totalDuration}
-          format="HH:MM:SS:FF"
-          fps={activeProject?.fps || DEFAULT_FPS}
-          onTimeChange={seek}
-          disabled={!hasAnyElements}
-          className="text-foreground/90 hover:bg-white/10"
+    <div className="flex flex-col gap-3 w-full text-foreground">
+      {/* Top row - Preview mode toggle centered */}
+      <div className="flex justify-center">
+        <PreviewModeToggle
+          isMediaPreviewMode={!!isMediaPreviewMode}
+          togglePreviewMode={togglePreviewMode ?? (() => {})}
+          previewMedia={previewMedia ?? null}
         />
-        <span className="opacity-50">/</span>
-        <span>
-          {formatTimeCode(
-            totalDuration,
-            "HH:MM:SS:FF",
-            activeProject?.fps || DEFAULT_FPS
-          )}
-        </span>
       </div>
+      
+      {/* Bottom row - Playback controls */}
+      <div
+        data-toolbar
+        className="flex items-center gap-2 p-1 w-full relative"
+      >
+        <div className="flex items-center gap-1 text-[0.70rem] tabular-nums text-foreground/90">
+          <EditableTimecode
+            time={getCurrentTime()}
+            duration={totalDuration}
+            format="HH:MM:SS:FF"
+            fps={activeProject?.fps || DEFAULT_FPS}
+            onTimeChange={isMediaPreviewMode ? setMediaCurrentTime : seek}
+            disabled={!hasAnyElements && !isMediaPreviewMode}
+            className="text-foreground/90 hover:bg-white/10"
+          />
+          <span className="opacity-50">/</span>
+          <span>
+            {formatTimeCode(
+              totalDuration,
+              "HH:MM:SS:FF",
+              activeProject?.fps || DEFAULT_FPS
+            )}
+          </span>
+        </div>
 
-      <div className="flex items-center gap-1">
-        <Button
-          variant="text"
-          size="icon"
-          onClick={skipBackward}
-          disabled={!hasAnyElements}
-          className="h-auto p-0 text-foreground"
-          title="Skip backward 1s"
-        >
-          <SkipBack className="h-3 w-3" />
-        </Button>
-        <Button
-          variant="text"
-          size="icon"
-          onClick={toggle}
-          disabled={!hasAnyElements}
-          className="h-auto p-0 text-foreground hover:text-foreground/80"
-        >
-          {isPlaying ? (
-            <Pause className="h-3 w-3" />
-          ) : (
-            <Play className="h-3 w-3" />
-          )}
-        </Button>
-        <Button
-          variant="text"
-          size="icon"
-          onClick={skipForward}
-          disabled={!hasAnyElements}
-          className="h-auto p-0 text-foreground hover:text-foreground/80"
-          title="Skip forward 1s"
-        >
-          <SkipForward className="h-3 w-3" />
-        </Button>
-      </div>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="text"
+            size="icon"
+            onClick={skipBackward}
+            disabled={!hasAnyElements && !isMediaPreviewMode}
+            className="h-auto p-0 text-foreground"
+            title="Skip backward 1s"
+            type="button"
+          >
+            <SkipBack className="h-3 w-3" />
+          </Button>
+          <Button
+            variant="text"
+            size="icon"
+            onClick={getCurrentToggle()}
+            disabled={!hasAnyElements && !isMediaPreviewMode}
+            className="h-auto p-0 text-foreground hover:text-foreground/80"
+            type="button"
+            aria-label={getCurrentIsPlaying() ? "Pause" : "Play"}
+            title={getCurrentIsPlaying() ? "Pause" : "Play"}
+          >
+            {getCurrentIsPlaying() ? (
+              <Pause className="h-3 w-3" />
+            ) : (
+              <Play className="h-3 w-3" />
+            )}
+          </Button>
+          <Button
+            variant="text"
+            size="icon"
+            onClick={skipForward}
+            disabled={!hasAnyElements && !isMediaPreviewMode}
+            className="h-auto p-0 text-foreground hover:text-foreground/80"
+            title="Skip forward 1s"
+            type="button"
+          >
+            <SkipForward className="h-3 w-3" />
+          </Button>
+        </div>
 
-      <div className="flex-1 flex items-center gap-2">
-        <div
-          className={cn(
-            "relative h-1 rounded-full cursor-pointer flex-1 bg-foreground/20",
-            !hasAnyElements && "opacity-50 cursor-not-allowed"
-          )}
-          onClick={hasAnyElements ? handleTimelineClick : undefined}
-          onMouseDown={hasAnyElements ? handleTimelineDrag : undefined}
-          style={{ userSelect: "none" }}
-        >
+        <div className="flex-1 flex items-center gap-2">
           <div
             className={cn(
-              "absolute top-0 left-0 h-full rounded-full bg-foreground",
-              !isDragging && "duration-100"
+              "relative h-1 rounded-full cursor-pointer flex-1 bg-foreground/20",
+              (!hasAnyElements && !isMediaPreviewMode) && "opacity-50 cursor-not-allowed"
             )}
-            style={{ width: `${progress}%` }}
-          />
-          <div
-            className="absolute top-1/2 w-3 h-3 rounded-full -translate-y-1/2 -translate-x-1/2 shadow-xs bg-foreground border border-black/20"
-            style={{ left: `${progress}%` }}
-          />
+            onClick={(hasAnyElements || isMediaPreviewMode) ? handleTimelineClick : undefined}
+            onMouseDown={(hasAnyElements || isMediaPreviewMode) ? handleTimelineDrag : undefined}
+            style={{ userSelect: "none" }}
+          >
+            <div
+              className={cn(
+                "absolute top-0 left-0 h-full rounded-full bg-foreground",
+                !isDragging && "duration-100"
+              )}
+              style={{ width: `${progress}%` }}
+            />
+            <div
+              className="absolute top-1/2 w-3 h-3 rounded-full -translate-y-1/2 -translate-x-1/2 shadow-xs bg-foreground border border-black/20"
+              style={{ left: `${progress}%` }}
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="text"
+            size="icon"
+            className="size-4! text-foreground/80 hover:text-foreground"
+            onClick={onToggleExpanded}
+            title="Exit fullscreen (Esc)"
+            type="button"
+          >
+            <Expand className="size-4!" />
+          </Button>
         </div>
       </div>
-
-      <Button
-        variant="text"
-        size="icon"
-        className="size-4! text-foreground/80 hover:text-foreground"
-        onClick={onToggleExpanded}
-        title="Exit fullscreen (Esc)"
-      >
-        <Expand className="size-4!" />
-      </Button>
     </div>
   );
 }
@@ -732,6 +857,11 @@ function FullscreenPreview({
   setCurrentTime,
   toggle,
   getTotalDuration,
+  isMediaPreviewMode,
+  previewMedia,
+  renderMediaPreview,
+  togglePreviewMode,
+  clearPreview,
 }: {
   previewDimensions: { width: number; height: number };
   activeProject: any;
@@ -745,6 +875,11 @@ function FullscreenPreview({
   setCurrentTime: (time: number) => void;
   toggle: () => void;
   getTotalDuration: () => number;
+  isMediaPreviewMode: boolean;
+  previewMedia: MediaItem | null;
+  renderMediaPreview: () => React.ReactNode;
+  togglePreviewMode: () => void;
+  clearPreview: () => void;
 }) {
   return (
     <div className="fixed inset-0 z-9999 flex flex-col">
@@ -760,17 +895,23 @@ function FullscreenPreview({
                 : activeProject?.backgroundColor || "#1a1a1a",
           }}
         >
-          {renderBlurBackground()}
-          {activeElements.length === 0 ? (
-            <div className="absolute inset-0 flex items-center justify-center text-white/60">
-              No elements at current time
-            </div>
+          {isMediaPreviewMode ? (
+            renderMediaPreview()
           ) : (
-            activeElements.map((elementData, index) =>
-              renderElement(elementData, index)
-            )
+            <>
+              {renderBlurBackground()}
+              {activeElements.length === 0 ? (
+                <div className="absolute inset-0 flex items-center justify-center text-white/60">
+                  No elements at current time
+                </div>
+              ) : (
+                activeElements.map((elementData, index) =>
+                  renderElement(elementData, index)
+                )
+              )}
+              <LayoutGuideOverlay />
+            </>
           )}
-          <LayoutGuideOverlay />
         </div>
       </div>
       <div className="p-4 bg-background">
@@ -781,6 +922,10 @@ function FullscreenPreview({
           setCurrentTime={setCurrentTime}
           toggle={toggle}
           getTotalDuration={getTotalDuration}
+          isMediaPreviewMode={isMediaPreviewMode}
+          togglePreviewMode={togglePreviewMode ?? (() => {})}
+          previewMedia={previewMedia}
+          clearPreview={clearPreview}
         />
       </div>
     </div>
@@ -795,6 +940,10 @@ function PreviewToolbar({
   setCurrentTime,
   toggle,
   getTotalDuration,
+  isMediaPreviewMode,
+  togglePreviewMode,
+  previewMedia,
+  clearPreview,
 }: {
   hasAnyElements: boolean;
   onToggleExpanded: () => void;
@@ -803,9 +952,17 @@ function PreviewToolbar({
   setCurrentTime: (time: number) => void;
   toggle: () => void;
   getTotalDuration: () => number;
+  isMediaPreviewMode: boolean;
+  togglePreviewMode: () => void;
+  previewMedia: MediaItem | null;
+  clearPreview: () => void;
 }) {
+  const { toggleMediaPlayback, mediaIsPlaying } = useMediaPreviewStore();
   const { isPlaying } = usePlaybackStore();
   const { layoutGuide, toggleLayoutGuide } = useEditorStore();
+  
+  const currentIsPlaying = isMediaPreviewMode ? mediaIsPlaying : isPlaying;
+  const currentToggle = isMediaPreviewMode ? toggleMediaPlayback : toggle;
 
   if (isExpanded) {
     return (
@@ -817,6 +974,10 @@ function PreviewToolbar({
           setCurrentTime,
           toggle,
           getTotalDuration,
+          isMediaPreviewMode,
+          togglePreviewMode,
+          previewMedia,
+          clearPreview,
         }}
       />
     );
@@ -825,17 +986,28 @@ function PreviewToolbar({
   return (
     <div
       data-toolbar
-      className="flex justify-end gap-2 h-auto pb-5 pr-5 pt-4 w-full"
+      className="flex justify-between gap-2 h-auto pb-5 pr-5 pt-4 w-full"
     >
+      <div className="flex items-center gap-2 ml-5">
+        <PreviewModeToggle
+          isMediaPreviewMode={isMediaPreviewMode}
+          togglePreviewMode={togglePreviewMode}
+          previewMedia={previewMedia}
+        />
+      </div>
+      
       <div className="flex items-center gap-2">
         <Button
           variant="text"
           size="icon"
-          onClick={toggle}
-          disabled={!hasAnyElements}
+          onClick={currentToggle}
+          disabled={!hasAnyElements && !isMediaPreviewMode}
           className="h-auto p-0"
+          type="button"
+          aria-label={currentIsPlaying ? "Pause" : "Play"}
+          title={currentIsPlaying ? "Pause" : "Play"}
         >
-          {isPlaying ? (
+          {currentIsPlaying ? (
             <Pause className="h-3 w-3" />
           ) : (
             <Play className="h-3 w-3" />
@@ -848,6 +1020,7 @@ function PreviewToolbar({
               size="icon"
               className="h-auto p-0 mr-1"
               title="Toggle layout guide"
+              type="button"
             >
               <SocialsIcon className="!size-6" />
             </Button>
@@ -895,10 +1068,53 @@ function PreviewToolbar({
           className="size-4!"
           onClick={onToggleExpanded}
           title="Enter fullscreen"
+          type="button"
         >
           <Expand className="size-4!" />
         </Button>
       </div>
+    </div>
+  );
+}
+
+function PreviewModeToggle({ 
+  isMediaPreviewMode, 
+  togglePreviewMode, 
+  previewMedia 
+}: {
+  isMediaPreviewMode: boolean;
+  togglePreviewMode: () => void;
+  previewMedia: MediaItem | null;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex bg-muted rounded-md p-1">
+        <Button
+          variant={!isMediaPreviewMode ? "default" : "secondary"}
+          size="sm"
+          onClick={() => isMediaPreviewMode && togglePreviewMode()}
+          className="h-7 px-3 text-xs"
+          type="button"
+        >
+          Timeline
+        </Button>
+        <Button
+          variant={isMediaPreviewMode ? "default" : "secondary"}
+          size="sm"
+          onClick={() => !isMediaPreviewMode && previewMedia && togglePreviewMode()}
+          disabled={!previewMedia}
+          className="h-7 px-3 text-xs"
+          type="button"
+        >
+          Media
+        </Button>
+      </div>
+      
+      {previewMedia && (
+        <span className="text-xs text-muted-foreground truncate max-w-36">
+          {isMediaPreviewMode ? previewMedia.name : "Double-click to preview"}
+        </span>
+      )}
     </div>
   );
 }

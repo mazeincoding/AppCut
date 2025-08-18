@@ -11,6 +11,11 @@ interface AudioPlayerProps {
   trimEnd: number;
   clipDuration: number;
   trackMuted?: boolean;
+  // Add media preview props
+  isPlaying?: boolean;
+  onTimeUpdate?: (time: number) => void;
+  onPlay?: () => void;
+  onPause?: () => void;
 }
 
 export function AudioPlayer({
@@ -21,22 +26,33 @@ export function AudioPlayer({
   trimEnd,
   clipDuration,
   trackMuted = false,
+  // Media preview props
+  isPlaying: externalIsPlaying,
+  onTimeUpdate,
+  onPlay,
+  onPause,
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const { isPlaying, currentTime, volume, speed, muted } = usePlaybackStore();
+  const timelineStore = usePlaybackStore();
+  
+  // Use external props if provided (media preview mode), otherwise use timeline
+  const isPlaying = externalIsPlaying !== undefined ? externalIsPlaying : timelineStore.isPlaying;
+  const currentTime = timelineStore.currentTime;
+  const { volume, speed, muted } = timelineStore;
+  
+  // Determine if this is media preview mode
+  const isMediaPreviewMode = externalIsPlaying !== undefined;
 
-  // Calculate if we're within this clip's timeline range
+  // Calculate if we're within this clip's timeline range (only for timeline mode)
   const clipEndTime = clipStartTime + (clipDuration - trimStart - trimEnd);
-  const isInClipRange =
-    currentTime >= clipStartTime && currentTime < clipEndTime;
+  const isInClipRange = isMediaPreviewMode || (currentTime >= clipStartTime && currentTime < clipEndTime);
 
-  // Sync playback events
+  // Sync playback events for timeline mode
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio || !isInClipRange) return;
+    if (!audio || isMediaPreviewMode) return; // Skip timeline events in media preview mode
 
     const handleSeekEvent = (e: CustomEvent) => {
-      // Always update audio time, even if outside clip range
       const timelineTime = e.detail.time;
       const audioTime = Math.max(
         trimStart,
@@ -49,7 +65,6 @@ export function AudioPlayer({
     };
 
     const handleUpdateEvent = (e: CustomEvent) => {
-      // Always update audio time, even if outside clip range
       const timelineTime = e.detail.time;
       const targetTime = Math.max(
         trimStart,
@@ -89,19 +104,60 @@ export function AudioPlayer({
         handleSpeed as EventListener
       );
     };
-  }, [clipStartTime, trimStart, trimEnd, clipDuration, isInClipRange]);
+  }, [clipStartTime, trimStart, trimEnd, clipDuration, isMediaPreviewMode]);
 
   // Sync playback state
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    if (isPlaying && isInClipRange && !trackMuted) {
-      audio.play().catch(() => {});
+    if (isPlaying && isInClipRange) {
+      audio.play().catch(() => {
+        // Handle play promise rejection silently
+      });
     } else {
       audio.pause();
     }
-  }, [isPlaying, isInClipRange, trackMuted]);
+  }, [isPlaying, isInClipRange]);
+
+  // Handle time updates for media preview mode
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !isMediaPreviewMode) return;
+
+    const handleTimeUpdate = () => {
+      onTimeUpdate?.(audio.currentTime);
+    };
+
+    const handlePlay = () => {
+      onPlay?.();
+    };
+
+    const handlePause = () => {
+      onPause?.();
+    };
+
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
+
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
+    };
+  }, [isMediaPreviewMode, onTimeUpdate, onPlay, onPause]);
+
+  // Sync media preview time
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !isMediaPreviewMode) return;
+
+    // In media preview mode, sync with clipStartTime (used as mediaCurrentTime in preview mode)
+    if (Math.abs(audio.currentTime - clipStartTime) > 0.5) {
+      audio.currentTime = clipStartTime;
+    }
+  }, [clipStartTime, isMediaPreviewMode]);
 
   // Sync volume and speed
   useEffect(() => {

@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useActionHandler } from "@/constants/actions";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { usePlaybackStore } from "@/stores/playback-store";
+import { useMediaPreviewStore } from "@/stores/media-preview-store";
 import { DEFAULT_FPS, useProjectStore } from "@/stores/project-store";
 import { toast } from "sonner";
 
@@ -24,11 +25,19 @@ export function useEditorActions() {
 
   const { currentTime, duration, isPlaying, toggle, seek } = usePlaybackStore();
   const { activeProject } = useProjectStore();
+  const { isMediaPreviewMode, setMediaIsPlaying } = useMediaPreviewStore();
 
   // Playback actions
   useActionHandler(
     "toggle-play",
     () => {
+      // If we're in media preview mode and trying to resume timeline playback
+      if (isMediaPreviewMode && !isPlaying) {
+        // Pause any media preview playback
+        setMediaIsPlaying(false);
+        // Exit media preview mode
+        useMediaPreviewStore.getState().exitPreviewMode();
+      }
       toggle();
     },
     undefined
