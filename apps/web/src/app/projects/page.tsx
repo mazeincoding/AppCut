@@ -5,6 +5,7 @@ import {
   ChevronLeft,
   Loader2,
   MoreHorizontal,
+  ArrowDown01,
   Plus,
   Search,
   Trash2,
@@ -29,12 +30,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProjectStore } from "@/stores/project-store";
 import { useTimelineStore } from "@/stores/timeline-store";
@@ -228,17 +228,71 @@ export default function ProjectsPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Select value={sortOption} onValueChange={setSortOption}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="createdAt-desc">Newest to Oldest</SelectItem>
-              <SelectItem value="createdAt-asc">Oldest to Newest</SelectItem>
-              <SelectItem value="name-asc">Name (A-Z)</SelectItem>
-              <SelectItem value="name-desc">Name (Z-A)</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-0">
+            <TooltipProvider>
+              <Tooltip>
+                <DropdownMenu>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        className="justify-center items-center w-9 h-9"
+                      >
+                        <ArrowDown01
+                          strokeWidth={1.5}
+                          className="!size-[1.05rem]"
+                        />
+                      </Button>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onClick={() => {
+                        if (sortOption.startsWith("createdAt")) {
+                          setSortOption(
+                            sortOption.endsWith("asc")
+                              ? "createdAt-desc"
+                              : "createdAt-asc"
+                          );
+                        } else {
+                          setSortOption("createdAt-asc");
+                        }
+                      }}
+                    >
+                      Created{" "}
+                      {sortOption.startsWith("createdAt") &&
+                        (sortOption.endsWith("asc") ? "↑" : "↓")}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        if (sortOption.startsWith("name")) {
+                          setSortOption(
+                            sortOption.endsWith("asc")
+                              ? "name-desc"
+                              : "name-asc"
+                          );
+                        } else {
+                          setSortOption("name-asc");
+                        }
+                      }}
+                    >
+                      Name{" "}
+                      {sortOption.startsWith("name") &&
+                        (sortOption.endsWith("asc") ? "↑" : "↓")}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <TooltipContent>
+                  <p>
+                    Sort by{" "}
+                    {sortOption.startsWith("createdAt") ? "date" : "name"} (
+                    {sortOption.endsWith("asc") ? "ascending" : "descending"})
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </div>
 
         {isSelectionMode && sortedProjects.length > 0 && (
@@ -399,7 +453,7 @@ function ProjectCard({
       >
         {isSelectionMode && (
           <div className="absolute top-3 left-3 z-10">
-            <div className="w-5 h-5 rounded bg-background/80 backdrop-blur-xs border flex items-center justify-center">
+            <div className="w-5 h-5 rounded-full bg-background/80 backdrop-blur-xs border flex items-center justify-center">
               <Checkbox
                 checked={isSelected}
                 onCheckedChange={(checked) =>

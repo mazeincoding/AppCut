@@ -208,7 +208,7 @@ export function TimelineElement({
             }`}
           >
             <div
-              className={`absolute top-[0.15rem] bottom-[0.15rem] left-0 right-0`}
+              className={`absolute top-[0.25rem] bottom-[0.25rem] left-0 right-0`}
               style={{
                 backgroundImage: imageUrl ? `url(${imageUrl})` : "none",
                 backgroundRepeat: "repeat-x",
@@ -271,7 +271,7 @@ export function TimelineElement({
           onMouseLeave={resizing ? handleResizeEnd : undefined}
         >
           <div
-            className={`relative h-full rounded-[0.15rem] cursor-pointer overflow-hidden ${getTrackElementClasses(
+            className={`relative h-full rounded-[0.5rem] cursor-pointer overflow-hidden ${getTrackElementClasses(
               track.type
             )} ${isSelected ? "" : ""} ${
               isBeingDragged ? "z-50" : "z-10"
@@ -299,13 +299,17 @@ export function TimelineElement({
             {isSelected && (
               <>
                 <div
-                  className="absolute left-0 top-0 bottom-0 w-[0.2rem] cursor-w-resize bg-primary z-50"
+                  className="absolute left-0 top-0 bottom-0 w-[0.6rem] cursor-w-resize bg-primary z-50 flex items-center justify-center"
                   onMouseDown={(e) => handleResizeStart(e, element.id, "left")}
-                />
+                >
+                  <div className="w-[0.2rem] h-[1.5rem] bg-foreground/75 rounded-full" />
+                </div>
                 <div
-                  className="absolute right-0 top-0 bottom-0 w-[0.2rem] cursor-e-resize bg-primary z-50"
+                  className="absolute right-0 top-0 bottom-0 w-[0.6rem] cursor-e-resize bg-primary z-50 flex items-center justify-center"
                   onMouseDown={(e) => handleResizeStart(e, element.id, "right")}
-                />
+                >
+                  <div className="w-[0.2rem] h-[1.5rem] bg-foreground/75 rounded-full" />
+                </div>
               </>
             )}
           </div>

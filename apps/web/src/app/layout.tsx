@@ -17,6 +17,10 @@ const protectedRoutes = [
     path: "/none",
     method: "GET",
   },
+  {
+    path: "/api/waitlist/export",
+    method: "POST",
+  },
 ];
 
 export default function RootLayout({

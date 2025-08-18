@@ -164,9 +164,20 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   },
 
   createNewProject: async (name: string) => {
-    const newProject: TProject = { ...DEFAULT_PROJECT, name };
+    const newProject: TProject = {
+      ...DEFAULT_PROJECT,
+      id: generateUUID(),
+      name,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
 
     set({ activeProject: newProject });
+
+    const mediaStore = useMediaStore.getState();
+    const timelineStore = useTimelineStore.getState();
+    mediaStore.clearAllMedia();
+    timelineStore.clearTimeline();
 
     try {
       await storageService.saveProject(newProject);

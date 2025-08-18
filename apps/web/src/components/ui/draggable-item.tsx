@@ -23,6 +23,7 @@ export interface DraggableMediaItemProps {
   onAddToTimeline?: (currentTime: number) => void;
   aspectRatio?: number;
   className?: string;
+  containerClassName?: string;
   showPlusOnDrag?: boolean;
   showLabel?: boolean;
   rounded?: boolean;
@@ -39,6 +40,7 @@ export function DraggableMediaItem({
   onAddToTimeline,
   aspectRatio = 16 / 9,
   className = "",
+  containerClassName,
   showPlusOnDrag = true,
   showLabel = true,
   rounded = true,
@@ -119,7 +121,7 @@ export function DraggableMediaItem({
       {variant === "card" ? (
         <div
           ref={dragRef}
-          className="relative group w-28 h-28"
+          className={cn("relative group", containerClassName ?? "w-28 h-28")}
           onDoubleClick={handleDoubleClick}
           role="button"
           tabIndex={0}
