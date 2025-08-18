@@ -62,9 +62,10 @@ export function DraggableMediaItem({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Only handle Enter key for media preview - let space bubble up for global shortcuts
-    if (e.key === "Enter" && mediaItem) {
+    // Handle Enter (and optionally Space) for media preview
+    if ((e.key === "Enter" /* || e.code === "Space" */) && mediaItem) {
       e.preventDefault();
+      // e.stopPropagation(); // uncomment if enabling Space to avoid interfering with global shortcuts
       handleDoubleClick();
     }
     // Don't handle space key here to allow global keybindings to work
@@ -164,11 +165,11 @@ export function DraggableMediaItem({
         <div
           ref={dragRef}
           className="relative group w-full"
-          onDoubleClick={handleDoubleClick}
-          role="button"
-          tabIndex={0}
-          aria-label={`Preview ${name}. Press Enter to preview.`}
-          onKeyDown={handleKeyDown}
+          onDoubleClick={mediaItem ? handleDoubleClick : undefined}
+          role={mediaItem ? "button" : undefined}
+          tabIndex={mediaItem ? 0 : undefined}
+          aria-label={mediaItem ? `Preview ${name}. Press Enter to preview.` : undefined}
+          onKeyDown={mediaItem ? handleKeyDown : undefined}
         >
           <div
             className={cn(
