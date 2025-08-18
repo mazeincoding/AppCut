@@ -116,6 +116,7 @@ export const getVideoInfo = async (
   const ffmpeg = await initFFmpeg();
 
   const inputName = "input.mp4";
+  const ffprobeOutputJson = "out.json";
 
   // Write input file
   await ffmpeg.writeFile(
@@ -123,62 +124,60 @@ export const getVideoInfo = async (
     new Uint8Array(await videoFile.arrayBuffer())
   );
 
-  // Capture FFmpeg stderr output with a one-time listener pattern
-  let ffmpegOutput = "";
-  let listening = true;
-  const listener = (data: string) => {
-    if (listening) ffmpegOutput += data;
-  };
-  ffmpeg.on("log", ({ message }) => listener(message));
-
-  // Run ffmpeg to get info (stderr will contain the info)
+  // Run ffprobe to get info (stderr will contain the info)
   try {
-    await ffmpeg.exec(["-i", inputName, "-f", "null", "-"]);
+    await ffmpeg.ffprobe([
+      "-v",
+       "error",
+      "-print_format",
+      "json",
+      "-show_format",
+      "-show_streams",
+      "-select_streams",
+      "v:0",
+      inputName,
+      "-o",
+      ffprobeOutputJson,
+    ])
+    const json = await ffmpeg.readFile(ffprobeOutputJson, "utf8");
+
+    const info = JSON.parse(json as string);
+    const width = info.streams[0].width;
+    const height = info.streams[0].height;
+    const fps = parseFrameRate(info.streams[0].r_frame_rate);
+    const duration = parseFloat(info.format.duration);
+
+    return {
+      duration,
+      width,
+      height,
+      fps,
+    }
   } catch (error) {
-    listening = false;
-    await ffmpeg.deleteFile(inputName);
-    console.error("FFmpeg execution failed:", error);
+    console.error("FFprobe execution failed:", error);
     throw new Error(
       "Failed to extract video info. The file may be corrupted or in an unsupported format."
     );
+  } finally {
+    // Cleanup
+    try {
+      await ffmpeg.deleteFile(inputName);
+      await ffmpeg.deleteFile(ffprobeOutputJson);
+    } catch(e) {
+      console.error("Error deleting temporary files:", e);
+    }
   }
-
-  // Disable listener after exec completes
-  listening = false;
-
-  // Cleanup
-  await ffmpeg.deleteFile(inputName);
-
-  // Parse output for duration, resolution, and fps
-  // Example: Duration: 00:00:10.00, start: 0.000000, bitrate: 1234 kb/s
-  // Example: Stream #0:0: Video: h264 (High), yuv420p(progressive), 1920x1080 [SAR 1:1 DAR 16:9], 30 fps, 30 tbr, 90k tbn, 60 tbc
-
-  const durationMatch = ffmpegOutput.match(/Duration: (\d+):(\d+):([\d.]+)/);
-  let duration = 0;
-  if (durationMatch) {
-    const [, h, m, s] = durationMatch;
-    duration = parseInt(h) * 3600 + parseInt(m) * 60 + parseFloat(s);
-  }
-
-  const videoStreamMatch = ffmpegOutput.match(
-    /Video:.* (\d+)x(\d+)[^,]*, ([\d.]+) fps/
-  );
-  let width = 0,
-    height = 0,
-    fps = 0;
-  if (videoStreamMatch) {
-    width = parseInt(videoStreamMatch[1]);
-    height = parseInt(videoStreamMatch[2]);
-    fps = parseFloat(videoStreamMatch[3]);
-  }
-
-  return {
-    duration,
-    width,
-    height,
-    fps,
-  };
 };
+
+function parseFrameRate(r_frame_rate: string) {
+  let r: number;
+  if (r_frame_rate.indexOf("/") > 0) {
+    const [n, m] = r_frame_rate.split("/");
+    r = parseFloat(n) / parseFloat(m);
+  }
+  r =  parseFloat(r_frame_rate);
+  return Number.isFinite(r) && r > 0 ? r : 0;
+}
 
 export const convertToWebM = async (
   videoFile: File,
