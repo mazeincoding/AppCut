@@ -15,6 +15,7 @@ interface MediaPreviewState {
   togglePreviewMode: () => void;
   clearPreview: () => void;
   toggleMediaPlayback: () => void;
+  exitPreviewMode: () => void;
 }
 
 export const useMediaPreviewStore = create<MediaPreviewState>((set, get) => ({
@@ -71,5 +72,11 @@ export const useMediaPreviewStore = create<MediaPreviewState>((set, get) => ({
     isMediaPreviewMode: false,
     mediaCurrentTime: 0,
     mediaIsPlaying: false
-  })
+  }),
+
+  exitPreviewMode: () =>
+    set({
+      isMediaPreviewMode: false,
+      mediaIsPlaying: false,
+    })
 }));

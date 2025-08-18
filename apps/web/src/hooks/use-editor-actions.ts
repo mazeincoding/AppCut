@@ -35,8 +35,8 @@ export function useEditorActions() {
       if (isMediaPreviewMode && !isPlaying) {
         // Pause any media preview playback
         setMediaIsPlaying(false);
-        // Switch back to timeline preview mode by setting isMediaPreviewMode to false
-        useMediaPreviewStore.setState({ isMediaPreviewMode: false });
+        // Exit media preview mode
+        useMediaPreviewStore.getState().exitPreviewMode();
       }
       toggle();
     },

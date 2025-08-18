@@ -9,7 +9,8 @@ import { VideoPlayer } from "@/components/ui/video-player";
 import { AudioPlayer } from "@/components/ui/audio-player";
 import { Button } from "@/components/ui/button";
 import { Play, Pause, Expand, SkipBack, SkipForward } from "lucide-react";
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import type React from "react";
 import { cn } from "@/lib/utils";
 import { formatTimeCode } from "@/lib/time";
 import { EditableTimecode } from "@/components/ui/editable-timecode";
@@ -501,7 +502,7 @@ export function PreviewPanel() {
             poster={previewMedia.thumbnailUrl}
             clipStartTime={mediaCurrentTime}
             trimStart={0}
-            trimEnd={previewMedia.duration ?? 0}
+            trimEnd={0}
             clipDuration={previewMedia.duration ?? 0}
             trackMuted={false}
             isPlaying={mediaIsPlaying}
@@ -537,7 +538,7 @@ export function PreviewPanel() {
               src={previewMedia.url}
               clipStartTime={mediaCurrentTime}
               trimStart={0}
-              trimEnd={previewMedia.duration ?? 0}
+              trimEnd={0}
               clipDuration={previewMedia.duration ?? 0}
               trackMuted={false}
               isPlaying={mediaIsPlaying}
@@ -780,6 +781,8 @@ function FullscreenToolbar({
             disabled={!hasAnyElements && !isMediaPreviewMode}
             className="h-auto p-0 text-foreground hover:text-foreground/80"
             type="button"
+            aria-label={getCurrentIsPlaying() ? "Pause" : "Play"}
+            title={getCurrentIsPlaying() ? "Pause" : "Play"}
           >
             {getCurrentIsPlaying() ? (
               <Pause className="h-3 w-3" />
@@ -1001,6 +1004,8 @@ function PreviewToolbar({
           disabled={!hasAnyElements && !isMediaPreviewMode}
           className="h-auto p-0"
           type="button"
+          aria-label={currentIsPlaying ? "Pause" : "Play"}
+          title={currentIsPlaying ? "Pause" : "Play"}
         >
           {currentIsPlaying ? (
             <Pause className="h-3 w-3" />

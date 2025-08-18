@@ -153,8 +153,8 @@ export function VideoPlayer({
     const video = videoRef.current;
     if (!video || !isMediaPreviewMode) return;
 
-    // In media preview mode, sync with clipStartTime (which is actually mediaCurrentTime)
-    if (Math.abs(video.currentTime - clipStartTime) > 0.5) {
+    // In media preview mode, sync with clipStartTime (mediaCurrentTime)
+    if (Math.abs(video.currentTime - clipStartTime) > 0.05) {
       video.currentTime = clipStartTime;
     }
   }, [clipStartTime, isMediaPreviewMode]);
@@ -176,7 +176,7 @@ export function VideoPlayer({
       poster={poster}
       className={`max-w-full max-h-full object-contain ${className}`}
       playsInline
-      preload="auto"
+      preload={isMediaPreviewMode ? "metadata" : "auto"}
       controls={false}
       disablePictureInPicture
       disableRemotePlayback

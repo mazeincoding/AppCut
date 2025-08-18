@@ -153,7 +153,7 @@ export function AudioPlayer({
     const audio = audioRef.current;
     if (!audio || !isMediaPreviewMode) return;
 
-    // In media preview mode, sync with clipStartTime (which is actually mediaCurrentTime)
+    // In media preview mode, sync with clipStartTime (used as mediaCurrentTime in preview mode)
     if (Math.abs(audio.currentTime - clipStartTime) > 0.5) {
       audio.currentTime = clipStartTime;
     }
