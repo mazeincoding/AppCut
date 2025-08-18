@@ -138,7 +138,7 @@ export const getVideoInfo = async (
       inputName,
       "-o",
       ffprobeOutputJson,
-    ])
+    ]);
     const json = await ffmpeg.readFile(ffprobeOutputJson, "utf8");
 
     const info = JSON.parse(json as string);
