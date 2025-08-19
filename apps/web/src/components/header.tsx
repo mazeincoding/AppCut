@@ -46,7 +46,7 @@ export function Header() {
   return (
     <div className="sticky top-4 z-50 mx-4 md:mx-0">
       <HeaderBase
-        className="bg-background border rounded-2xl max-w-3xl mx-auto mt-4 pl-4 pr-[14px]"
+        className="bg-background border rounded-2xl max-w-3xl mx-auto mt-4 pl-4 pr-[11px]"
         leftContent={leftContent}
         rightContent={rightContent}
       />
