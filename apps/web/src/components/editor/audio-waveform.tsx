@@ -67,8 +67,8 @@ const AudioWaveform: React.FC<AudioWaveformProps> = ({
         });
 
         newWaveSurfer.on("error", (err) => {
-          console.error("WaveSurfer error:", err);
           if (mounted) {
+            console.error("WaveSurfer error:", err);
             setError(true);
             setIsLoading(false);
           }
@@ -76,8 +76,8 @@ const AudioWaveform: React.FC<AudioWaveformProps> = ({
 
         await newWaveSurfer.load(audioUrl);
       } catch (err) {
-        console.error("Failed to initialize WaveSurfer:", err);
         if (mounted) {
+          console.error("Failed to initialize WaveSurfer:", err);
           setError(true);
           setIsLoading(false);
         }
