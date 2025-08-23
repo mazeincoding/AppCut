@@ -247,7 +247,10 @@ export function TextProperties({
               checked={element.backgroundColor === "transparent"}
               onCheckedChange={handleTransparentToggle}
             />
-            <label htmlFor="transparent-bg-toggle" className="text-sm font-medium">
+            <label
+              htmlFor="transparent-bg-toggle"
+              className="text-sm font-medium"
+            >
               Transparent
             </label>
           </div>

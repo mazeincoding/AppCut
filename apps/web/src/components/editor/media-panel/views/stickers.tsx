@@ -565,7 +565,12 @@ interface StickerItemProps {
   capSize?: boolean;
 }
 
-function StickerItem({ iconName, onAdd, isAdding, capSize = false }: StickerItemProps) {
+function StickerItem({
+  iconName,
+  onAdd,
+  isAdding,
+  capSize = false,
+}: StickerItemProps) {
   const [imageError, setImageError] = useState(false);
   const [hostIndex, setHostIndex] = useState(0);
 
@@ -601,7 +606,10 @@ function StickerItem({ iconName, onAdd, isAdding, capSize = false }: StickerItem
         className="w-full h-full object-contain"
         style={
           capSize
-            ? { maxWidth: "var(--sticker-max, 160px)", maxHeight: "var(--sticker-max, 160px)" }
+            ? {
+                maxWidth: "var(--sticker-max, 160px)",
+                maxHeight: "var(--sticker-max, 160px)",
+              }
             : undefined
         }
         onError={() => {

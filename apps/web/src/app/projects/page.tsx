@@ -221,13 +221,16 @@ export default function ProjectsPage() {
         </div>
 
         <div className="mb-4 flex items-center justify-between gap-4">
-          <div className="flex-1 max-w-72">
+          <div className="flex-1 max-w-72 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             <Input
               placeholder="Search projects..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
             />
           </div>
+
           <div className="flex items-center gap-0">
             <TooltipProvider>
               <Tooltip>
