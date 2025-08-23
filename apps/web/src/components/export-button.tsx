@@ -170,7 +170,9 @@ function ExportDialog({
                   aria-live="polite"
                   className={cn(
                     "text-xs",
-                    serverMessage.type === "success" ? "text-green-600" : "text-red-600"
+                    serverMessage.type === "success"
+                      ? "text-green-600"
+                      : "text-red-600"
                   )}
                 >
                   {serverMessage.text}
