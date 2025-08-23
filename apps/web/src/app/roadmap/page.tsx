@@ -230,7 +230,7 @@ export default function RoadmapPage() {
                   >
                     <Badge
                       variant="outline"
-                      className="text-sm px-4 py-2 hover:bg-muted/50 transition-colors"
+                      className="text-sm px-4 py-2 bg-red-600 hover:bg-red-600/50 transition-colors"
                     >
                       Report Issues
                     </Badge>
