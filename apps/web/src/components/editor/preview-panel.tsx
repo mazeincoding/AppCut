@@ -14,7 +14,11 @@ import { cn } from "@/lib/utils";
 import { formatTimeCode } from "@/lib/time";
 import { EditableTimecode } from "@/components/ui/editable-timecode";
 import { FONT_CLASS_MAP } from "@/lib/font-config";
-import { DEFAULT_CANVAS_SIZE, DEFAULT_FPS, useProjectStore } from "@/stores/project-store";
+import {
+  DEFAULT_CANVAS_SIZE,
+  DEFAULT_FPS,
+  useProjectStore,
+} from "@/stores/project-store";
 import { TextElementDragState } from "@/types/editor";
 import {
   Popover,
@@ -363,18 +367,20 @@ export function PreviewPanel() {
           style={{
             left: `${
               50 +
-              ((dragState.isDragging && dragState.elementId === element.id
-                ? dragState.currentX
-                : element.x) /
-                canvasSize.width) *
+              (
+                (dragState.isDragging && dragState.elementId === element.id
+                  ? dragState.currentX
+                  : element.x) / canvasSize.width
+              ) *
                 100
             }%`,
             top: `${
               50 +
-              ((dragState.isDragging && dragState.elementId === element.id
-                ? dragState.currentY
-                : element.y) /
-                canvasSize.height) *
+              (
+                (dragState.isDragging && dragState.elementId === element.id
+                  ? dragState.currentY
+                  : element.y) / canvasSize.height
+              ) *
                 100
             }%`,
             transform: `translate(-50%, -50%) rotate(${element.rotation}deg)`,
