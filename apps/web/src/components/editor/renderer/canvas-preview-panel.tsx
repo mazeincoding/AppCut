@@ -7,12 +7,21 @@ import { TimeOffsetNode } from "@/lib/renderer/nodes/time-offset-node";
 import { TimecodeNode } from "@/lib/renderer/nodes/timecode-node";
 import { VideoNode } from "@/lib/renderer/nodes/video-node";
 import { SceneRenderer } from "@/lib/renderer/scene-renderer";
-import { useEditorStore } from "@/stores/editor-store";
 import { useMediaStore } from "@/stores/media-store";
 import { usePlaybackStore } from "@/stores/playback-store";
 import { useRendererStore } from "@/stores/renderer-store";
 import { useTimelineStore } from "@/stores/timeline-store";
 import { TimelineElement } from "@/types/timeline";
+import { useProjectStore } from "@/stores/project-store";
+
+// TODO: get preview size in a better way
+function usePreviewSize() {
+  const { activeProject } = useProjectStore();
+  return {
+    width: activeProject?.canvasSize?.width || 600,
+    height: activeProject?.canvasSize?.height || 320,
+  };
+}
 
 function useActiveElements(): TimelineElement[] {
   const tracks = useTimelineStore((s) => s.tracks);
@@ -54,7 +63,7 @@ function PreviewCanvas() {
   const lastFrameRef = useRef(0);
   const lastSceneRef = useRef<SceneNode | null>(null);
 
-  const { width, height } = useEditorStore((s) => s.canvasSize);
+  const { width, height } = usePreviewSize();
 
   const renderer = useMemo(() => {
     return new SceneRenderer({

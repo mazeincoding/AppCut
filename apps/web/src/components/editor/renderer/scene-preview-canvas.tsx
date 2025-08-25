@@ -1,9 +1,18 @@
 import { SceneRenderer } from "@/lib/renderer/scene-renderer";
 import { useEffect, useRef, useState } from "react";
 import { SceneNode } from "@/lib/renderer/nodes/scene-node";
+import { useProjectStore } from "@/stores/project-store";
 
-const PREVIEW_SIZE = { width: 600, height: 320 };
 const PREVIEW_FPS = 30;
+
+// TODO: get preview size in a better way
+function usePreviewSize() {
+  const { activeProject } = useProjectStore();
+  return {
+    width: activeProject?.canvasSize.width || 600,
+    height: activeProject?.canvasSize.height || 320,
+  };
+}
 
 export function ScenePreviewCanvas({
   frame,
@@ -13,11 +22,12 @@ export function ScenePreviewCanvas({
   scene: SceneNode;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const size = usePreviewSize();
 
   const [renderer] = useState<SceneRenderer | null>(() => {
     const renderer = new SceneRenderer({
-      width: PREVIEW_SIZE.width,
-      height: PREVIEW_SIZE.height,
+      width: size.width,
+      height: size.height,
       fps: PREVIEW_FPS,
     });
 
@@ -32,8 +42,8 @@ export function ScenePreviewCanvas({
 
   return (
     <canvas
-      width={PREVIEW_SIZE.width}
-      height={PREVIEW_SIZE.height}
+      width={size.width}
+      height={size.height}
       ref={canvasRef}
       className="w-full h-full"
     />

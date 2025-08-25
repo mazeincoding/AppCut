@@ -20,7 +20,8 @@ import { useRouter } from "next/navigation";
 import { FaDiscord } from "react-icons/fa6";
 import { useTheme } from "next-themes";
 import { PanelPresetSelector } from "./panel-preset-selector";
-import { ExportButton } from "./export-button";
+// import { ExportButton } from "./export-button";
+import { ExportDialog } from "./editor/renderer/export-dialog";
 
 export function EditorHeader() {
   const { activeProject, renameProject, deleteProject } = useProjectStore();
@@ -116,7 +117,9 @@ export function EditorHeader() {
     <nav className="flex items-center gap-2">
       <PanelPresetSelector />
       <KeyboardShortcutsHelp />
-      <ExportButton />
+      <ExportDialog>
+        <Button>Export</Button>
+      </ExportDialog>
       <Button
         size="icon"
         variant="text"
