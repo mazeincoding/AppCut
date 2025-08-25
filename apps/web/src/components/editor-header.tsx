@@ -1,17 +1,8 @@
 "use client";
 
 import { Button } from "./ui/button";
-import {
-  ChevronDown,
-  ArrowLeft,
-  Download,
-  SquarePen,
-  Trash,
-  Sun,
-} from "lucide-react";
-import { useTimelineStore } from "@/stores/timeline-store";
+import { ChevronDown, ArrowLeft, SquarePen, Trash, Sun } from "lucide-react";
 import { HeaderBase } from "./header-base";
-import { formatTimeCode } from "@/lib/time";
 import { useProjectStore } from "@/stores/project-store";
 import { KeyboardShortcutsHelp } from "./keyboard-shortcuts-help";
 import { useState } from "react";
@@ -28,12 +19,10 @@ import { DeleteProjectDialog } from "./delete-project-dialog";
 import { useRouter } from "next/navigation";
 import { FaDiscord } from "react-icons/fa6";
 import { useTheme } from "next-themes";
-import { usePlaybackStore } from "@/stores/playback-store";
-import { ExportDialog } from "./editor/renderer/export-dialog";
+import { PanelPresetSelector } from "./panel-preset-selector";
+import { ExportButton } from "./export-button";
 
 export function EditorHeader() {
-  const { getTotalDuration } = useTimelineStore();
-  const { currentTime } = usePlaybackStore();
   const { activeProject, renameProject, deleteProject } = useProjectStore();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
@@ -72,7 +61,7 @@ export function EditorHeader() {
             <span className="text-[0.85rem] mr-2">{activeProject?.name}</span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-40">
+        <DropdownMenuContent align="start" className="w-40 z-100">
           <Link href="/projects">
             <DropdownMenuItem className="flex items-center gap-1.5">
               <ArrowLeft className="h-4 w-4" />
@@ -123,34 +112,11 @@ export function EditorHeader() {
     </div>
   );
 
-  const centerContent = (
-    <div className="flex items-center gap-2 text-xs">
-      <span className="text-foreground tabular-nums">
-        {formatTimeCode(currentTime, "HH:MM:SS:FF", activeProject?.fps || 30)}
-      </span>
-      <span className="text-foreground/50">/</span>
-      <span className="text-foreground/50 tabular-nums">
-        {formatTimeCode(
-          getTotalDuration(),
-          "HH:MM:SS:FF",
-          activeProject?.fps || 30
-        )}
-      </span>
-    </div>
-  );
-
   const rightContent = (
     <nav className="flex items-center gap-2">
+      <PanelPresetSelector />
       <KeyboardShortcutsHelp />
-      <ExportDialog>
-        <Button
-          size="sm"
-          className="h-8 text-xs !bg-linear-to-r from-cyan-400 to-blue-500 text-white hover:opacity-85 transition-opacity"
-        >
-          <Download className="h-4 w-4" />
-          <span className="text-sm pr-1">Export</span>
-        </Button>
-      </ExportDialog>
+      <ExportButton />
       <Button
         size="icon"
         variant="text"
@@ -166,7 +132,6 @@ export function EditorHeader() {
   return (
     <HeaderBase
       leftContent={leftContent}
-      centerContent={centerContent}
       rightContent={rightContent}
       className="bg-background h-[3.2rem] px-3 items-center mt-0.5"
     />

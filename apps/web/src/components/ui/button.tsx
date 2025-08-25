@@ -13,12 +13,14 @@ const buttonVariants = cva(
           "bg-foreground text-background shadow-sm hover:bg-foreground/90",
         primary:
           "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90",
+        "primary-gradient":
+          "bg-gradient-to-r from-cyan-400 to-blue-500 text-white hover:opacity-85 transition-opacity",
         destructive:
           "bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90",
         outline:
-          "border border-input bg-background shadow-xs hover:bg-accent hover:text-accent-foreground",
+          "border border-input bg-background shadow-xs hover:opacity-75 transition-opacity hover:text-accent-foreground",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
+          "bg-secondary text-secondary-foreground shadow-xs hover:bg-foreground/15 border border-input",
         text: "bg-transparent p-0 rounded-none opacity-100 hover:opacity-50 transition-opacity", // Instead of ghost (matches app better)
         link: "text-primary underline-offset-4 hover:underline",
       },

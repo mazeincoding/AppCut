@@ -16,6 +16,8 @@ export interface MediaItem {
   width?: number; // For video/image width
   height?: number; // For video/image height
   fps?: number; // For video frame rate
+  // Ephemeral items are used by timeline directly and should not appear in the media library or be persisted
+  ephemeral?: boolean;
   // Text-specific properties
   content?: string; // Text content
   fontSize?: number; // Font size

@@ -11,10 +11,10 @@ import {
   List,
   Loader2,
   Music,
-  Search,
   Video,
 } from "lucide-react";
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useRef, useState, useMemo, useEffect } from "react";
+import { useHighlightScroll } from "@/hooks/use-highlight-scroll";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { MediaDragOverlay } from "@/components/editor/media-panel/drag-overlay";
@@ -33,7 +33,6 @@ import {
 import { DraggableMediaItem } from "@/components/ui/draggable-item";
 import { useProjectStore } from "@/stores/project-store";
 import { useTimelineStore } from "@/stores/timeline-store";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Tooltip,
   TooltipContent,
@@ -41,6 +40,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { usePanelStore } from "@/stores/panel-store";
+import { useMediaPanelStore } from "../store";
 
 function MediaItemWithContextMenu({
   item,
@@ -80,6 +80,11 @@ export function MediaView() {
     "name"
   );
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const { highlightMediaId, clearHighlight } = useMediaPanelStore();
+  const { highlightedId, registerElement } = useHighlightScroll(
+    highlightMediaId,
+    clearHighlight
+  );
 
   const processFiles = async (files: FileList | File[]) => {
     if (!files || files.length === 0) return;
@@ -146,6 +151,7 @@ export function MediaView() {
 
   useEffect(() => {
     let filtered = mediaItems.filter((item) => {
+      if (item.ephemeral) return false;
       if (mediaFilter && mediaFilter !== "all" && item.type !== mediaFilter) {
         return false;
       }
@@ -205,7 +211,7 @@ export function MediaView() {
             <img
               src={item.url}
               alt={item.name}
-              className="max-w-full max-h-full object-contain"
+              className="w-full max-h-full object-cover"
               loading="lazy"
             />
           </div>
@@ -434,7 +440,7 @@ export function MediaView() {
           </div>
         </div>
 
-        <div className="h-full w-full overflow-y-auto scrollbar-thin">
+        <div className="h-full w-full overflow-y-auto scrollbar-thin pt-1">
           <div className="flex-1 p-3 pt-0 w-full">
             {isDragOver || filteredMediaItems.length === 0 ? (
               <MediaDragOverlay
@@ -449,13 +455,16 @@ export function MediaView() {
                 filteredMediaItems={filteredMediaItems}
                 renderPreview={renderPreview}
                 handleRemove={handleRemove}
+                highlightedId={highlightedId}
+                registerElement={registerElement}
               />
             ) : (
               <ListView
                 filteredMediaItems={filteredMediaItems}
                 renderPreview={renderPreview}
                 handleRemove={handleRemove}
-                formatDuration={formatDuration}
+                highlightedId={highlightedId}
+                registerElement={registerElement}
               />
             )}
           </div>
@@ -469,10 +478,14 @@ function GridView({
   filteredMediaItems,
   renderPreview,
   handleRemove,
+  highlightedId,
+  registerElement,
 }: {
   filteredMediaItems: MediaItem[];
   renderPreview: (item: MediaItem) => React.ReactNode;
   handleRemove: (e: React.MouseEvent, id: string) => Promise<void>;
+  highlightedId: string | null;
+  registerElement: (id: string, element: HTMLElement | null) => void;
 }) {
   return (
     <div
@@ -482,27 +495,26 @@ function GridView({
       }}
     >
       {filteredMediaItems.map((item) => (
-        <MediaItemWithContextMenu
-          key={item.id}
-          item={item}
-          onRemove={handleRemove}
-        >
-          <DraggableMediaItem
-            name={item.name}
-            preview={renderPreview(item)}
-            dragData={{
-              id: item.id,
-              type: item.type,
-              name: item.name,
-            }}
-            showPlusOnDrag={false}
-            onAddToTimeline={(currentTime) =>
-              useTimelineStore.getState().addMediaAtTime(item, currentTime)
-            }
-            rounded={false}
-            variant="card"
-          />
-        </MediaItemWithContextMenu>
+        <div key={item.id} ref={(el) => registerElement(item.id, el)}>
+          <MediaItemWithContextMenu item={item} onRemove={handleRemove}>
+            <DraggableMediaItem
+              name={item.name}
+              preview={renderPreview(item)}
+              dragData={{
+                id: item.id,
+                type: item.type,
+                name: item.name,
+              }}
+              showPlusOnDrag={false}
+              onAddToTimeline={(currentTime) =>
+                useTimelineStore.getState().addMediaAtTime(item, currentTime)
+              }
+              rounded={false}
+              variant="card"
+              isHighlighted={highlightedId === item.id}
+            />
+          </MediaItemWithContextMenu>
+        </div>
       ))}
     </div>
   );
@@ -512,36 +524,37 @@ function ListView({
   filteredMediaItems,
   renderPreview,
   handleRemove,
-  formatDuration,
+  highlightedId,
+  registerElement,
 }: {
   filteredMediaItems: MediaItem[];
   renderPreview: (item: MediaItem) => React.ReactNode;
   handleRemove: (e: React.MouseEvent, id: string) => Promise<void>;
-  formatDuration: (duration: number) => string;
+  highlightedId: string | null;
+  registerElement: (id: string, element: HTMLElement | null) => void;
 }) {
   return (
     <div className="space-y-1">
       {filteredMediaItems.map((item) => (
-        <MediaItemWithContextMenu
-          key={item.id}
-          item={item}
-          onRemove={handleRemove}
-        >
-          <DraggableMediaItem
-            name={item.name}
-            preview={renderPreview(item)}
-            dragData={{
-              id: item.id,
-              type: item.type,
-              name: item.name,
-            }}
-            showPlusOnDrag={false}
-            onAddToTimeline={(currentTime) =>
-              useTimelineStore.getState().addMediaAtTime(item, currentTime)
-            }
-            variant="compact"
-          />
-        </MediaItemWithContextMenu>
+        <div key={item.id} ref={(el) => registerElement(item.id, el)}>
+          <MediaItemWithContextMenu item={item} onRemove={handleRemove}>
+            <DraggableMediaItem
+              name={item.name}
+              preview={renderPreview(item)}
+              dragData={{
+                id: item.id,
+                type: item.type,
+                name: item.name,
+              }}
+              showPlusOnDrag={false}
+              onAddToTimeline={(currentTime) =>
+                useTimelineStore.getState().addMediaAtTime(item, currentTime)
+              }
+              variant="compact"
+              isHighlighted={highlightedId === item.id}
+            />
+          </MediaItemWithContextMenu>
+        </div>
       ))}
     </div>
   );

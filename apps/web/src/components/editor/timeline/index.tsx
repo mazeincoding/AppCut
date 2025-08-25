@@ -12,6 +12,7 @@ import {
   SplitSquareHorizontal,
   Pause,
   Play,
+  SkipBack,
   Video,
   Music,
   TypeIcon,
@@ -21,8 +22,8 @@ import {
   ZoomOut,
   Bookmark,
   Eye,
-  MicOff,
-  Mic,
+  VolumeOff,
+  Volume2,
 } from "lucide-react";
 import {
   Tooltip,
@@ -39,9 +40,11 @@ import {
 import { useTimelineStore } from "@/stores/timeline-store";
 import { useMediaStore } from "@/stores/media-store";
 import { usePlaybackStore } from "@/stores/playback-store";
-import { useProjectStore } from "@/stores/project-store";
+import { DEFAULT_FPS, useProjectStore } from "@/stores/project-store";
+
 import { useTimelineZoom } from "@/hooks/use-timeline-zoom";
 import { processMediaFiles } from "@/lib/media-processing";
+
 import { toast } from "sonner";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { TimelineTrackContent } from "./timeline-track";
@@ -53,7 +56,7 @@ import { SelectionBox } from "../selection-box";
 import { useSelectionBox } from "@/hooks/use-selection-box";
 import { SnapIndicator } from "../snap-indicator";
 import { SnapPoint } from "@/hooks/use-timeline-snapping";
-import type { DragData, TimelineTrack } from "@/types/timeline";
+import type { DragData, TimelineTrack, TrackType } from "@/types/timeline";
 import {
   getTrackHeight,
   getCumulativeHeightBefore,
@@ -62,6 +65,8 @@ import {
   snapTimeToFrame,
 } from "@/constants/timeline-constants";
 import { Slider } from "@/components/ui/slider";
+import { formatTimeCode } from "@/lib/time";
+import { EditableTimecode } from "@/components/ui/editable-timecode";
 
 export function Timeline() {
   // Timeline shows all tracks (video, audio, effects) and their elements.
@@ -167,10 +172,31 @@ export function Timeline() {
   const handleTimelineMouseDown = useCallback((e: React.MouseEvent) => {
     // Only track mouse down on timeline background areas (not elements)
     const target = e.target as HTMLElement;
+    console.log(
+      JSON.stringify({
+        debug_mousedown: "START",
+        target_class: target.className,
+        target_parent_class: target.parentElement?.className,
+        clientX: e.clientX,
+        clientY: e.clientY,
+        timeStamp: e.timeStamp,
+      })
+    );
+
     const isTimelineBackground =
       !target.closest(".timeline-element") &&
       !playheadRef.current?.contains(target) &&
       !target.closest("[data-track-labels]");
+
+    console.log(
+      JSON.stringify({
+        debug_mousedown: "CHECK",
+        isTimelineBackground,
+        hasTimelineElement: !!target.closest(".timeline-element"),
+        hasPlayhead: !!playheadRef.current?.contains(target),
+        hasTrackLabels: !!target.closest("[data-track-labels]"),
+      })
+    );
 
     if (isTimelineBackground) {
       mouseTrackingRef.current = {
@@ -179,12 +205,38 @@ export function Timeline() {
         downY: e.clientY,
         downTime: e.timeStamp,
       };
+      console.log(
+        JSON.stringify({
+          debug_mousedown: "TRACKED",
+          mouseTracking: mouseTrackingRef.current,
+        })
+      );
+    } else {
+      console.log(
+        JSON.stringify({
+          debug_mousedown: "IGNORED - not timeline background",
+        })
+      );
     }
   }, []);
 
   // Timeline content click to seek handler
   const handleTimelineContentClick = useCallback(
     (e: React.MouseEvent) => {
+      console.log(
+        JSON.stringify({
+          debug_click: "START",
+          target: (e.target as HTMLElement).className,
+          target_parent: (e.target as HTMLElement).parentElement?.className,
+          mouseTracking: mouseTrackingRef.current,
+          isSelecting,
+          justFinishedSelecting,
+          clickX: e.clientX,
+          clickY: e.clientY,
+          timeStamp: e.timeStamp,
+        })
+      );
+
       const { isMouseDown, downX, downY, downTime } = mouseTrackingRef.current;
 
       // Reset mouse tracking
@@ -199,8 +251,8 @@ export function Timeline() {
       if (!isMouseDown) {
         console.log(
           JSON.stringify({
-            ignoredClickWithoutMouseDown: true,
-            timeStamp: e.timeStamp,
+            debug_click: "REJECTED - no mousedown",
+            mouseTracking: mouseTrackingRef.current,
           })
         );
         return;
@@ -214,11 +266,10 @@ export function Timeline() {
       if (deltaX > 5 || deltaY > 5 || deltaTime > 500) {
         console.log(
           JSON.stringify({
-            ignoredDragNotClick: true,
+            debug_click: "REJECTED - movement too large",
             deltaX,
             deltaY,
             deltaTime,
-            timeStamp: e.timeStamp,
           })
         );
         return;
@@ -226,27 +277,54 @@ export function Timeline() {
 
       // Don't seek if this was a selection box operation
       if (isSelecting || justFinishedSelecting) {
+        console.log(
+          JSON.stringify({
+            debug_click: "REJECTED - selection operation",
+            isSelecting,
+            justFinishedSelecting,
+          })
+        );
         return;
       }
 
       // Don't seek if clicking on timeline elements, but still deselect
       if ((e.target as HTMLElement).closest(".timeline-element")) {
+        console.log(
+          JSON.stringify({
+            debug_click: "REJECTED - clicked timeline element",
+          })
+        );
         return;
       }
 
       // Don't seek if clicking on playhead
       if (playheadRef.current?.contains(e.target as Node)) {
+        console.log(
+          JSON.stringify({
+            debug_click: "REJECTED - clicked playhead",
+          })
+        );
         return;
       }
 
       // Don't seek if clicking on track labels
       if ((e.target as HTMLElement).closest("[data-track-labels]")) {
+        console.log(
+          JSON.stringify({
+            debug_click: "REJECTED - clicked track labels",
+          })
+        );
         clearSelectedElements();
         return;
       }
 
       // Clear selected elements when clicking empty timeline area
-      console.log(JSON.stringify({ clearingSelectedElements: true }));
+      console.log(
+        JSON.stringify({
+          debug_click: "PROCEEDING - clearing elements",
+          clearingSelectedElements: true,
+        })
+      );
       clearSelectedElements();
 
       // Determine if we're clicking in ruler or tracks area
@@ -254,24 +332,39 @@ export function Timeline() {
         "[data-ruler-area]"
       );
 
+      console.log(
+        JSON.stringify({
+          debug_click: "CALCULATING POSITION",
+          isRulerClick,
+          clientX: e.clientX,
+          clientY: e.clientY,
+          target_element: (e.target as HTMLElement).tagName,
+          target_class: (e.target as HTMLElement).className,
+        })
+      );
+
       let mouseX: number;
       let scrollLeft = 0;
 
       if (isRulerClick) {
         // Calculate based on ruler position
-        const rulerContent = rulerScrollRef.current?.querySelector(
-          "[data-radix-scroll-area-viewport]"
-        ) as HTMLElement;
-        if (!rulerContent) return;
+        const rulerContent = rulerScrollRef.current;
+        if (!rulerContent) {
+          console.log(
+            JSON.stringify({
+              debug_click: "ERROR - no ruler container found",
+            })
+          );
+          return;
+        }
         const rect = rulerContent.getBoundingClientRect();
         mouseX = e.clientX - rect.left;
         scrollLeft = rulerContent.scrollLeft;
       } else {
-        // Calculate based on tracks content position
-        const tracksContent = tracksScrollRef.current?.querySelector(
-          "[data-radix-scroll-area-viewport]"
-        ) as HTMLElement;
-        if (!tracksContent) return;
+        const tracksContent = tracksScrollRef.current;
+        if (!tracksContent) {
+          return;
+        }
         const rect = tracksContent.getBoundingClientRect();
         mouseX = e.clientX - rect.left;
         scrollLeft = tracksContent.scrollLeft;
@@ -289,7 +382,6 @@ export function Timeline() {
       // Use frame snapping for timeline clicking
       const projectFps = activeProject?.fps || 30;
       const time = snapTimeToFrame(rawTime, projectFps);
-
       seek(time);
     },
     [
@@ -403,7 +495,21 @@ export function Timeline() {
               item.name === processedItem.name && item.url === processedItem.url
           );
           if (addedItem) {
-            useTimelineStore.getState().addMediaToNewTrack(addedItem);
+            const trackType: TrackType =
+              addedItem.type === "audio" ? "audio" : "media";
+            const targetTrackId = useTimelineStore
+              .getState()
+              .insertTrackAt(trackType, 0);
+
+            useTimelineStore.getState().addElementToTrack(targetTrackId, {
+              type: "media",
+              mediaId: addedItem.id,
+              name: addedItem.name,
+              duration: addedItem.duration || 5,
+              startTime: currentTime,
+              trimStart: 0,
+              trimEnd: 0,
+            });
           }
         }
       } catch (error) {
@@ -426,15 +532,9 @@ export function Timeline() {
 
   // --- Scroll synchronization effect ---
   useEffect(() => {
-    const rulerViewport = rulerScrollRef.current?.querySelector(
-      "[data-radix-scroll-area-viewport]"
-    ) as HTMLElement;
-    const tracksViewport = tracksScrollRef.current?.querySelector(
-      "[data-radix-scroll-area-viewport]"
-    ) as HTMLElement;
-    const trackLabelsViewport = trackLabelsScrollRef.current?.querySelector(
-      "[data-radix-scroll-area-viewport]"
-    ) as HTMLElement;
+    const rulerViewport = rulerScrollRef.current;
+    const tracksViewport = tracksScrollRef.current;
+    const trackLabelsViewport = trackLabelsScrollRef.current;
 
     if (!rulerViewport || !tracksViewport) return;
 
@@ -703,12 +803,12 @@ export function Timeline() {
                     >
                       <div className="flex items-center justify-end flex-1 min-w-0 gap-2">
                         {track.muted ? (
-                          <MicOff
+                          <VolumeOff
                             className="h-4 w-4 text-destructive cursor-pointer"
                             onClick={() => toggleTrackMute(track.id)}
                           />
                         ) : (
-                          <Mic
+                          <Volume2
                             className="h-4 w-4 text-muted-foreground cursor-pointer"
                             onClick={() => toggleTrackMute(track.id)}
                           />
@@ -857,10 +957,9 @@ function TimelineToolbar({
     rippleEditingEnabled,
     toggleRippleEditing,
   } = useTimelineStore();
-  const { currentTime, duration, isPlaying, toggle } = usePlaybackStore();
-  const { toggleBookmark, isBookmarked } = useProjectStore();
+  const { currentTime, duration, isPlaying, toggle, seek } = usePlaybackStore();
+  const { toggleBookmark, isBookmarked, activeProject } = useProjectStore();
 
-  // Action handlers
   const handleSplitSelected = () => {
     if (selectedElements.length === 0) return;
     let splitCount = 0;
@@ -976,7 +1075,6 @@ function TimelineToolbar({
     clearSelectedElements();
   };
 
-  // Zoom handlers
   const handleZoomIn = () => {
     setZoomLevel(Math.min(4, zoomLevel + 0.25));
   };
@@ -993,13 +1091,11 @@ function TimelineToolbar({
     await toggleBookmark(currentTime);
   };
 
-  // Check if the current time is bookmarked
   const currentBookmarked = isBookmarked(currentTime);
   return (
     <div className="border-b flex items-center justify-between px-2 py-1">
       <div className="flex items-center gap-1 w-full">
         <TooltipProvider delayDuration={500}>
-          {/* Play/Pause Button */}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -1019,15 +1115,37 @@ function TimelineToolbar({
               {isPlaying ? "Pause (Space)" : "Play (Space)"}
             </TooltipContent>
           </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="text"
+                size="icon"
+                onClick={() => seek(0)}
+                className="mr-2"
+              >
+                <SkipBack className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Return to Start (Home / Enter)</TooltipContent>
+          </Tooltip>
           <div className="w-px h-6 bg-border mx-1" />
           {/* Time Display */}
-          <div
-            className="text-xs text-muted-foreground font-mono px-2"
-            style={{ minWidth: "18ch", textAlign: "center" }}
-          >
-            {currentTime.toFixed(1)}s / {duration.toFixed(1)}s
+          <div className="flex flex-row items-center justify-center px-2">
+            <EditableTimecode
+              time={currentTime}
+              duration={duration}
+              format="HH:MM:SS:FF"
+              fps={activeProject?.fps ?? DEFAULT_FPS}
+              onTimeChange={seek}
+              className="text-center"
+            />
+            <div className="text-xs text-muted-foreground font-mono px-2">
+              /
+            </div>
+            <div className="text-xs text-muted-foreground font-mono text-center">
+              {formatTimeCode(duration, "HH:MM:SS:FF")}
+            </div>
           </div>
-          {/* Test Clip Button - for debugging */}
           {tracks.length === 0 && (
             <>
               <div className="w-px h-6 bg-border mx-1" />

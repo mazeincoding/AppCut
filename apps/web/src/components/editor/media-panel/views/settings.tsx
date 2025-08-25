@@ -7,9 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BaseView } from "./base-view";
 import {
   PropertyItem,
   PropertyItemLabel,
@@ -34,37 +32,37 @@ export function SettingsView() {
 
 function ProjectSettingsTabs() {
   return (
-    <div className="h-full flex flex-col">
-      <Tabs defaultValue="project-info" className="flex flex-col h-full">
-        <div className="px-3 pt-4 pb-0">
-          <TabsList>
-            <TabsTrigger value="project-info">Project info</TabsTrigger>
-            <TabsTrigger value="background">Background</TabsTrigger>
-          </TabsList>
-        </div>
-        <Separator className="my-4" />
-        <ScrollArea className="flex-1">
-          <TabsContent value="project-info" className="p-5 pt-0 mt-0">
-            <ProjectInfoView />
-          </TabsContent>
-          <TabsContent value="background" className="p-4 pt-0">
-            <BackgroundView />
-          </TabsContent>
-        </ScrollArea>
-      </Tabs>
-    </div>
+    <BaseView
+      defaultTab="project-info"
+      tabs={[
+        {
+          value: "project-info",
+          label: "Project info",
+          content: <ProjectInfoView />,
+        },
+        {
+          value: "background",
+          label: "Background",
+          content: <BackgroundView />,
+        },
+      ]}
+    />
   );
 }
 
 function ProjectInfoView() {
-  const { activeProject, updateProjectFps } = useProjectStore();
-  const { canvasPresets, setCanvasSize } = useEditorStore();
+  const { activeProject, updateProjectFps, updateCanvasSize } =
+    useProjectStore();
+  const { canvasPresets } = useEditorStore();
   const { getDisplayName } = useAspectRatio();
 
   const handleAspectRatioChange = (value: string) => {
     const preset = canvasPresets.find((p) => p.name === value);
     if (preset) {
-      setCanvasSize({ width: preset.width, height: preset.height });
+      updateCanvasSize(
+        { width: preset.width, height: preset.height },
+        "preset"
+      );
     }
   };
 
@@ -259,7 +257,7 @@ function BackgroundView() {
   );
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
       <PropertyGroup title="Blur" defaultExpanded={false}>
         <div className="grid grid-cols-4 gap-2 w-full">{blurPreviews}</div>
       </PropertyGroup>

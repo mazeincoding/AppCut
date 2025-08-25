@@ -28,4 +28,5 @@ node_modules
 
 # cursor
 bun.lockb
-.DS_Store
+apps/transcription/__pycache__
+apps/transcription/env

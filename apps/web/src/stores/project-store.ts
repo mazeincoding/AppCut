@@ -5,6 +5,25 @@ import { toast } from "sonner";
 import { useMediaStore } from "./media-store";
 import { useTimelineStore } from "./timeline-store";
 import { generateUUID } from "@/lib/utils";
+import { CanvasSize, CanvasMode } from "@/types/editor";
+
+export const DEFAULT_CANVAS_SIZE: CanvasSize = { width: 1920, height: 1080 };
+export const DEFAULT_FPS = 30;
+
+const DEFAULT_PROJECT: TProject = {
+  id: generateUUID(),
+  name: "Untitled",
+  thumbnail: "",
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  backgroundColor: "#000000",
+  backgroundType: "color",
+  blurIntensity: 8,
+  bookmarks: [],
+  fps: DEFAULT_FPS,
+  canvasSize: DEFAULT_CANVAS_SIZE,
+  canvasMode: "preset",
+};
 
 interface ProjectStore {
   activeProject: TProject | null;
@@ -28,6 +47,7 @@ interface ProjectStore {
     options?: { backgroundColor?: string; blurIntensity?: number }
   ) => Promise<void>;
   updateProjectFps: (fps: number) => Promise<void>;
+  updateCanvasSize: (size: CanvasSize, mode: CanvasMode) => Promise<void>;
 
   // Bookmark methods
   toggleBookmark: (time: number) => Promise<void>;
@@ -58,7 +78,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     if (!activeProject) return;
 
     // Round time to the nearest frame
-    const fps = activeProject.fps || 30;
+    const fps = activeProject.fps || DEFAULT_FPS;
     const frameTime = Math.round(time * fps) / fps;
 
     const bookmarks = activeProject.bookmarks || [];
@@ -100,7 +120,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     if (!activeProject || !activeProject.bookmarks) return false;
 
     // Round time to the nearest frame
-    const fps = activeProject.fps || 30;
+    const fps = activeProject.fps || DEFAULT_FPS;
     const frameTime = Math.round(time * fps) / fps;
 
     return activeProject.bookmarks.some(
@@ -113,7 +133,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     if (!activeProject || !activeProject.bookmarks) return;
 
     // Round time to the nearest frame
-    const fps = activeProject.fps || 30;
+    const fps = activeProject.fps || DEFAULT_FPS;
     const frameTime = Math.round(time * fps) / fps;
 
     const updatedBookmarks = activeProject.bookmarks.filter(
@@ -145,19 +165,19 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
   createNewProject: async (name: string) => {
     const newProject: TProject = {
+      ...DEFAULT_PROJECT,
       id: generateUUID(),
       name,
-      thumbnail: "",
       createdAt: new Date(),
       updatedAt: new Date(),
-      backgroundColor: "#000000",
-      backgroundType: "color",
-      blurIntensity: 8,
-      bookmarks: [],
-      fps: 30,
     };
 
     set({ activeProject: newProject });
+
+    const mediaStore = useMediaStore.getState();
+    const timelineStore = useTimelineStore.getState();
+    mediaStore.clearAllMedia();
+    timelineStore.clearTimeline();
 
     try {
       await storageService.saveProject(newProject);
@@ -423,6 +443,29 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     } catch (error) {
       console.error("Failed to update project FPS:", error);
       toast.error("Failed to update project FPS", {
+        description: "Please try again",
+      });
+    }
+  },
+
+  updateCanvasSize: async (size: CanvasSize, mode: CanvasMode) => {
+    const { activeProject } = get();
+    if (!activeProject) return;
+
+    const updatedProject = {
+      ...activeProject,
+      canvasSize: size,
+      canvasMode: mode,
+      updatedAt: new Date(),
+    };
+
+    try {
+      await storageService.saveProject(updatedProject);
+      set({ activeProject: updatedProject });
+      await get().loadAllProjects(); // Refresh the list
+    } catch (error) {
+      console.error("Failed to update canvas size:", error);
+      toast.error("Failed to update canvas size", {
         description: "Please try again",
       });
     }

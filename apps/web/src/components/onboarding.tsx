@@ -57,6 +57,7 @@ export function Onboarding() {
             <div className="space-y-3">
               <Title title={getStepTitle()} />
               <Description description="OpenCut started just one month ago. There's still a ton of things to do to make this editor amazing." />
+              <Description description="A lot of features are still missing, like the export functionality. We're working hard to build them out!" />
               <Description description="If you're curious, check out our roadmap [here](https://opencut.app/roadmap)" />
             </div>
             <NextButton onClick={handleNext}>Next</NextButton>
@@ -79,7 +80,7 @@ export function Onboarding() {
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[425px] outline-hidden!">
+      <DialogContent className="sm:max-w-[425px] !outline-none pt-2">
         <DialogTitle>
           <span className="sr-only">{getStepTitle()}</span>
         </DialogTitle>

@@ -4,6 +4,7 @@ import {
   Scissors,
   Trash2,
   Copy,
+  Search,
   RefreshCw,
   EyeOff,
   Eye,
@@ -29,6 +30,7 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "../../ui/context-menu";
+import { useMediaPanelStore } from "../media-panel/store";
 
 export function TimelineElement({
   element,
@@ -50,6 +52,7 @@ export function TimelineElement({
     replaceElementMedia,
     rippleEditingEnabled,
     toggleElementHidden,
+    toggleElementMuted,
   } = useTimelineStore();
   const { currentTime } = usePlaybackStore();
 
@@ -57,7 +60,7 @@ export function TimelineElement({
     element.type === "media"
       ? mediaItems.find((item) => item.id === element.mediaId)
       : null;
-  const isAudio = mediaItem?.type === "audio";
+  const hasAudio = mediaItem?.type === "audio" || mediaItem?.type === "video";
 
   const { resizing, handleResizeStart, handleResizeMove, handleResizeEnd } =
     useTimelineElementResize({
@@ -67,6 +70,8 @@ export function TimelineElement({
       onUpdateTrim: updateElementTrim,
       onUpdateDuration: updateElementDuration,
     });
+
+  const { requestRevealMedia } = useMediaPanelStore.getState();
 
   const effectiveDuration =
     element.duration - element.trimStart - element.trimEnd;
@@ -124,8 +129,12 @@ export function TimelineElement({
     }
   };
 
-  const handleToggleElementHidden = (e: React.MouseEvent) => {
+  const handleToggleElementContext = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (hasAudio && element.type === "media") {
+      toggleElementMuted(track.id, element.id);
+      return;
+    }
     toggleElementHidden(track.id, element.id);
   };
 
@@ -159,6 +168,16 @@ export function TimelineElement({
       }
     };
     input.click();
+  };
+
+  const handleRevealInMedia = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (element.type !== "media") {
+      toast.error("Reveal is only available for media clips");
+      return;
+    }
+
+    requestRevealMedia(element.mediaId);
   };
 
   const renderElementContent = () => {
@@ -203,7 +222,7 @@ export function TimelineElement({
             }`}
           >
             <div
-              className={`absolute top-[0.15rem] bottom-[0.15rem] left-0 right-0`}
+              className={`absolute top-[0.25rem] bottom-[0.25rem] left-0 right-0`}
               style={{
                 backgroundImage: imageUrl ? `url(${imageUrl})` : "none",
                 backgroundRepeat: "repeat-x",
@@ -246,6 +265,8 @@ export function TimelineElement({
     }
   };
 
+  const isMuted = element.type === "media" ? element.muted === true : false;
+
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
@@ -264,7 +285,7 @@ export function TimelineElement({
           onMouseLeave={resizing ? handleResizeEnd : undefined}
         >
           <div
-            className={`relative h-full rounded-[0.15rem] cursor-pointer overflow-hidden ${getTrackElementClasses(
+            className={`relative h-full rounded-[0.5rem] cursor-pointer overflow-hidden ${getTrackElementClasses(
               track.type
             )} ${isSelected ? "" : ""} ${
               isBeingDragged ? "z-50" : "z-10"
@@ -279,9 +300,9 @@ export function TimelineElement({
               {renderElementContent()}
             </div>
 
-            {element.hidden && (
+            {(hasAudio ? isMuted : element.hidden) && (
               <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center pointer-events-none">
-                {isAudio ? (
+                {hasAudio ? (
                   <VolumeX className="h-6 w-6 text-white" />
                 ) : (
                   <EyeOff className="h-6 w-6 text-white" />
@@ -292,13 +313,17 @@ export function TimelineElement({
             {isSelected && (
               <>
                 <div
-                  className="absolute left-0 top-0 bottom-0 w-[0.2rem] cursor-w-resize bg-primary z-50"
+                  className="absolute left-0 top-0 bottom-0 w-[0.6rem] cursor-w-resize bg-primary z-50 flex items-center justify-center"
                   onMouseDown={(e) => handleResizeStart(e, element.id, "left")}
-                />
+                >
+                  <div className="w-[0.2rem] h-[1.5rem] bg-foreground/75 rounded-full" />
+                </div>
                 <div
-                  className="absolute right-0 top-0 bottom-0 w-[0.2rem] cursor-e-resize bg-primary z-50"
+                  className="absolute right-0 top-0 bottom-0 w-[0.6rem] cursor-e-resize bg-primary z-50 flex items-center justify-center"
                   onMouseDown={(e) => handleResizeStart(e, element.id, "right")}
-                />
+                >
+                  <div className="w-[0.2rem] h-[1.5rem] bg-foreground/75 rounded-full" />
+                </div>
               </>
             )}
           </div>
@@ -309,9 +334,9 @@ export function TimelineElement({
           <Scissors className="h-4 w-4 mr-2" />
           Split at playhead
         </ContextMenuItem>
-        <ContextMenuItem onClick={handleToggleElementHidden}>
-          {isAudio ? (
-            element.hidden ? (
+        <ContextMenuItem onClick={handleToggleElementContext}>
+          {hasAudio ? (
+            isMuted ? (
               <Volume2 className="h-4 w-4 mr-2" />
             ) : (
               <VolumeX className="h-4 w-4 mr-2" />
@@ -322,8 +347,8 @@ export function TimelineElement({
             <EyeOff className="h-4 w-4 mr-2" />
           )}
           <span>
-            {isAudio
-              ? element.hidden
+            {hasAudio
+              ? isMuted
                 ? "Unmute"
                 : "Mute"
               : element.hidden
@@ -337,10 +362,16 @@ export function TimelineElement({
           Duplicate {element.type === "text" ? "text" : "clip"}
         </ContextMenuItem>
         {element.type === "media" && (
-          <ContextMenuItem onClick={handleReplaceClip}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Replace clip
-          </ContextMenuItem>
+          <>
+            <ContextMenuItem onClick={handleRevealInMedia}>
+              <Search className="h-4 w-4 mr-2" />
+              Reveal in media
+            </ContextMenuItem>
+            <ContextMenuItem onClick={handleReplaceClip}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Replace clip
+            </ContextMenuItem>
+          </>
         )}
         <ContextMenuSeparator />
         <ContextMenuItem

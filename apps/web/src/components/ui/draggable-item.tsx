@@ -21,10 +21,13 @@ export interface DraggableMediaItemProps {
   onAddToTimeline?: (currentTime: number) => void;
   aspectRatio?: number;
   className?: string;
+  containerClassName?: string;
   showPlusOnDrag?: boolean;
   showLabel?: boolean;
   rounded?: boolean;
   variant?: "card" | "compact";
+  isDraggable?: boolean;
+  isHighlighted?: boolean;
 }
 
 export function DraggableMediaItem({
@@ -35,15 +38,21 @@ export function DraggableMediaItem({
   onAddToTimeline,
   aspectRatio = 16 / 9,
   className = "",
+  containerClassName,
   showPlusOnDrag = true,
   showLabel = true,
   rounded = true,
   variant = "card",
+  isDraggable = true,
+  isHighlighted = false,
 }: DraggableMediaItemProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
   const dragRef = useRef<HTMLDivElement>(null);
-  const currentTime = usePlaybackStore((state) => state.currentTime);
+  const currentTime = isDraggable
+    ? usePlaybackStore((state) => state.currentTime)
+    : 0;
+  const highlightClassName = "ring-2 ring-primary rounded-sm bg-primary/10";
 
   const handleAddToTimeline = () => {
     onAddToTimeline?.(currentTime);
@@ -91,20 +100,27 @@ export function DraggableMediaItem({
   return (
     <>
       {variant === "card" ? (
-        <div ref={dragRef} className="relative group w-28 h-28">
+        <div
+          ref={dragRef}
+          className={cn("relative group", containerClassName ?? "w-28 h-28")}
+        >
           <div
-            className={`flex flex-col gap-1 p-0 h-auto w-full relative cursor-default ${className}`}
+            className={cn(
+              "flex flex-col gap-1 p-1 h-auto w-full relative cursor-default",
+              className,
+              isHighlighted && highlightClassName
+            )}
           >
             <AspectRatio
               ratio={aspectRatio}
               className={cn(
                 "bg-panel-accent relative overflow-hidden",
                 rounded && "rounded-md",
-                "[&::-webkit-drag-ghost]:opacity-0" // Webkit-specific ghost hiding
+                isDraggable && "[&::-webkit-drag-ghost]:opacity-0" // Webkit-specific ghost hiding
               )}
-              draggable={true}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
+              draggable={isDraggable}
+              onDragStart={isDraggable ? handleDragStart : undefined}
+              onDragEnd={isDraggable ? handleDragEnd : undefined}
             >
               {preview}
               {!isDragging && (
@@ -128,18 +144,24 @@ export function DraggableMediaItem({
           </div>
         </div>
       ) : (
-        <div ref={dragRef} className="relative group w-full">
+        <div
+          ref={dragRef}
+          className={cn(
+            "relative group w-full",
+            isHighlighted && highlightClassName
+          )}
+        >
           <div
             className={cn(
-              "h-10 flex items-center gap-3 cursor-default w-full",
-              "[&::-webkit-drag-ghost]:opacity-0",
+              "h-8 flex items-center gap-3 cursor-default w-full px-1",
+              isDraggable && "[&::-webkit-drag-ghost]:opacity-0",
               className
             )}
-            draggable={true}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
+            draggable={isDraggable}
+            onDragStart={isDraggable ? handleDragStart : undefined}
+            onDragEnd={isDraggable ? handleDragEnd : undefined}
           >
-            <div className="w-6 h-6 flex-shrink-0 rounded overflow-hidden">
+            <div className="w-6 h-6 flex-shrink-0 rounded-[0.35rem] overflow-hidden">
               {preview}
             </div>
             <span className="text-sm truncate flex-1 w-full">{name}</span>
@@ -148,7 +170,8 @@ export function DraggableMediaItem({
       )}
 
       {/* Custom drag preview */}
-      {isDragging &&
+      {isDraggable &&
+        isDragging &&
         typeof document !== "undefined" &&
         createPortal(
           <div
@@ -194,7 +217,7 @@ function PlusButton({
     <Button
       size="icon"
       className={cn(
-        "absolute bottom-2 right-2 size-4 bg-background text-foreground",
+        "absolute bottom-2 right-2 size-4 bg-background hover:bg-panel text-foreground",
         className
       )}
       onClick={(e) => {
