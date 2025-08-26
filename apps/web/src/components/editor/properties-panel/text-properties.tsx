@@ -7,7 +7,8 @@ import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch"; // Add Switch import
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useProjectStore, DEFAULT_CANVAS_SIZE } from "@/stores/project-store";
 import {
   PropertyItem,
   PropertyItemLabel,
@@ -22,8 +23,8 @@ export function TextProperties({
   trackId: string;
 }) {
   const { updateTextElement } = useTimelineStore();
+  const { activeProject } = useProjectStore();
 
-  // Local state for input values to allow temporary empty/invalid states
   const [fontSizeInput, setFontSizeInput] = useState(
     element.fontSize.toString()
   );
@@ -31,7 +32,17 @@ export function TextProperties({
     Math.round(element.opacity * 100).toString()
   );
 
-  // Track the last selected color for toggling
+  const canvasWidth = activeProject?.canvasSize?.width || DEFAULT_CANVAS_SIZE.width;
+  const canvasHeight = activeProject?.canvasSize?.height || DEFAULT_CANVAS_SIZE.height;
+  const posXMin = -Math.floor(canvasWidth / 2);
+  const posXMax = Math.floor(canvasWidth / 2);
+  const posYMin = -Math.floor(canvasHeight / 2);
+  const posYMax = Math.floor(canvasHeight / 2);
+
+  const [xInput, setXInput] = useState(element.x.toString());
+  const [yInput, setYInput] = useState(element.y.toString());
+  const [rotationInput, setRotationInput] = useState(element.rotation.toString());
+
   const lastSelectedColor = useRef("#000000");
 
   const parseAndValidateNumber = (
@@ -43,6 +54,60 @@ export function TextProperties({
     const parsed = parseInt(value, 10);
     if (isNaN(parsed)) return fallback;
     return Math.max(min, Math.min(max, parsed));
+  };
+
+  useEffect(() => {
+    setXInput(element.x.toString());
+  }, [element.x]);
+  useEffect(() => {
+    setYInput(element.y.toString());
+  }, [element.y]);
+  useEffect(() => {
+    setRotationInput(element.rotation.toString());
+  }, [element.rotation]);
+
+  const handleXChange = (value: string) => {
+    setXInput(value);
+    if (value.trim() !== "") {
+      const x = parseAndValidateNumber(value, posXMin, posXMax, element.x);
+      updateTextElement(trackId, element.id, { x });
+    }
+  };
+  const handleXBlur = () => {
+    const x = parseAndValidateNumber(xInput, posXMin, posXMax, element.x);
+    setXInput(x.toString());
+    updateTextElement(trackId, element.id, { x });
+  };
+
+  const handleYChange = (value: string) => {
+    setYInput(value);
+    if (value.trim() !== "") {
+      const y = parseAndValidateNumber(value, posYMin, posYMax, element.y);
+      updateTextElement(trackId, element.id, { y });
+    }
+  };
+  const handleYBlur = () => {
+    const y = parseAndValidateNumber(yInput, posYMin, posYMax, element.y);
+    setYInput(y.toString());
+    updateTextElement(trackId, element.id, { y });
+  };
+
+  const handleRotationChange = (value: string) => {
+    setRotationInput(value);
+    if (value.trim() !== "") {
+      const rotation = parseAndValidateNumber(value, -180, 180, element.rotation);
+      updateTextElement(trackId, element.id, { rotation });
+    }
+  };
+  const handleRotationBlur = () => {
+    const rotation = parseAndValidateNumber(
+      rotationInput,
+      -180,
+      180,
+      element.rotation
+    );
+    setRotationInput(rotation.toString());
+    updateTextElement(trackId, element.id, { rotation });
   };
 
   const handleFontSizeChange = (value: string) => {
@@ -125,7 +190,7 @@ export function TextProperties({
           />
         </PropertyItemValue>
       </PropertyItem>
-      <PropertyItem direction="column">
+      
         <PropertyItem direction="row">
           <PropertyItemLabel>Style</PropertyItemLabel>
           <PropertyItemValue>
@@ -195,52 +260,140 @@ export function TextProperties({
             </div>
           </PropertyItemValue>
         </PropertyItem>
-        <PropertyItemLabel>Font size</PropertyItemLabel>
-        <PropertyItemValue>
-          <div className="flex items-center gap-2">
-            <Slider
-              value={[element.fontSize]}
-              min={8}
-              max={300}
-              step={1}
-              onValueChange={([value]) => {
-                updateTextElement(trackId, element.id, { fontSize: value });
-                setFontSizeInput(value.toString());
-              }}
-              className="w-full"
-            />
+        <PropertyItem direction="row">
+          <PropertyItemLabel>Font size</PropertyItemLabel>
+          <PropertyItemValue>
+            <div className="flex items-center gap-2">
+              <Slider
+                value={[element.fontSize]}
+                min={8}
+                max={300}
+                step={1}
+                onValueChange={([value]) => {
+                  updateTextElement(trackId, element.id, { fontSize: value });
+                  setFontSizeInput(value.toString());
+                }}
+                className="w-full"
+              />
+              <Input
+                type="number"
+                value={fontSizeInput}
+                min={8}
+                max={300}
+                onChange={(e) => handleFontSizeChange(e.target.value)}
+                onBlur={handleFontSizeBlur}
+                className="w-12 !text-xs h-7 rounded-sm text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              />
+            </div>
+          </PropertyItemValue>
+        </PropertyItem>
+
+        <PropertyItem direction="column">
+          <PropertyItem direction="row">
+            <PropertyItemLabel>Position</PropertyItemLabel>
+            <PropertyItemValue>
+              <div className="flex items-center gap-3 w-full">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground w-4">X</span>
+                    <Slider
+                      value={[element.x]}
+                      min={posXMin}
+                      max={posXMax}
+                      step={1}
+                      onValueChange={([value]) => {
+                        updateTextElement(trackId, element.id, { x: value });
+                        setXInput(value.toString());
+                      }}
+                      className="w-full"
+                    />
+                    <Input
+                      type="number"
+                      value={xInput}
+                      min={posXMin}
+                      max={posXMax}
+                      onChange={(e) => handleXChange(e.target.value)}
+                      onBlur={handleXBlur}
+                      className="w-16 !text-xs h-7 rounded-sm text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 w-full mt-2">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground w-4">Y</span>
+                    <Slider
+                      value={[element.y]}
+                      min={posYMin}
+                      max={posYMax}
+                      step={1}
+                      onValueChange={([value]) => {
+                        updateTextElement(trackId, element.id, { y: value });
+                        setYInput(value.toString());
+                      }}
+                      className="w-full"
+                    />
+                    <Input
+                      type="number"
+                      value={yInput}
+                      min={posYMin}
+                      max={posYMax}
+                      onChange={(e) => handleYChange(e.target.value)}
+                      onBlur={handleYBlur}
+                      className="w-16 !text-xs h-7 rounded-sm text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                  </div>
+                </div>
+              </div>
+            </PropertyItemValue>
+          </PropertyItem>
+        </PropertyItem>
+
+        <PropertyItem direction="column">
+          <PropertyItemLabel>Rotation</PropertyItemLabel>
+          <PropertyItemValue>
+            <div className="flex items-center gap-2">
+              <Slider
+                value={[element.rotation]}
+                min={-180}
+                max={180}
+                step={1}
+                onValueChange={([value]) => {
+                  updateTextElement(trackId, element.id, { rotation: value });
+                  setRotationInput(value.toString());
+                }}
+                className="w-full"
+              />
+              <Input
+                type="number"
+                value={rotationInput}
+                min={-180}
+                max={180}
+                onChange={(e) => handleRotationChange(e.target.value)}
+                onBlur={handleRotationBlur}
+                className="w-16 !text-xs h-7 rounded-sm text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              />
+            </div>
+          </PropertyItemValue>
+        </PropertyItem>
+        <PropertyItem direction="row">
+          <PropertyItemLabel>Color</PropertyItemLabel>
+          <PropertyItemValue>
             <Input
-              type="number"
-              value={fontSizeInput}
-              min={8}
-              max={300}
-              onChange={(e) => handleFontSizeChange(e.target.value)}
-              onBlur={handleFontSizeBlur}
-              className="w-12 !text-xs h-7 rounded-sm text-center
-               [appearance:textfield]
-               [&::-webkit-outer-spin-button]:appearance-none
-               [&::-webkit-inner-spin-button]:appearance-none"
+              type="color"
+              value={element.color || "#ffffff"}
+              onChange={(e) =>
+                updateTextElement(trackId, element.id, { color: e.target.value })
+              }
+              className="w-full cursor-pointer rounded-full"
             />
-          </div>
-        </PropertyItemValue>
-      </PropertyItem>
-      <PropertyItem direction="row">
-        <PropertyItemLabel>Color</PropertyItemLabel>
-        <PropertyItemValue>
-          <Input
-            type="color"
-            value={element.color || "#ffffff"}
-            onChange={(e) => {
-              const color = e.target.value;
-              updateTextElement(trackId, element.id, { color });
-            }}
-            className="w-full cursor-pointer rounded-full"
-          />
-        </PropertyItemValue>
-      </PropertyItem>
+          </PropertyItemValue>
+        </PropertyItem>
+
       <PropertyItem direction="column">
-        <div className="flex items-center justify-between">
-          <PropertyItemLabel>Background</PropertyItemLabel>
+          <div className="flex items-center justify-between">
+            <PropertyItemLabel>Background</PropertyItemLabel>
           <div className="flex items-center space-x-2">
             <Switch
               id="transparent-bg-toggle"

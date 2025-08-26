@@ -171,33 +171,24 @@ export function PreviewPanel() {
       const scaleRatio = previewDimensions.width / canvasSize.width;
       const newX = dragState.initialElementX + deltaX / scaleRatio;
       const newY = dragState.initialElementY + deltaY / scaleRatio;
-
-      const halfWidth = dragState.elementWidth / scaleRatio / 2;
-      const halfHeight = dragState.elementHeight / scaleRatio / 2;
-
-      const constrainedX = Math.max(
-        -canvasSize.width / 2 + halfWidth,
-        Math.min(canvasSize.width / 2 - halfWidth, newX)
-      );
-      const constrainedY = Math.max(
-        -canvasSize.height / 2 + halfHeight,
-        Math.min(canvasSize.height / 2 - halfHeight, newY)
-      );
+      const constrainedX = Math.max(-canvasSize.width / 2, Math.min(canvasSize.width / 2, newX));
+      const constrainedY = Math.max(-canvasSize.height / 2, Math.min(canvasSize.height / 2, newY));
 
       setDragState((prev) => ({
         ...prev,
         currentX: constrainedX,
         currentY: constrainedY,
       }));
+
+      if (dragState.trackId && dragState.elementId) {
+        updateTextElement(dragState.trackId, dragState.elementId, {
+          x: constrainedX,
+          y: constrainedY,
+        });
+      }
     };
 
     const handleMouseUp = () => {
-      if (dragState.isDragging && dragState.trackId && dragState.elementId) {
-        updateTextElement(dragState.trackId, dragState.elementId, {
-          x: dragState.currentX,
-          y: dragState.currentY,
-        });
-      }
       setDragState((prev) => ({ ...prev, isDragging: false }));
     };
 
