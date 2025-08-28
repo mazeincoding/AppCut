@@ -27,12 +27,17 @@ function RendererSceneController() {
   const mediaItems = useMediaStore((s) => s.mediaItems);
 
   const getTotalDuration = useTimelineStore((s) => s.getTotalDuration);
+  const { width, height } = usePreviewSize();
 
   useDeepCompareEffect(() => {
     const scene = buildScene({
       tracks,
       mediaItems,
       duration: getTotalDuration(),
+      canvasSize: {
+        width,
+        height,
+      },
     });
 
     setScene(scene);
@@ -50,8 +55,8 @@ function PreviewCanvas() {
 
   const renderer = useMemo(() => {
     return new SceneRenderer({
-      width: width / 2,
-      height: height / 2,
+      width,
+      height,
       fps: 30, // TODO: get fps from project
     });
   }, [width, height]);
@@ -70,7 +75,7 @@ function PreviewCanvas() {
         lastFrameRef.current = frame;
       }
     }
-  }, [renderer, scene]);
+  }, [renderer, scene, width, height]);
 
   useRafLoop(render);
 

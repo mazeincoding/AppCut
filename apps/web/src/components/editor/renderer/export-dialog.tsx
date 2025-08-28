@@ -72,6 +72,10 @@ export function ExportDialog({ children }: { children: React.ReactNode }) {
       tracks: useTimelineStore.getState().tracks,
       mediaItems: useMediaStore.getState().mediaItems,
       duration: useTimelineStore.getState().getTotalDuration(),
+      canvasSize: {
+        width,
+        height,
+      },
     });
 
     const exporter = new SceneExporter({

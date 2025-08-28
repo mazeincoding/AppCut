@@ -4,15 +4,17 @@ import { type MediaItem } from "@/stores/media-store";
 import { SceneNode } from "./nodes/scene-node";
 import { VideoNode } from "./nodes/video-node";
 import { TimecodeNode } from "./nodes/timecode-node";
+import { TextNode } from "./nodes/text-node";
 
 export type BuildSceneParams = {
+  canvasSize: { width: number; height: number };
   tracks: TimelineTrack[];
   mediaItems: MediaItem[];
   duration: number;
 };
 
 export function buildScene(params: BuildSceneParams) {
-  const { tracks, mediaItems, duration } = params;
+  const { tracks, mediaItems, duration, canvasSize } = params;
 
   const scene = new SceneNode({ duration });
 
@@ -37,6 +39,27 @@ export function buildScene(params: BuildSceneParams) {
           })
         );
       }
+    }
+
+    if (element.type === "text") {
+      console.log(element);
+      scene.add(
+        new TextNode({
+          text: element.content,
+          fontSize: element.fontSize,
+          fontFamily: element.fontFamily,
+          fontWeight: element.fontWeight === "bold" ? 700 : 400,
+          fontStyle: element.fontStyle === "italic" ? "italic" : "normal",
+          textAlign: element.textAlign,
+          textBaseline: "middle",
+          color: element.color,
+          opacity: element.opacity,
+          timeStart: element.startTime,
+          duration: element.duration - element.trimEnd - element.trimStart,
+          x: element.x + canvasSize.width / 2,
+          y: element.y + canvasSize.height / 2,
+        })
+      );
     }
   }
 

@@ -16,8 +16,8 @@ import { useProjectStore } from "@/stores/project-store";
 import { EditorProvider } from "@/components/editor-provider";
 import { usePlaybackControls } from "@/hooks/use-playback-controls";
 import { Onboarding } from "@/components/onboarding";
-// import { CanvasPreviewPanel as PreviewPanel } from "@/components/editor/renderer/canvas-preview-panel";
-import { PreviewPanel } from "@/components/editor/preview-panel";
+import { CanvasPreviewPanel as PreviewPanel } from "@/components/editor/renderer/canvas-preview-panel";
+// import { PreviewPanel } from "@/components/editor/preview-panel";
 
 export default function Editor() {
   const {
