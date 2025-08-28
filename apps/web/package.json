@@ -39,6 +39,7 @@
     "dotenv": "^16.5.0",
     "drizzle-orm": "^0.44.2",
     "embla-carousel-react": "^8.5.1",
+    "eventemitter3": "^5.0.1",
     "feed": "^5.1.0",
     "framer-motion": "^11.13.1",
     "input-otp": "^1.4.1",
@@ -67,6 +68,7 @@
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "unified": "^11.0.5",
+    "use-deep-compare-effect": "^1.8.1",
     "vaul": "^1.1.1",
     "zod": "^3.25.67",
     "zustand": "^5.0.2"
