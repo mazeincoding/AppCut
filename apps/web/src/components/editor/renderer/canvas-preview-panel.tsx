@@ -3,16 +3,13 @@ import useDeepCompareEffect from "use-deep-compare-effect";
 
 import { useRafLoop } from "@/hooks/use-raf-loop";
 import { SceneNode } from "@/lib/renderer/nodes/scene-node";
-import { TimeOffsetNode } from "@/lib/renderer/nodes/time-offset-node";
-import { TimecodeNode } from "@/lib/renderer/nodes/timecode-node";
-import { VideoNode } from "@/lib/renderer/nodes/video-node";
 import { SceneRenderer } from "@/lib/renderer/scene-renderer";
 import { useMediaStore } from "@/stores/media-store";
 import { usePlaybackStore } from "@/stores/playback-store";
 import { useRendererStore } from "@/stores/renderer-store";
 import { useTimelineStore } from "@/stores/timeline-store";
-import { TimelineElement } from "@/types/timeline";
 import { useProjectStore } from "@/stores/project-store";
+import { buildScene } from "@/lib/renderer/build-scene";
 
 // TODO: get preview size in a better way
 function usePreviewSize() {
@@ -23,37 +20,23 @@ function usePreviewSize() {
   };
 }
 
-function useActiveElements(): TimelineElement[] {
-  const tracks = useTimelineStore((s) => s.tracks);
-  return tracks.flatMap((track) => track.elements);
-}
-
 function RendererSceneController() {
   const setScene = useRendererStore((s) => s.setScene);
+
+  const tracks = useTimelineStore((s) => s.tracks);
   const mediaItems = useMediaStore((s) => s.mediaItems);
-  const elements = useActiveElements();
 
   const getTotalDuration = useTimelineStore((s) => s.getTotalDuration);
 
   useDeepCompareEffect(() => {
-    const scene = new SceneNode({ duration: getTotalDuration() });
+    const scene = buildScene({
+      tracks,
+      mediaItems,
+      duration: getTotalDuration(),
+    });
 
-    for (const element of elements) {
-      if (element.type === "media") {
-        const media = mediaItems.find((m) => m.id === element.mediaId);
-        if (media && media.url) {
-          scene.add(
-            new TimeOffsetNode({ timeOffset: element.startTime }).add(
-              new VideoNode({ video: media.url })
-            )
-          );
-        }
-      }
-    }
-
-    scene.add(new TimecodeNode());
     setScene(scene);
-  }, [elements, mediaItems, getTotalDuration]);
+  }, [tracks, mediaItems, getTotalDuration]);
 
   return null;
 }

@@ -10,14 +10,14 @@ import {
 import { MediaPanel } from "../../../components/editor/media-panel";
 import { PropertiesPanel } from "../../../components/editor/properties-panel";
 import { Timeline } from "../../../components/editor/timeline";
-// import { PreviewPanel } from "../../../components/editor/preview-panel";
 import { EditorHeader } from "@/components/editor-header";
 import { usePanelStore } from "@/stores/panel-store";
 import { useProjectStore } from "@/stores/project-store";
 import { EditorProvider } from "@/components/editor-provider";
 import { usePlaybackControls } from "@/hooks/use-playback-controls";
 import { Onboarding } from "@/components/onboarding";
-import { CanvasPreviewPanel } from "@/components/editor/renderer/canvas-preview-panel";
+// import { CanvasPreviewPanel as PreviewPanel } from "@/components/editor/renderer/canvas-preview-panel";
+import { PreviewPanel } from "@/components/editor/preview-panel";
 
 export default function Editor() {
   const {
@@ -200,7 +200,7 @@ export default function Editor() {
                         onResize={setPreviewPanel}
                         className="min-w-0 min-h-0 flex-1"
                       >
-                        <CanvasPreviewPanel />
+                        <PreviewPanel />
                       </ResizablePanel>
 
                       <ResizableHandle withHandle />
@@ -277,7 +277,7 @@ export default function Editor() {
                         className="min-w-0 min-h-0 flex-1"
                       >
                         {/* <PreviewPanel /> */}
-                        <CanvasPreviewPanel />
+                        <PreviewPanel />
                       </ResizablePanel>
                     </ResizablePanelGroup>
                   </ResizablePanel>
@@ -381,8 +381,7 @@ export default function Editor() {
                 onResize={setPreviewPanel}
                 className="min-w-0 min-h-0"
               >
-                {/* <PreviewPanel /> */}
-                <CanvasPreviewPanel />
+                <PreviewPanel />
               </ResizablePanel>
             </ResizablePanelGroup>
           ) : (
@@ -423,8 +422,7 @@ export default function Editor() {
                     onResize={setPreviewPanel}
                     className="min-w-0 min-h-0 flex-1"
                   >
-                    {/* <PreviewPanel /> */}
-                    <CanvasPreviewPanel />
+                    <PreviewPanel />
                   </ResizablePanel>
 
                   <ResizableHandle withHandle />

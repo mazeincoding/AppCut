@@ -12,9 +12,11 @@ import {
 } from "@/components/ui/dialog";
 
 import { Button } from "@/components/ui/button";
-import { SceneNode } from "@/lib/renderer/nodes/scene-node";
 import { Progress } from "@/components/ui/progress";
-import { useRendererStore } from "@/stores/renderer-store";
+import { buildScene } from "@/lib/renderer/build-scene";
+import { useTimelineStore } from "@/stores/timeline-store";
+import { useMediaStore } from "@/stores/media-store";
+import { useProjectStore } from "@/stores/project-store";
 
 function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
@@ -43,26 +45,42 @@ export function ExportDialog({ children }: { children: React.ReactNode }) {
   const [isExporting, setIsExporting] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const scene = useRendererStore((s) => s.scene);
+
+  const [exporter, setExporter] = useState<SceneExporter | null>(null);
 
   const handleOpenChange = (open: boolean) => {
+    if (isExporting) {
+      return;
+    }
+
     setIsOpen(open);
     setError(null);
     setProgress(0);
   };
 
   const handleExport = async () => {
-    if (!scene) {
-      return;
-    }
-
+    setProgress(0);
     setIsExporting(true);
 
-    const exporter = new SceneExporter({
-      width: 600, // TODO: Use project's aspect ratio
-      height: 320, // TODO: Use project's aspect ratio
-      fps: 30, // TODO: Use project's frame rate
+    const project = useProjectStore.getState().activeProject;
+
+    const width = project?.canvasSize.width ?? 640;
+    const height = project?.canvasSize.height ?? 720;
+    const fps = project?.fps ?? 30;
+
+    const scene = buildScene({
+      tracks: useTimelineStore.getState().tracks,
+      mediaItems: useMediaStore.getState().mediaItems,
+      duration: useTimelineStore.getState().getTotalDuration(),
     });
+
+    const exporter = new SceneExporter({
+      width,
+      height,
+      fps,
+    });
+
+    setExporter(exporter);
 
     exporter.on("progress", (progress) => {
       setProgress(progress);
@@ -79,6 +97,13 @@ export function ExportDialog({ children }: { children: React.ReactNode }) {
 
     await exporter.export(scene);
     setIsExporting(false);
+    setExporter(null);
+  };
+
+  const handleCancel = () => {
+    exporter?.cancel();
+    setIsExporting(false);
+    setIsOpen(false);
   };
 
   return (
@@ -94,7 +119,12 @@ export function ExportDialog({ children }: { children: React.ReactNode }) {
           {error && <div className="text-red-500">{error}</div>}
         </div>
         <DialogFooter>
-          <Button disabled={isExporting || !scene} onClick={handleExport}>
+          {isExporting && (
+            <Button variant="outline" onClick={handleCancel}>
+              Cancel
+            </Button>
+          )}
+          <Button disabled={isExporting} onClick={handleExport}>
             Export
           </Button>
         </DialogFooter>

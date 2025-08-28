@@ -1,12 +1,20 @@
 import { SceneRenderer } from "../scene-renderer";
 import { BaseNode } from "./base-node";
 
+const VIDEO_EPSILON = 1 / 500;
+
 export type VideoNodeParams = {
   video: HTMLVideoElement | string;
+  duration: number;
+  timeOffset: number;
+  trimStart: number;
+  trimEnd: number;
 };
 
 export class VideoNode extends BaseNode<VideoNodeParams> {
-  private videoElement: HTMLVideoElement;
+  videoElement: HTMLVideoElement;
+
+  readyPromise: Promise<void>;
 
   constructor(params: VideoNodeParams) {
     super(params);
@@ -18,27 +26,48 @@ export class VideoNode extends BaseNode<VideoNodeParams> {
     } else {
       this.videoElement = params.video;
     }
-  }
 
-  get duration() {
-    return this.videoElement.duration;
-  }
-
-  async seek(time: number) {
-    this.videoElement.currentTime = time;
-    return new Promise<void>((resolve) => {
-      this.videoElement.onseeked = () => resolve();
+    this.readyPromise = new Promise((resolve) => {
+      this.videoElement.addEventListener("canplay", () => {
+        resolve();
+      });
     });
+  }
+
+  async seek(videoTime: number) {
+    await this.readyPromise;
+    return new Promise<void>((resolve) => {
+      const handleSeeked = () => {
+        this.videoElement.removeEventListener("seeked", handleSeeked);
+        resolve();
+      };
+      this.videoElement.addEventListener("seeked", handleSeeked);
+      this.videoElement.currentTime = videoTime;
+    });
+  }
+
+  getVideoTime(time: number) {
+    return time - this.params.timeOffset + this.params.trimStart;
+  }
+
+  isInRange(time: number) {
+    const videoTime = this.getVideoTime(time);
+    return (
+      videoTime >= this.params.trimStart - VIDEO_EPSILON &&
+      videoTime < this.params.duration - this.params.trimEnd
+    );
   }
 
   async render(renderer: SceneRenderer, time: number) {
     await super.render(renderer, time);
 
-    if (time < 0 || time > this.duration) {
+    if (!this.isInRange(time)) {
       return;
     }
 
-    await this.seek(time);
+    const videoTime = this.getVideoTime(time);
+    await this.seek(videoTime);
+
     renderer.context.drawImage(
       this.videoElement,
       0,

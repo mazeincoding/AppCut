@@ -17,17 +17,20 @@ type ExportParams = {
   bitrate?: number;
 };
 
-const DEFAULT_BITRATE = 2_000_000;
+const DEFAULT_BITRATE = 4_000_000;
 
 export type SceneExporterEvents = {
   progress: [progress: number];
   complete: [blob: Blob];
   error: [error: Error];
+  cancelled: [];
 };
 
 export class SceneExporter extends EventEmitter<SceneExporterEvents> {
   private renderer: SceneRenderer;
   private bitrate: number;
+
+  private cancelled = false;
 
   constructor(params: ExportParams) {
     super();
@@ -38,6 +41,10 @@ export class SceneExporter extends EventEmitter<SceneExporterEvents> {
     });
 
     this.bitrate = params.bitrate ?? DEFAULT_BITRATE;
+  }
+
+  cancel() {
+    this.cancelled = true;
   }
 
   async export(scene: SceneNode) {
@@ -59,6 +66,12 @@ export class SceneExporter extends EventEmitter<SceneExporterEvents> {
     await output.start();
 
     for (let i = 0; i < frameCount; i++) {
+      if (this.cancelled) {
+        await output.cancel();
+        this.emit("cancelled");
+        return;
+      }
+
       await this.renderer.render(scene, i);
       await videoSource.add(i / fps, 1 / fps);
       this.emit("progress", i / frameCount);
