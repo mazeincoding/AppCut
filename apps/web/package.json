@@ -44,6 +44,7 @@
     "framer-motion": "^11.13.1",
     "input-otp": "^1.4.1",
     "lucide-react": "^0.468.0",
+    "mediabunny": "^1.11.2",
     "motion": "^12.18.1",
     "nanoid": "^5.1.5",
     "next": "^15.4.5",

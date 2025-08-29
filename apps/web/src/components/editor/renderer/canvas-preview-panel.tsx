@@ -50,6 +50,7 @@ function PreviewCanvas() {
   const ref = useRef<HTMLCanvasElement>(null);
   const lastFrameRef = useRef(0);
   const lastSceneRef = useRef<SceneNode | null>(null);
+  const renderingRef = useRef(false);
 
   const { width, height } = usePreviewSize();
 
@@ -64,15 +65,17 @@ function PreviewCanvas() {
   const scene = useRendererStore((s) => s.scene);
 
   const render = useCallback(() => {
-    if (ref.current && scene) {
+    if (ref.current && scene && !renderingRef.current) {
       const time = usePlaybackStore.getState().currentTime;
       const frame = Math.floor(time * renderer.fps);
 
       if (frame !== lastFrameRef.current || scene !== lastSceneRef.current) {
-        console.log("rendering", frame);
-        renderer.renderToCanvas(scene, frame, ref.current);
+        renderingRef.current = true;
         lastSceneRef.current = scene;
         lastFrameRef.current = frame;
+        renderer.renderToCanvas(scene, frame, ref.current).then(() => {
+          renderingRef.current = false;
+        });
       }
     }
   }, [renderer, scene, width, height]);
